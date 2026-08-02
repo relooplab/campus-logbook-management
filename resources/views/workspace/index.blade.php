@@ -15,27 +15,27 @@
             Dashboard</a>
     </div> {{-- Filter --}} <form method="GET" action="{{ route("workspace.index", $mahasiswaTa) }}"
         class="bg-bg-surface rounded-xl border border-border p-4 flex flex-wrap gap-3 items-end">
-        <div> <label class="block text-xs text-text-secondary mb-1">Bab</label> <select name="bab"
-                class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+        <div class="w-full sm:w-auto"> <label class="block text-xs text-text-secondary mb-1">Bab</label> <select name="bab"
+                class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                 <option value="">Semua Bab</option>
                 @foreach ($babs as $b)
                     <option value="{{ $b }}" @selected(request("bab") === $b)>{{ $b }}</option>
                 @endforeach
             </select> </div>
-        <div> <label class="block text-xs text-text-secondary mb-1">Tipe</label> <select name="type"
-                class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+        <div class="w-full sm:w-auto"> <label class="block text-xs text-text-secondary mb-1">Tipe</label> <select name="type"
+                class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                 <option value="">Semua Tipe</option>
                 <option value="pdf" @selected(request("type") === "pdf")>PDF</option>
                 <option value="doc" @selected(request("type") === "doc")>DOCX</option>
                 <option value="xls" @selected(request("type") === "xls")>XLSX</option>
             </select> </div>
-        <div> <label class="block text-xs text-text-secondary mb-1">Cari</label> <input type="text" name="search"
+        <div class="w-full sm:w-auto"> <label class="block text-xs text-text-secondary mb-1">Cari</label> <input type="text" name="search"
                 value="{{ request("search") }}" placeholder="Nama file / catatan"
-                class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
-        <div class="flex gap-2"> <button
-                class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm">Cari</button> <a
+                class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
+        <div class="flex gap-2 w-full sm:w-auto"> <button
+                class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm">Cari</button> <a
                 href="{{ route("workspace.index", $mahasiswaTa) }}"
-                class="px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Reset</a>
+                class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm text-center">Reset</a>
         </div>
     </form> {{-- Upload --}} @if ($canUpload)
         <div class="bg-bg-surface rounded-xl border border-border p-5">

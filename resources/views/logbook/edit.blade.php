@@ -84,7 +84,7 @@
         class="px-3 py-2 rounded-md bg-status-pending/10 border border-status-pending/20 text-xs text-status-pending">
         ⚠ Mengganti atau menghapus file akan mengarsipkan versi lama dan tidak bisa dikembalikan. Komentar PDF
         pada file yang diganti akan otomatis ditandai selesai (resolve). </div>
-    <div class="flex gap-2 pt-2"> <button type="submit"
+    <div class="flex flex-wrap gap-2 pt-2"> <button type="submit"
             class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm font-semibold">Simpan</button>
         <a href="{{ route("logbook.show", $logbook) }}"
             class="px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Batal</a>

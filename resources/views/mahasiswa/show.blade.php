@@ -28,7 +28,7 @@
             <div class="text-2xl font-bold text-accent-teal">{{ $approved }}/{{ $target }}</div>
             <div class="text-xs text-text-secondary">sesi disetujui</div>
         </div>
-        <div class="flex gap-2"> <a
+        <div class="flex flex-wrap gap-2"> <a
                 href="{{ route("chat.start", ["user" => $mahasiswaTa->user_id, "ta" => $mahasiswaTa->id]) }}"
                 class="px-3 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm">💬 Chat</a> <a
                 href="{{ route("workspace.index", $mahasiswaTa) }}"
@@ -74,9 +74,9 @@
                     <thead>
                         <tr class="text-left text-text-secondary border-b border-border">
                             <th class="py-2 pr-4">Sesi</th>
-                            <th class="py-2 pr-4">Jenis</th>
+                            <th class="py-2 pr-4 table-col-jenis">Jenis</th>
                             <th class="py-2 pr-4">Topik</th>
-                            <th class="py-2 pr-4">Tanggal</th>
+                            <th class="py-2 pr-4 table-col-tanggal">Tanggal</th>
                             <th class="py-2 pr-4">Status</th>
                             <th class="py-2">Aksi</th>
                         </tr>
@@ -85,9 +85,9 @@
                         @foreach ($entries as $entry)
                             <tr class="border-b border-border">
                                 <td class="py-2 pr-4">{{ $entry->jenis === "revisi" ? "—" : $entry->sesi_ke }}</td>
-                                <td class="py-2 pr-4">{{ ucfirst($entry->jenis) }}</td>
+                                <td class="py-2 pr-4 table-col-jenis">{{ ucfirst($entry->jenis) }}</td>
                                 <td class="py-2 pr-4">{{ $entry->topik ?? "Revisi" }}</td>
-                                <td class="py-2 pr-4">{{ $entry->tanggal_bimbingan?->format("d M Y") ?? "—" }}</td>
+                                <td class="py-2 pr-4 table-col-tanggal">{{ $entry->tanggal_bimbingan?->format("d M Y") ?? "—" }}</td>
                                 <td class="py-2 pr-4">@include("partials.status-badge", ["status" => $entry->status])</td>
                                 <td class="py-2"><a href="{{ route("logbook.show", $entry) }}"
                                         class="text-accent-teal hover:underline">Detail</a></td>

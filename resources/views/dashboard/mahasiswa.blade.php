@@ -9,7 +9,7 @@
             <h1 class="font-heading font-bold text-2xl text-text-primary">Dashboard Mahasiswa</h1>
             <p class="text-sm text-text-secondary mt-0.5">Pantau progres bimbingan Tugas Akhir Anda</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
             <a href="{{ route('logbook.create') }}" class="px-4 py-2 rounded-xl bg-accent-blue text-white text-sm font-medium hover:opacity-90">+ Logbook</a>
             <a href="{{ route('logbook.create-revisi') }}" class="px-4 py-2 rounded-xl bg-accent-teal text-white text-sm font-medium hover:opacity-90">+ Entri Revisi</a>
             <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Semua Entri</a>

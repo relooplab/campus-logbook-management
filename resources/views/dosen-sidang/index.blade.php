@@ -2,7 +2,7 @@
 <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Riwayat Menguji ({{ $sidangs->count() }})</h1>
-        <div class="flex gap-2"> <a href="{{ route("dashboard.dosen.sidang-list.export") }}"
+        <div class="flex flex-wrap gap-2"> <a href="{{ route("dashboard.dosen.sidang-list.export") }}"
                 class="px-3 py-2 rounded-md bg-accent-blue hover:bg-accent-blue/90 text-white text-sm">⬇ Export PDF</a>
             <a href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">←
                 Dashboard</a> </div>
@@ -64,8 +64,8 @@
                     <tr class="text-left text-text-secondary border-b border-border">
                         <th class="py-3 px-4">Mahasiswa</th>
                         <th class="py-3 px-4">Pembimbing (diuji)</th>
-                        <th class="py-3 px-4">Jenis</th>
-                        <th class="py-3 px-4">Tanggal</th>
+                        <th class="py-3 px-4 table-col-jenis">Jenis</th>
+                        <th class="py-3 px-4 table-col-tanggal">Tanggal</th>
                         <th class="py-3 px-4">Hasil</th>
                         <th class="py-3 px-4">Aksi</th>
                     </tr>
@@ -76,8 +76,8 @@
                             <td class="py-3 px-4">{{ $s->mahasiswa_name ?? $s->mahasiswaTa?->mahasiswa?->name }}</td>
                             <td class="py-3 px-4 text-xs">
                                 {{ $s->supervisor_names ? implode(", ", $s->supervisor_names) : "—" }}</td>
-                            <td class="py-3 px-4">{{ $s->jenisLabel() }}</td>
-                            <td class="py-3 px-4">{{ $s->tanggal?->format("d M Y") }}</td>
+                            <td class="py-3 px-4 table-col-jenis">{{ $s->jenisLabel() }}</td>
+                            <td class="py-3 px-4 table-col-tanggal">{{ $s->tanggal?->format("d M Y") }}</td>
                             <td class="py-3 px-4"> <span
                                     class="badge {{ $s->hasil === "lulus" ? "badge-success" : "" }} {{ $s->hasil === "lulus_revisi" ? "badge-pending" : "" }} {{ $s->hasil === "mengulang" ? "badge-danger" : "" }}">
                                     {{ $s->hasilLabel() }} </span> </td>

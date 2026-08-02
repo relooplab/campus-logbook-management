@@ -3,13 +3,13 @@
     <h1 class="text-xl font-bold">Data Tugas Akhir</h1> {{-- Search / filter --}} <form method="GET"
         action="{{ route("admin.tas") }}" class="bg-bg-surface rounded-xl border border-border p-4 flex flex-wrap gap-3">
         <input type="text" name="keyword" value="{{ request("keyword") }}" placeholder="Judul TA"
-            class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <select name="pembimbing"
-            class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+            class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <select name="pembimbing"
+            class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
             <option value="">Semua pembimbing</option>
             @foreach ($dosenList as $d)
                 <option value="{{ $d->id }}" @selected((string) request("pembimbing") === (string) $d->id)>{{ $d->name }}</option>
             @endforeach
-        </select> <button class="px-3 py-2 rounded-md bg-accent-teal text-white text-sm">Cari</button>
+        </select> <button class="w-full sm:w-auto px-3 py-2 rounded-md bg-accent-teal text-white text-sm">Cari</button>
     </form>
     <div class="grid lg:grid-cols-3 gap-4">
         <div class="lg:col-span-2 bg-bg-surface rounded-xl border border-border overflow-x-auto">
@@ -22,10 +22,10 @@
                             <th class="py-3 px-4">Mahasiswa</th>
                             <th class="py-3 px-4">Judul</th>
                             <th class="py-3 px-4">Pembimbing 1</th>
-                            <th class="py-3 px-4">Pembimbing 2</th>
-                            <th class="py-3 px-4">Penguji 1</th>
-                            <th class="py-3 px-4">Penguji 2</th>
-                            <th class="py-3 px-4">Target</th>
+                            <th class="py-3 px-4 table-col-pembimbing2">Pembimbing 2</th>
+                            <th class="py-3 px-4 table-col-penguji">Penguji 1</th>
+                            <th class="py-3 px-4 table-col-penguji">Penguji 2</th>
+                            <th class="py-3 px-4 table-col-target">Target</th>
                             <th class="py-3 px-4">Status</th>
                             <th class="py-3 px-4">Aksi</th>
                         </tr>
@@ -38,10 +38,10 @@
                                 <td class="py-3 px-4">{{ $ta->mahasiswa?->name }}</td>
                                 <td class="py-3 px-4 max-w-[220px] truncate">{{ $ta->judul_ta }}</td>
                                 <td class="py-3 px-4">{{ $ta->pembimbing1?->name ?? "—" }}</td>
-                                <td class="py-3 px-4">{{ $ta->pembimbing2?->name ?? "—" }}</td>
-                                <td class="py-3 px-4">{{ $ta->penguji1?->name ?? "—" }}</td>
-                                <td class="py-3 px-4">{{ $ta->penguji2?->name ?? "—" }}</td>
-                                <td class="py-3 px-4">{{ $ta->target_sesi }}</td>
+                                <td class="py-3 px-4 table-col-pembimbing2">{{ $ta->pembimbing2?->name ?? "—" }}</td>
+                                <td class="py-3 px-4 table-col-penguji">{{ $ta->penguji1?->name ?? "—" }}</td>
+                                <td class="py-3 px-4 table-col-penguji">{{ $ta->penguji2?->name ?? "—" }}</td>
+                                <td class="py-3 px-4 table-col-target">{{ $ta->target_sesi }}</td>
                                 <td class="py-3 px-4"> <span
                                         class="badge {{ $ta->status_ta === "aktif" ? "badge-info" : "" }} {{ $ta->status_ta === "tamat" ? "badge-success" : "" }} {{ $ta->status_ta === "nonaktif" ? "badge-neutral" : "" }}">
                                         {{ ucfirst($ta->status_ta) }} </span> </td>

@@ -4,24 +4,24 @@
         action="{{ route("admin.users") }}"
         class="bg-bg-surface rounded-xl border border-border p-4 flex flex-wrap gap-3"> <input type="text"
             name="keyword" value="{{ request("keyword") }}" placeholder="Nama / email / identifier"
-            class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <select name="role"
-            class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+            class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <select name="role"
+            class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
             <option value="">Semua role</option>
             @foreach ($roles as $r)
                 <option value="{{ $r->name }}" @selected(request("role") === $r->name)>{{ ucfirst($r->name) }}</option>
             @endforeach
-        </select> <select name="sort" class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+        </select> <select name="sort" class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
             <option value="latest" @selected(request("sort") === "latest")>Terbaru</option>
             <option value="name" @selected(request("sort") === "name")>Nama (A-Z)</option>
-        </select> <button class="px-3 py-2 rounded-md bg-accent-teal text-white text-sm">Cari</button> </form>
+        </select> <button class="w-full sm:w-auto px-3 py-2 rounded-md bg-accent-teal text-white text-sm">Cari</button> </form>
     <div class="grid lg:grid-cols-3 gap-4">
         <div class="lg:col-span-2 bg-bg-surface rounded-xl border border-border overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="text-left text-text-secondary border-b border-border">
                         <th class="py-3 px-4">Nama</th>
-                        <th class="py-3 px-4">Identifier</th>
-                        <th class="py-3 px-4">Email</th>
+                        <th class="py-3 px-4 table-col-identifier">Identifier</th>
+                        <th class="py-3 px-4 table-col-email">Email</th>
                         <th class="py-3 px-4">Role</th>
                         <th class="py-3 px-4">Aksi</th>
                     </tr>
@@ -30,8 +30,8 @@
                     @forelse ($users as $u)
                         <tr class="border-b border-border">
                             <td class="py-3 px-4">{{ $u->name }}</td>
-                            <td class="py-3 px-4">{{ $u->identifier ?? "—" }}</td>
-                            <td class="py-3 px-4">{{ $u->email }}</td>
+                            <td class="py-3 px-4 table-col-identifier">{{ $u->identifier ?? "—" }}</td>
+                            <td class="py-3 px-4 table-col-email">{{ $u->email }}</td>
                             <td class="py-3 px-4">
                                 @foreach ($u->roles as $role)
                                     <span

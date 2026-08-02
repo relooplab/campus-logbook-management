@@ -1,6 +1,6 @@
 @extends("layouts.app") @section("title", "Profil " . $profile->name) @section("content")
 <div class="max-w-2xl space-y-6">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Profil</h1> <a href="{{ url()->previous() }}"
             class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">← Kembali</a>
     </div>

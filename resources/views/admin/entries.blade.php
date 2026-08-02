@@ -6,26 +6,26 @@
             Dosen</a>
     </div> {{-- Filter --}} <form method="GET" action="{{ route("admin.entries") }}"
         class="bg-bg-surface rounded-xl border border-border p-4 flex flex-wrap gap-3 items-end">
-        <div> <label class="block text-xs text-text-secondary mb-1">Status</label> <select name="status"
-                class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+        <div class="w-full sm:w-auto"> <label class="block text-xs text-text-secondary mb-1">Status</label> <select name="status"
+                class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                 <option value="">Semua</option>
                 @foreach (["draft" => "Draf", "submitted" => "Dikirim", "approved" => "Disetujui", "revisi" => "Revisi"] as $v => $l)
                     <option value="{{ $v }}" @selected(request("status") === $v)>{{ $l }}</option>
                 @endforeach
             </select> </div>
-        <div> <label class="block text-xs text-text-secondary mb-1">Jenis</label> <select name="jenis"
-                class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+        <div class="w-full sm:w-auto"> <label class="block text-xs text-text-secondary mb-1">Jenis</label> <select name="jenis"
+                class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                 <option value="">Semua</option>
                 <option value="logbook" @selected(request("jenis") === "logbook")>Logbook</option>
                 <option value="revisi" @selected(request("jenis") === "revisi")>Revisi</option>
             </select> </div>
-        <div> <label class="block text-xs text-text-secondary mb-1">Kata kunci</label> <input type="text"
+        <div class="w-full sm:w-auto"> <label class="block text-xs text-text-secondary mb-1">Kata kunci</label> <input type="text"
                 name="keyword" value="{{ request("keyword") }}" placeholder="Topik / nama / isi"
-                class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
-        <div class="flex gap-2"> <button
-                class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm">Cari</button> <a
+                class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
+        <div class="flex gap-2 w-full sm:w-auto"> <button
+                class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm">Cari</button> <a
                 href="{{ route("admin.entries") }}"
-                class="px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Reset</a>
+                class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm text-center">Reset</a>
         </div>
     </form> {{-- Daftar entri dengan checkbox + bulk action --}} <form method="POST" action="{{ route("admin.bulk") }}" id="bulk-form"> @csrf <input
             type="hidden" name="action" value="" id="bulk-action">
@@ -36,9 +36,9 @@
                         <th class="py-3 px-4"><input type="checkbox" id="select-all" class="bg-bg-surface"></th>
                         <th class="py-3 px-4">Mahasiswa</th>
                         <th class="py-3 px-4">Sesi</th>
-                        <th class="py-3 px-4">Jenis</th>
+                        <th class="py-3 px-4 table-col-jenis">Jenis</th>
                         <th class="py-3 px-4">Topik</th>
-                        <th class="py-3 px-4">Tanggal</th>
+                        <th class="py-3 px-4 table-col-tanggal">Tanggal</th>
                         <th class="py-3 px-4">Status</th>
                         <th class="py-3 px-4">Aksi</th>
                     </tr>
@@ -50,9 +50,9 @@
                                     class="row-check bg-bg-surface"></td>
                             <td class="py-3 px-4">{{ $entry->mahasiswaTa?->mahasiswa?->name }}</td>
                             <td class="py-3 px-4">{{ $entry->jenis === "revisi" ? "—" : $entry->sesi_ke }}</td>
-                            <td class="py-3 px-4">{{ ucfirst($entry->jenis) }}</td>
+                            <td class="py-3 px-4 table-col-jenis">{{ ucfirst($entry->jenis) }}</td>
                             <td class="py-3 px-4">{{ $entry->topik ?? "Revisi" }}</td>
-                            <td class="py-3 px-4">{{ $entry->tanggal_bimbingan?->format("d M Y") ?? "—" }}</td>
+                            <td class="py-3 px-4 table-col-tanggal">{{ $entry->tanggal_bimbingan?->format("d M Y") ?? "—" }}</td>
                             <td class="py-3 px-4">@include("partials.status-badge", ["status" => $entry->status])</td>
                             <td class="py-3 px-4"><a href="{{ route("logbook.show", $entry) }}"
                                     class="text-accent-teal hover:underline">Detail</a></td>

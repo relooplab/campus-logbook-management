@@ -8,8 +8,8 @@
                     <tr class="text-left text-text-secondary border-b border-border">
                         <th class="py-3 px-4">Mahasiswa</th>
                         <th class="py-3 px-4">Penguji</th>
-                        <th class="py-3 px-4">Jenis</th>
-                        <th class="py-3 px-4">Tanggal</th>
+                        <th class="py-3 px-4 table-col-jenis">Jenis</th>
+                        <th class="py-3 px-4 table-col-tanggal">Tanggal</th>
                         <th class="py-3 px-4">Hasil</th>
                         <th class="py-3 px-4">Aksi</th>
                     </tr>
@@ -19,8 +19,8 @@
                         <tr class="border-b border-border">
                             <td class="py-3 px-4">{{ $s->mahasiswaTa?->mahasiswa?->name }}</td>
                             <td class="py-3 px-4">{{ $s->penguji?->name }}</td>
-                            <td class="py-3 px-4">{{ $s->jenisLabel() }}</td>
-                            <td class="py-3 px-4">{{ $s->tanggal?->format("d M Y") }}</td>
+                            <td class="py-3 px-4 table-col-jenis">{{ $s->jenisLabel() }}</td>
+                            <td class="py-3 px-4 table-col-tanggal">{{ $s->tanggal?->format("d M Y") }}</td>
                             <td class="py-3 px-4"> <span
                                     class="badge {{ $s->hasil === "lulus" ? "badge-success" : "" }} {{ $s->hasil === "lulus_revisi" ? "badge-pending" : "" }} {{ $s->hasil === "mengulang" ? "badge-danger" : "" }}">
                                     {{ $s->hasilLabel() }} </span> </td>

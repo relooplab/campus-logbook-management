@@ -9,7 +9,7 @@
             <h1 class="font-heading font-bold text-2xl text-text-primary">Dashboard Dosen</h1>
             <p class="text-sm text-text-secondary mt-0.5">Ringkasan aktivitas bimbingan &amp; pengujian TA</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
             <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Semua Entri</a>
             <a href="{{ route('notifications.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Notifikasi</a>
         </div>
