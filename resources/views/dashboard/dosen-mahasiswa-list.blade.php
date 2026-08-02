@@ -30,8 +30,10 @@
                 </thead>
                 <tbody>
                     @foreach ($list as $row)
-                        @php $ta = $row['ta']; @endphp <tr class="border-b border-border">
-                            <td class="py-3 px-4">{{ $ta->mahasiswa?->name }} <span
+                        @php $ta = $row['ta']; @endphp <tr class="border-b border-border hover:bg-bg-hover cursor-pointer"
+                            onclick="window.location='{{ route("mahasiswa-ta.show", $ta) }}'">
+                            <td class="py-3 px-4"><a href="{{ route("mahasiswa-ta.show", $ta) }}"
+                                    class="hover:underline">{{ $ta->mahasiswa?->name }}</a> <span
                                     class="text-text-secondary text-xs">({{ $ta->mahasiswa?->identifier }})</span></td>
                             <td class="py-3 px-4"> <span
                                     class="badge {{ $ta->status_ta === "aktif" ? "badge-info" : "" }} {{ $ta->status_ta === "tamat" ? "badge-success" : "" }} {{ $ta->status_ta === "nonaktif" ? "badge-neutral" : "" }}">

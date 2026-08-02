@@ -72,18 +72,24 @@
 
 <div class="flex min-h-screen">
 
+    {{-- Overlay (mobile only, shown while sidebar drawer is open) --}}
+    <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black/50 z-30 md:hidden"></div>
+
     {{-- ===================== SIDEBAR (fixed kiri) ===================== --}}
-    <aside class="fixed left-0 top-0 h-screen w-60 bg-bg-base border-r border-border flex flex-col z-40">
+    <aside id="sidebar" class="fixed left-0 top-0 h-screen w-60 bg-bg-base border-r border-border flex flex-col z-40 -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out">
         <div class="px-6 py-6 flex items-center gap-2.5">
-            <span class="w-9 h-9 rounded-xl bg-accent-blue/15 text-accent-blue flex items-center justify-center">
+            <span class="w-9 h-9 rounded-xl bg-accent-blue/15 text-accent-blue flex items-center justify-center shrink-0">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                 </svg>
             </span>
-            <div>
-                <div class="font-heading font-extrabold text-lg text-text-primary leading-tight">Thesis Logbook</div>
+            <div class="min-w-0 flex-1">
+                <div class="font-heading font-extrabold text-lg text-text-primary leading-tight truncate">Thesis Logbook</div>
                 <div class="text-[10px] uppercase tracking-widest text-text-secondary -mt-0.5">Management</div>
             </div>
+            <button type="button" id="sidebar-close-btn" title="Tutup menu" class="md:hidden p-1.5 rounded-lg text-text-secondary hover:bg-bg-hover hover:text-text-primary">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
         </div>
 
         @auth
@@ -177,35 +183,43 @@
                 📅 Jadwal Bimbingan
             </a>
             @auth
-            <div class="flex items-center gap-3 px-1">
-                <a href="{{ route('profile.index') }}" class="flex items-center gap-3 flex-1 group">
-                    <span class="w-9 h-9 rounded-full bg-accent-purple/20 text-accent-purple flex items-center justify-center text-xs font-bold overflow-hidden">
-                        @if ($user->photoUrl())
-                            <img src="{{ $user->photoUrl() }}" class="h-full w-full object-cover" alt="Foto profil">
-                        @else
-                            {{ $user->initials() }}
-                        @endif
-                    </span>
-                    <span class="min-w-0">
-                        <span class="block text-sm font-medium text-text-primary truncate group-hover:text-accent-blue">{{ $user->name }}</span>
-                        <span class="block text-xs text-text-secondary truncate">{{ $user->email }}</span>
-                    </span>
-                </a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" title="Keluar" class="p-2 rounded-lg text-text-secondary hover:bg-bg-hover hover:text-status-danger">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                    </button>
-                </form>
+            <div class="relative" id="profile-menu-wrap">
+                <div id="profile-menu-dropdown" class="hidden absolute left-0 bottom-full mb-2 w-56 bg-bg-surface rounded-xl shadow-lg border border-border overflow-hidden">
+                    <div class="px-4 py-3 border-b border-border">
+                        <div class="text-sm font-medium text-text-primary truncate">{{ $user->name }}</div>
+                        <div class="text-xs text-text-secondary truncate">{{ $user->email }}</div>
+                    </div>
+                    <a href="{{ route('profile.index') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-hover hover:text-text-primary">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        Profil
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-hover hover:text-status-danger">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                            Keluar
+                        </button>
+                    </form>
+                </div>
+                <button type="button" id="profile-menu-btn" title="{{ $user->name }}" class="w-10 h-10 rounded-full bg-accent-purple/20 text-accent-purple flex items-center justify-center text-xs font-bold overflow-hidden hover:ring-2 hover:ring-accent-blue/40 transition">
+                    @if ($user->photoUrl())
+                        <img src="{{ $user->photoUrl() }}" class="h-full w-full object-cover" alt="Foto profil">
+                    @else
+                        {{ $user->initials() }}
+                    @endif
+                </button>
             </div>
             @endauth
         </div>
     </aside>
 
     {{-- ===================== MAIN CONTENT ===================== --}}
-    <div class="flex-1 ml-60">
-        <header class="sticky top-0 z-30 h-16 bg-bg-base/80 backdrop-blur border-b border-border px-8 flex items-center justify-between">
-            <div class="flex items-center gap-3">
+    <div class="flex-1 md:ml-60">
+        <header class="sticky top-0 z-30 h-16 bg-bg-base/80 backdrop-blur border-b border-border px-4 md:px-8 flex items-center justify-between">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" id="sidebar-open-btn" title="Buka menu" class="md:hidden p-2 rounded-xl bg-bg-hover text-text-secondary hover:text-text-primary shrink-0">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
                 @yield('header-title', '')
             </div>
             <div class="flex items-center gap-3">
@@ -372,6 +386,47 @@
                 var badge = document.getElementById('notif-badge');
                 if (d.unread > 0) { badge.classList.remove('hidden'); badge.classList.add('flex'); badge.textContent = d.unread > 9 ? '9+' : d.unread; }
             });
+    })();
+
+    // ---- Sidebar drawer (mobile) ----
+    (function () {
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('sidebar-overlay');
+        var openBtn = document.getElementById('sidebar-open-btn');
+        var closeBtn = document.getElementById('sidebar-close-btn');
+        if (!sidebar || !overlay) return;
+
+        function openSidebar() {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+        }
+        function closeSidebar() {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        }
+        if (openBtn) openBtn.addEventListener('click', openSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        overlay.addEventListener('click', closeSidebar);
+        sidebar.querySelectorAll('a').forEach(function (a) {
+            a.addEventListener('click', function () {
+                if (window.matchMedia('(max-width: 767px)').matches) closeSidebar();
+            });
+        });
+        window.addEventListener('resize', function () {
+            if (window.matchMedia('(min-width: 768px)').matches) overlay.classList.add('hidden');
+        });
+    })();
+
+    // ---- Profile dropdown ----
+    (function () {
+        var btn = document.getElementById('profile-menu-btn');
+        var drop = document.getElementById('profile-menu-dropdown');
+        if (!btn || !drop) return;
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            drop.classList.toggle('hidden');
+        });
+        document.addEventListener('click', function () { drop.classList.add('hidden'); });
     })();
 
     // ---- Global search (Cmd+K) ----
