@@ -80,6 +80,34 @@
             html.sidebar-collapsed #sidebar nav a { justify-content: center; }
             html.sidebar-collapsed #sidebar-collapse-btn svg { transform: rotate(180deg); }
         }
+        /* ===== Perbaikan mobile ===== */
+        /* Dropdown notifikasi & profil agar tidak overflow di layar kecil */
+        @media (max-width: 767px) {
+            #notif-dropdown, #global-search-results {
+                position: fixed !important;
+                left: 0.75rem !important;
+                right: 0.75rem !important;
+                top: 4rem !important;
+                width: auto !important;
+                max-width: none !important;
+            }
+            #profile-menu-dropdown {
+                position: fixed !important;
+                right: 0.75rem !important;
+                top: 4rem !important;
+                width: 14rem !important;
+            }
+        }
+        /* Tabel responsif: sembunyikan kolom kurang penting di layar kecil */
+        @media (max-width: 639px) {
+            .table-col-email, .table-col-identifier, .table-col-tanggal, .table-col-jenis,
+            .table-col-pembimbing2, .table-col-penguji, .table-col-target { display: none; }
+        }
+        @media (max-width: 1023px) {
+            .table-col-penguji { display: none; }
+        }
+        /* Tombol aksi header agar tidak overflow */
+        .header-actions { flex-wrap: wrap; }
     </style>
     @yield('head')
 </head>
@@ -279,7 +307,7 @@
             </div>
         </header>
 
-        <main class="px-8 py-8">
+        <main class="px-4 py-6 md:px-8 md:py-8">
             @if (session('success'))
                 <div class="mb-5 px-4 py-3 rounded-xl bg-status-success/10 text-status-success border border-status-success/20 flex items-start gap-2.5">
                     <span class="mt-0.5">✅</span><span>{{ session('success') }}</span>
