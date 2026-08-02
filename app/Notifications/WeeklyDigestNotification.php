@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Notifications;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
+
+class WeeklyDigestNotification extends Notification
+{
+    use Queueable;
+
+    public function __construct(
+        public string $message,
+        public ?string $url = null,
+        public string $subject = 'Digest Mingguan Thesis Logbook Management',
+    ) {
+    }
+
+    public function via(object $notifiable): array
+    {
+        return ['database', 'mail'];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        return (new MailMessage)
+            ->subject($this->subject)
+            ->greeting('Halo '.$notifiable->name)
+            ->line('Ringkasan bimbingan mingguan Anda:')
+            ->line($this->message)
+            ->when($this->url, fn ($m) => $m->action('Buka Aplikasi', $this->url));
+    }
+
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'message' => $this->message,
+            'url' => $this->url,
+        ];
+    }
+}

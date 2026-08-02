@@ -1,0 +1,58 @@
+/* ============================================================
+   Thesis Logbook Management — Brand tokens (dark surface)
+   Dipakai sebagai alternatif / pendamping Tailwind CDN.
+   Token warna sejalan dengan tailwind.config.js.
+   ============================================================ */
+
+:root[data-theme="dark"] {
+  --bg-base: #0B0F14;
+  --bg-surface: #151B23;
+  --bg-surface-hover: #1C232D;
+  --border: #242C38;
+
+  --text-primary: #E6EDF3;
+  --text-secondary: #8B98A5;
+
+  --brand-primary: #10B981;
+  --brand-primary-hover: #0EA271;
+
+  --accent-blue: #3B82F6;
+  --accent-amber: #F59E0B;
+  --accent-red: #EF4444;
+  --accent-purple: #7C6EF6;
+
+  --radius-card: 12px;
+  --spacing-card: 20px;
+
+  --font-sans: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+/* ---------- Badge status semantik ---------- */
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.badge-success { background: rgba(16,185,129,0.15); color: #10B981; }
+.badge-pending { background: rgba(245,158,11,0.15); color: #F59E0B; }
+.badge-danger  { background: rgba(239,68,68,0.15); color: #EF4444; }
+.badge-info    { background: rgba(59,130,246,0.15); color: #3B82F6; }
+.badge-neutral { background: rgba(139,152,165,0.15); color: #8B98A5; }
+
+/* ---------- Tombol hierarchy ---------- */
+.btn-primary { background: var(--brand-primary); color: #fff; }
+.btn-primary:hover { background: var(--brand-primary-hover); }
+.btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text-primary); }
+.btn-warning { background: var(--accent-amber); color: #1a1300; }
+.btn-danger { background: var(--accent-red); color: #fff; }
+
+/* ---------- Layout primitif ---------- */
+.radius-card { border-radius: var(--radius-card); }
+
+/* Font default aplikasi (Inter / Plus Jakarta Sans) */
+body {
+  font-family: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
+}

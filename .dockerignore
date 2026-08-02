@@ -1,0 +1,15 @@
+.git
+.gitignore
+.env
+.vscode
+.idea
+node_modules
+storage/logs/*.log
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+database/database.sqlite
+vendor
+nginx
+docker-compose.yml
+*.md

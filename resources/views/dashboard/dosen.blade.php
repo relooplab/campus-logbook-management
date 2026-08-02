@@ -1,0 +1,229 @@
+@extends('layouts.app')
+
+@section('title', 'Dashboard Dosen')
+
+@section('content')
+<div class="space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <h1 class="font-heading font-bold text-2xl text-text-primary">Dashboard Dosen</h1>
+            <p class="text-sm text-text-secondary mt-0.5">Ringkasan aktivitas bimbingan &amp; pengujian TA</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Semua Entri</a>
+            <a href="{{ route('notifications.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Notifikasi</a>
+        </div>
+    </div>
+
+    {{-- ===== Stat cards (icon-circle + delta badge) ===== --}}
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-5">
+        <a href="{{ route('dashboard.dosen.mahasiswa-list') }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-accent-blue/30 transition-colors">
+            <div class="flex items-center justify-between mb-3">
+                <span class="icon-circle w-10 h-10 bg-accent-blue/15 text-accent-blue">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </span>
+            </div>
+            <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['total_bimbingan'] }}</div>
+            <div class="text-sm text-text-secondary mt-1">Total Bimbingan</div>
+        </a>
+        <a href="{{ route('dashboard.dosen.mahasiswa-list', ['status' => 'aktif']) }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-accent-teal/30 transition-colors">
+            <div class="flex items-center justify-between mb-3">
+                <span class="icon-circle w-10 h-10 bg-accent-teal/15 text-accent-teal">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </span>
+            </div>
+            <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['sedang_progres'] }}</div>
+            <div class="text-sm text-text-secondary mt-1">Sedang Progres</div>
+        </a>
+        <a href="{{ route('dashboard.dosen.mahasiswa-list', ['status' => 'tamat']) }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-accent-orange/30 transition-colors">
+            <div class="flex items-center justify-between mb-3">
+                <span class="icon-circle w-10 h-10 bg-accent-orange/15 text-accent-orange">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M22 10l-6-6M2 10l10-5 10 5-10 5-10-5zM6 12v5c0 1.657 2.686 3 6 3s6-1.343 6-3v-5"/></svg>
+                </span>
+            </div>
+            <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['tamat'] }}</div>
+            <div class="text-sm text-text-secondary mt-1">Tamat</div>
+        </a>
+        <a href="{{ route('dashboard.dosen.sidang-list') }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-accent-purple/30 transition-colors">
+            <div class="flex items-center justify-between mb-3">
+                <span class="icon-circle w-10 h-10 bg-accent-purple/15 text-accent-purple">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </span>
+            </div>
+            <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['diuji'] }}</div>
+            <div class="text-sm text-text-secondary mt-1">Diuji</div>
+        </a>
+        <a href="{{ route('quick-review.index') }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-status-danger/30 transition-colors">
+            <div class="flex items-center justify-between mb-3">
+                <span class="icon-circle w-10 h-10 bg-status-danger/15 text-status-danger">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                </span>
+                @if ($stats['menunggu_review'] > 0)
+                    <span class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-status-danger/15 text-status-danger">↑ {{ $stats['menunggu_review'] }} review</span>
+                @endif
+            </div>
+            <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['menunggu_review'] }}</div>
+            <div class="text-sm text-text-secondary mt-1">Menunggu Review</div>
+        </a>
+    </div>
+
+    {{-- ===== Antrean Review ===== --}}
+    <div class="card p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="font-heading font-semibold text-text-primary">Antrean Review ({{ $queue->count() }})</h2>
+            <a href="{{ route('quick-review.index') }}" class="text-sm text-accent-blue hover:underline">Quick Review →</a>
+        </div>
+        @if ($queue->isEmpty())
+            <p class="text-sm text-text-secondary">Tidak ada entri menunggu review.</p>
+        @else
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-text-secondary border-b border-border">
+                            <th class="py-2 pr-4 font-medium">Mahasiswa</th>
+                            <th class="py-2 pr-4 font-medium">Jenis</th>
+                            <th class="py-2 pr-4 font-medium">Topik/Sesi</th>
+                            <th class="py-2 pr-4 font-medium">Dikirim</th>
+                            <th class="py-2 font-medium">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($queue as $entry)
+                            <tr class="border-b border-border last:border-0">
+                                <td class="py-2.5 pr-4">{{ $entry->mahasiswaTa?->mahasiswa?->name }}</td>
+                                <td class="py-2.5 pr-4">{{ ucfirst($entry->jenis) }}</td>
+                                <td class="py-2.5 pr-4">{{ $entry->jenis === 'revisi' ? 'Revisi' : 'Sesi ' . $entry->sesi_ke . ' — ' . $entry->topik }}</td>
+                                <td class="py-2.5 pr-4 text-text-secondary">{{ $entry->submitted_at?->format('d M H:i') }}</td>
+                                <td class="py-2.5">
+                                    <a href="{{ route('logbook.show', $entry) }}" class="px-3 py-1.5 rounded-xl bg-accent-blue text-white text-xs font-medium hover:opacity-90">Review</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+
+    {{-- ===== Health Indicator Bimbingan ===== --}}
+    <div class="card p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 class="font-heading font-semibold text-text-primary">Health Indicator Bimbingan</h2>
+            <div class="flex flex-wrap gap-2 text-sm">
+                <button type="button" data-health="all" class="health-filter px-3 py-1.5 rounded-full bg-bg-panel text-text-secondary hover:bg-bg-hover">Semua ({{ $perTa->count() }})</button>
+                <button type="button" data-health="green" class="health-filter px-3 py-1.5 rounded-full bg-bg-panel text-text-secondary hover:bg-bg-hover"><span class="inline-block w-2 h-2 rounded-full bg-status-success mr-1"></span>{{ $healthCount['green'] }} Sehat</button>
+                <button type="button" data-health="yellow" class="health-filter px-3 py-1.5 rounded-full bg-bg-panel text-text-secondary hover:bg-bg-hover"><span class="inline-block w-2 h-2 rounded-full bg-status-pending mr-1"></span>{{ $healthCount['yellow'] }} Perhatian</button>
+                <button type="button" data-health="red" class="health-filter px-3 py-1.5 rounded-full bg-bg-panel text-text-secondary hover:bg-bg-hover"><span class="inline-block w-2 h-2 rounded-full bg-status-danger mr-1"></span>{{ $healthCount['red'] }} Kritis</button>
+            </div>
+        </div>
+        @if ($perTa->isEmpty())
+            <p class="text-sm text-text-secondary">Belum ada mahasiswa bimbingan.</p>
+        @else
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-text-secondary border-b border-border">
+                            <th class="py-2 pr-4 font-medium">Mahasiswa</th>
+                            <th class="py-2 pr-4 font-medium">Fase</th>
+                            <th class="py-2 pr-4 font-medium">Terakhir</th>
+                            <th class="py-2 pr-4 font-medium">Progres</th>
+                            <th class="py-2 font-medium">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($perTa as $row)
+                            @php $ta = $row['ta']; @endphp
+                            <tr class="border-b border-border health-row last:border-0" data-health="{{ $row['regularity'] }}">
+                                <td class="py-2.5 pr-4">
+                                    <span class="inline-block w-3 h-3 rounded-full mr-2 align-middle {{ $row['regularity'] === 'green' ? 'bg-status-success' : '' }} {{ $row['regularity'] === 'yellow' ? 'bg-status-pending' : '' }} {{ $row['regularity'] === 'red' ? 'bg-status-danger' : '' }}" title="{{ $row['tooltip'] }}"></span>
+                                    <a href="{{ route('mahasiswa-ta.show', $ta) }}" class="font-medium hover:text-accent-blue align-middle">{{ $ta->mahasiswa?->name }}</a>
+                                    @if ($row['warned'])
+                                        <span class="text-status-danger align-middle" title="Sudah dikirim email inaktivitas">⚠</span>
+                                    @endif
+                                </td>
+                                <td class="py-2.5 pr-4 text-xs">{{ $ta->faseLabel() }}</td>
+                                <td class="py-2.5 pr-4 text-xs text-text-secondary">
+                                    {{ $row['tooltip'] }}
+                                    @if ($row['menunggu']) · <span class="text-status-pending">{{ $row['menunggu'] }} menunggu</span> @endif
+                                </td>
+                                <td class="py-2.5 pr-4">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs w-16">{{ $row['approved'] }}/{{ $row['target'] }}</span>
+                                        <div class="h-2 w-24 rounded-full bg-bg-panel overflow-hidden">
+                                            <div class="progress-bar h-full rounded-full {{ $row['percent'] >= 100 ? 'bg-accent-teal' : 'bg-accent-blue' }}" style="width:{{ min(100, $row['percent']) }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-2.5">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium {{ $row['regularity'] === 'green' ? 'bg-status-success/10 text-status-success' : '' }} {{ $row['regularity'] === 'yellow' ? 'bg-status-pending/10 text-status-pending' : '' }} {{ $row['regularity'] === 'red' ? 'bg-status-danger/10 text-status-danger' : '' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $row['regularity'] === 'green' ? 'bg-status-success' : '' }} {{ $row['regularity'] === 'yellow' ? 'bg-status-pending' : '' }} {{ $row['regularity'] === 'red' ? 'bg-status-danger' : '' }}"></span>
+                                        {{ ucfirst($row['regularity']) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+
+    {{-- ===== Manajemen Fase TA ===== --}}
+    <div class="card p-6">
+        <h2 class="font-heading font-semibold text-text-primary mb-4">Manajemen Fase TA ({{ $tas->count() }})</h2>
+        @if ($tas->isEmpty())
+            <p class="text-sm text-text-secondary">Belum ada mahasiswa bimbingan.</p>
+        @else
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-text-secondary border-b border-border">
+                            <th class="py-2 pr-4 font-medium">Mahasiswa</th>
+                            <th class="py-2 pr-4 font-medium">Judul TA</th>
+                            <th class="py-2 pr-4 font-medium">Pembimbing</th>
+                            <th class="py-2 font-medium">Fase</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($tas as $ta)
+                            <tr class="border-b border-border last:border-0">
+                                <td class="py-2.5 pr-4"><a href="{{ route('mahasiswa-ta.show', $ta) }}" class="hover:text-accent-blue">{{ $ta->mahasiswa?->name }}</a> <span class="text-text-secondary text-xs">({{ $ta->mahasiswa?->identifier }})</span></td>
+                                <td class="py-2.5 pr-4">{{ $ta->judul_ta }}</td>
+                                <td class="py-2.5 pr-4 text-xs">{{ $ta->pembimbing1?->name }}{{ $ta->pembimbing2 ? ' & ' . $ta->pembimbing2->name : '' }}</td>
+                                <td class="py-2.5">
+                                    <form method="POST" action="{{ route('mahasiswa-ta.fase', $ta) }}" class="flex items-center gap-1">
+                                        @csrf
+                                        <select name="fase" class="rounded-lg border border-border bg-bg-surface px-2 py-1.5 text-xs">
+                                            @foreach (\App\Models\MahasiswaTa::FASES as $key => $label)
+                                                <option value="{{ $key }}" @selected($ta->fase === $key)>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button class="px-3 py-1.5 rounded-lg bg-accent-blue text-white text-xs font-medium hover:opacity-90">Update</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script>
+    // Filter health indicator (klik counter untuk filter baris).
+    var filters = document.querySelectorAll('.health-filter');
+    var rows = document.querySelectorAll('.health-row');
+    filters.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var f = btn.dataset.health;
+            filters.forEach(function (b) { b.classList.remove('bg-accent-blue', 'text-white'); b.classList.add('bg-bg-panel', 'text-text-secondary'); });
+            btn.classList.remove('bg-bg-panel', 'text-text-secondary');
+            btn.classList.add('bg-accent-blue', 'text-white');
+            rows.forEach(function (r) { r.style.display = (f === 'all' || r.dataset.health === f) ? '' : 'none'; });
+        });
+    });
+</script>
+@endsection

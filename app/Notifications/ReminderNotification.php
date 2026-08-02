@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Notifications;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
+
+class ReminderNotification extends Notification
+{
+    use Queueable;
+
+    public function __construct(
+        public string $message,
+        public ?string $url = null,
+    ) {
+    }
+
+    public function via(object $notifiable): array
+    {
+        return ['database', 'mail'];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        return (new MailMessage)
+            ->subject('Reminder Thesis Logbook Management')
+            ->greeting('Halo '.$notifiable->name)
+            ->line($this->message)
+            ->when($this->url, fn ($m) => $m->action('Buka Aplikasi', $this->url));
+    }
+
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'message' => $this->message,
+            'url' => $this->url,
+        ];
+    }
+}

@@ -1,0 +1,140 @@
+/* ============================================================
+   Thesis Logbook Management — Brand & UI tokens (light + dark)
+   Diadopsi dari brand guideline. Token memakai CSS variables
+   RGB-channel sehingga mendukung opacity modifier Tailwind
+   (mis. bg-accent-blue/15) dan otomatis switch light/dark
+   lewat selector `.dark` (strategy 'class').
+   ============================================================ */
+
+:root {
+  /* ----- Light mode (default, diadopsi dari referensi) ----- */
+  --bg-base: 255 255 255;
+  --bg-surface: 255 255 255;
+  --bg-panel: 243 243 245;
+  --bg-hover: 245 246 248;
+  --border: 236 236 239;
+
+  --text-primary: 20 21 26;
+  --text-secondary: 139 141 152;
+
+  --accent-blue: 79 125 243;
+  --accent-orange: 247 164 103;
+  --accent-teal: 20 184 166;
+  --accent-purple: 167 139 250;
+
+  --status-success: 34 197 94;
+  --status-danger: 239 68 68;
+  --status-info: 96 165 250;
+  --status-pending: 245 158 11;
+
+  --card-inverse: 18 20 28;
+
+  --radius-card: 20px;
+  --spacing-card: 24px;
+  --sidebar-width: 240px;
+
+  --font-sans: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+}
+
+.dark {
+  /* ----- Dark mode (diturunkan, satu keluarga hue) ----- */
+  --bg-base: 11 13 18;
+  --bg-surface: 20 22 29;
+  --bg-panel: 26 29 36;
+  --bg-hover: 30 33 42;
+  --border: 36 39 48;
+
+  --text-primary: 244 245 247;
+  --text-secondary: 144 150 163;
+
+  --accent-blue: 108 147 255;
+  --accent-orange: 253 186 130;
+  --accent-teal: 45 212 191;
+  --accent-purple: 185 166 252;
+
+  --status-success: 52 211 153;
+  --status-danger: 248 113 113;
+  --status-info: 96 165 250;
+  --status-pending: 251 191 36;
+
+  --card-inverse: 244 245 247;
+}
+
+/* ============================================================
+   Primitive utilities (komponen dari guideline)
+   ============================================================ */
+
+body {
+  font-family: var(--font-sans);
+}
+
+.font-heading,
+h1, h2, h3, .font-heading {
+  font-family: var(--font-heading);
+}
+
+/* ---------- Badge status: dot + label ---------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: currentColor;
+}
+.badge-success { background: rgba(var(--status-success) / 0.14); color: rgb(var(--status-success)); }
+.badge-pending { background: rgba(var(--status-pending) / 0.14); color: rgb(var(--status-pending)); }
+.badge-danger  { background: rgba(var(--status-danger) / 0.14); color: rgb(var(--status-danger)); }
+.badge-info    { background: rgba(var(--status-info) / 0.14); color: rgb(var(--status-info)); }
+.badge-neutral { background: rgba(var(--text-secondary) / 0.14); color: rgb(var(--text-secondary)); }
+
+/* ---------- Tombol hierarchy ---------- */
+.btn-primary {
+  background: rgb(var(--accent-blue));
+  color: #fff;
+  transition: opacity .15s ease;
+}
+.btn-primary:hover { opacity: .9; }
+.btn-secondary {
+  background: rgb(var(--bg-hover));
+  color: rgb(var(--text-primary));
+  border: 1px solid transparent;
+}
+.btn-secondary:hover { background: rgb(var(--border)); }
+.btn-ghost {
+  background: transparent;
+  color: rgb(var(--text-primary));
+  border: 1px solid rgb(var(--border));
+}
+.btn-ghost:hover { background: rgb(var(--bg-hover)); }
+.btn-danger { background: rgb(var(--status-danger)); color: #fff; }
+.btn-danger:hover { opacity: .9; }
+.btn-warning { background: rgb(var(--status-pending)); color: #1a1300; }
+
+/* ---------- Card (rounded generous) ---------- */
+.card {
+  background: rgb(var(--bg-surface));
+  border: 1px solid rgb(var(--border));
+  border-radius: var(--radius-card);
+}
+
+/* ---------- Icon-circle ---------- */
+.icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
