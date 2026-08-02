@@ -18,13 +18,13 @@
 
     @if (!$ta)
         <div class="px-4 py-6 rounded-card bg-status-pending/10 text-status-pending border border-status-pending/20 flex items-start gap-2.5">
-            <span class="mt-0.5">ℹ️</span><span>Data Tugas Akhir Anda belum diinput oleh admin.</span>
+            <span class="material-symbols-outlined icon-md mt-0.5">info</span><span>Data Tugas Akhir Anda belum diinput oleh admin.</span>
         </div>
     @else
         {{-- ===== Pengumuman belum dibaca (banner) ===== --}}
         @foreach ($unreadAnnouncements as $a)
             <div class="px-4 py-3.5 rounded-card border border-status-pending/30 bg-status-pending/10 flex items-start gap-3">
-                <span class="text-xl">📢</span>
+                <span class="material-symbols-outlined icon-lg">campaign</span>
                 <div class="flex-1 text-sm">
                     <p class="font-semibold text-text-primary">{{ $a->title }}</p>
                     <p class="text-text-secondary">{{ $a->body }}</p>

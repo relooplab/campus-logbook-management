@@ -8,7 +8,7 @@
             <div class="flex flex-col items-center text-center w-24">
                 @if ($state === "done")
                     <span
-                        class="h-8 w-8 rounded-full bg-accent-teal text-white flex items-center justify-center shadow">✓</span>
+                        class="h-8 w-8 rounded-full bg-accent-teal text-white flex items-center justify-center shadow"><span class="material-symbols-outlined icon-sm">check</span></span>
                 @elseif ($state === "active")
                     <span
                         class="h-8 w-8 rounded-full bg-accent-blue text-white flex items-center justify-center shadow animate-pulse">●</span>

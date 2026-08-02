@@ -30,9 +30,9 @@
         </div>
         <div class="flex flex-wrap gap-2"> <a
                 href="{{ route("chat.start", ["user" => $mahasiswaTa->user_id, "ta" => $mahasiswaTa->id]) }}"
-                class="px-3 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm">💬 Chat</a> <a
+                class="px-3 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">chat</span> Chat</a> <a
                 href="{{ route("workspace.index", $mahasiswaTa) }}"
-                class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">📁
+                class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">folder</span>
                 Workspace</a>
             @if ($mahasiswaTa->pembimbing1 || $mahasiswaTa->pembimbing2)
                 <a href="{{ route("logbook.export.pdf", $mahasiswaTa) }}"

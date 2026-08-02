@@ -14,12 +14,12 @@
     if (!function_exists('tlIcon')) {
         function tlIcon($status) {
             return match ($status) {
-                "approved" => "✅",
-                "revisi" => "🔄",
-                "submitted" => "📤",
-                "comment" => "💬",
-                "future" => "○",
-                default => "●",
+                "approved" => "check_circle",
+                "revisi" => "autorenew",
+                "submitted" => "outbox",
+                "comment" => "chat",
+                "future" => "radio_button_unchecked",
+                default => "fiber_manual_record",
             };
         }
     }
@@ -47,7 +47,7 @@
                 <div class="flex items-center gap-2"> <span
                         class="text-xs text-text-secondary font-medium w-16">{{ $item["date"] }}</span> <span
                         class="text-sm">{{ $item["label"] }}</span> <span
-                        class="text-xs">{{ tlIcon($item["status"]) }}</span>
+                        class="material-symbols-outlined icon-sm">{{ tlIcon($item["status"]) }}</span>
                     @if ($item["type"] !== "future")
                         <span class="inline-block w-2.5 h-2.5 rounded-full ml-auto {{ healthDot($reg) }}"
                             title="Health bimbingan: {{ ucfirst($reg) }} — {{ $regTip }}"></span>

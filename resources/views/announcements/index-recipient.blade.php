@@ -10,7 +10,7 @@
                 class="bg-bg-surface rounded-xl border {{ $unread ? "border-status-pending/30" : "border-border" }} p-5">
                 <div class="flex items-start justify-between gap-3">
                     <div>
-                        <p class="font-semibold">📢 {{ $a->title }}</p>
+                        <p class="font-semibold"><span class="material-symbols-outlined icon-sm">campaign</span> {{ $a->title }}</p>
                         <p class="text-sm text-text-primary mt-1">{{ $a->body }}</p>
                         <p class="text-xs text-text-secondary mt-2">Dari: {{ $a->sender?->name }} ·
                             {{ $a->created_at?->diffForHumans() }}</p>
@@ -18,7 +18,7 @@
                     @if ($unread)
                         <span class="badge badge-pending flex-shrink-0">Belum dibaca</span>
                     @else
-                        <span class="badge badge-success flex-shrink-0">Dibaca ✓</span>
+                        <span class="badge badge-success flex-shrink-0">Dibaca <span class="material-symbols-outlined icon-sm align-text-bottom">check</span></span>
                     @endif
                 </div>
                 @if ($unread)

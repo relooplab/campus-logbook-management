@@ -10,7 +10,7 @@
 
 <div class="space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="text-xl font-bold">📁 Workspace — {{ $mahasiswaTa->mahasiswa?->name ?? "Mahasiswa" }}</h1> <a
+        <h1 class="text-xl font-bold"><span class="material-symbols-outlined icon-md align-text-bottom">folder</span> Workspace — {{ $mahasiswaTa->mahasiswa?->name ?? "Mahasiswa" }}</h1> <a
             href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">←
             Dashboard</a>
     </div> {{-- Filter --}} <form method="GET" action="{{ route("workspace.index", $mahasiswaTa) }}"
@@ -48,7 +48,7 @@
                 </div>
                 <div id="drop-zone"
                     class="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-accent-teal/30 transition">
-                    <p class="text-3xl">📂</p>
+                    <p><span class="material-symbols-outlined" style="font-size:48px">folder_open</span></p>
                     <p class="text-sm mt-2">Tarik &amp; lepas file di sini, atau <span
                             class="text-accent-teal font-medium">klik untuk memilih</span></p>
                     <p class="text-xs text-text-secondary mt-1">PDF, DOC, DOCX, XLS, XLSX — maks 25 MB, hingga 5 file
@@ -99,19 +99,19 @@
                                     @if ($file->isPdf())
                                         <a href="{{ route("workspace.preview", $file) }}" target="_blank"
                                             title="Preview"
-                                            class="p-1.5 rounded hover:bg-bg-hover hover:bg-bg-hover">👁</a>
+                                            class="p-1.5 rounded hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm">visibility</span></a>
                                     @endif <a href="{{ route("workspace.download", $file) }}"
-                                        title="Download" class="p-1.5 rounded hover:bg-bg-hover hover:bg-bg-hover">⬇</a>
+                                        title="Download" class="p-1.5 rounded hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm">download</span></a>
                                     @if ($canModify)
                                         <button type="button" data-edit="{{ $file->id }}"
                                             data-bab="{{ $file->bab }}" data-desc="{{ $file->description }}"
                                             class="edit-btn p-1.5 rounded hover:bg-bg-hover hover:bg-bg-hover"
-                                            title="Edit">✏</button>
+                                            title="Edit"><span class="material-symbols-outlined icon-sm">edit</span></button>
                                         <form method="POST" action="{{ route("workspace.destroy", $file) }}"
                                             onsubmit="return confirm('Hapus file ini?')"> @csrf @method("DELETE")
                                             <button
                                                 class="p-1.5 rounded hover:bg-status-danger/10 hover:bg-status-danger/15 text-status-danger"
-                                                title="Hapus">🗑</button>
+                                                title="Hapus"><span class="material-symbols-outlined icon-sm">delete</span></button>
                                         </form>
                                     @endif
                                 </div>

@@ -8,9 +8,9 @@
             href="{{ route("dashboard.dosen.mahasiswa-list") }}"
             class="px-3 py-1.5 rounded-md text-sm {{ $status === "all" ? "bg-accent-teal text-white" : "bg-bg-hover" }}">Semua</a>
         <a href="{{ route("dashboard.dosen.mahasiswa-list", ["status" => "aktif"]) }}"
-            class="px-3 py-1.5 rounded-md text-sm {{ $status === "aktif" ? "bg-accent-blue text-white" : "bg-accent-blue/10 text-accent-blue" }}">🔵
+            class="px-3 py-1.5 rounded-md text-sm {{ $status === "aktif" ? "bg-accent-blue text-white" : "bg-accent-blue/10 text-accent-blue" }}"><span class="material-symbols-outlined icon-sm align-text-bottom">fiber_manual_record</span>
             Aktif</a> <a href="{{ route("dashboard.dosen.mahasiswa-list", ["status" => "tamat"]) }}"
-            class="px-3 py-1.5 rounded-md text-sm {{ $status === "tamat" ? "bg-accent-teal text-white" : "bg-accent-teal/10 text-accent-teal" }}">🎓
+            class="px-3 py-1.5 rounded-md text-sm {{ $status === "tamat" ? "bg-accent-teal text-white" : "bg-accent-teal/10 text-accent-teal" }}"><span class="material-symbols-outlined icon-sm align-text-bottom">school</span>
             Tamat</a>
     </div>
     @if ($list->isEmpty())

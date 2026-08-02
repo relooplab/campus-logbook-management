@@ -12,7 +12,7 @@
             <div class="bg-bg-surface rounded-xl border border-border p-5">
                 <div class="flex items-start justify-between gap-3">
                     <div>
-                        <p class="font-semibold">📢 {{ $a->title }}</p>
+                        <p class="font-semibold"><span class="material-symbols-outlined icon-sm">campaign</span> {{ $a->title }}</p>
                         <p class="text-sm text-text-secondary mt-1">{{ $a->body }}</p>
                         <p class="text-xs text-text-secondary mt-2">{{ $a->created_at?->diffForHumans() }}</p>
                     </div>

@@ -36,7 +36,7 @@
         </div> {{-- Lampiran draft --}} <div> <label class="block text-sm font-medium mb-1">Lampiran Draft
                 (PDF)</label>
             @if ($logbook->lampiran_path)
-                <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-bg-panel"> <span class="text-xl">📄</span>
+                <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-bg-panel"> <span class="material-symbols-outlined icon-lg">description</span>
                     <div class="flex-1">
                         <p class="text-sm font-medium">
                             {{ $logbook->lampiran_original_name ?: basename($logbook->lampiran_path) }}</p>
@@ -64,7 +64,7 @@
             @enderror
     </div> {{-- Catatan perbaikan (untuk revisi) --}} @if ($logbook->catatan_perbaikan_path)
         <div> <label class="block text-sm font-medium mb-1">Catatan Perbaikan (PDF)</label>
-            <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-bg-panel"> <span class="text-xl">📄</span>
+            <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-bg-panel"> <span class="material-symbols-outlined icon-lg">description</span>
                 <div class="flex-1">
                     <p class="text-sm font-medium">
                         {{ $logbook->catatan_original_name ?: basename($logbook->catatan_perbaikan_path) }}</p>
@@ -82,7 +82,7 @@
     @endif
     <div
         class="px-3 py-2 rounded-md bg-status-pending/10 border border-status-pending/20 text-xs text-status-pending">
-        ⚠ Mengganti atau menghapus file akan mengarsipkan versi lama dan tidak bisa dikembalikan. Komentar PDF
+        <span class="material-symbols-outlined icon-sm align-text-bottom">warning</span> Mengganti atau menghapus file akan mengarsipkan versi lama dan tidak bisa dikembalikan. Komentar PDF
         pada file yang diganti akan otomatis ditandai selesai (resolve). </div>
     <div class="flex flex-wrap gap-2 pt-2"> <button type="submit"
             class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm font-semibold">Simpan</button>

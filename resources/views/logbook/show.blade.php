@@ -62,7 +62,7 @@
         </div>
     </div> {{-- Action items / todo dari feedback (mahasiswa) --}} @if ($owner && $logbook->feedback_dosen)
         <div class="bg-bg-surface rounded-xl border border-border p-5">
-            <h2 class="font-semibold mb-3">📋 Action Items (dari feedback)</h2>
+            <h2 class="font-semibold mb-3"><span class="material-symbols-outlined icon-sm align-text-bottom">assignment</span> Action Items (dari feedback)</h2>
             <form class="mb-2 flex gap-2" onsubmit="addActionItem(event)"> @csrf <input type="text" id="ai-input"
                     placeholder="Tulis tugas kecil... (mis. 'Perbaiki sitasi BAB 2')"
                     class="flex-1 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <button
@@ -74,7 +74,7 @@
                             onchange="toggleActionItem(this)" class="rounded bg-bg-surface"> <span
                             class="text-sm {{ $item->is_done ? "line-through text-text-secondary" : "" }}">{{ $item->text }}</span>
                         <button type="button" data-id="{{ $item->id }}" onclick="delActionItem(this)"
-                            class="ml-auto text-status-danger text-xs">✕</button>
+                            class="ml-auto text-status-danger"><span class="material-symbols-outlined icon-sm">close</span></button>
                     </div>
                 @endforeach
             </div>
@@ -158,10 +158,10 @@
             cb.nextElementSibling.classList.toggle('line-through', d.is_done);
             cb.nextElementSibling.classList.toggle('text-text-secondary', d.is_done);
             if (d.all_done) {
-                document.getElementById('ai-done-msg').textContent =
-                    '✅ Semua tugas selesai — siap kirim revisi ke pembimbing!';
+                document.getElementById('ai-done-msg').innerHTML =
+                    '<span class="material-symbols-outlined icon-sm align-text-bottom">check_circle</span> Semua tugas selesai — siap kirim revisi ke pembimbing!';
             } else {
-                document.getElementById('ai-done-msg').textContent = '';
+                document.getElementById('ai-done-msg').innerHTML = '';
             }
         });
     }

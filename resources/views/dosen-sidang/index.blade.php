@@ -3,7 +3,7 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Riwayat Menguji ({{ $sidangs->count() }})</h1>
         <div class="flex flex-wrap gap-2"> <a href="{{ route("dashboard.dosen.sidang-list.export") }}"
-                class="px-3 py-2 rounded-md bg-accent-blue hover:bg-accent-blue/90 text-white text-sm">⬇ Export PDF</a>
+                class="px-3 py-2 rounded-md bg-accent-blue hover:bg-accent-blue/90 text-white text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">download</span> Export PDF</a>
             <a href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">←
                 Dashboard</a> </div>
     </div> {{-- Form catat sidang (dosen, bisa mahasiswa orang lain) --}} <div class="bg-bg-surface rounded-xl border border-border p-5">

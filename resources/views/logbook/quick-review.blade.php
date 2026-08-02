@@ -2,7 +2,7 @@
 @if (!$entry)
     <div class="max-w-2xl mx-auto text-center py-16">
         <h1 class="text-2xl font-bold">Quick Review</h1>
-        <p class="text-text-secondary mt-2">Tidak ada entri menunggu review. 🎉</p> <a href="{{ route("dashboard") }}"
+        <p class="text-text-secondary mt-2">Tidak ada entri menunggu review. <span class="material-symbols-outlined icon-sm align-text-bottom">celebration</span></p> <a href="{{ route("dashboard") }}"
             class="inline-block mt-4 px-4 py-2 rounded-md bg-accent-teal text-white text-sm">← Dashboard</a>
     </div>
 @else
@@ -64,19 +64,19 @@
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold">Feedback</h2> <button type="button" id="build-feedback"
                     class="text-xs px-3 py-1.5 rounded-md bg-accent-blue/10 text-accent-blue">
-                    ⚡ Jadikan dari Komentar </button>
+                    <span class="material-symbols-outlined icon-sm align-text-bottom">bolt</span> Jadikan dari Komentar </button>
             </div>
             <textarea name="feedback_dosen" id="feedback_dosen" rows="4" required
                 placeholder="Tulis feedback / alasan revisi..."
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">{{ $feedbackDraft ?? "" }}</textarea>
             <div class="flex flex-wrap gap-2">
                 <form method="POST" action="{{ route("quick-review.approve-next", $entry) }}"> @csrf <button type="submit"
-                        class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm font-semibold">✓
+                        class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">check</span>
                         Setujui & Next</button> </form>
                 <form method="POST" action="{{ route("quick-review.revisi-next", $entry) }}" id="revisi-form">
                     @csrf <input type="hidden" name="feedback_dosen" id="revisi-feedback">
                     <button type="submit" id="revisi-btn"
-                        class="px-4 py-2 rounded-md bg-status-pending hover:bg-status-pending/90 text-white text-sm font-semibold">🔄
+                        class="px-4 py-2 rounded-md bg-status-pending hover:bg-status-pending/90 text-white text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">autorenew</span>
                         Revisi & Next</button>
                 </form> <a href="{{ route("logbook.show", $entry) }}"
                     class="px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Detail

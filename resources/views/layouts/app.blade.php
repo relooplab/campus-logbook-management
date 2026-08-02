@@ -153,9 +153,9 @@
 
         @auth
             @if (\App\Support\Feature::isInstitution())
-                <div class="px-6 pb-2 sidebar-label"><span class="text-[10px] px-2 py-0.5 rounded-full bg-accent-purple/15 text-accent-purple">🏛️ Institusi</span></div>
+                <div class="px-6 pb-2 sidebar-label"><span class="text-[10px] px-2 py-0.5 rounded-full bg-accent-purple/15 text-accent-purple"><span class="material-symbols-outlined icon-sm align-text-bottom" style="font-size:12px">apartment</span> Institusi</span></div>
             @else
-                <div class="px-6 pb-2 sidebar-label"><span class="text-[10px] px-2 py-0.5 rounded-full bg-accent-teal/15 text-accent-teal">🌱 Individual</span></div>
+                <div class="px-6 pb-2 sidebar-label"><span class="text-[10px] px-2 py-0.5 rounded-full bg-accent-teal/15 text-accent-teal"><span class="material-symbols-outlined icon-sm align-text-bottom" style="font-size:12px">eco</span> Individual</span></div>
             @endif
         @endauth
 
@@ -315,12 +315,12 @@
         <main class="px-4 py-6 md:px-8 md:py-8">
             @if (session('success'))
                 <div class="mb-5 px-4 py-3 rounded-xl bg-status-success/10 text-status-success border border-status-success/20 flex items-start gap-2.5">
-                    <span class="mt-0.5">✅</span><span>{{ session('success') }}</span>
+                    <span class="material-symbols-outlined icon-md mt-0.5">check_circle</span><span>{{ session('success') }}</span>
                 </div>
             @endif
             @if (session('error'))
                 <div class="mb-5 px-4 py-3 rounded-xl bg-status-danger/10 text-status-danger border border-status-danger/20 flex items-start gap-2.5">
-                    <span class="mt-0.5">⚠️</span><span>{{ session('error') }}</span>
+                    <span class="material-symbols-outlined icon-md mt-0.5">warning</span><span>{{ session('error') }}</span>
                 </div>
             @endif
 
@@ -528,13 +528,13 @@
                         if (d.entries.length) {
                             html += '<p class="px-4 py-1 text-[10px] uppercase tracking-wider text-text-secondary">Entri</p>';
                             d.entries.forEach(function (e) {
-                                html += '<a href="' + esc(e.url) + '" class="block px-4 py-2 hover:bg-bg-hover text-sm text-text-primary">📄 ' + esc(e.title) + ' <span class="text-xs text-text-secondary">' + esc(e.student || '') + '</span></a>';
+                                html += '<a href="' + esc(e.url) + '" class="block px-4 py-2 hover:bg-bg-hover text-sm text-text-primary"><span class="material-symbols-outlined icon-sm align-text-bottom">description</span> ' + esc(e.title) + ' <span class="text-xs text-text-secondary">' + esc(e.student || '') + '</span></a>';
                             });
                         }
                         if (d.files.length) {
                             html += '<p class="px-4 py-1 text-[10px] uppercase tracking-wider text-text-secondary">File Workspace</p>';
                             d.files.forEach(function (f) {
-                                html += '<a href="' + esc(f.url) + '" class="block px-4 py-2 hover:bg-bg-hover text-sm text-text-primary">📁 ' + esc(f.name) + '</a>';
+                                html += '<a href="' + esc(f.url) + '" class="block px-4 py-2 hover:bg-bg-hover text-sm text-text-primary"><span class="material-symbols-outlined icon-sm align-text-bottom">folder</span> ' + esc(f.name) + '</a>';
                             });
                         }
                         if (!html) html = '<div class="px-4 py-3 text-text-secondary">Tidak ada hasil.</div>';

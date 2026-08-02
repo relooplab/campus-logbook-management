@@ -20,7 +20,7 @@
         <a href="{{ route('dashboard.dosen.mahasiswa-list') }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-accent-blue/30 transition-colors">
             <div class="flex items-center justify-between mb-3">
                 <span class="icon-circle w-10 h-10 bg-accent-blue/15 text-accent-blue">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span class="material-symbols-outlined icon-md">group</span>
                 </span>
             </div>
             <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['total_bimbingan'] }}</div>
@@ -29,7 +29,7 @@
         <a href="{{ route('dashboard.dosen.mahasiswa-list', ['status' => 'aktif']) }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-accent-teal/30 transition-colors">
             <div class="flex items-center justify-between mb-3">
                 <span class="icon-circle w-10 h-10 bg-accent-teal/15 text-accent-teal">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span class="material-symbols-outlined icon-md">bolt</span>
                 </span>
             </div>
             <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['sedang_progres'] }}</div>
@@ -38,7 +38,7 @@
         <a href="{{ route('dashboard.dosen.mahasiswa-list', ['status' => 'tamat']) }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-accent-orange/30 transition-colors">
             <div class="flex items-center justify-between mb-3">
                 <span class="icon-circle w-10 h-10 bg-accent-orange/15 text-accent-orange">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M22 10l-6-6M2 10l10-5 10 5-10 5-10-5zM6 12v5c0 1.657 2.686 3 6 3s6-1.343 6-3v-5"/></svg>
+                    <span class="material-symbols-outlined icon-md">school</span>
                 </span>
             </div>
             <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['tamat'] }}</div>
@@ -47,7 +47,7 @@
         <a href="{{ route('dashboard.dosen.sidang-list') }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-accent-purple/30 transition-colors">
             <div class="flex items-center justify-between mb-3">
                 <span class="icon-circle w-10 h-10 bg-accent-purple/15 text-accent-purple">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <span class="material-symbols-outlined icon-md">verified</span>
                 </span>
             </div>
             <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['diuji'] }}</div>
@@ -56,7 +56,7 @@
         <a href="{{ route('quick-review.index') }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-status-danger/30 transition-colors">
             <div class="flex items-center justify-between mb-3">
                 <span class="icon-circle w-10 h-10 bg-status-danger/15 text-status-danger">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    <span class="material-symbols-outlined icon-md">fact_check</span>
                 </span>
                 @if ($stats['menunggu_review'] > 0)
                     <span class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-status-danger/15 text-status-danger">↑ {{ $stats['menunggu_review'] }} review</span>
@@ -138,7 +138,7 @@
                                     <span class="inline-block w-3 h-3 rounded-full mr-2 align-middle {{ $row['regularity'] === 'green' ? 'bg-status-success' : '' }} {{ $row['regularity'] === 'yellow' ? 'bg-status-pending' : '' }} {{ $row['regularity'] === 'red' ? 'bg-status-danger' : '' }}" title="{{ $row['tooltip'] }}"></span>
                                     <a href="{{ route('mahasiswa-ta.show', $ta) }}" class="font-medium hover:text-accent-blue align-middle">{{ $ta->mahasiswa?->name }}</a>
                                     @if ($row['warned'])
-                                        <span class="text-status-danger align-middle" title="Sudah dikirim email inaktivitas">⚠</span>
+                                        <span class="material-symbols-outlined icon-sm text-status-danger align-middle" title="Sudah dikirim email inaktivitas">warning</span>
                                     @endif
                                 </td>
                                 <td class="py-2.5 pr-4 text-xs">{{ $ta->faseLabel() }}</td>
