@@ -7,7 +7,7 @@ name: logbook-ta
 x-app-env: &app-env
   APP_ENV: production
   APP_DEBUG: "false"
-  APP_URL: "http://<server-ip>:8280"
+  APP_URL: "${APP_URL:-http://localhost:8280}"
   # Fix #3: APP_KEY wajib di-set (di-generate manual) agar Laravel boot.
   APP_KEY: "${APP_KEY:-}"
   # Fix #5: DB_CONNECTION di-set di semua worker (default sqlite jika kosong).
