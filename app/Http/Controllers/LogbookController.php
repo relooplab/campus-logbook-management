@@ -448,15 +448,17 @@ class LogbookController extends Controller
                 // Konversi ke koordinat PDF (origin bottom-left).
                 $pdfY1 = $size['height'] - $yTop - $h;
 
-                // Warna: amber = belum resolve, hijau = sudah resolve.
-                $color = $c->is_resolved ? [16, 185, 129] : [245, 158, 11];
+                // Warna outline: merah untuk anotasi (tanpa isian agar tulisan tidak tertutup).
+                // Tetap menampilkan label nomor + nama + isi komentar di atas area.
+                $color = $c->is_resolved ? [16, 185, 129] : [220, 38, 38];
                 [$r, $g, $b] = $color;
                 $pdf->SetDrawColor($r, $g, $b);
                 $pdf->SetFillColor($r, $g, $b);
-                $pdf->SetLineWidth(0.8);
-                $pdf->Rect($x1, $pdfY1, $w, $h, 'DF');
+                $pdf->SetLineWidth(0.6);
+                // 'D' = Draw outline only (tidak mengisi), agar tulisan PDF di dalamnya tetap terlihat.
+                $pdf->Rect($x1, $pdfY1, $w, $h, 'D');
 
-                // Label nomor komentar di pojok atas kotak.
+                // Label nomor komentar di pojok atas kotak (background solid).
                 $pdf->SetFillColor($r, $g, $b);
                 $pdf->SetTextColor(255, 255, 255);
                 $pdf->SetFont('Helvetica', 'B', 8);
@@ -464,34 +466,37 @@ class LogbookController extends Controller
                 $pdf->Rect($x1, $labelY, 10, 6, 'F');
                 $pdf->Text($x1 + 1, $labelY + 4.5, (string) $i);
 
-                // Nama pemberi komentar + isi komentar di dalam kotak.
+                // Teks komentar ditaruh di LUAR kotak (di atasnya) dengan background putih
+                // semi-transparan, sehingga tidak menutupi tulisan PDF di dalam area.
                 $name = trim((string) ($c->user?->name ?? ''));
                 $text = trim((string) $c->comment);
-                $maxW = $w - 12;
-                $lineH = 3;
-                $tx = $x1 + 4;
-                // Mulai dari atas kotak (koordinat PDF, descending).
-                $ty = $pdfY1 + $h - 8;
-                $maxLines = max(1, (int) floor(($h - 10) / $lineH));
+                $lineH = 3.2;
+
+                // Tentukan posisi: tepat di atas kotak anotasi.
+                // Lebar area teks = lebar area anotasi, tetapi maksimal 120 pt.
+                $textW = min(120, max(40, $w));
+                $tx = $x1;
+                // Posisi Y (PDF, origin bottom-left): di atas label nomor.
+                $ty = $labelY + 2;
 
                 $pdf->SetFont('Helvetica', 'B', 7);
                 $pdf->SetFontSize(7);
                 $pdf->SetTextColor($r, $g, $b);
+                $lines = [];
                 if ($name !== '') {
-                    $pdf->Text($tx, $ty, mb_substr($name, 0, 30));
-                    $ty -= $lineH;
-                    $maxLines--;
+                    $lines[] = mb_substr($name, 0, 40);
                 }
-
-                $pdf->SetFont('Helvetica', '', 7);
-                $pdf->SetFontSize(7);
-                if ($text !== '' && $maxW > 20 && $maxLines > 0) {
-                    $lines = $this->wrapPdfText($text, $maxW, function ($s) use ($pdf) {
+                if ($text !== '') {
+                    $wrapped = $this->wrapPdfText($text, $textW, function ($s) use ($pdf) {
                         return $pdf->GetStringWidth($s);
                     });
-                    foreach (array_slice($lines, 0, $maxLines) as $idx => $ln) {
-                        $pdf->Text($tx, $ty - ($idx * $lineH), $ln);
+                    foreach ($wrapped as $ln) {
+                        $lines[] = $ln;
+                        if (count($lines) >= 3) break;
                     }
+                }
+                foreach ($lines as $idx => $ln) {
+                    $pdf->Text($tx, $ty + ($idx * $lineH), $ln);
                 }
             }
         }
@@ -524,7 +529,7 @@ class LogbookController extends Controller
         // Legend warna
         $pdf->SetFont('Helvetica', '', 9);
         $pdf->Cell(0, 7, 'Legenda:', 0, 1);
-        $this->legendRow($pdf, [245, 158, 11], 'Belum selesai (belum resolve)');
+        $this->legendRow($pdf, [220, 38, 38], 'Area anotasi (outline merah)');
         $this->legendRow($pdf, [16, 185, 129], 'Sudah selesai (resolve)');
 
         $pdf->Ln(6);

@@ -261,6 +261,9 @@ function PdfViewerApp() {
   }, [annotations]);
 
   // ---------------------------------------------------------------- build feedback
+  // Tombol "Jadikan Feedback": kompilasi komentar yang belum resolve, simpan ke
+  // session (di server), lalu langsung pindah ke Quick Review agar feedback
+  // sudah terisi otomatis di textarea.
   async function buildFeedback() {
     if (!buildFeedbackUrl) return;
     try {
@@ -270,8 +273,7 @@ function PdfViewerApp() {
         credentials: 'same-origin',
       });
       if (!res.ok) {
-        const text = await res.text();
-        console.error('Build feedback error:', res.status, text);
+        console.error('Build feedback error:', res.status);
         alert('Gagal membuat feedback. Status: ' + res.status + '. Pastikan Anda adalah pembimbing entri ini.');
         return;
       }
@@ -280,7 +282,8 @@ function PdfViewerApp() {
         alert('Tidak ada komentar yang belum resolve.');
         return;
       }
-      alert('Feedback ter-compile dari komentar. Buka Quick Review untuk menerapkan.');
+      // Berhasil: langsung pindah ke halaman Quick Review.
+      window.location.href = '/quick-review';
     } catch (e) {
       console.error(e);
       alert('Gagal membuat feedback. Periksa koneksi atau coba lagi.');

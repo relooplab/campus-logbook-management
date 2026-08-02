@@ -15,6 +15,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet" />
+    <style>
+        .material-symbols-outlined,
+        .material-symbols-rounded {
+            user-select: none;
+            vertical-align: middle;
+            font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-sm { font-size: 16px; }
+        .icon-md { font-size: 20px; }
+        .icon-lg { font-size: 24px; }
+        #sidebar-collapse-icon { transition: transform .2s ease; }
+        html.sidebar-collapsed #sidebar-collapse-icon { transform: rotate(180deg); }
+    </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -71,14 +86,12 @@
     <link rel="stylesheet" href="{{ asset('css/global.css') }}">
     <style>
         .progress-bar { transition: width .4s ease; }
-        #sidebar-collapse-btn svg { transition: transform .2s ease; }
         @media (min-width: 768px) {
             html.sidebar-collapsed #sidebar { width: 5rem; }
             html.sidebar-collapsed #main-wrap { margin-left: 5rem; }
             html.sidebar-collapsed .sidebar-label { display: none; }
             html.sidebar-collapsed #sidebar-logo-row { justify-content: center; padding-left: 1rem; padding-right: 1rem; }
             html.sidebar-collapsed #sidebar nav a { justify-content: center; }
-            html.sidebar-collapsed #sidebar-collapse-btn svg { transform: rotate(180deg); }
         }
         /* ===== Perbaikan mobile ===== */
         /* Dropdown notifikasi & profil agar tidak overflow di layar kecil */
@@ -121,14 +134,12 @@
     {{-- ===================== SIDEBAR (fixed kiri) ===================== --}}
     <aside id="sidebar" class="fixed left-0 top-0 h-screen w-60 bg-bg-base border-r border-border flex flex-col z-40 -translate-x-full md:translate-x-0 transition-all duration-200 ease-in-out">
         <button type="button" id="sidebar-collapse-btn" title="Ciutkan/lebarkan sidebar" class="hidden md:flex absolute -right-3 top-20 w-6 h-6 rounded-full bg-bg-surface border border-border items-center justify-center text-text-secondary hover:text-text-primary hover:bg-bg-hover z-50">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            <span id="sidebar-collapse-icon" class="material-symbols-outlined icon-sm">chevron_left</span>
         </button>
         <div id="sidebar-logo-row" class="px-6 py-6 flex items-center gap-2.5">
             <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 min-w-0 flex-1">
                 <span class="w-9 h-9 rounded-xl bg-accent-blue/15 text-accent-blue flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-                    </svg>
+                    <span class="material-symbols-outlined icon-md">assignment_turned_in</span>
                 </span>
                 <div class="min-w-0 sidebar-label">
                     <div class="font-heading font-extrabold text-lg text-text-primary leading-tight truncate">Thesis Logbook</div>
@@ -136,7 +147,7 @@
                 </div>
             </a>
             <button type="button" id="sidebar-close-btn" title="Tutup menu" class="md:hidden p-1.5 rounded-lg text-text-secondary hover:bg-bg-hover hover:text-text-primary">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <span class="material-symbols-outlined icon-md">close</span>
             </button>
         </div>
 
@@ -150,52 +161,52 @@
 
         <nav class="flex-1 px-3 space-y-1 overflow-y-auto mt-1">
             <a href="{{ route('dashboard') }}" class="{{ $navLink }} {{ $active('dashboard') }}">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>
+                <span class="material-symbols-outlined icon-md">dashboard</span>
                 <span class="sidebar-label">Dashboard</span>
             </a>
             <a href="{{ route('chat.index') }}" class="{{ $navLink }} {{ $active('chat.*') }}">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="material-symbols-outlined icon-md">chat</span>
                 <span class="sidebar-label">Chat</span>
             </a>
             <a href="{{ route('announcements.index') }}" class="{{ $navLink }} {{ $active('announcements.*') }}">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+                <span class="material-symbols-outlined icon-md">campaign</span>
                 <span class="sidebar-label">Pengumuman</span>
             </a>
 
             @if ($user->isMahasiswa())
                 <a href="{{ route('logbook.index') }}" class="{{ $navLink }} {{ $active('logbook.index') }}">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6M9 8h6M7 4h10a2 2 0 012 2v14l-3-2-3 2-3-2-3 2V6a2 2 0 012-2z"/></svg>
+                    <span class="material-symbols-outlined icon-md">menu_book</span>
                     <span class="sidebar-label">Logbook</span>
                 </a>
                 <a href="{{ route('logbook.create') }}" class="{{ $navLink }} {{ $active('logbook.create') }}">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    <span class="material-symbols-outlined icon-md">add</span>
                     <span class="sidebar-label">Tambah Logbook</span>
                 </a>
                 <a href="{{ route('logbook.create-revisi') }}" class="{{ $navLink }} {{ $active('logbook.create-revisi') }}">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    <span class="material-symbols-outlined icon-md">edit_note</span>
                     <span class="sidebar-label">Entri Revisi</span>
                 </a>
                 @if ($user->mahasiswaTa)
                     <a href="{{ route('workspace.index', $user->mahasiswaTa) }}" class="{{ $navLink }} {{ $active('workspace.*') }}">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        <span class="material-symbols-outlined icon-md">workspaces</span>
                         <span class="sidebar-label">Workspace</span>
                     </a>
                 @endif
             @elseif ($user->isDosen())
                 <a href="{{ route('logbook.index') }}" class="{{ $navLink }} {{ $active('logbook.index') }}">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586l-9 9V21H8v-5.414l-5-5V4z"/></svg>
+                    <span class="material-symbols-outlined icon-md">inbox</span>
                     <span class="sidebar-label">Antrean Review</span>
                 </a>
                 <a href="{{ route('quick-review.index') }}" class="{{ $navLink }} {{ $active('quick-review.*') }}">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span class="material-symbols-outlined icon-md">bolt</span>
                     <span class="sidebar-label">Quick Review</span>
                 </a>
                 <a href="{{ route('dosen-sidang.index') }}" class="{{ $navLink }} {{ $active('dosen-sidang.*') }}">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <span class="material-symbols-outlined icon-md">verified</span>
                     <span class="sidebar-label">Catat Sidang</span>
                 </a>
                 <a href="{{ route('approval.index') }}" class="{{ $navLink }} {{ $active('approval.*') }}">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="material-symbols-outlined icon-md">check_circle</span>
                     <span class="sidebar-label">Persetujuan</span>
                 </a>
             @endif
@@ -203,23 +214,23 @@
             @if ($user->isAdmin())
                 <div class="px-3 pt-4 pb-1 text-[10px] uppercase tracking-widest text-text-secondary sidebar-label">Administrasi</div>
                 <a href="{{ route('admin.users') }}" class="{{ $navLink }} {{ $active('admin.users') }}">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span class="material-symbols-outlined icon-md">group</span>
                     <span class="sidebar-label">Pengguna</span>
                 </a>
                 <a href="{{ route('admin.tas') }}" class="{{ $navLink }} {{ $active('admin.tas') }}">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    <span class="material-symbols-outlined icon-md">archive</span>
                     <span class="sidebar-label">Data TA</span>
                 </a>
                 <a href="{{ route('admin.entries') }}" class="{{ $navLink }} {{ $active('admin.entries') }}">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    <span class="material-symbols-outlined icon-md">fact_check</span>
                     <span class="sidebar-label">Review Massal</span>
                 </a>
                 <a href="{{ route('admin.sidangs') }}" class="{{ $navLink }} {{ $active('admin.sidangs') }}">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l9-4 9 4v6a9 9 0 01-18 0V6zm9 4v6m-3-3h6"/></svg>
+                    <span class="material-symbols-outlined icon-md">gavel</span>
                     <span class="sidebar-label">Sidang</span>
                 </a>
                 <a href="{{ route('admin.institution') }}" class="{{ $navLink }} {{ $active('admin.institution') }}">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    <span class="material-symbols-outlined icon-md">apartment</span>
                     <span class="sidebar-label">Institusi</span>
                 </a>
             @endif
@@ -228,7 +239,7 @@
         <div id="sidebar-footer" class="p-4 border-t border-border">
             <a href="{{ config('app.jadwal_url') }}" target="_blank" rel="noopener"
                class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">
-                📅 <span class="sidebar-label">Jadwal Bimbingan</span>
+                <span class="material-symbols-outlined icon-sm">calendar_month</span> <span class="sidebar-label">Jadwal Bimbingan</span>
             </a>
         </div>
     </aside>
@@ -238,7 +249,7 @@
         <header class="sticky top-0 z-30 h-16 bg-bg-base/80 backdrop-blur border-b border-border px-4 md:px-8 flex items-center justify-between">
             <div class="flex items-center gap-3 min-w-0">
                 <button type="button" id="sidebar-open-btn" title="Buka menu" class="md:hidden p-2 rounded-xl bg-bg-hover text-text-secondary hover:text-text-primary shrink-0">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    <span class="material-symbols-outlined icon-md">menu</span>
                 </button>
                 @yield('header-title', '')
             </div>
@@ -251,9 +262,7 @@
 
                 <div class="relative">
                     <button type="button" id="notif-bell" class="relative p-2.5 rounded-xl bg-bg-hover text-text-secondary hover:text-text-primary" title="Notifikasi">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                        </svg>
+                        <span class="material-symbols-outlined icon-md">notifications</span>
                         <span id="notif-badge" class="hidden absolute -top-1 -right-1 h-4 w-4 rounded-full bg-status-danger text-[10px] text-white items-center justify-center"></span>
                     </button>
                     <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-bg-surface rounded-card shadow-lg border border-border overflow-hidden">
@@ -268,12 +277,8 @@
                 </div>
 
                 <button type="button" id="theme-toggle" class="p-2.5 rounded-xl bg-bg-hover text-text-secondary hover:text-text-primary" title="Mode gelap/terang">
-                    <svg id="icon-dark" class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
-                    </svg>
-                    <svg id="icon-light" class="h-5 w-5 hidden" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/>
-                    </svg>
+                    <span id="icon-dark" class="material-symbols-outlined icon-md">dark_mode</span>
+                    <span id="icon-light" class="material-symbols-outlined icon-md hidden">light_mode</span>
                 </button>
 
                 @auth
@@ -291,13 +296,13 @@
                             <div class="text-xs text-text-secondary truncate">{{ $user->email }}</div>
                         </div>
                         <a href="{{ route('profile.index') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-hover hover:text-text-primary">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            <span class="material-symbols-outlined icon-sm">person</span>
                             Profil
                         </a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-hover hover:text-status-danger">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                <span class="material-symbols-outlined icon-sm">logout</span>
                                 Keluar
                             </button>
                         </form>
