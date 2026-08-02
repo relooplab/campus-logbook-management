@@ -154,17 +154,16 @@ class MahasiswaTa extends Model
     }
 
     /**
-     * Health indicator bimbingan: green/yellow/red.
-     * Dihitung dari interval antar tanggal_bimbingan (bukan sekadar terakhir).
-     * Di-cache 6 jam per mahasiswa untuk hindari N+1.
-     */
-    /**
      * Data regularity (di-cache 6 jam) — satu sumber untuk status & tooltip.
+     * Status health bimbingan:
+     *   - green  : selisih hari sejak bimbingan terakhir < 15 hari
+     *   - yellow : 15 <= selisih <= 40 hari
+     *   - red    : selisih > 40 hari (atau belum pernah bimbingan)
      */
     public function regularityData(): array
     {
         return Cache::remember(
-            "regularity:{$this->id}",
+            "regularity2:{$this->id}",
             now()->addHours(6),
             fn () => $this->computeRegularity()
         );
@@ -225,11 +224,12 @@ class MahasiswaTa extends Model
             }
         }
 
-        $status = 'red';
-        if ($daysSinceLast <= $avgInterval * 1.5) {
+        if ($daysSinceLast < 15) {
             $status = 'green';
-        } elseif ($daysSinceLast <= $avgInterval * 2.5) {
+        } elseif ($daysSinceLast <= 40) {
             $status = 'yellow';
+        } else {
+            $status = 'red';
         }
 
         return [

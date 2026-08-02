@@ -124,23 +124,9 @@
         /* Tombol aksi header agar tidak overflow */
         .header-actions { flex-wrap: wrap; }
 
-        /* ===== Jam odometer (rolling) di sidebar ===== */
-        .odometer { display: inline-flex; align-items: center; gap: 2px; line-height: 1; }
-        .odom-digit {
-            width: 1em; height: 1.25em; overflow: hidden; position: relative;
-            background: rgb(var(--bg-panel)); border: 1px solid rgb(var(--border));
-            border-radius: 6px;
+        @media (min-width: 768px) {
+            html.sidebar-collapsed #sidebar-clock { display: none; }
         }
-        .odom-spool {
-            display: flex; flex-direction: column; will-change: transform;
-            transition: transform .35s cubic-bezier(.4,0,.2,1);
-        }
-        .odom-spool span {
-            height: 1.25em; display: flex; align-items: center; justify-content: center;
-            font-weight: 700; line-height: 1;
-        }
-        .odom-sep { color: rgb(var(--text-secondary)); font-weight: 600; padding: 0 1px; }
-        html.sidebar-collapsed #sidebar-clock { display: none; }
     </style>
     @yield('head')
 </head>
@@ -157,9 +143,8 @@
             <span id="sidebar-collapse-icon" class="material-symbols-outlined icon-sm">chevron_left</span>
         </button>
         <div id="sidebar-logo-row" class="px-4 py-5 flex flex-col items-center gap-2.5">
-            <div id="sidebar-clock" class="sidebar-label flex flex-col items-center gap-1.5">
-                <div class="odometer font-heading text-2xl font-bold text-text-primary" id="clock-odometer" title="Waktu saat ini"></div>
-                <div class="text-xs text-text-secondary" id="clock-date">Memuat…</div>
+            <div id="sidebar-clock" class="sidebar-label flex flex-col items-center">
+                <div class="text-sm font-semibold text-text-primary" id="clock-date">Memuat…</div>
             </div>
             <button type="button" id="sidebar-close-btn" title="Tutup menu" class="md:hidden p-1.5 rounded-lg text-text-secondary hover:bg-bg-hover hover:text-text-primary">
                 <span class="material-symbols-outlined icon-md">close</span>
@@ -422,7 +407,7 @@
 
         function esc(s) {
             return String(s || '').replace(/[&<>"']/g, function (c) {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                return { '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#39;' }[c];
             });
         }
         function load() {
@@ -525,7 +510,7 @@
         var timer;
         function esc(s) {
             return String(s || '').replace(/[&<>"']/g, function (c) {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                return { '&': '&', '<': '<', '>': '>', '"': '"', "'": '&#39;' }[c];
             });
         }
         document.addEventListener('keydown', function (e) {
@@ -573,104 +558,27 @@
     })();
 </script>
 <script>
-    // ---- Jam odometer (rolling/odometer) + tanggal di sidebar ----
+    // ---- Tanggal di sidebar (format DD/Bulan/YYYY) ----
     (function () {
-        var clock = document.getElementById('clock-odometer');
         var dateEl = document.getElementById('clock-date');
-        if (!clock) return;
-
+        if (!dateEl) return;
         var MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-        var spools = [];
-        var prev = [-1, -1, -1, -1, -1, -1];
-        var firstRun = true;
 
-        function buildSpools() {
-            clock.textContent = '';
-            spools = [];
-            for (var g = 0; g < 3; g++) { // jam : menit : detik
-                if (g > 0) {
-                    var sep = document.createElement('span');
-                    sep.className = 'odom-sep';
-                    sep.textContent = ':';
-                    clock.appendChild(sep);
-                }
-                for (var d = 0; d < 2; d++) {
-                    var digit = document.createElement('div');
-                    digit.className = 'odom-digit';
-                    var spool = document.createElement('div');
-                    spool.className = 'odom-spool';
-                    // 0..9 lalu duplikat 0 di index 10 untuk transisi 9 -> 0
-                    for (var n = 0; n <= 10; n++) {
-                        var s = document.createElement('span');
-                        s.textContent = n % 10;
-                        spool.appendChild(s);
-                    }
-                    digit.appendChild(spool);
-                    clock.appendChild(digit);
-                    spools.push(spool);
-                }
-            }
+        function format(date) {
+            var dd = String(date.getDate()).padStart(2, '0');
+            return dd + '/' + MONTHS[date.getMonth()] + '/' + date.getFullYear();
         }
 
-        function setSpool(spool, val, animate) {
-            spool.style.transition = animate ? '' : 'none';
-            spool.style.transform = 'translateY(-' + (val * 100) + '%)';
-        }
-
-        // Jepret spool kembali ke index 0 (tanpa animasi) setelah gulir lewat duplikat "0"
-        function snapSpool(spool) {
-            spool.style.transition = 'none';
-            spool.style.transform = 'translateY(0)';
-            void spool.offsetHeight; // paksa reflow agar transisi berikutnya mulai dari posisi baru
-        }
-
-        function tick() {
+        dateEl.textContent = format(new Date());
+        // Perbarui sekali sehari (cek tiap 60 detik, ganti hanya jika harinya berubah)
+        var last = new Date().toDateString();
+        setInterval(function () {
             var now = new Date();
-            var h = now.getHours();
-            var m = now.getMinutes();
-            var s = now.getSeconds();
-            var vals = [
-                Math.floor(h / 10), h % 10,
-                Math.floor(m / 10), m % 10,
-                Math.floor(s / 10), s % 10
-            ];
-
-            if (dateEl) {
-                var dd = String(now.getDate()).padStart(2, '0');
-                dateEl.textContent = dd + '/' + MONTHS[now.getMonth()] + '/' + now.getFullYear();
+            if (now.toDateString() !== last) {
+                last = now.toDateString();
+                dateEl.textContent = format(now);
             }
-
-            for (var i = 0; i < 6; i++) {
-                if (vals[i] === prev[i]) continue;
-                var spool = spools[i];
-                var animate = !firstRun;
-                if (prev[i] === 9 && vals[i] === 0) {
-                    // Gulir lewat digit duplikat 0 (index 10), lalu jepret balik ke 0
-                    setSpool(spool, 10, animate);
-                    if (animate) {
-                        (function (sp) {
-                            setTimeout(function () { snapSpool(sp); }, 380);
-                        })(spool);
-                    } else {
-                        snapSpool(spool);
-                    }
-                } else {
-                    setSpool(spool, vals[i], animate);
-                }
-                prev[i] = vals[i];
-            }
-            firstRun = false;
-        }
-
-        buildSpools();
-        setSpool(spools[0], 0, false);
-        setSpool(spools[1], 0, false);
-        setSpool(spools[2], 0, false);
-        setSpool(spools[3], 0, false);
-        setSpool(spools[4], 0, false);
-        setSpool(spools[5], 0, false);
-        tick();
-        setInterval(tick, 1000);
+        }, 60000);
     })();
 </script>
 @yield('scripts')
