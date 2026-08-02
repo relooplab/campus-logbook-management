@@ -154,7 +154,11 @@ class LogbookEntry extends Model
 
         foreach ($recipients as $id) {
             if ($user = User::find($id)) {
-                $user->notify(new \App\Notifications\ActivityNotification($message, $url, $subject));
+                try {
+                    $user->notify(new \App\Notifications\ActivityNotification($message, $url, $subject));
+                } catch (\Throwable $e) {
+                    report($e);
+                }
             }
         }
     }
@@ -165,7 +169,11 @@ class LogbookEntry extends Model
     public function notifyDosen(string $message, ?string $url = null, string $subject = 'Entri Baru Menunggu Review'): void
     {
         if ($dosen = $this->reviewDosen()) {
-            $dosen->notify(new \App\Notifications\ActivityNotification($message, $url, $subject));
+            try {
+                $dosen->notify(new \App\Notifications\ActivityNotification($message, $url, $subject));
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
     }
 }

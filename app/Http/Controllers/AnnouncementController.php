@@ -86,11 +86,11 @@ class AnnouncementController extends Controller
         foreach ($recipients->unique() as $uid) {
             $announcement->recipients()->attach($uid);
             if ($u = User::find($uid)) {
-                $u->notify(new \App\Notifications\ActivityNotification(
+                $this->bestEffort(fn () => $u->notify(new \App\Notifications\ActivityNotification(
                     "📢 Pengumuman: {$announcement->title}",
                     route('announcements.index'),
                     'Pengumuman Baru',
-                ));
+                )));
             }
         }
 
@@ -139,11 +139,11 @@ class AnnouncementController extends Controller
             ->get();
 
         foreach ($unread as $u) {
-            $u->notify(new \App\Notifications\ActivityNotification(
+            $this->bestEffort(fn () => $u->notify(new \App\Notifications\ActivityNotification(
                 "📢 Pengingat: {$announcement->title}",
                 route('announcements.index'),
                 'Pengingat Pengumuman',
-            ));
+            )));
         }
 
         return back()->with('success', "Pengingat dikirim ke {$unread->count()} mahasiswa.");

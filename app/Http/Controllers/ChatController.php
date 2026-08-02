@@ -105,7 +105,7 @@ class ChatController extends Controller
         ]);
 
         $conversation->touch();
-        broadcast(new MessageSent($message, $conversation));
+        $this->bestEffort(fn () => broadcast(new MessageSent($message, $conversation)));
 
         return redirect()->route('chat.show', $conversation);
     }

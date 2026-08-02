@@ -55,7 +55,7 @@ class QuickReviewController extends Controller
             'reviewed_at' => now(),
         ]);
 
-        \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda telah disetujui.');
+        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda telah disetujui.'));
         $logbook->notifyParties('Entri '.($logbook->jenis === 'revisi' ? 'revisi' : 'logbook sesi '.$logbook->sesi_ke).' telah disetujui.', route('logbook.show', $logbook), 'Entri Disetujui');
         if ($owner = $logbook->mahasiswaTa?->mahasiswa) {
             app(\App\Services\AchievementService::class)->evaluateForUser($owner);
@@ -82,7 +82,7 @@ class QuickReviewController extends Controller
             'reviewed_at' => now(),
         ]);
 
-        \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda diminta revisi.');
+        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda diminta revisi.'));
         $logbook->notifyParties('Entri Anda diminta revisi: '.$validated['feedback_dosen'], route('logbook.show', $logbook), 'Permintaan Revisi');
 
         return redirect()->route('quick-review.index')

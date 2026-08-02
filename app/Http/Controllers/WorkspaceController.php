@@ -155,11 +155,11 @@ class WorkspaceController extends Controller
         // Mahasiswa upload -> beri tahu dosen pembimbing.
         foreach ([$mahasiswaTa->pembimbing1, $mahasiswaTa->pembimbing2] as $dosen) {
             if ($dosen && $dosen->id !== $uploader->id) {
-                $dosen->notify(new \App\Notifications\ActivityNotification(
+                $this->bestEffort(fn () => $dosen->notify(new \App\Notifications\ActivityNotification(
                     'Mahasiswa mengunggah file baru ke workspace.',
                     route('workspace.index', $mahasiswaTa),
                     'File Baru di Workspace',
-                ));
+                )));
             }
         }
     }

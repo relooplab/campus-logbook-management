@@ -1,31 +1,37 @@
 @php
-    function tlColor($status) {
-        return match ($status) {
-            "approved" => "bg-accent-teal",
-            "revisi" => "bg-status-pending",
-            "submitted" => "bg-accent-blue",
-            "comment" => "bg-accent-blue",
-            "future" => "bg-bg-hover",
-            default => "bg-bg-hover",
-        };
+    if (!function_exists('tlColor')) {
+        function tlColor($status) {
+            return match ($status) {
+                "approved" => "bg-accent-teal",
+                "revisi" => "bg-status-pending",
+                "submitted" => "bg-accent-blue",
+                "comment" => "bg-accent-blue",
+                "future" => "bg-bg-hover",
+                default => "bg-bg-hover",
+            };
+        }
     }
-    function tlIcon($status) {
-        return match ($status) {
-            "approved" => "✅",
-            "revisi" => "🔄",
-            "submitted" => "📤",
-            "comment" => "💬",
-            "future" => "○",
-            default => "●",
-        };
+    if (!function_exists('tlIcon')) {
+        function tlIcon($status) {
+            return match ($status) {
+                "approved" => "✅",
+                "revisi" => "🔄",
+                "submitted" => "📤",
+                "comment" => "💬",
+                "future" => "○",
+                default => "●",
+            };
+        }
     }
     // Dot health: green/yellow/red (sama dengan health indicator).
-    function healthDot($r) {
-        return match ($r) {
-            'green' => 'bg-status-success',
-            'yellow' => 'bg-status-pending',
-            default => 'bg-status-danger',
-        };
+    if (!function_exists('healthDot')) {
+        function healthDot($r) {
+            return match ($r) {
+                'green' => 'bg-status-success',
+                'yellow' => 'bg-status-pending',
+                default => 'bg-status-danger',
+            };
+        }
     }
     $reg = $regularity ?? 'red';
     $regTip = $regularityTooltip ?? '';

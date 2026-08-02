@@ -24,7 +24,7 @@
   --radius-card: 12px;
   --spacing-card: 20px;
 
-  --font-sans: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-sans: 'Roboto Mono', ui-monospace, monospace;
 }
 
 /* ---------- Badge status semantik ---------- */
@@ -52,7 +52,7 @@
 /* ---------- Layout primitif ---------- */
 .radius-card { border-radius: var(--radius-card); }
 
-/* Font default aplikasi (Inter / Plus Jakarta Sans) */
+/* Font default aplikasi (Roboto Mono) */
 body {
-  font-family: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: 'Roboto Mono', ui-monospace, monospace;
 }
