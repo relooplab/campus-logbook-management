@@ -63,13 +63,18 @@ services:
 
   # ----------------------------------------------------------------- nginx
   logbook-ta-nginx:
-    image: nginx:1.27-alpine
+    # Fix #7: konfigurasi vhost di-BAKE ke image (bukan bind-mount) agar
+    # stack dapat di-deploy dari Portainer (file stack tersimpan di filesystem
+    # container Portainer, bukan di host — bind-mount relatif akan gagal).
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    image: logbook-ta-nginx:latest
     container_name: logbook-ta-nginx
     restart: unless-stopped
     ports:
       - "8280:80"
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       # Fix #6: nginx kini punya akses ke folder public yang sama dgn app.
       - public_pp:/var/www/public:ro
     depends_on:
