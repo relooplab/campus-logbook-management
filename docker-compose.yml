@@ -53,6 +53,8 @@ services:
         condition: service_healthy
       logbook-ta-redis:
         condition: service_healthy
+      logbook-ta-mailpit:
+        condition: service_started
     volumes:
       - app_storage:/var/www/storage
       # Fix #6: shared public agar nginx bisa serve aset.
@@ -130,6 +132,8 @@ services:
     environment: *app-env
     depends_on:
       logbook-ta-app:
+        condition: service_started
+      logbook-ta-mailpit:
         condition: service_started
     volumes:
       - app_storage:/var/www/storage

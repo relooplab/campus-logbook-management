@@ -178,7 +178,7 @@ class AdminController extends Controller
 
         // Integrasi: jika sidang akhir & hasil lulus/lulus_revisi -> set status_ta tamat.
         if ($validated['jenis'] === \App\Models\Sidang::JENIS_SIDANG
-            && in_array($validated['hasil'], [\App\Models\Sidang::HASIL_LULUS, \App\Models\Sidang::HASIL_LULUS_REVISI], true)) {
+            && in_array($validated['hasil'] ?? null, [\App\Models\Sidang::HASIL_LULUS, \App\Models\Sidang::HASIL_LULUS_REVISI], true)) {
             MahasiswaTa::where('id', $validated['mahasiswa_ta_id'])
                 ->update(['status_ta' => MahasiswaTa::STATUS_TAMAT]);
         }

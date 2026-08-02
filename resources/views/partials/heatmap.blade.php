@@ -8,10 +8,12 @@
         $prevMonth = ($weekIdx > 0) ? \Carbon\Carbon::parse($heatmap[$weekIdx - 1][0]['date'])->month : $month;
         $header[$weekIdx] = ($weekIdx === 0 || $month !== $prevMonth) ? $months[$month - 1] : '';
     }
-    function heatColor($c) {
-        if ($c <= 0) return 'bg-bg-hover';
-        if ($c === 1) return 'bg-accent-teal/40';
-        return 'bg-accent-teal';
+    if (!function_exists('heatColor')) {
+        function heatColor($c) {
+            if ($c <= 0) return 'bg-bg-hover';
+            if ($c === 1) return 'bg-accent-teal/40';
+            return 'bg-accent-teal';
+        }
     }
 @endphp
 <div class="overflow-x-auto">

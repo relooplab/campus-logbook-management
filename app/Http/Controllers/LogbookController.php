@@ -77,7 +77,7 @@ class LogbookController extends Controller
         }
 
         if ($submit) {
-            \App\Events\EntryStatusChanged::dispatch($entry, 'Ada entri baru menunggu review.');
+            $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($entry, 'Ada entri baru menunggu review.'));
             $entry->notifyDosen(
                 'Entri logbook sesi '.$entry->sesi_ke.' baru dikirim oleh mahasiswa.',
                 route('logbook.show', $entry),
@@ -117,7 +117,7 @@ class LogbookController extends Controller
         ]);
 
         if ($submit) {
-            \App\Events\EntryStatusChanged::dispatch($entry, 'Ada entri revisi baru menunggu review.');
+            $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($entry, 'Ada entri revisi baru menunggu review.'));
             $entry->notifyDosen(
                 'Entri revisi baru dikirim oleh mahasiswa.',
                 route('logbook.show', $entry),
@@ -328,7 +328,7 @@ class LogbookController extends Controller
             'submitted_at' => now(),
         ]);
 
-        \App\Events\EntryStatusChanged::dispatch($logbook, 'Ada entri baru menunggu review.');
+        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Ada entri baru menunggu review.'));
         $logbook->notifyDosen(
             'Entri '.($logbook->jenis === 'revisi' ? 'revisi' : 'logbook sesi '.$logbook->sesi_ke).' baru dikirim oleh mahasiswa.',
             route('logbook.show', $logbook),
@@ -347,7 +347,7 @@ class LogbookController extends Controller
             'reviewed_at' => now(),
         ]);
 
-        \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda telah disetujui oleh pembimbing.');
+        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda telah disetujui oleh pembimbing.'));
         $logbook->notifyParties(
             'Entri '.($logbook->jenis === 'revisi' ? 'revisi' : 'logbook sesi '.$logbook->sesi_ke).' telah disetujui.',
             route('logbook.show', $logbook),
@@ -376,7 +376,7 @@ class LogbookController extends Controller
             'reviewed_at' => now(),
         ]);
 
-        \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda diminta revisi: '.$validated['feedback_dosen']);
+        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda diminta revisi: '.$validated['feedback_dosen']));
         $logbook->notifyParties(
             'Entri Anda diminta revisi: '.$validated['feedback_dosen'],
             route('logbook.show', $logbook),
@@ -716,7 +716,7 @@ class LogbookController extends Controller
 
         $logbook->comments()->save($comment);
 
-        \App\Events\PdfCommentCreated::dispatch($comment);
+        $this->bestEffort(fn () => \App\Events\PdfCommentCreated::dispatch($comment));
 
         // Notifikasi ke pihak terkait (kecuali penulis komentar sendiri).
         $recipients = [];
@@ -728,11 +728,11 @@ class LogbookController extends Controller
         }
         foreach (array_unique(array_filter($recipients)) as $id) {
             if ($id !== $request->user()->id && ($u = \App\Models\User::find($id))) {
-                $u->notify(new \App\Notifications\ActivityNotification(
+                $this->bestEffort(fn () => $u->notify(new \App\Notifications\ActivityNotification(
                     'Komentar baru pada PDF entri Anda: '.$comment->comment,
                     route('logbook.show', $logbook),
                     'Komentar PDF Baru',
-                ));
+                )));
             }
         }
 

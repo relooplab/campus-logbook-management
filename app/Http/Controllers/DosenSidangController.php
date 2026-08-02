@@ -68,7 +68,7 @@ class DosenSidangController extends Controller
             'penguji_id' => $user->id,
             'jenis' => $validated['jenis'],
             'tanggal' => $validated['tanggal'],
-            'hasil' => $validated['hasil'],
+            'hasil' => $validated['hasil'] ?? null,
             'supervisor_names' => $supervisors ?: null,
         ]);
 
