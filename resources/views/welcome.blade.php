@@ -935,7 +935,7 @@
                 z-index: 10
             }
 
-            .focus\:border-accent-blue/30:focus {
+            .focus\:border-brand/30:focus {
                 --tw-border-opacity: 1;
                 border-color: rgb(147 197 253 / var(--tw-border-opacity, 1))
             }

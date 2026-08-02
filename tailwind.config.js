@@ -26,11 +26,14 @@ module.exports = {
           primary: 'rgb(var(--text-primary) / <alpha-value>)',
           secondary: 'rgb(var(--text-secondary) / <alpha-value>)',
         },
-        accent: {
-          blue: 'rgb(var(--accent-blue) / <alpha-value>)',
-          orange: 'rgb(var(--accent-orange) / <alpha-value>)',
-          teal: 'rgb(var(--accent-teal) / <alpha-value>)',
-          purple: 'rgb(var(--accent-purple) / <alpha-value>)',
+        brand: {
+          DEFAULT: 'rgb(var(--brand) / <alpha-value>)',
+          hover: 'rgb(var(--brand-hover) / <alpha-value>)',
+          light: 'rgb(var(--brand-light) / <alpha-value>)',
+        },
+        sand: {
+          DEFAULT: 'rgb(var(--sand) / <alpha-value>)',
+          light: 'rgb(var(--sand-light) / <alpha-value>)',
         },
         status: {
           success: 'rgb(var(--status-success) / <alpha-value>)',
@@ -38,7 +41,6 @@ module.exports = {
           info: 'rgb(var(--status-info) / <alpha-value>)',
           pending: 'rgb(var(--status-pending) / <alpha-value>)',
         },
-        'card-inverse': 'rgb(var(--card-inverse) / <alpha-value>)',
       },
       borderRadius: {
         card: '20px',

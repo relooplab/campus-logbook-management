@@ -13,7 +13,7 @@
                 <a href="{{ route("chat.show", $c) }}"
                     class="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-bg-panel hover:bg-bg-hover/50">
                     <span
-                        class="h-10 w-10 rounded-full bg-accent-teal text-white flex items-center justify-center font-bold flex-shrink-0">
+                        class="h-10 w-10 rounded-full bg-brand text-white flex items-center justify-center font-bold flex-shrink-0">
                         @if ($c->other_user?->photoUrl())
                             <img src="{{ $c->other_user->photoUrl() }}" class="h-full w-full object-cover rounded-full"
                                 alt="">

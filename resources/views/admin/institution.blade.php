@@ -10,7 +10,7 @@
             class="space-y-4"> @csrf <div class="grid sm:grid-cols-2 gap-4">
                 <div> <label class="block text-sm font-medium mb-1">Nama Aplikasi</label> <input type="text"
                         name="app_name" value="{{ old("app_name", $institution->app_name) }}" required
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-accent-teal focus:outline-none">
+                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
                 </div>
                 <div> <label class="block text-sm font-medium mb-1">Nama Institusi</label> <input type="text"
                         name="institution_name" value="{{ old("institution_name", $institution->institution_name) }}"
@@ -49,7 +49,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-3 pt-2"> <button
-                    class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm font-semibold">Simpan</button>
+                    class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm font-semibold">Simpan</button>
             </div>
         </form>
     </div>

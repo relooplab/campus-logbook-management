@@ -8,12 +8,12 @@
             $locked = !$unlockedCodes->contains($code);
             $unlocked = $unlockedAchievements->firstWhere("code", $code);
         @endphp <div
-            class="flex flex-col items-center text-center rounded-lg p-2 {{ $locked ? "opacity-40 grayscale" : "bg-accent-teal/10 border border-accent-teal/20" }}"
+            class="flex flex-col items-center text-center rounded-lg p-2 {{ $locked ? "opacity-40 grayscale" : "bg-brand/10 border border-brand/20" }}"
             title="{{ $name }}: {{ $desc }}"> <span class="text-2xl">{{ $icon }}</span> <span
                 class="mt-1 text-[10px] font-medium leading-tight">{{ $name }}</span> <span
                 class="text-[9px] text-text-secondary">{{ $desc }}</span>
             @if (!$locked)
-                <span class="mt-1 text-[9px] text-accent-teal">Terbuka</span>
+                <span class="mt-1 text-[9px] text-brand">Terbuka</span>
             @else
                 <span class="mt-1 text-[9px] text-text-secondary">Terkunci</span>
             @endif

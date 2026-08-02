@@ -13,7 +13,7 @@
         </select> <select name="sort" class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
             <option value="latest" @selected(request("sort") === "latest")>Terbaru</option>
             <option value="name" @selected(request("sort") === "name")>Nama (A-Z)</option>
-        </select> <button class="w-full sm:w-auto px-3 py-2 rounded-md bg-accent-teal text-white text-sm">Cari</button> </form>
+        </select> <button class="w-full sm:w-auto px-3 py-2 rounded-md bg-brand text-white text-sm">Cari</button> </form>
     <div class="grid lg:grid-cols-3 gap-4">
         <div class="lg:col-span-2 bg-bg-surface rounded-xl border border-border overflow-x-auto">
             <table class="w-full text-sm">
@@ -40,7 +40,7 @@
                             </td>
                             <td class="py-3 px-4"> <button type="button" data-reset="{{ $u->id }}"
                                     data-name="{{ $u->name }}"
-                                    class="reset-btn text-accent-blue hover:underline text-xs mr-2">Reset PW</button>
+                                    class="reset-btn text-brand hover:underline text-xs mr-2">Reset PW</button>
                                 <form method="POST" action="{{ route("admin.users.destroy", $u) }}"
                                     onsubmit="return confirm('Hapus pengguna ini?')" class="inline"> @csrf
                                     @method("DELETE") <button
@@ -74,7 +74,7 @@
                         @endforeach
                     </div>
                 </div> <button
-                    class="w-full px-3 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm">Simpan</button>
+                    class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Simpan</button>
             </form>
         </div>
     </div>
@@ -88,7 +88,7 @@
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
             <div class="flex justify-end gap-2 mt-4"> <button type="button" id="reset-cancel"
                     class="px-3 py-2 rounded-md bg-bg-panel text-sm">Batal</button> <button
-                    class="px-3 py-2 rounded-md bg-accent-blue text-white text-sm">Reset</button> </div>
+                    class="px-3 py-2 rounded-md bg-brand text-white text-sm">Reset</button> </div>
         </form>
     </div>
 </div>

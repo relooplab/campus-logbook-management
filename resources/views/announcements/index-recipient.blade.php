@@ -23,7 +23,7 @@
                 </div>
                 @if ($unread)
                     <form method="POST" action="{{ route("announcements.read", $a) }}" class="mt-3"> @csrf <button
-                            class="px-3 py-1.5 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-xs">Tandai
+                            class="px-3 py-1.5 rounded-md bg-brand hover:bg-brand-hover text-white text-xs">Tandai
                             Dibaca</button> </form>
                 @endif
             </div>

@@ -9,18 +9,18 @@
     <form method="POST" action="{{ route("login.attempt") }}" class="space-y-4"> @csrf <div> <label
                 class="block text-sm font-medium mb-1" for="email">Email</label> <input type="email" name="email"
                 id="email" required value="{{ old("email") }}" autofocus
-                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-accent-teal focus:outline-none">
+                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
         </div>
         <div> <label class="block text-sm font-medium mb-1" for="password">Kata Sandi</label> <input type="password"
                 name="password" id="password" required
-                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-accent-teal focus:outline-none">
+                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
         </div> <label class="flex items-center gap-2 text-sm"> <input type="checkbox" name="remember"
                 class="rounded bg-bg-surface"> Ingat saya </label> <button type="submit"
-            class="w-full rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white py-2 text-sm font-semibold"> Masuk
+            class="w-full rounded-md bg-brand hover:bg-brand-hover text-white py-2 text-sm font-semibold"> Masuk
         </button> <a href="{{ route("password.request") }}"
-            class="block text-center text-sm text-accent-teal hover:underline">Lupa kata sandi?</a>
+            class="block text-center text-sm text-brand hover:underline">Lupa kata sandi?</a>
         <p class="block text-center text-sm text-text-secondary">Belum punya akun? <a href="{{ route("register") }}"
-                class="text-accent-teal hover:underline">Daftar</a></p>
+                class="text-brand hover:underline">Daftar</a></p>
     </form>
     <div class="mt-4 text-xs text-text-secondary border-t border-border pt-3 space-y-1">
         <p><strong>Admin/Dosen:</strong> admin@example.com / password</p>

@@ -33,7 +33,7 @@
                 value="{{ request("search") }}" placeholder="Nama file / catatan"
                 class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
         <div class="flex gap-2 w-full sm:w-auto"> <button
-                class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm">Cari</button> <a
+                class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Cari</button> <a
                 href="{{ route("workspace.index", $mahasiswaTa) }}"
                 class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm text-center">Reset</a>
         </div>
@@ -47,10 +47,10 @@
                             class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
                 </div>
                 <div id="drop-zone"
-                    class="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-accent-teal/30 transition">
+                    class="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-brand/30 transition">
                     <p><span class="material-symbols-outlined" style="font-size:48px">folder_open</span></p>
                     <p class="text-sm mt-2">Tarik &amp; lepas file di sini, atau <span
-                            class="text-accent-teal font-medium">klik untuk memilih</span></p>
+                            class="text-brand font-medium">klik untuk memilih</span></p>
                     <p class="text-xs text-text-secondary mt-1">PDF, DOC, DOCX, XLS, XLSX — maks 25 MB, hingga 5 file
                     </p> <input type="file" name="files[]" id="file-input" multiple
                         accept=".pdf,.doc,.docx,.xls,.xlsx" class="hidden">
@@ -58,11 +58,11 @@
                 <div id="file-list" class="mt-3 space-y-1"></div>
                 <div id="progress-wrap" class="hidden mt-3">
                     <div class="h-2 rounded-full bg-bg-panel overflow-hidden">
-                        <div id="progress-bar" class="h-full rounded-full bg-accent-teal" style="width:0%"></div>
+                        <div id="progress-bar" class="h-full rounded-full bg-brand" style="width:0%"></div>
                     </div>
                     <p id="progress-text" class="text-xs text-text-secondary mt-1">0%</p>
                 </div> <button type="submit" id="upload-btn" disabled
-                    class="mt-3 px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm disabled:opacity-40">Upload</button>
+                    class="mt-3 px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm disabled:opacity-40">Upload</button>
                 @error("files.*")
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -83,7 +83,7 @@
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-wrap items-center gap-2"> <a
                                             href="{{ $file->isPdf() ? route("workspace.preview", $file) : route("workspace.download", $file) }}"
-                                            class="font-medium hover:text-accent-teal {{ $file->isPdf() ? "" : "" }}"
+                                            class="font-medium hover:text-brand {{ $file->isPdf() ? "" : "" }}"
                                             @if ($file->isPdf()) target="_blank" @endif>
                                             {{ $file->original_name }} </a> <span
                                             class="text-xs text-text-secondary">{{ $file->sizeHuman() }}</span> <span
@@ -138,12 +138,12 @@
             </div>
             <div class="flex justify-end gap-2 mt-4"> <button type="button" id="edit-cancel"
                     class="px-3 py-2 rounded-md bg-bg-panel text-sm">Batal</button> <button
-                    class="px-3 py-2 rounded-md bg-accent-teal text-white text-sm">Simpan</button> </div>
+                    class="px-3 py-2 rounded-md bg-brand text-white text-sm">Simpan</button> </div>
         </form>
     </div>
 </div>
 @endsection @section("scripts")
 <script>
-    // ---------- drag & drop upload ---------- (function () { var zone = document.getElementById('drop-zone'); var input = document.getElementById('file-input'); var list = document.getElementById('file-list'); var btn = document.getElementById('upload-btn'); var selectedFiles = []; function render() { list.innerHTML = ''; selectedFiles.forEach(function (f, i) { var div = document.createElement('div'); div.className = 'flex items-center justify-between text-sm px-2 py-1 rounded bg-bg-panel'; div.innerHTML = '<span class="truncate mr-2">' + f.name + ' (' + (f.size/1048576).toFixed(1) + ' MB)</span>' + '<button type="button" data-i="' + i + '" class="text-status-danger text-xs">hapus</button>'; list.appendChild(div); }); btn.disabled = selectedFiles.length === 0; } zone.addEventListener('click', function () { input.click(); }); input.addEventListener('change', function () { selectedFiles = Array.from(input.files); render(); }); ['dragover','dragenter'].forEach(function (ev) { zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.add('border-accent-teal/30'); }); }); ['dragleave','drop'].forEach(function (ev) { zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.remove('border-accent-teal/30'); }); }); zone.addEventListener('drop', function (e) { selectedFiles = Array.from(e.dataTransfer.files); render(); }); list.addEventListener('click', function (e) { if (e.target.tagName === 'BUTTON') { var i = parseInt(e.target.dataset.i, 10); selectedFiles.splice(i, 1); render(); } }); // upload dengan progress (FormData, tanpa library) document.getElementById('upload-form').addEventListener('submit', function (e) { if (selectedFiles.length === 0) { e.preventDefault(); return; } e.preventDefault(); var fd = new FormData(this); selectedFiles.forEach(function (f) { fd.append('files[]', f); }); var xhr = new XMLHttpRequest(); document.getElementById('progress-wrap').classList.remove('hidden'); xhr.upload.onprogress = function (ev) { if (ev.lengthComputable) { var pct = Math.round(ev.loaded / ev.total * 100); document.getElementById('progress-bar').style.width = pct + '%'; document.getElementById('progress-text').textContent = pct + '%'; } }; xhr.onload = function () { window.location.reload(); }; xhr.onerror = function () { alert('Upload gagal.'); document.getElementById('progress-wrap').classList.add('hidden'); }; xhr.open('POST', this.action); xhr.send(fd); }); })(); // ---------- edit metadata modal ---------- (function () { var modal = document.getElementById('edit-modal'); var form = document.getElementById('edit-form'); document.querySelectorAll('.edit-btn').forEach(function (btn) { btn.addEventListener('click', function () { var url = btn.closest('.flex').querySelector('a[href]'); // resolve route var id = btn.dataset.edit; form.action = '/workspace/files/' + id; document.getElementById('edit-bab').value = btn.dataset.bab || ''; document.getElementById('edit-desc').value = btn.dataset.desc || ''; modal.classList.remove('hidden'); }); }); document.getElementById('edit-cancel').addEventListener('click', function () { modal.classList.add('hidden'); }); modal.addEventListener('click', function (e) { if (e.target === modal) modal.classList.add('hidden'); }); })();
+    // ---------- drag & drop upload ---------- (function () { var zone = document.getElementById('drop-zone'); var input = document.getElementById('file-input'); var list = document.getElementById('file-list'); var btn = document.getElementById('upload-btn'); var selectedFiles = []; function render() { list.innerHTML = ''; selectedFiles.forEach(function (f, i) { var div = document.createElement('div'); div.className = 'flex items-center justify-between text-sm px-2 py-1 rounded bg-bg-panel'; div.innerHTML = '<span class="truncate mr-2">' + f.name + ' (' + (f.size/1048576).toFixed(1) + ' MB)</span>' + '<button type="button" data-i="' + i + '" class="text-status-danger text-xs">hapus</button>'; list.appendChild(div); }); btn.disabled = selectedFiles.length === 0; } zone.addEventListener('click', function () { input.click(); }); input.addEventListener('change', function () { selectedFiles = Array.from(input.files); render(); }); ['dragover','dragenter'].forEach(function (ev) { zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.add('border-brand/30'); }); }); ['dragleave','drop'].forEach(function (ev) { zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.remove('border-brand/30'); }); }); zone.addEventListener('drop', function (e) { selectedFiles = Array.from(e.dataTransfer.files); render(); }); list.addEventListener('click', function (e) { if (e.target.tagName === 'BUTTON') { var i = parseInt(e.target.dataset.i, 10); selectedFiles.splice(i, 1); render(); } }); // upload dengan progress (FormData, tanpa library) document.getElementById('upload-form').addEventListener('submit', function (e) { if (selectedFiles.length === 0) { e.preventDefault(); return; } e.preventDefault(); var fd = new FormData(this); selectedFiles.forEach(function (f) { fd.append('files[]', f); }); var xhr = new XMLHttpRequest(); document.getElementById('progress-wrap').classList.remove('hidden'); xhr.upload.onprogress = function (ev) { if (ev.lengthComputable) { var pct = Math.round(ev.loaded / ev.total * 100); document.getElementById('progress-bar').style.width = pct + '%'; document.getElementById('progress-text').textContent = pct + '%'; } }; xhr.onload = function () { window.location.reload(); }; xhr.onerror = function () { alert('Upload gagal.'); document.getElementById('progress-wrap').classList.add('hidden'); }; xhr.open('POST', this.action); xhr.send(fd); }); })(); // ---------- edit metadata modal ---------- (function () { var modal = document.getElementById('edit-modal'); var form = document.getElementById('edit-form'); document.querySelectorAll('.edit-btn').forEach(function (btn) { btn.addEventListener('click', function () { var url = btn.closest('.flex').querySelector('a[href]'); // resolve route var id = btn.dataset.edit; form.action = '/workspace/files/' + id; document.getElementById('edit-bab').value = btn.dataset.bab || ''; document.getElementById('edit-desc').value = btn.dataset.desc || ''; modal.classList.remove('hidden'); }); }); document.getElementById('edit-cancel').addEventListener('click', function () { modal.classList.add('hidden'); }); modal.addEventListener('click', function (e) { if (e.target === modal) modal.classList.add('hidden'); }); })();
 </script>
 @endsection

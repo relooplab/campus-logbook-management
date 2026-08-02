@@ -24,7 +24,7 @@
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div> <label
             class="flex items-center gap-2 text-sm cursor-pointer"> <input type="checkbox" name="as_examiner"
                 id="as_examiner" value="1" class="rounded bg-bg-surface" {{ old("as_examiner") ? "checked" : "" }}>
-            Saya juga penguji — mencatat sidang mahasiswa lain </label>
+            Saya sebagai penguji anda </label>
         <div id="supervisor-fields" class="hidden space-y-2 border-t border-border pt-3">
             <p class="text-xs text-text-secondary">Nama pembimbing mahasiswa yang akan Anda uji (maks 3):</p> <input
                 type="text" name="supervisor_1" placeholder="Pembimbing 1" value="{{ old("supervisor_1") }}"
@@ -34,8 +34,8 @@
                 name="supervisor_3" placeholder="Pembimbing 3 (opsional)" value="{{ old("supervisor_3") }}"
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
         </div> <button type="submit"
-            class="w-full rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white py-2 text-sm font-semibold">Daftar</button>
-        <a href="{{ route("login") }}" class="block text-center text-sm text-accent-teal hover:underline">Sudah punya akun?
+            class="w-full rounded-md bg-brand hover:bg-brand-hover text-white py-2 text-sm font-semibold">Daftar</button>
+        <a href="{{ route("login") }}" class="block text-center text-sm text-brand hover:underline">Sudah punya akun?
             Masuk</a>
     </form>
     @endsection @section("guest-scripts")

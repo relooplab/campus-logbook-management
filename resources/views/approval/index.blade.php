@@ -43,7 +43,7 @@
                                     class="rounded bg-bg-surface"> Izinkan menjadi penguji </label> </div>
                     @endif
                     <div class="sm:col-span-2 flex gap-2 pt-1"> <button
-                            class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm">Setujui
+                            class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Setujui
                             &amp; Assign</button>
                         <form method="POST" action="{{ route("approval.reject", $m) }}" class="inline"> @csrf <button
                                 class="px-4 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Tolak</button>

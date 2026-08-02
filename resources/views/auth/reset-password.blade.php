@@ -10,7 +10,7 @@
             value="{{ $token }}">
         <div> <label class="block text-sm font-medium mb-1" for="email">Email</label> <input type="email" name="email"
                 id="email" required value="{{ $email ?? old("email") }}"
-                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-accent-teal focus:outline-none">
+                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
         </div>
         <div> <label class="block text-sm font-medium mb-1" for="password">Kata Sandi Baru</label> <input type="password"
                 name="password" id="password" required minlength="6"
@@ -19,7 +19,7 @@
                 type="password" name="password_confirmation" id="password_confirmation" required minlength="6"
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div> <button
             type="submit"
-            class="w-full rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white py-2 text-sm font-semibold">Reset
+            class="w-full rounded-md bg-brand hover:bg-brand-hover text-white py-2 text-sm font-semibold">Reset
             Kata
             Sandi</button>
     </form>

@@ -11,8 +11,8 @@
     if (!function_exists('heatColor')) {
         function heatColor($c) {
             if ($c <= 0) return 'bg-bg-hover';
-            if ($c === 1) return 'bg-accent-teal/40';
-            return 'bg-accent-teal';
+            if ($c === 1) return 'bg-brand/40';
+            return 'bg-brand';
         }
     }
 @endphp
@@ -42,8 +42,8 @@
 </div>
 <div class="mt-2 flex items-center gap-1 text-[10px] text-text-secondary">
     Sedikit <span class="h-2.5 w-2.5 rounded-sm bg-bg-hover"></span>
-    <span class="h-2.5 w-2.5 rounded-sm bg-accent-teal/40"></span>
-    <span class="h-2.5 w-2.5 rounded-sm bg-accent-teal"></span>
-    <span class="h-2.5 w-2.5 rounded-sm bg-accent-teal"></span>
+    <span class="h-2.5 w-2.5 rounded-sm bg-brand/40"></span>
+    <span class="h-2.5 w-2.5 rounded-sm bg-brand"></span>
+    <span class="h-2.5 w-2.5 rounded-sm bg-brand"></span>
     Banyak
 </div>

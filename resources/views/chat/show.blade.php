@@ -10,7 +10,7 @@
             @foreach ($messages as $m)
                 @php $mine = $m->sender_id === $user->id; @endphp <div class="flex {{ $mine ? "justify-end" : "justify-start" }}">
                     <div
-                        class="max-w-[75%] {{ $mine ? "bg-accent-teal text-white" : "bg-bg-hover" }} rounded-lg px-3 py-2 text-sm">
+                        class="max-w-[75%] {{ $mine ? "bg-brand text-white" : "bg-bg-hover" }} rounded-lg px-3 py-2 text-sm">
                         @if ($m->attachable)
                             @php $a = $m->attachable; @endphp <div
                                 class="mb-1 {{ $mine ? "text-white/90" : "text-text-secondary" }} text-xs">
@@ -43,7 +43,7 @@
                 id="attach-btn" class="p-2 rounded-md hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-md">attach_file</span></button>
             <textarea name="body" id="msg-body" rows="1" required placeholder="Tulis pesan..."
                 class="flex-1 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm resize-none"></textarea> <button
-                class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm">Kirim</button>
+                class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Kirim</button>
         </form> {{-- Panel attach --}} <div id="attach-panel" class="hidden border-t border-border p-3">
             <div class="flex items-center justify-between mb-2">
                 <p class="text-sm font-semibold">Lampirkan referensi</p> <button type="button" id="attach-close"
@@ -61,7 +61,7 @@
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"></textarea>
             <div class="flex justify-end gap-2 mt-3"> <button type="button" id="edit-cancel"
                     class="px-3 py-2 rounded-md bg-bg-panel text-sm">Batal</button> <button
-                    class="px-3 py-2 rounded-md bg-accent-teal text-white text-sm">Simpan</button> </div>
+                    class="px-3 py-2 rounded-md bg-brand text-white text-sm">Simpan</button> </div>
         </form>
     </div>
 </div>

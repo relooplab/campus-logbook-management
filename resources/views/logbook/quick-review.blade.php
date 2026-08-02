@@ -3,7 +3,7 @@
     <div class="max-w-2xl mx-auto text-center py-16">
         <h1 class="text-2xl font-bold">Quick Review</h1>
         <p class="text-text-secondary mt-2">Tidak ada entri menunggu review. <span class="material-symbols-outlined icon-sm align-text-bottom">celebration</span></p> <a href="{{ route("dashboard") }}"
-            class="inline-block mt-4 px-4 py-2 rounded-md bg-accent-teal text-white text-sm">← Dashboard</a>
+            class="inline-block mt-4 px-4 py-2 rounded-md bg-brand text-white text-sm">← Dashboard</a>
     </div>
 @else
     <div class="space-y-4">
@@ -35,20 +35,20 @@
             </div>
             @if ($entry->lampiran_path || $entry->catatan_perbaikan_path)
                 <a href="{{ route("logbook.pdf-viewer", $entry) }}" target="_blank"
-                    class="inline-block px-3 py-2 rounded-md bg-accent-blue text-white text-sm">Lihat PDF &
+                    class="inline-block px-3 py-2 rounded-md bg-brand text-white text-sm">Lihat PDF &
                     Anotasi</a>
             @endif
         </div> {{-- Feedback terakhir untuk mahasiswa ini (reuse) --}} @if ($lastFeedback)
             <div class="bg-bg-surface rounded-xl border border-border p-4">
                 <p class="text-xs font-semibold text-text-secondary uppercase mb-1">Feedback terakhir untuk mahasiswa
                     ini</p> <button type="button" id="use-last"
-                    class="text-left text-sm hover:text-accent-teal whitespace-pre-wrap">{{ $lastFeedback }}</button>
+                    class="text-left text-sm hover:text-brand whitespace-pre-wrap">{{ $lastFeedback }}</button>
             </div>
         @endif {{-- Template feedback --}} <div
             class="bg-bg-surface rounded-xl border border-border p-4">
             <div class="flex items-center justify-between mb-2">
                 <p class="text-xs font-semibold text-text-secondary uppercase">Template Feedback</p> <button
-                    type="button" id="new-tpl" class="text-xs text-accent-teal hover:underline">+ Simpan feedback
+                    type="button" id="new-tpl" class="text-xs text-brand hover:underline">+ Simpan feedback
                     sebagai template</button>
             </div>
             <div class="flex flex-wrap gap-2" id="tpl-list">
@@ -63,15 +63,16 @@
         </div> {{-- Form review --}} <div class="bg-bg-surface rounded-xl border border-border p-5 space-y-3">
             <div class="flex items-center justify-between">
                 <h2 class="font-semibold">Feedback</h2> <button type="button" id="build-feedback"
-                    class="text-xs px-3 py-1.5 rounded-md bg-accent-blue/10 text-accent-blue">
+                    class="text-xs px-3 py-1.5 rounded-md bg-brand/10 text-brand">
                     <span class="material-symbols-outlined icon-sm align-text-bottom">bolt</span> Jadikan dari Komentar </button>
             </div>
             <textarea name="feedback_dosen" id="feedback_dosen" rows="4" required
                 placeholder="Tulis feedback / alasan revisi..."
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">{{ $feedbackDraft ?? "" }}</textarea>
+            <p id="revisi-error" class="hidden text-xs text-status-danger mt-1">Feedback wajib diisi.</p>
             <div class="flex flex-wrap gap-2">
-                <form method="POST" action="{{ route("quick-review.approve-next", $entry) }}"> @csrf <button type="submit"
-                        class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">check</span>
+                <form method="POST" action="{{ route("quick-review.approve-next", $entry) }}" id="approve-form"> @csrf <button type="submit" id="approve-btn"
+                        class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">check</span>
                         Setujui & Next</button> </form>
                 <form method="POST" action="{{ route("quick-review.revisi-next", $entry) }}" id="revisi-form">
                     @csrf <input type="hidden" name="feedback_dosen" id="revisi-feedback">
@@ -95,7 +96,7 @@
         </div>
         <div class="flex justify-end gap-2 mt-4"> <button type="button" id="tpl-cancel"
                 class="px-3 py-2 rounded-md bg-bg-panel text-sm">Batal</button> <button type="button" id="tpl-save"
-                class="px-3 py-2 rounded-md bg-accent-teal text-white text-sm">Simpan</button> </div>
+                class="px-3 py-2 rounded-md bg-brand text-white text-sm">Simpan</button> </div>
     </div>
 </div>
 @endsection @section("scripts")
@@ -124,15 +125,50 @@
         });
 
         // Revisi & next: salin isi textarea ke input hidden lalu submit form.
-        if (revisiBtn && revisiForm && revisiFeedback) {
+        var revisiError = document.getElementById('revisi-error');
+        if (revisiBtn && revisiForm && revisiFeedback && revisiError) {
             revisiBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 if (!feedback.value.trim()) {
-                    alert('Feedback wajib diisi.');
+                    revisiError.classList.remove('hidden');
+                    feedback.focus();
                     return;
                 }
+                revisiError.classList.add('hidden');
                 revisiFeedback.value = feedback.value;
-                revisiForm.submit();
+                revisiBtn.disabled = true;
+                revisiBtn.innerHTML = '<span class="material-symbols-outlined icon-sm align-text-bottom">hourglass_top</span> Memproses…';
+                // requestSubmit() memicu validasi native + event submit form,
+                // lebih andal daripada submit() yang bisa gagal diam-diam.
+                if (revisiForm.requestSubmit) {
+                    revisiForm.requestSubmit();
+                } else {
+                    revisiForm.submit();
+                }
+            });
+            feedback.addEventListener('input', function () {
+                revisiError.classList.add('hidden');
+            });
+        }
+
+        // Cegah double-submit pada tombol "Setujui & Next" dan "Revisi & Next".
+        var approveForm = document.getElementById('approve-form');
+        if (approveForm) {
+            approveForm.addEventListener('submit', function () {
+                var btn = document.getElementById('approve-btn');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="material-symbols-outlined icon-sm align-text-bottom">hourglass_top</span> Memproses…';
+                }
+            });
+        }
+        if (revisiForm) {
+            revisiForm.addEventListener('submit', function () {
+                var btn = document.getElementById('revisi-btn');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="material-symbols-outlined icon-sm align-text-bottom">hourglass_top</span> Memproses…';
+                }
             });
         }
 

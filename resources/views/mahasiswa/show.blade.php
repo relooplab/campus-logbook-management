@@ -11,7 +11,7 @@
     </div> {{-- Kartu profil mahasiswa --}} <div
         class="bg-bg-surface rounded-xl border border-border p-6 flex flex-wrap items-center gap-4">
         <div
-            class="h-16 w-16 rounded-full overflow-hidden bg-accent-teal text-white flex items-center justify-center text-xl font-bold flex-shrink-0">
+            class="h-16 w-16 rounded-full overflow-hidden bg-brand text-white flex items-center justify-center text-xl font-bold flex-shrink-0">
             @if ($mahasiswaTa->mahasiswa?->photoUrl())
                 <img src="{{ $mahasiswaTa->mahasiswa->photoUrl() }}" class="h-full w-full object-cover" alt="Foto">
             @else
@@ -25,12 +25,12 @@
             <p class="text-sm text-text-primary mt-1">{{ $mahasiswaTa->judul_ta }}</p>
         </div>
         <div class="text-center">
-            <div class="text-2xl font-bold text-accent-teal">{{ $approved }}/{{ $target }}</div>
+            <div class="text-2xl font-bold text-brand">{{ $approved }}/{{ $target }}</div>
             <div class="text-xs text-text-secondary">sesi disetujui</div>
         </div>
         <div class="flex flex-wrap gap-2"> <a
                 href="{{ route("chat.start", ["user" => $mahasiswaTa->user_id, "ta" => $mahasiswaTa->id]) }}"
-                class="px-3 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">chat</span> Chat</a> <a
+                class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">chat</span> Chat</a> <a
                 href="{{ route("workspace.index", $mahasiswaTa) }}"
                 class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">folder</span>
                 Workspace</a>
@@ -60,7 +60,7 @@
                             <option value="{{ $key }}" @selected($mahasiswaTa->fase === $key)>{{ $label }}
                             </option>
                         @endforeach
-                    </select> <button class="px-2 py-1 rounded-md bg-accent-blue text-white text-xs">Update</button>
+                    </select> <button class="px-2 py-1 rounded-md bg-brand text-white text-xs">Update</button>
                 </form>
             @endif
         </div>
@@ -90,7 +90,7 @@
                                 <td class="py-2 pr-4 table-col-tanggal">{{ $entry->tanggal_bimbingan?->format("d M Y") ?? "—" }}</td>
                                 <td class="py-2 pr-4">@include("partials.status-badge", ["status" => $entry->status])</td>
                                 <td class="py-2"><a href="{{ route("logbook.show", $entry) }}"
-                                        class="text-accent-teal hover:underline">Detail</a></td>
+                                        class="text-brand hover:underline">Detail</a></td>
                             </tr>
                         @endforeach
                     </tbody>

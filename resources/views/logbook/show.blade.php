@@ -44,7 +44,7 @@
         <div class="flex flex-wrap gap-2 text-sm">
             @if ($logbook->lampiran_path || $logbook->catatan_perbaikan_path) <a
                     href="{{ route("logbook.pdf-viewer", $logbook) }}"
-                    class="px-3 py-2 rounded-md bg-accent-blue hover:bg-accent-blue/90 text-white">
+                    class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-white">
                     @if ($canReview)
                         Review PDF &amp; Beri Anotasi
                     @else
@@ -66,7 +66,7 @@
             <form class="mb-2 flex gap-2" onsubmit="addActionItem(event)"> @csrf <input type="text" id="ai-input"
                     placeholder="Tulis tugas kecil... (mis. 'Perbaiki sitasi BAB 2')"
                     class="flex-1 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <button
-                    class="px-3 py-2 rounded-md bg-accent-blue text-white text-sm">+ Tambah</button> </form>
+                    class="px-3 py-2 rounded-md bg-brand text-white text-sm">+ Tambah</button> </form>
             <div id="ai-list" class="space-y-1">
                 @foreach ($logbook->actionItems as $item)
                     <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-bg-panel hover:bg-bg-hover">
@@ -78,22 +78,22 @@
                     </div>
                 @endforeach
             </div>
-            <p id="ai-done-msg" class="text-xs text-accent-teal mt-2"></p>
+            <p id="ai-done-msg" class="text-xs text-brand mt-2"></p>
         </div> @endif {{-- Actions berdasarkan role & status --}} @if ($owner && $logbook->isEditable())
             <div class="flex flex-wrap gap-2"> <a href="{{ route("logbook.edit", $logbook) }}"
                     class="px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Edit</a>
                 <form method="POST" action="{{ route("logbook.submit", $logbook) }}"> @csrf <button
-                        class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm">Kirim ke
+                        class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Kirim ke
                         Pembimbing</button> </form>
             </div>
             @endif @if ($canReview && $logbook->status === "submitted")
                 <div class="bg-bg-surface rounded-xl border border-border p-5 space-y-4">
                     <h2 class="font-semibold">Review</h2>
                     @if ($logbook->lampiran_path || $logbook->catatan_perbaikan_path)
-                        <div class="px-4 py-3 rounded-md bg-accent-blue/10 border border-accent-blue/20">
+                        <div class="px-4 py-3 rounded-md bg-brand/10 border border-brand/20">
                             <p class="text-sm mb-2">Buka PDF, seret untuk menandai area, dan beri komentar sebelum
                                 memutuskan.</p> <a href="{{ route("logbook.pdf-viewer", $logbook) }}"
-                                class="inline-block px-4 py-2 rounded-md bg-accent-blue hover:bg-accent-blue/90 text-white text-sm">Buka
+                                class="inline-block px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Buka
                                 PDF &amp; Anotasi</a>
                         </div>
                     @else
@@ -101,7 +101,7 @@
                     @endif
                     <form method="POST" action="{{ route("logbook.approve", $logbook) }}" class="mb-3"> @csrf
                         <button
-                            class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm">Setujui
+                            class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Setujui
                             (Approve)</button>
                     </form>
                     <form method="POST" action="{{ route("logbook.request-revisi", $logbook) }}" class="space-y-2">

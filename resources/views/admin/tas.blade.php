@@ -9,7 +9,7 @@
             @foreach ($dosenList as $d)
                 <option value="{{ $d->id }}" @selected((string) request("pembimbing") === (string) $d->id)>{{ $d->name }}</option>
             @endforeach
-        </select> <button class="w-full sm:w-auto px-3 py-2 rounded-md bg-accent-teal text-white text-sm">Cari</button>
+        </select> <button class="w-full sm:w-auto px-3 py-2 rounded-md bg-brand text-white text-sm">Cari</button>
     </form>
     <div class="grid lg:grid-cols-3 gap-4">
         <div class="lg:col-span-2 bg-bg-surface rounded-xl border border-border overflow-x-auto">
@@ -46,7 +46,7 @@
                                         class="badge {{ $ta->status_ta === "aktif" ? "badge-info" : "" }} {{ $ta->status_ta === "tamat" ? "badge-success" : "" }} {{ $ta->status_ta === "nonaktif" ? "badge-neutral" : "" }}">
                                         {{ ucfirst($ta->status_ta) }} </span> </td>
                                 <td class="py-3 px-4"><a href="{{ route("admin.tas") }}#edit-{{ $ta->id }}"
-                                        class="text-accent-teal hover:underline text-xs">Edit</a></td>
+                                        class="text-brand hover:underline text-xs">Edit</a></td>
                         </tr> @empty <tr>
                                 <td colspan="10" class="py-4 px-4 text-text-secondary">Tidak ada data TA.</td>
                             </tr>
@@ -60,7 +60,7 @@
                         @foreach ($dosenList as $d)
                             <option value="{{ $d->id }}">{{ $d->name }}</option>
                         @endforeach
-                    </select> <button class="px-3 py-2 rounded-md bg-accent-blue text-white text-sm">Assign Pembimbing
+                    </select> <button class="px-3 py-2 rounded-md bg-brand text-white text-sm">Assign Pembimbing
                         1</button> </div>
             </form>
             <div class="p-3">{{ $tas->links() }}</div>
@@ -102,7 +102,7 @@
                     @endforeach
                 </select> <input type="number" name="target_sesi" value="7" min="1"
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <button
-                    class="w-full px-3 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm">Simpan</button>
+                    class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Simpan</button>
             </form>
         </div>
     </div> {{-- Inline edit forms --}} @foreach ($tas as $ta)
@@ -141,7 +141,7 @@
                     <option value="aktif" @selected($ta->status_ta === "aktif")>Aktif</option>
                     <option value="tamat" @selected($ta->status_ta === "tamat")>Tamat</option>
                     <option value="nonaktif" @selected($ta->status_ta === "nonaktif")>Nonaktif</option>
-                </select> <button class="px-4 py-2 rounded-md bg-accent-teal text-white text-sm">Simpan
+                </select> <button class="px-4 py-2 rounded-md bg-brand text-white text-sm">Simpan
                     Perubahan</button> </form>
         </div>
     @endforeach

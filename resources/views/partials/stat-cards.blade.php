@@ -1,7 +1,7 @@
 <div class="grid grid-cols-2 gap-3 text-sm">
     <div class="p-4 rounded-xl bg-bg-panel">
         <div class="flex items-center justify-between mb-2">
-            <span class="icon-circle w-8 h-8 bg-accent-teal/15 text-accent-teal">
+            <span class="icon-circle w-8 h-8 bg-brand-light text-brand">
                 <span class="material-symbols-outlined icon-sm">bolt</span>
             </span>
         </div>
@@ -10,7 +10,7 @@
     </div>
     <div class="p-4 rounded-xl bg-bg-panel">
         <div class="flex items-center justify-between mb-2">
-            <span class="icon-circle w-8 h-8 bg-accent-blue/15 text-accent-blue">
+            <span class="icon-circle w-8 h-8 bg-brand-light text-brand">
                 <span class="material-symbols-outlined icon-sm">bar_chart</span>
             </span>
         </div>
@@ -19,7 +19,7 @@
     </div>
     <div class="p-4 rounded-xl bg-bg-panel">
         <div class="flex items-center justify-between mb-2">
-            <span class="icon-circle w-8 h-8 bg-accent-orange/15 text-accent-orange">
+            <span class="icon-circle w-8 h-8 bg-sand/15 text-sand">
                 <span class="material-symbols-outlined icon-sm">schedule</span>
             </span>
         </div>
@@ -28,7 +28,7 @@
     </div>
     <div class="p-4 rounded-xl bg-bg-panel">
         <div class="flex items-center justify-between mb-2">
-            <span class="icon-circle w-8 h-8 bg-accent-purple/15 text-accent-purple">
+            <span class="icon-circle w-8 h-8 bg-brand-light text-brand">
                 <span class="material-symbols-outlined icon-sm">forum</span>
             </span>
         </div>

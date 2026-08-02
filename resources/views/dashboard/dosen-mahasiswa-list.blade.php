@@ -6,11 +6,11 @@
             Dashboard</a>
     </div> {{-- Filter status --}} <div class="flex flex-wrap gap-2"> <a
             href="{{ route("dashboard.dosen.mahasiswa-list") }}"
-            class="px-3 py-1.5 rounded-md text-sm {{ $status === "all" ? "bg-accent-teal text-white" : "bg-bg-hover" }}">Semua</a>
+            class="px-3 py-1.5 rounded-md text-sm {{ $status === "all" ? "bg-brand text-white" : "bg-bg-hover" }}">Semua</a>
         <a href="{{ route("dashboard.dosen.mahasiswa-list", ["status" => "aktif"]) }}"
-            class="px-3 py-1.5 rounded-md text-sm {{ $status === "aktif" ? "bg-accent-blue text-white" : "bg-accent-blue/10 text-accent-blue" }}"><span class="material-symbols-outlined icon-sm align-text-bottom">fiber_manual_record</span>
+            class="px-3 py-1.5 rounded-md text-sm {{ $status === "aktif" ? "bg-brand text-white" : "bg-brand/10 text-brand" }}"><span class="material-symbols-outlined icon-sm align-text-bottom">fiber_manual_record</span>
             Aktif</a> <a href="{{ route("dashboard.dosen.mahasiswa-list", ["status" => "tamat"]) }}"
-            class="px-3 py-1.5 rounded-md text-sm {{ $status === "tamat" ? "bg-accent-teal text-white" : "bg-accent-teal/10 text-accent-teal" }}"><span class="material-symbols-outlined icon-sm align-text-bottom">school</span>
+            class="px-3 py-1.5 rounded-md text-sm {{ $status === "tamat" ? "bg-brand text-white" : "bg-brand/10 text-brand" }}"><span class="material-symbols-outlined icon-sm align-text-bottom">school</span>
             Tamat</a>
     </div>
     @if ($list->isEmpty())
@@ -44,7 +44,7 @@
                                     title="{{ $row["tooltip"] }}"></span> <span
                                     class="text-xs text-text-secondary">{{ ucfirst($row["regularity"]) }}</span> </td>
                             <td class="py-3 px-4"><a href="{{ route("mahasiswa-ta.show", $ta) }}"
-                                    class="text-accent-teal hover:underline">Detail</a></td>
+                                    class="text-brand hover:underline">Detail</a></td>
                         </tr>
                     @endforeach
                 </tbody>

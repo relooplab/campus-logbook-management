@@ -35,9 +35,9 @@
                         bg: { base: 'rgb(var(--bg-base) / <alpha-value>)', surface: 'rgb(var(--bg-surface) / <alpha-value>)', panel: 'rgb(var(--bg-panel) / <alpha-value>)', hover: 'rgb(var(--bg-hover) / <alpha-value>)' },
                         border: { DEFAULT: 'rgb(var(--border) / <alpha-value>)' },
                         text: { primary: 'rgb(var(--text-primary) / <alpha-value>)', secondary: 'rgb(var(--text-secondary) / <alpha-value>)' },
-                        accent: { blue: 'rgb(var(--accent-blue) / <alpha-value>)', orange: 'rgb(var(--accent-orange) / <alpha-value>)', teal: 'rgb(var(--accent-teal) / <alpha-value>)', purple: 'rgb(var(--accent-purple) / <alpha-value>)' },
+                        brand: { DEFAULT: 'rgb(var(--brand) / <alpha-value>)', hover: 'rgb(var(--brand-hover) / <alpha-value>)', light: 'rgb(var(--brand-light) / <alpha-value>)' },
+                        sand: { DEFAULT: 'rgb(var(--sand) / <alpha-value>)', light: 'rgb(var(--sand-light) / <alpha-value>)' },
                         status: { success: 'rgb(var(--status-success) / <alpha-value>)', danger: 'rgb(var(--status-danger) / <alpha-value>)', info: 'rgb(var(--status-info) / <alpha-value>)', pending: 'rgb(var(--status-pending) / <alpha-value>)' },
-                        'card-inverse': 'rgb(var(--card-inverse) / <alpha-value>)',
                     },
                     borderRadius: { card: '20px' },
                 },
@@ -53,7 +53,7 @@
 <body class="bg-bg-base text-text-primary min-h-screen flex items-center justify-center p-4 font-sans antialiased">
     <div class="w-full max-w-md">
         <div class="text-center mb-6">
-            <div class="inline-flex w-14 h-14 rounded-2xl bg-accent-blue/15 text-accent-blue items-center justify-center mb-3">
+            <div class="inline-flex w-14 h-14 rounded-2xl bg-brand-light text-brand items-center justify-center mb-3">
                 <span class="material-symbols-outlined icon-lg">assignment_turned_in</span>
             </div>
             <h1 class="font-heading font-extrabold text-2xl text-text-primary">{{ $inst->app_name }}</h1>

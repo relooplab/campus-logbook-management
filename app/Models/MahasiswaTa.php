@@ -28,8 +28,10 @@ class MahasiswaTa extends Model
         'proposal' => 'Seminar Proposal',
         'pengumpulan_data' => 'Pengumpulan Data',
         'analisis' => 'Analisis',
-        'draft_final' => 'Draft Final',
+        'seminar_hasil' => 'Seminar Hasil',
+        'draft_sidang' => 'Draft Sidang',
         'sidang' => 'Sidang',
+        'achievement' => 'Achievement Unlocked',
     ];
 
     /** Status siklus TA. */

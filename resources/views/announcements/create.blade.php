@@ -27,7 +27,7 @@
                 @endforeach
             </div>
         </div> <button
-            class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm font-semibold">Kirim
+            class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm font-semibold">Kirim
             Pengumuman</button>
     </form>
 </div>

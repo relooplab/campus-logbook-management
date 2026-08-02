@@ -15,7 +15,7 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
         <div class="p-5 rounded-card bg-bg-surface border border-border">
             <div class="flex items-center justify-between mb-3">
-                <span class="icon-circle w-10 h-10 bg-accent-blue/15 text-accent-blue">
+                <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
                     <span class="material-symbols-outlined icon-md">group</span>
                 </span>
             </div>
@@ -24,7 +24,7 @@
         </div>
         <div class="p-5 rounded-card bg-bg-surface border border-border">
             <div class="flex items-center justify-between mb-3">
-                <span class="icon-circle w-10 h-10 bg-accent-teal/15 text-accent-teal">
+                <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
                     <span class="material-symbols-outlined icon-md">school</span>
                 </span>
             </div>
@@ -33,7 +33,7 @@
         </div>
         <div class="p-5 rounded-card bg-bg-surface border border-border">
             <div class="flex items-center justify-between mb-3">
-                <span class="icon-circle w-10 h-10 bg-accent-orange/15 text-accent-orange">
+                <span class="icon-circle w-10 h-10 bg-sand/15 text-sand">
                     <span class="material-symbols-outlined icon-md">archive</span>
                 </span>
             </div>
@@ -68,7 +68,7 @@
                     @endforeach
                 </select>
             </div>
-            <button class="px-4 py-2 rounded-xl bg-accent-blue text-white text-sm font-medium">Import</button>
+            <button class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium">Import</button>
             @error('file')
                 <p class="text-status-danger text-xs w-full">{{ $message }}</p>
             @enderror
@@ -78,7 +78,7 @@
     <div class="card p-6">
         <div class="flex items-center justify-between mb-4">
             <h2 class="font-heading font-semibold text-text-primary">Data TA Terbaru</h2>
-            <a href="{{ route('admin.tas') }}" class="text-sm text-accent-blue hover:underline">Kelola →</a>
+            <a href="{{ route('admin.tas') }}" class="text-sm text-brand hover:underline">Kelola →</a>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">

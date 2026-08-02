@@ -10,8 +10,8 @@
             <p class="text-sm text-text-secondary mt-0.5">Pantau progres bimbingan Tugas Akhir Anda</p>
         </div>
         <div class="flex flex-wrap gap-2">
-            <a href="{{ route('logbook.create') }}" class="px-4 py-2 rounded-xl bg-accent-blue text-white text-sm font-medium hover:opacity-90">+ Logbook</a>
-            <a href="{{ route('logbook.create-revisi') }}" class="px-4 py-2 rounded-xl bg-accent-teal text-white text-sm font-medium hover:opacity-90">+ Entri Revisi</a>
+            <a href="{{ route('logbook.create') }}" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">+ Logbook</a>
+            <a href="{{ route('logbook.create-revisi') }}" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">+ Entri Revisi</a>
             <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Semua Entri</a>
         </div>
     </div>
@@ -32,7 +32,7 @@
                 </div>
                 <form method="POST" action="{{ route('announcements.read', $a) }}" class="flex-shrink-0">
                     @csrf
-                    <button class="px-3 py-1.5 rounded-xl bg-accent-blue text-white text-xs font-medium hover:opacity-90">Tandai Dibaca</button>
+                    <button class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Tandai Dibaca</button>
                 </form>
             </div>
         @endforeach
@@ -100,7 +100,7 @@
                     <span class="font-bold text-text-primary">{{ $progressPercent }}%</span>
                 </div>
                 <div class="h-3 rounded-full bg-bg-panel overflow-hidden">
-                    <div class="progress-bar h-full rounded-full bg-accent-teal" style="width:{{ $progressPercent }}%"></div>
+                    <div class="progress-bar h-full rounded-full bg-brand" style="width:{{ $progressPercent }}%"></div>
                 </div>
                 <p class="mt-3 text-xs text-text-secondary">Minimal {{ $target }} sesi bimbingan perlu disetujui.</p>
             </div>

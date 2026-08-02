@@ -8,26 +8,28 @@
 
 :root {
   /* ----- Light mode (default, diadopsi dari referensi) ----- */
-  --bg-base: 255 255 255;
+  --bg-base: 248 249 245;
   --bg-surface: 255 255 255;
-  --bg-panel: 243 243 245;
-  --bg-hover: 245 246 248;
-  --border: 236 236 239;
+  --bg-panel: 239 242 234;
+  --bg-hover: 239 242 234;
+  --border: 225 230 217;
 
-  --text-primary: 20 21 26;
-  --text-secondary: 139 141 152;
+  --text-primary: 35 41 30;
+  --text-secondary: 107 117 102;
 
-  --accent-blue: 79 125 243;
-  --accent-orange: 247 164 103;
-  --accent-teal: 20 184 166;
-  --accent-purple: 167 139 250;
+  --brand: 124 148 115;
+  --brand-hover: 100 120 92;
+  --brand-light: 228 234 219;
 
-  --status-success: 34 197 94;
-  --status-danger: 239 68 68;
-  --status-info: 96 165 250;
-  --status-pending: 245 158 11;
+  --sand: 201 169 126;
+  --sand-light: 242 231 210;
 
-  --card-inverse: 18 20 28;
+  --status-success: 124 148 115;
+  --status-danger: 201 124 107;
+  --status-info: 107 140 174;
+  --status-pending: 201 169 126;
+
+  --card-inverse: 35 41 30;
 
   --radius-card: 20px;
   --spacing-card: 24px;
@@ -39,26 +41,28 @@
 
 .dark {
   /* ----- Dark mode (diturunkan, satu keluarga hue) ----- */
-  --bg-base: 11 13 18;
-  --bg-surface: 20 22 29;
-  --bg-panel: 26 29 36;
-  --bg-hover: 30 33 42;
-  --border: 36 39 48;
+  --bg-base: 19 24 15;
+  --bg-surface: 27 34 22;
+  --bg-panel: 34 43 28;
+  --bg-hover: 34 43 28;
+  --border: 44 54 36;
 
-  --text-primary: 244 245 247;
-  --text-secondary: 144 150 163;
+  --text-primary: 237 240 231;
+  --text-secondary: 154 166 146;
 
-  --accent-blue: 108 147 255;
-  --accent-orange: 253 186 130;
-  --accent-teal: 45 212 191;
-  --accent-purple: 185 166 252;
+  --brand: 147 174 133;
+  --brand-hover: 124 148 115;
+  --brand-light: 42 51 34;
 
-  --status-success: 52 211 153;
-  --status-danger: 248 113 113;
-  --status-info: 96 165 250;
-  --status-pending: 251 191 36;
+  --sand: 217 189 143;
+  --sand-light: 51 43 29;
 
-  --card-inverse: 244 245 247;
+  --status-success: 147 174 133;
+  --status-danger: 217 148 133;
+  --status-info: 143 173 201;
+  --status-pending: 217 189 143;
+
+  --card-inverse: 237 240 231;
 }
 
 /* ============================================================
@@ -102,11 +106,11 @@ h1, h2, h3, .font-heading {
 
 /* ---------- Tombol hierarchy ---------- */
 .btn-primary {
-  background: rgb(var(--accent-blue));
+  background: rgb(var(--brand));
   color: #fff;
   transition: opacity .15s ease;
 }
-.btn-primary:hover { opacity: .9; }
+.btn-primary:hover { background: rgb(var(--brand-hover)); }
 .btn-secondary {
   background: rgb(var(--bg-hover));
   color: rgb(var(--text-primary));

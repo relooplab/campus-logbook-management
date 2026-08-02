@@ -293,14 +293,14 @@ function PdfViewerApp() {
   return (
     <div className="space-y-4">
       {/* Tabs */}
-      <div className="border-b border-slate-200 dark:border-slate-700 flex gap-1 overflow-x-auto">
+      <div className="border-b border-border flex gap-1 overflow-x-auto">
         <button onClick={() => setActiveType('draft')}
-          className={`px-4 py-2 rounded-t-lg text-sm font-semibold whitespace-nowrap ${activeType === 'draft' ? 'bg-white dark:bg-slate-800 border-b-2 border-emerald-500' : 'bg-slate-100 dark:bg-slate-900'}`}>
+          className={`px-4 py-2 rounded-t-lg text-sm font-semibold whitespace-nowrap ${activeType === 'draft' ? 'bg-bg-surface dark:bg-bg-surface border-b-2 border-brand' : 'bg-bg-panel dark:bg-bg-panel'}`}>
           {TYPE_LABEL.draft}
         </button>
         {hasCatatan && (
           <button onClick={() => setActiveType('catatan')}
-            className={`px-4 py-2 rounded-t-lg text-sm font-semibold whitespace-nowrap ${activeType === 'catatan' ? 'bg-white dark:bg-slate-800 border-b-2 border-emerald-500' : 'bg-slate-100 dark:bg-slate-900'}`}>
+            className={`px-4 py-2 rounded-t-lg text-sm font-semibold whitespace-nowrap ${activeType === 'catatan' ? 'bg-bg-surface dark:bg-bg-surface border-b-2 border-brand' : 'bg-bg-panel dark:bg-bg-panel'}`}>
             {TYPE_LABEL.catatan}
           </button>
         )}
@@ -309,21 +309,21 @@ function PdfViewerApp() {
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm">Total {numPages || '…'} halaman</span>
-        <button onClick={() => setScale((s) => Math.min(4, s + 0.2))} className="px-3 py-1.5 rounded-md bg-slate-200 dark:bg-slate-700 text-sm">+</button>
-        <button onClick={() => setScale((s) => Math.max(0.5, s - 0.2))} className="px-3 py-1.5 rounded-md bg-slate-200 dark:bg-slate-700 text-sm">−</button>
+        <button onClick={() => setScale((s) => Math.min(4, s + 0.2))} className="px-3 py-1.5 rounded-md bg-bg-panel dark:bg-bg-panel text-sm">+</button>
+        <button onClick={() => setScale((s) => Math.max(0.5, s - 0.2))} className="px-3 py-1.5 rounded-md bg-bg-panel dark:bg-bg-panel text-sm">−</button>
         <button onClick={() => setAreaMode((m) => !m)}
-          className={`px-3 py-1.5 rounded-md text-sm font-semibold ${areaMode ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-700'}`}>
+          className={`px-3 py-1.5 rounded-md text-sm font-semibold ${areaMode ? 'bg-brand text-white' : 'bg-bg-panel dark:bg-bg-panel'}`}>
           {areaMode ? 'Mode Area: ON' : 'Mode Area: OFF'}
         </button>
         {buildFeedbackUrl && (
           <button onClick={buildFeedback}
-            className="px-3 py-1.5 rounded-md bg-accent-blue hover:bg-accent-blue/90 text-white text-sm">
+            className="px-3 py-1.5 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">
             ⚡ Jadikan Feedback
           </button>
         )}
         {burnUrl && (
           <a href={burnUrl.replace('__TYPE__', activeType)} target="_blank" rel="noopener"
-            className="ml-auto px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-sm">
+            className="ml-auto px-3 py-1.5 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">
             Unduh PDF dengan Anotasi
           </a>
         )}
@@ -331,9 +331,9 @@ function PdfViewerApp() {
 
       {/* Stage: continuous scroll, 2 halaman di layar besar */}
       <div ref={stageRef}
-        className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-2 overflow-x-auto">
+        className="bg-bg-surface dark:bg-bg-surface rounded-lg border border-border p-2 overflow-x-auto">
         {error && (
-          <div className="flex items-center justify-center p-8 text-center text-sm text-red-600 dark:text-red-400">
+          <div className="flex items-center justify-center p-8 text-center text-sm text-status-danger">
             {error}
           </div>
         )}
@@ -364,18 +364,18 @@ function PdfViewerApp() {
                           top: (a.y1 * size.height) + 'px',
                           width: ((a.x2 - a.x1) * size.width) + 'px',
                           height: ((a.y2 - a.y1) * size.height) + 'px',
-                          borderColor: a.resolved ? '#10b981' : '#f59e0b',
-                          backgroundColor: (a.resolved ? 'rgba(16,185,129,.15)' : 'rgba(245,158,11,.15)'),
+                          borderColor: a.resolved ? '#7C9473' : '#C9A97E',
+                          backgroundColor: (a.resolved ? 'rgba(124,148,115,.15)' : 'rgba(201,169,126,.15)'),
                         }}>
                         <span className="absolute -top-3 -left-1 text-white text-[10px] px-1 rounded"
-                          style={{ backgroundColor: a.resolved ? '#10b981' : '#f59e0b' }}>
+                          style={{ backgroundColor: a.resolved ? '#7C9473' : '#C9A97E' }}>
                           {a.id}
                         </span>
                       </div>
                     ))}
                     {/* Persegi saat menggambar */}
                     {drawing && drawing.pageIndex === i && (
-                      <div className="absolute border-2 border-dashed border-amber-500 bg-amber-500/20"
+                      <div className="absolute border-2 border-dashed border-sand bg-sand/20"
                         style={{
                           left: Math.min(drawing.x1, drawing.x2) + 'px',
                           top: Math.min(drawing.y1, drawing.y2) + 'px',
@@ -395,24 +395,24 @@ function PdfViewerApp() {
         )}
       </div>
 
-      <p className="text-xs text-slate-500 dark:text-slate-400">
+      <p className="text-xs text-text-secondary">
         {loading ? 'Memuat PDF…' : areaMode ? 'Seret pada halaman untuk menandai area, lalu tekan Enter untuk menyimpan komentar.' : 'Nyalakan Mode Area untuk menandai area, lalu beri komentar.'}
       </p>
 
       {/* Modal komentar baru */}
       {modal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-lg border dark:border-slate-700 p-4 w-full max-w-md">
+          <div className="bg-bg-surface dark:bg-bg-surface rounded-lg border border-border p-4 w-full max-w-md">
             <h3 className="font-semibold mb-2">Komentar pada area ini</h3>
             <textarea rows="3" value={modal.comment} onChange={(e) => setModal({ ...modal, comment: e.target.value })}
               onKeyDown={onCommentKeyDown}
-              className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
+              className="w-full rounded-md border border-border bg-bg-surface dark:bg-bg-surface px-3 py-2 text-sm"
               placeholder="Tulis komentar… (Enter untuk simpan)" autoFocus />
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Tekan Enter untuk menyimpan, Shift+Enter untuk baris baru.</p>
+            <p className="text-xs text-text-secondary mt-1">Tekan Enter untuk menyimpan, Shift+Enter untuk baris baru.</p>
             <div className="flex justify-end gap-2 mt-3">
-              <button onClick={() => setModal(null)} className="px-3 py-2 rounded-md bg-slate-200 dark:bg-slate-700 text-sm">Batal</button>
+              <button onClick={() => setModal(null)} className="px-3 py-2 rounded-md bg-bg-panel dark:bg-bg-panel text-sm">Batal</button>
               <button onClick={saveAnnotation} disabled={modal.saving}
-                className="px-3 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-sm">
+                className="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">
                 {modal.saving ? 'Menyimpan…' : 'Simpan'}
               </button>
             </div>
@@ -423,19 +423,19 @@ function PdfViewerApp() {
       {/* Modal detail komentar */}
       {selected && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-lg border dark:border-slate-700 p-4 w-full max-w-md">
+          <div className="bg-bg-surface dark:bg-bg-surface rounded-lg border border-border p-4 w-full max-w-md">
             <h3 className="font-semibold mb-2">Anotasi #{selected.id}</h3>
             <p className="text-sm mb-1">{selected.user}</p>
             <p className="text-sm mb-3">{selected.comment}</p>
             <div className="flex items-center gap-2">
               <button onClick={() => toggleResolve(selected.id)}
-                className="px-3 py-2 rounded-md bg-amber-500 text-white text-sm">
+                className="px-3 py-2 rounded-md bg-sand text-white text-sm">
                 {selected.resolved ? 'Buka' : 'Tandai Selesai'}
               </button>
               <button onClick={() => removeAnnotation(selected.id)}
-                className="px-3 py-2 rounded-md bg-red-600 text-white text-sm">Hapus</button>
+                className="px-3 py-2 rounded-md bg-status-danger text-white text-sm">Hapus</button>
               <button onClick={() => setSelected(null)}
-                className="ml-auto px-3 py-2 rounded-md bg-slate-200 dark:bg-slate-700 text-sm">Tutup</button>
+                className="ml-auto px-3 py-2 rounded-md bg-bg-panel dark:bg-bg-panel text-sm">Tutup</button>
             </div>
           </div>
         </div>

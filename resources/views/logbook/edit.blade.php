@@ -6,7 +6,7 @@
             <div> <label class="block text-sm font-medium mb-1" for="tanggal_pengiriman">Tanggal Pengiriman Revisi</label>
                 <input type="date" name="tanggal_pengiriman" id="tanggal_pengiriman" required
                     value="{{ old("tanggal_pengiriman", $logbook->tanggal_pengiriman?->format("Y-m-d") ?? now()->format("Y-m-d")) }}"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-accent-teal focus:outline-none">
+                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
                 @error("tanggal_pengiriman")
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -15,14 +15,14 @@
             <div> <label class="block text-sm font-medium mb-1" for="tanggal_bimbingan">Tanggal Bimbingan</label> <input
                     type="date" name="tanggal_bimbingan" id="tanggal_bimbingan" required
                     value="{{ old("tanggal_bimbingan", $logbook->tanggal_bimbingan?->format("Y-m-d")) }}"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-accent-teal focus:outline-none">
+                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
                 @error("tanggal_bimbingan")
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
             <div> <label class="block text-sm font-medium mb-1" for="topik">Topik Bimbingan</label> <input
                     type="text" name="topik" id="topik" required value="{{ old("topik", $logbook->topik) }}"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-accent-teal focus:outline-none">
+                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
                 @error("topik")
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -30,7 +30,7 @@
         @endif
         <div> <label class="block text-sm font-medium mb-1" for="progres_kendala">Ringkasan Perbaikan</label>
             <textarea name="progres_kendala" id="progres_kendala" rows="6" required
-                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-accent-teal focus:outline-none">{{ old("progres_kendala", $logbook->progres_kendala) }}</textarea> @error("progres_kendala")
+                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">{{ old("progres_kendala", $logbook->progres_kendala) }}</textarea> @error("progres_kendala")
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
         </div> {{-- Lampiran draft --}} <div> <label class="block text-sm font-medium mb-1">Lampiran Draft
@@ -47,7 +47,7 @@
                     <div class="flex items-center gap-1"> <a href="{{ route("logbook.pdf", $logbook) }}"
                             target="_blank" class="px-2 py-1 rounded-md bg-bg-panel hover:bg-bg-hover text-xs">Lihat</a>
                         <label
-                            class="px-2 py-1 rounded-md bg-accent-blue hover:bg-accent-blue/90 text-white text-xs cursor-pointer">
+                            class="px-2 py-1 rounded-md bg-brand hover:bg-brand-hover text-white text-xs cursor-pointer">
                             Ganti <input type="file" name="lampiran" accept="application/pdf" class="hidden">
                         </label>
                         <form method="POST" action="{{ route("logbook.remove-lampiran", $logbook) }}"
@@ -85,7 +85,7 @@
         <span class="material-symbols-outlined icon-sm align-text-bottom">warning</span> Mengganti atau menghapus file akan mengarsipkan versi lama dan tidak bisa dikembalikan. Komentar PDF
         pada file yang diganti akan otomatis ditandai selesai (resolve). </div>
     <div class="flex flex-wrap gap-2 pt-2"> <button type="submit"
-            class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm font-semibold">Simpan</button>
+            class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm font-semibold">Simpan</button>
         <a href="{{ route("logbook.show", $logbook) }}"
             class="px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Batal</a>
     </div>

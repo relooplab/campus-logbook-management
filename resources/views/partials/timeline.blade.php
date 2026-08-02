@@ -2,10 +2,10 @@
     if (!function_exists('tlColor')) {
         function tlColor($status) {
             return match ($status) {
-                "approved" => "bg-accent-teal",
+                "approved" => "bg-brand",
                 "revisi" => "bg-status-pending",
-                "submitted" => "bg-accent-blue",
-                "comment" => "bg-accent-blue",
+                "submitted" => "bg-brand",
+                "comment" => "bg-brand",
                 "future" => "bg-bg-hover",
                 default => "bg-bg-hover",
             };

@@ -1,58 +1,143 @@
 /* ============================================================
-   Thesis Logbook Management — Brand tokens (dark surface)
-   Dipakai sebagai alternatif / pendamping Tailwind CDN.
-   Token warna sejalan dengan tailwind.config.js.
+   Thesis Logbook Management — Brand & UI tokens (light + dark)
+   Selaras dengan tailwind.config.js dan public/css/global.css.
+   Token memakai CSS variables RGB-channel sehingga mendukung
+   opacity modifier Tailwind (mis. bg-brand/15) dan otomatis
+   switch light/dark lewat selector `.dark` (strategy 'class').
    ============================================================ */
 
-:root[data-theme="dark"] {
-  --bg-base: #0B0F14;
-  --bg-surface: #151B23;
-  --bg-surface-hover: #1C232D;
-  --border: #242C38;
+:root {
+  /* ----- Light mode (default) ----- */
+  --bg-base: 248 249 245;
+  --bg-surface: 255 255 255;
+  --bg-panel: 239 242 234;
+  --bg-hover: 239 242 234;
+  --border: 225 230 217;
 
-  --text-primary: #E6EDF3;
-  --text-secondary: #8B98A5;
+  --text-primary: 35 41 30;
+  --text-secondary: 107 117 102;
 
-  --brand-primary: #10B981;
-  --brand-primary-hover: #0EA271;
+  --brand: 124 148 115;
+  --brand-hover: 100 120 92;
+  --brand-light: 228 234 219;
 
-  --accent-blue: #3B82F6;
-  --accent-amber: #F59E0B;
-  --accent-red: #EF4444;
-  --accent-purple: #7C6EF6;
+  --sand: 201 169 126;
+  --sand-light: 242 231 210;
 
-  --radius-card: 12px;
-  --spacing-card: 20px;
+  --status-success: 124 148 115;
+  --status-danger: 201 124 107;
+  --status-info: 107 140 174;
+  --status-pending: 201 169 126;
+
+  --card-inverse: 35 41 30;
+
+  --radius-card: 20px;
+  --spacing-card: 24px;
 
   --font-sans: 'Roboto Mono', ui-monospace, monospace;
+  --font-heading: 'Roboto Mono', ui-monospace, monospace;
 }
 
-/* ---------- Badge status semantik ---------- */
+.dark {
+  /* ----- Dark mode (satu keluarga hue) ----- */
+  --bg-base: 19 24 15;
+  --bg-surface: 27 34 22;
+  --bg-panel: 34 43 28;
+  --bg-hover: 34 43 28;
+  --border: 44 54 36;
+
+  --text-primary: 237 240 231;
+  --text-secondary: 154 166 146;
+
+  --brand: 147 174 133;
+  --brand-hover: 124 148 115;
+  --brand-light: 42 51 34;
+
+  --sand: 217 189 143;
+  --sand-light: 51 43 29;
+
+  --status-success: 147 174 133;
+  --status-danger: 217 148 133;
+  --status-info: 143 173 201;
+  --status-pending: 217 189 143;
+
+  --card-inverse: 237 240 231;
+}
+
+/* ============================================================
+   Primitive utilities (komponen dari guideline)
+   ============================================================ */
+
+body {
+  font-family: var(--font-sans);
+}
+
+.font-heading,
+h1, h2, h3, .font-heading {
+  font-family: var(--font-heading);
+}
+
+/* ---------- Badge status: dot + label ---------- */
 .badge {
-  display: inline-block;
-  padding: 2px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
   line-height: 1.4;
+  white-space: nowrap;
 }
-.badge-success { background: rgba(16,185,129,0.15); color: #10B981; }
-.badge-pending { background: rgba(245,158,11,0.15); color: #F59E0B; }
-.badge-danger  { background: rgba(239,68,68,0.15); color: #EF4444; }
-.badge-info    { background: rgba(59,130,246,0.15); color: #3B82F6; }
-.badge-neutral { background: rgba(139,152,165,0.15); color: #8B98A5; }
+.badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: currentColor;
+}
+.badge-success { background: rgba(var(--status-success) / 0.14); color: rgb(var(--status-success)); }
+.badge-pending { background: rgba(var(--status-pending) / 0.14); color: rgb(var(--status-pending)); }
+.badge-danger  { background: rgba(var(--status-danger) / 0.14); color: rgb(var(--status-danger)); }
+.badge-info    { background: rgba(var(--status-info) / 0.14); color: rgb(var(--status-info)); }
+.badge-neutral { background: rgba(var(--text-secondary) / 0.14); color: rgb(var(--text-secondary)); }
 
 /* ---------- Tombol hierarchy ---------- */
-.btn-primary { background: var(--brand-primary); color: #fff; }
-.btn-primary:hover { background: var(--brand-primary-hover); }
-.btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text-primary); }
-.btn-warning { background: var(--accent-amber); color: #1a1300; }
-.btn-danger { background: var(--accent-red); color: #fff; }
+.btn-primary {
+  background: rgb(var(--brand));
+  color: #fff;
+  transition: opacity .15s ease;
+}
+.btn-primary:hover { background: rgb(var(--brand-hover)); }
+.btn-secondary {
+  background: rgb(var(--bg-hover));
+  color: rgb(var(--text-primary));
+  border: 1px solid transparent;
+}
+.btn-secondary:hover { background: rgb(var(--border)); }
+.btn-ghost {
+  background: transparent;
+  color: rgb(var(--text-primary));
+  border: 1px solid rgb(var(--border));
+}
+.btn-ghost:hover { background: rgb(var(--bg-hover)); }
+.btn-danger { background: rgb(var(--status-danger)); color: #fff; }
+.btn-danger:hover { opacity: .9; }
+.btn-warning { background: rgb(var(--status-pending)); color: #1a1300; }
 
-/* ---------- Layout primitif ---------- */
-.radius-card { border-radius: var(--radius-card); }
+/* ---------- Card (rounded generous) ---------- */
+.card {
+  background: rgb(var(--bg-surface));
+  border: 1px solid rgb(var(--border));
+  border-radius: var(--radius-card);
+}
 
-/* Font default aplikasi (Roboto Mono) */
-body {
-  font-family: 'Roboto Mono', ui-monospace, monospace;
+/* ---------- Icon-circle ---------- */
+.icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  flex-shrink: 0;
 }

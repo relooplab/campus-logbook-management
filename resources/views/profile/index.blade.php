@@ -4,7 +4,7 @@
         class="bg-bg-surface rounded-xl border border-border p-6 space-y-4">
         <div class="flex items-center gap-4">
             <div
-                class="h-20 w-20 rounded-full overflow-hidden bg-accent-teal text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                class="h-20 w-20 rounded-full overflow-hidden bg-brand text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
                 @if ($user->photoUrl())
                     <img src="{{ $user->photoUrl() }}" class="h-full w-full object-cover" alt="Foto profil">
                 @else
@@ -24,7 +24,7 @@
             @csrf @method("PUT") <div class="grid sm:grid-cols-2 gap-4">
                 <div> <label class="block text-sm font-medium mb-1" for="name">Nama Lengkap</label> <input
                         type="text" name="name" id="name" required value="{{ old("name", $user->name) }}"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-accent-teal focus:outline-none">
+                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
                     @error("name")
                         <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -80,7 +80,7 @@
                 </div>
             @endif
             <div class="flex items-center gap-3 pt-2"> <button
-                    class="px-4 py-2 rounded-md bg-accent-teal hover:bg-accent-teal/90 text-white text-sm font-semibold">Simpan
+                    class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm font-semibold">Simpan
                     Profil</button> </div>
         </form>
     </div> {{-- Ganti kata sandi --}} <div class="bg-bg-surface rounded-xl border border-border p-6 space-y-4">
@@ -105,7 +105,7 @@
                     <input type="password" name="password_confirmation" id="password_confirmation" required
                         minlength="6" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                 </div>
-            </div> <button class="px-4 py-2 rounded-md bg-accent-blue hover:bg-accent-blue/90 text-white text-sm">Ubah
+            </div> <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Ubah
                 Kata
                 Sandi</button>
         </form>

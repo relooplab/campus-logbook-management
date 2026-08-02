@@ -7,7 +7,7 @@
     <div class="bg-bg-surface rounded-xl border border-border p-6">
         <div class="flex items-center gap-4">
             <div
-                class="h-20 w-20 rounded-full overflow-hidden bg-accent-teal text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                class="h-20 w-20 rounded-full overflow-hidden bg-brand text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
                 @if ($profile->photoUrl())
                     <img src="{{ $profile->photoUrl() }}" class="h-full w-full object-cover" alt="Foto profil">
                 @else
@@ -45,11 +45,11 @@
                 <div class="flex flex-wrap gap-2 text-sm">
                     @if ($profile->google_scholar)
                         <a href="{{ $profile->google_scholar }}" target="_blank" rel="noopener"
-                            class="px-3 py-1.5 rounded-md bg-accent-blue/10 text-accent-blue hover:bg-accent-blue/10 hover:bg-accent-blue/15"><span class="material-symbols-outlined icon-sm align-text-bottom">school</span>
+                            class="px-3 py-1.5 rounded-md bg-brand/10 text-brand hover:bg-brand/10 hover:bg-brand-light"><span class="material-symbols-outlined icon-sm align-text-bottom">school</span>
                             Google Scholar</a>
                         @endif @if ($profile->orcid)
                             <a href="https://orcid.org/{{ $profile->orcid }}" target="_blank" rel="noopener"
-                                class="px-3 py-1.5 rounded-md bg-accent-teal/10 text-accent-teal hover:bg-accent-teal/10"><span class="material-symbols-outlined icon-sm align-text-bottom">badge</span>
+                                class="px-3 py-1.5 rounded-md bg-brand/10 text-brand hover:bg-brand/10"><span class="material-symbols-outlined icon-sm align-text-bottom">badge</span>
                                 ORCID</a>
                             @endif @if ($profile->sinta)
                                 <a href="https://sinta.kemdikbud.go.id/authors/profile/{{ $profile->sinta }}"
