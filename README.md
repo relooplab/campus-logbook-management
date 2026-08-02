@@ -52,7 +52,10 @@ The application follows a cohesive design system optimized for thesis mentoring 
 - [Configuration](#configuration)
 - [Testing & Verification](#testing--verification)
 - [Design Principles & Constraints](#design-principles--constraints)
-- [Publishing to GitHub](#publishing-to-github)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [Security](#security)
+- [License](#license)
 
 ---
 
@@ -139,59 +142,14 @@ Two integrated modules provide 1:1 messaging and broadcast announcements.
 - **Student UX** — Sticky banner on dashboard + database notification + email alert.
 - **Reporting** — Senders see read status ("12 of 15 read") with per-recipient `read_at` timestamp. "Remind unread" action re-sends notifications without duplicating the announcement.
 
-#### REST Endpoints
-
-| Method | Route | Controller | Auth | Purpose |
-|---|---|---|---|---|
-| GET | `/chat` | `ChatController@index` | Authenticated | List conversations with unread message counts |
-| GET | `/chat/start?user=&ta=` | `ChatController@start` | Authenticated | Find or create conversation; redirect to thread |
-| GET | `/chat/{conversation}` | `ChatController@show` | Participant | View conversation; auto-mark as read |
-| POST | `/chat/{conversation}` | `ChatController@store` | Participant | Send message with optional file attachment |
-| POST | `/chat/{conversation}/attach-options` | `ChatController@attachOptions` | Participant | JSON list of attachable Workspace files / Logbook entries |
-| PUT | `/chat/{conversation}/{message}` | `ChatController@update` | Message sender | Edit message (≤15 min window) |
-| GET | `/announcements` | `AnnouncementController@index` | Authenticated | Senders: sent announcements + read counts; students: received announcements |
-| GET | `/announcements/create` | `AnnouncementController@create` | Supervisor/Admin | Announcement form |
-| POST | `/announcements` | `AnnouncementController@store` | Supervisor/Admin | Create announcement, fan-out to recipients, send notifications |
-| GET | `/announcements/{id}/report` | `AnnouncementController@report` | Sender/Admin | Read/unread recipient breakdown |
-| POST | `/announcements/{id}/read` | `AnnouncementController@markRead` | Recipient | Mark announcement as read |
-| POST | `/announcements/{id}/remind` | `AnnouncementController@remindUnread` | Sender/Admin | Send reminder to unread recipients |
-
-#### Database Schema
-
-See migration `2026_08_02_120000_create_chat_tables.php`:
-
-```sql
-conversations
-  id, mahasiswa_ta_id (nullable FK->mahasiswa_ta),
-  user_one_id, user_two_id (FK->users, cascade),
-  created_at, updated_at
-  UNIQUE (mahasiswa_ta_id, user_one_id, user_two_id)
-
-messages
-  id, conversation_id (FK cascade),
-  sender_id (FK->users cascade),
-  body (text),
-  attachable_type, attachable_id    -- Polymorphic: WorkspaceFile | LogbookEntry
-  read_at, edited_at, created_at, updated_at
-
-announcements
-  id, sender_id (FK->users cascade),
-  institution_id (nullable FK->institutions, nullOnDelete),
-  title, body, target_filter (nullable JSON),
-  created_at, updated_at
-
-announcement_recipients
-  id, announcement_id (FK cascade), user_id (FK->users cascade),
-  read_at (nullable), created_at, updated_at
-  UNIQUE (announcement_id, user_id)
-```
-
-#### Access Control (`ChatController@authorizeChat`)
+#### Access Control
 
 - **Admins** — Chat with any user (scoped to institution in `institution` mode).
-- **Supervisors** — Chat with supervised/examined students (`pembimbing_1/2` or `penguji_1/2`) or admins. Two supervisors cannot directly message each other.
+- **Supervisors** — Chat with supervised/examined students or admins. Two supervisors cannot directly message each other.
 - **Students** — Chat with assigned supervisors/examiners or admins. Students cannot message other students.
 - **File attachments** — Re-authorized per thesis: only admins, the file owner (student), or assigned supervisors/examiners can attach. Receiver permissions follow existing Workspace/logbook policies.
+
+> Full route reference, controller mapping, and database schema for the chat and announcement modules are documented in [docs/API.md](docs/API.md).
 
 ### Productivity Features
 
@@ -355,16 +313,16 @@ Copy `.env.example` to `.env` and configure:
 
 ```bash
 # Deployment
-APP_ENV=production              # Set to 'local' for development
-APP_DEBUG=false              # Never enable in production
-APP_URL=http://your-domain   # Application base URL
+APP_ENV=production            # Set to 'local' for development
+APP_DEBUG=false                # Never enable in production
+APP_URL=http://your-domain     # Application base URL
 
 # Application mode
-APP_MODE=individual          # 'individual' (default) | 'institution'
+APP_MODE=individual            # 'individual' (default) | 'institution'
 
 # External resource links (customizable per institution)
-APP_JADWAL_URL=https://...   # External guidance scheduling system
-APP_TEMPLATE_URL=https://...  # External revision template link
+APP_JADWAL_URL=https://...     # External guidance scheduling system
+APP_TEMPLATE_URL=https://...   # External revision template link
 
 # Database
 DB_CONNECTION=mysql
@@ -472,54 +430,49 @@ php artisan files:prune-orphans
 
 ---
 
-## Publishing to GitHub
+## Documentation
 
-After pushing this repository to GitHub, complete the following steps to ensure discoverability and clarity:
-
-### Step 1: Repository Settings
-
-Navigate to **Settings** → **General** and set:
-
-- **Description:** "Web application for recording and monitoring undergraduate thesis mentoring — Laravel 11, PDF annotations, real-time Reverb, exports."
-
-### Step 2: Repository Topics
-
-On the repository home page, click **About** → **Edit** and add these topics:
-
-```text
-laravel php mysql redis thesis thesis-management logbook mentoring academic-project
-pdf-annotation dompdf reverb laravel-excel spatie-permission tailwindcss docker
-docker-compose web-application education
-```
-
-### Step 3: Update README Badge
-
-The license badge in this README currently points to:
-
-```markdown
-![License](https://img.shields.io/github/license/hafizhul/thesis-logbook-management)
-```
-
-If you fork this repository or use a different GitHub account/org, update the badge to:
-
-```markdown
-![License](https://img.shields.io/github/license/<your-github-username>/<your-repo-name>)
-```
-
-### Step 4: Environment Configuration
-
-Once deployed, update your `.env` file:
-
-```bash
-APP_URL=https://your-domain.com    # Your production domain
-APP_JADWAL_URL=https://...         # Link to your institution's scheduling system
-APP_TEMPLATE_URL=https://...       # Link to revision template document
-```
+| Document | Purpose |
+|---|---|
+| [MODE-SPEC.md](docs/MODE-SPEC.md) | Full architecture of individual vs. institution deployment modes |
+| [API.md](docs/API.md) | Route, controller, and database reference for the chat/announcement module |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Development setup, coding standards, and pull request process |
+| [CHANGELOG.md](CHANGELOG.md) | Version history and release notes |
+| [SECURITY.md](SECURITY.md) | Security policy and vulnerability disclosure |
 
 ---
 
-## Support & License
+## Contributing
 
-This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on the development workflow, coding standards, and how to submit a pull request.
 
-For issues, feature requests, or contributions, please open an issue or pull request on GitHub.
+Ways to contribute:
+
+- Report bugs or suggest features via [GitHub Issues](https://github.com/hafizhul/thesis-logbook-management/issues)
+- Improve documentation
+- Submit bug fixes or new features via pull request
+
+---
+
+## Security
+
+If you discover a security vulnerability, please **do not** open a public issue. Follow the responsible disclosure process described in [SECURITY.md](SECURITY.md).
+
+---
+
+## License
+
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
+
+---
+
+## Acknowledgments
+
+Built with [Laravel](https://laravel.com), [PDF.js](https://mozilla.github.io/pdf.js/), [Tailwind CSS](https://tailwindcss.com), and other open-source projects listed in [composer.json](composer.json) and [package.json](package.json).
+
+---
+
+## Support
+
+- **Bug reports & feature requests:** [GitHub Issues](https://github.com/hafizhul/thesis-logbook-management/issues)
+- **Questions & discussion:** [GitHub Discussions](https://github.com/hafizhul/thesis-logbook-management/discussions)

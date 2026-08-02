@@ -1,11 +1,13 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "hafizhul/thesis-logbook-management",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "A web application for recording and monitoring undergraduate thesis mentoring sessions.",
     "keywords": [
         "laravel",
-        "framework"
+        "thesis",
+        "logbook",
+        "mentoring"
     ],
     "license": "MIT",
     "require": {
