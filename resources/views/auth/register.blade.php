@@ -34,7 +34,7 @@
                 name="supervisor_3" placeholder="Pembimbing 3 (opsional)" value="{{ old("supervisor_3") }}"
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
         </div> <button type="submit"
-            class="w-full rounded-md bg-brand hover:bg-brand-hover text-white py-2 text-sm font-semibold">Daftar</button>
+            class="w-full rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white py-2 text-sm font-semibold">Daftar</button>
         <a href="{{ route("login") }}" class="block text-center text-sm text-brand hover:underline">Sudah punya akun?
             Masuk</a>
     </form>

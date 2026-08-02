@@ -76,11 +76,19 @@
                                 value="{{ old("researchgate", $user->researchgate) }}"
                                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                         </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium mb-1" for="jadwal_bimbingan_url">Link Jadwal Bimbingan</label>
+                            <input type="url" name="jadwal_bimbingan_url" id="jadwal_bimbingan_url"
+                                value="{{ old("jadwal_bimbingan_url", $user->jadwal_bimbingan_url) }}"
+                                placeholder="https://cal.com/... atau https://forms.gle/..."
+                                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            <p class="text-xs text-text-secondary mt-1">Link ini akan ditampilkan sebagai card di halaman Jadwal Bimbingan agar mahasiswa dapat memesan/bergabung sesi bimbingan Anda. Kosongkan jika belum tersedia.</p>
+                        </div>
                     </div>
                 </div>
             @endif
             <div class="flex items-center gap-3 pt-2"> <button
-                    class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm font-semibold">Simpan
+                    class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan
                     Profil</button> </div>
         </form>
     </div> {{-- Ganti kata sandi --}} <div class="bg-bg-surface rounded-xl border border-border p-6 space-y-4">
@@ -105,7 +113,7 @@
                     <input type="password" name="password_confirmation" id="password_confirmation" required
                         minlength="6" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                 </div>
-            </div> <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Ubah
+            </div> <button class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Ubah
                 Kata
                 Sandi</button>
         </form>

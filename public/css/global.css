@@ -18,6 +18,8 @@
   --text-secondary: 107 117 102;
 
   --brand: 124 148 115;
+  --brand-fill: 124 148 115;
+  --brand-fill-hover: 100 120 92;
   --brand-hover: 100 120 92;
   --brand-light: 228 234 219;
 
@@ -51,6 +53,8 @@
   --text-secondary: 154 166 146;
 
   --brand: 147 174 133;
+  --brand-fill: 124 148 115;
+  --brand-fill-hover: 100 120 92;
   --brand-hover: 124 148 115;
   --brand-light: 42 51 34;
 

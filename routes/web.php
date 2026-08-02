@@ -18,6 +18,7 @@ use App\Http\Controllers\ActionItemController;
 use App\Http\Controllers\PdfCommentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuickReviewController;
+use App\Http\Controllers\SchedulingController;
 use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
@@ -79,6 +80,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/mahasiswa-ta/{mahasiswaTa}', [MahasiswaTaController::class, 'show'])->name('mahasiswa-ta.show');
     Route::post('/mahasiswa-ta/{mahasiswaTa}/fase', [MahasiswaTaController::class, 'updateFase'])
         ->name('mahasiswa-ta.fase');
+
+    // -------------------------------------------------- jadwal bimbingan
+    Route::get('/jadwal-bimbingan', [SchedulingController::class, 'index'])->name('scheduling.index');
 
     // -------------------------------------------------- quick review (dosen)
     Route::get('/quick-review', [QuickReviewController::class, 'index'])->name('quick-review.index');

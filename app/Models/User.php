@@ -36,6 +36,7 @@ class User extends Authenticatable
         'orcid',
         'sinta',
         'researchgate',
+        'jadwal_bimbingan_url',
     ];
 
     /**
@@ -158,8 +159,7 @@ class User extends Authenticatable
      */
     public function supervisedTas(): HasMany
     {
-        return $this->hasMany(MahasiswaTa::class, 'pembimbing_1_id')
-            ->orWhere('pembimbing_2_id', $this->id);
+        return $this->hasMany(MahasiswaTa::class, 'pembimbing_1_id');
     }
 
     /**

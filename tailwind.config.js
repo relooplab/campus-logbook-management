@@ -30,6 +30,8 @@ module.exports = {
           DEFAULT: 'rgb(var(--brand) / <alpha-value>)',
           hover: 'rgb(var(--brand-hover) / <alpha-value>)',
           light: 'rgb(var(--brand-light) / <alpha-value>)',
+          fill: 'rgb(var(--brand-fill) / <alpha-value>)',
+          'fill-hover': 'rgb(var(--brand-fill-hover) / <alpha-value>)',
         },
         sand: {
           DEFAULT: 'rgb(var(--sand) / <alpha-value>)',

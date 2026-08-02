@@ -2,7 +2,7 @@
 <div class="space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Pengumuman</h1> <a href="{{ route("announcements.create") }}"
-            class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">+ Buat Pengumuman</a>
+            class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">+ Buat Pengumuman</a>
     </div>
     @if ($announcements->isEmpty())
         <div class="px-4 py-10 rounded-lg bg-bg-surface border border-border text-center text-text-secondary"> Belum ada

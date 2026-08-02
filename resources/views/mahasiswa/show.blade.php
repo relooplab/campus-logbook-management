@@ -30,7 +30,7 @@
         </div>
         <div class="flex flex-wrap gap-2"> <a
                 href="{{ route("chat.start", ["user" => $mahasiswaTa->user_id, "ta" => $mahasiswaTa->id]) }}"
-                class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">chat</span> Chat</a> <a
+                class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">chat</span> Chat</a> <a
                 href="{{ route("workspace.index", $mahasiswaTa) }}"
                 class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">folder</span>
                 Workspace</a>
@@ -40,7 +40,44 @@
                     PDF</a>
             @endif
         </div>
-    </div> {{-- Info pembimbing + penguji + fase --}} <div
+    </div> {{-- Kontak mahasiswa (hanya untuk dosen) --}} @php $mhs = $mahasiswaTa->mahasiswa; @endphp
+    @if ($isDosen && $mhs && ($mhs->whatsapp || $mhs->telegram || $mhs->linkedin))
+        <div class="bg-bg-surface rounded-xl border border-border p-5">
+            <h2 class="font-semibold mb-3"><span class="material-symbols-outlined icon-sm align-text-bottom">contact_phone</span> Kontak Mahasiswa</h2>
+            <div class="grid sm:grid-cols-3 gap-3 text-sm">
+                @if ($mhs->whatsapp)
+                    <a href="{{ $mhs->whatsappUrl() }}" target="_blank" rel="noopener"
+                        class="px-3 py-2.5 rounded-md bg-bg-panel hover:bg-bg-hover flex items-start gap-2 min-w-0">
+                        <span class="material-symbols-outlined icon-sm flex-shrink-0 mt-0.5">chat</span>
+                        <span class="min-w-0">
+                            <span class="block text-xs text-text-secondary">WhatsApp</span>
+                            <span class="block font-medium text-text-primary break-words">{{ $mhs->whatsapp }}</span>
+                        </span>
+                    </a>
+                @endif
+                @if ($mhs->telegram)
+                    <div class="px-3 py-2.5 rounded-md bg-bg-panel flex items-start gap-2 min-w-0">
+                        <span class="material-symbols-outlined icon-sm flex-shrink-0 mt-0.5">send</span>
+                        <span class="min-w-0">
+                            <span class="block text-xs text-text-secondary">Telegram</span>
+                            <span class="block font-medium text-text-primary break-words">{{ $mhs->telegram }}</span>
+                        </span>
+                    </div>
+                @endif
+                @if ($mhs->linkedin)
+                    <a href="{{ $mhs->linkedin }}" target="_blank" rel="noopener"
+                        class="px-3 py-2.5 rounded-md bg-bg-panel hover:bg-bg-hover flex items-start gap-2 min-w-0">
+                        <span class="material-symbols-outlined icon-sm flex-shrink-0 mt-0.5">link</span>
+                        <span class="min-w-0">
+                            <span class="block text-xs text-text-secondary">LinkedIn</span>
+                            <span class="block font-medium text-text-primary break-words">{{ \Illuminate\Support\Str::limit($mhs->linkedin, 40) }}</span>
+                        </span>
+                    </a>
+                @endif
+            </div>
+        </div>
+    @endif
+    {{-- Info pembimbing + penguji + fase --}} <div
         class="bg-bg-surface rounded-xl border border-border p-5 grid sm:grid-cols-2 gap-4 text-sm">
         <div class="px-3 py-2 rounded-md bg-bg-panel"> <span class="text-text-secondary">Pembimbing 1:</span> <span
                 class="font-medium block">@include("partials.user-link", ["user" => $mahasiswaTa->pembimbing1])</span> </div>
@@ -64,7 +101,75 @@
                 </form>
             @endif
         </div>
-    </div> {{-- Riwayat logbook --}} <div class="bg-bg-surface rounded-xl border border-border p-5">
+    </div>
+
+    {{-- ===== Ringkasan dashboard mahasiswa (view dosen) ===== --}}
+    <div class="space-y-6">
+        {{-- Health indicator (self-awareness) --}}
+        <div class="px-4 py-3 rounded-card border flex items-center gap-3
+            {{ $regularity === 'green' ? 'bg-status-success/10 border-status-success/20 text-status-success' : '' }}
+            {{ $regularity === 'yellow' ? 'bg-status-pending/10 border-status-pending/20 text-status-pending' : '' }}
+            {{ $regularity === 'red' ? 'bg-status-danger/10 border-status-danger/20 text-status-danger' : '' }}">
+            <span class="inline-block w-4 h-4 rounded-full flex-shrink-0
+                {{ $regularity === 'green' ? 'bg-status-success' : '' }}
+                {{ $regularity === 'yellow' ? 'bg-status-pending' : '' }}
+                {{ $regularity === 'red' ? 'bg-status-danger' : '' }}"></span>
+            <div class="text-sm">
+                <strong>Status bimbingan mahasiswa: {{ ucfirst($regularity) }}</strong>
+                <span class="block text-xs opacity-80">{{ $regularityTooltip }}</span>
+            </div>
+        </div>
+
+        {{-- Milestone Journey (fase) --}}
+        <div class="card p-6 bg-bg-surface rounded-xl border border-border">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-heading font-semibold text-text-primary">Milestone Journey</h2>
+                <span class="text-sm text-text-secondary">{{ $mahasiswaTa->faseLabel() }} · {{ $percent }}%</span>
+            </div>
+            @include('partials.milestone', ['faseKeys' => $faseKeys, 'faseIndex' => $faseIndex])
+            <p class="mt-3 text-xs text-text-secondary">Fase ditetapkan oleh dosen pembimbing.</p>
+        </div>
+
+        {{-- Progres Bimbingan --}}
+        <div class="card p-6 bg-bg-surface rounded-xl border border-border">
+            <h2 class="font-heading font-semibold text-text-primary mb-3">Progres Bimbingan</h2>
+            <div class="flex items-end justify-between mb-1 text-sm">
+                <span class="text-text-secondary">{{ $approved }} / {{ $target }} sesi disetujui</span>
+                <span class="font-bold text-text-primary">{{ $percent }}%</span>
+            </div>
+            <div class="h-3 rounded-full bg-bg-panel overflow-hidden">
+                <div class="progress-bar h-full rounded-full bg-brand" style="width:{{ $percent }}%"></div>
+            </div>
+            <p class="mt-3 text-xs text-text-secondary">Minimal {{ $target }} sesi bimbingan perlu disetujui.</p>
+        </div>
+
+        {{-- Achievement + Statistik & Streak --}}
+        <div class="grid lg:grid-cols-2 gap-5">
+            <div class="card p-6 bg-bg-surface rounded-xl border border-border">
+                <h2 class="font-heading font-semibold text-text-primary mb-3">Achievement ({{ $unlockedAchievements->count() }}/{{ $totalAchievements }})</h2>
+                @include('partials.badge-shelf', ['unlockedAchievements' => $unlockedAchievements, 'unlockedCodes' => $unlockedCodes, 'totalAchievements' => $totalAchievements])
+            </div>
+
+            <div class="card p-6 bg-bg-surface rounded-xl border border-border">
+                <h2 class="font-heading font-semibold text-text-primary mb-3">Statistik & Streak</h2>
+                @include('partials.stat-cards', ['stats' => $stats])
+            </div>
+        </div>
+
+        {{-- Heatmap --}}
+        <div class="card p-6 bg-bg-surface rounded-xl border border-border">
+            <h2 class="font-heading font-semibold text-text-primary mb-3">Aktivitas 12 Bulan</h2>
+            @include('partials.heatmap', ['heatmap' => $heatmap])
+        </div>
+
+        {{-- Timeline --}}
+        <div class="card p-6 bg-bg-surface rounded-xl border border-border">
+            <h2 class="font-heading font-semibold text-text-primary mb-4">Timeline Bimbingan</h2>
+            @include('partials.timeline', ['timeline' => $timeline, 'regularity' => $regularity, 'regularityTooltip' => $regularityTooltip])
+        </div>
+    </div>
+
+    {{-- Riwayat logbook --}} <div class="bg-bg-surface rounded-xl border border-border p-5">
         <h2 class="font-semibold mb-4">Riwayat Logbook ({{ $entries->count() }})</h2>
         @if ($entries->isEmpty())
             <p class="text-sm text-text-secondary">Belum ada bimbingan. Mulai catat sesi pertamamu.</p>

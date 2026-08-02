@@ -44,9 +44,9 @@
         @enderror
     </div>
     <div class="flex flex-wrap gap-2 pt-2"> <button type="submit"
-            class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm font-semibold">Simpan
+            class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan
             Draf</button> <button type="submit" name="submit" value="1"
-            class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm font-semibold">Kirim
+            class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Kirim
             ke
             Pembimbing</button> <a href="{{ route("logbook.index") }}"
             class="px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Batal</a>
@@ -59,6 +59,32 @@
     initTbToolbar('progres_kendala');
 </script>
 <script>
-    // Auto-save draft ke localStorage (tiap 5 detik) + restore. (function () { var KEY = 'lbta-logbook-draft'; var topik = document.getElementById('topik'); var progres = document.getElementById('progres_kendala'); var tanggal = document.getElementById('tanggal_bimbingan'); var msg = document.getElementById('autosave-msg'); function save() { localStorage.setItem(KEY, JSON.stringify({ topik: topik.value, progres: progres.value, tanggal: tanggal.value, ts: Date.now() })); msg.textContent = 'Draf tersimpan otomatis '+new Date().toLocaleTimeString(); } // Restore draf (hanya jika ada dan tidak sedang mengisi ulang). try { var saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (saved && saved.progres && !progres.value) { if (saved.topik) topik.value = saved.topik; if (saved.progres) progres.value = saved.progres; if (saved.tanggal) tanggal.value = saved.tanggal; msg.textContent = 'Draf dipulihkan dari penyimpanan otomatis.'; } } catch (e) {} setInterval(save, 5000); // Hapus draf saat berhasil submit. document.getElementById('logbook-form').addEventListener('submit', function () { localStorage.removeItem(KEY); }); })();
+    // Auto-save draft ke localStorage (tiap 5 detik) + restore.
+    (function () {
+        var KEY = 'lbta-logbook-draft';
+        var topik = document.getElementById('topik');
+        var progres = document.getElementById('progres_kendala');
+        var tanggal = document.getElementById('tanggal_bimbingan');
+        var msg = document.getElementById('autosave-msg');
+        function save() {
+            localStorage.setItem(KEY, JSON.stringify({ topik: topik.value, progres: progres.value, tanggal: tanggal.value, ts: Date.now() }));
+            msg.textContent = 'Draf tersimpan otomatis ' + new Date().toLocaleTimeString();
+        }
+        // Restore draf (hanya jika ada dan tidak sedang mengisi ulang).
+        try {
+            var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+            if (saved && saved.progres && !progres.value) {
+                if (saved.topik) topik.value = saved.topik;
+                if (saved.progres) progres.value = saved.progres;
+                if (saved.tanggal) tanggal.value = saved.tanggal;
+                msg.textContent = 'Draf dipulihkan dari penyimpanan otomatis.';
+            }
+        } catch (e) {}
+        setInterval(save, 5000);
+        // Hapus draf saat berhasil submit.
+        document.getElementById('logbook-form').addEventListener('submit', function () {
+            localStorage.removeItem(KEY);
+        });
+    })();
 </script>
 @endsection

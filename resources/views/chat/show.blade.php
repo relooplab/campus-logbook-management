@@ -1,6 +1,6 @@
 @extends("layouts.app") @section("title", "Chat") @section("content")
 <div class="max-w-3xl mx-auto">
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h1 class="text-xl font-bold">Chat dengan {{ $conversation->other_user?->name }}</h1> <a
             href="{{ route("chat.index") }}" class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">←
             Daftar</a>
@@ -43,7 +43,7 @@
                 id="attach-btn" class="p-2 rounded-md hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-md">attach_file</span></button>
             <textarea name="body" id="msg-body" rows="1" required placeholder="Tulis pesan..."
                 class="flex-1 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm resize-none"></textarea> <button
-                class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Kirim</button>
+                class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Kirim</button>
         </form> {{-- Panel attach --}} <div id="attach-panel" class="hidden border-t border-border p-3">
             <div class="flex items-center justify-between mb-2">
                 <p class="text-sm font-semibold">Lampirkan referensi</p> <button type="button" id="attach-close"
@@ -68,7 +68,86 @@
 @endsection @section("scripts")
 <script>
     var convId = {{ $conversation->id }};
-    var csrf = document.querySelector('meta[name="csrf-token"]')
-        .content; // Polling fallback (15 detik) — realtime Reverb aktif bila server tersedia. setInterval(function () { fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' }) .then(function (r) { return r.text(); }) .then(function () { /* reload ringan bila ada pesan baru — pendekatan sederhana */ }); }, 15000); // --- Attach panel --- document.getElementById('attach-btn').addEventListener('click', function () { var panel = document.getElementById('attach-panel'); panel.classList.toggle('hidden'); if (!panel.classList.contains('hidden')) loadAttach(); }); document.getElementById('attach-close').addEventListener('click', function () { document.getElementById('attach-panel').classList.add('hidden'); }); function loadAttach() { fetch('/chat/' + convId + '/attach-options', { headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' }, credentials: 'same-origin' }) .then(function (r) { return r.json(); }) .then(function (d) { var html = ''; d.files.forEach(function (f) { html += '<button type="button" data-type="workspace" data-id="' + f.id + '" class="attach-item block w-full text-left px-2 py-1 rounded hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">description</span> ' + f.name + ' <span class="text-xs text-text-secondary">· ' + (f.student||'') + '</span></button>'; }); d.entries.forEach(function (e) { html += '<button type="button" data-type="logbook" data-id="' + e.id + '" class="attach-item block w-full text-left px-2 py-1 rounded hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">assignment</span> ' + e.label + ' <span class="text-xs text-text-secondary">· ' + (e.student||'') + '</span></button>'; }); if (!html) html = '<p class="text-sm text-text-secondary">Tidak ada file untuk dilampirkan.</p>'; document.getElementById('attach-list').innerHTML = html; document.querySelectorAll('.attach-item').forEach(function (b) { b.addEventListener('click', function () { document.getElementById('attach-type').value = b.dataset.type; document.getElementById('attach-id').value = b.dataset.id; document.getElementById('attach-panel').classList.add('hidden'); }); }); }); } // --- Edit message --- var modal = document.getElementById('edit-modal'); document.querySelectorAll('.edit-link').forEach(function (l) { l.addEventListener('click', function (e) { e.preventDefault(); var id = l.dataset.edit; var bubble = l.closest('.max-w'); var text = bubble.querySelector('p.whitespace-pre-wrap').textContent; document.getElementById('edit-body').value = text; document.getElementById('edit-form').action = '/chat/' + convId + '/' + id; modal.classList.remove('hidden'); }); }); document.getElementById('edit-cancel').addEventListener('click', function () { modal.classList.add('hidden'); }); modal.addEventListener('click', function (e) { if (e.target === modal) modal.classList.add('hidden'); }); // Auto-resize textarea + Enter kirim var ta = document.getElementById('msg-body'); ta.addEventListener('input', function () { ta.style.height = 'auto'; ta.style.height = Math.min(120, ta.scrollHeight) + 'px'; }); ta.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!ta.value.trim()) return; var form = ta.closest('form'); if (form.requestSubmit) form.requestSubmit(); else form.submit(); } });
+    var csrf = document.querySelector('meta[name="csrf-token"]').content;
+
+    // Polling fallback (15 detik) — realtime Reverb aktif bila server tersedia.
+    setInterval(function () {
+        fetch(window.location.href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        }).then(function (r) { return r.text(); }).then(function () {
+            // reload ringan bila ada pesan baru — pendekatan sederhana
+        });
+    }, 15000);
+
+    // --- Attach panel ---
+    document.getElementById('attach-btn').addEventListener('click', function () {
+        var panel = document.getElementById('attach-panel');
+        panel.classList.toggle('hidden');
+        if (!panel.classList.contains('hidden')) loadAttach();
+    });
+    document.getElementById('attach-close').addEventListener('click', function () {
+        document.getElementById('attach-panel').classList.add('hidden');
+    });
+
+    function loadAttach() {
+        fetch('/chat/' + convId + '/attach-options', {
+            headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+            credentials: 'same-origin'
+        }).then(function (r) { return r.json(); }).then(function (d) {
+            var html = '';
+            d.files.forEach(function (f) {
+                html += '<button type="button" data-type="workspace" data-id="' + f.id + '" class="attach-item block w-full text-left px-2 py-1 rounded hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">description</span> ' + f.name + ' <span class="text-xs text-text-secondary">· ' + (f.student||'') + '</span></button>';
+            });
+            d.entries.forEach(function (e) {
+                html += '<button type="button" data-type="logbook" data-id="' + e.id + '" class="attach-item block w-full text-left px-2 py-1 rounded hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">assignment</span> ' + e.label + ' <span class="text-xs text-text-secondary">· ' + (e.student||'') + '</span></button>';
+            });
+            if (!html) html = '<p class="text-sm text-text-secondary">Tidak ada file untuk dilampirkan.</p>';
+            document.getElementById('attach-list').innerHTML = html;
+            document.querySelectorAll('.attach-item').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    document.getElementById('attach-type').value = b.dataset.type;
+                    document.getElementById('attach-id').value = b.dataset.id;
+                    document.getElementById('attach-panel').classList.add('hidden');
+                });
+            });
+        });
+    }
+
+    // --- Edit message ---
+    var modal = document.getElementById('edit-modal');
+    document.querySelectorAll('.edit-link').forEach(function (l) {
+        l.addEventListener('click', function (e) {
+            e.preventDefault();
+            var id = l.dataset.edit;
+            var bubble = l.closest('.rounded-lg');
+            var text = bubble.querySelector('p.whitespace-pre-wrap').textContent;
+            document.getElementById('edit-body').value = text;
+            document.getElementById('edit-form').action = '/chat/' + convId + '/' + id;
+            modal.classList.remove('hidden');
+        });
+    });
+    document.getElementById('edit-cancel').addEventListener('click', function () {
+        modal.classList.add('hidden');
+    });
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) modal.classList.add('hidden');
+    });
+
+    // Auto-resize textarea + Enter kirim
+    var ta = document.getElementById('msg-body');
+    ta.addEventListener('input', function () {
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(120, ta.scrollHeight) + 'px';
+    });
+    ta.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (!ta.value.trim()) return;
+            var form = ta.closest('form');
+            if (form.requestSubmit) form.requestSubmit();
+            else form.submit();
+        }
+    });
 </script>
 @endsection

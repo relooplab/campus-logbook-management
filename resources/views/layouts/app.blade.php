@@ -56,6 +56,8 @@
                             DEFAULT: 'rgb(var(--brand) / <alpha-value>)',
                             hover: 'rgb(var(--brand-hover) / <alpha-value>)',
                             light: 'rgb(var(--brand-light) / <alpha-value>)',
+                            fill: 'rgb(var(--brand-fill) / <alpha-value>)',
+                            'fill-hover': 'rgb(var(--brand-fill-hover) / <alpha-value>)',
                         },
                         sand: {
                             DEFAULT: 'rgb(var(--sand) / <alpha-value>)',
@@ -237,8 +239,7 @@
         </nav>
 
         <div id="sidebar-footer" class="p-4 border-t border-border">
-            <a href="{{ config('app.jadwal_url') }}" target="_blank" rel="noopener"
-               class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">
+            <a href="{{ route('scheduling.index') }}" class="{{ $navLink }} {{ $active('scheduling.*') }}">
                 <span class="material-symbols-outlined icon-sm">calendar_month</span> <span class="sidebar-label">Jadwal Bimbingan</span>
             </a>
         </div>
@@ -246,14 +247,14 @@
 
     {{-- ===================== MAIN CONTENT ===================== --}}
     <div id="main-wrap" class="flex-1 md:ml-60 transition-all duration-200 ease-in-out">
-        <header class="sticky top-0 z-30 h-16 bg-bg-base/80 backdrop-blur border-b border-border px-4 md:px-8 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-            <div class="flex items-center gap-3 min-w-0">
+        <header class="sticky top-0 z-30 h-16 bg-bg-base/80 backdrop-blur border-b border-border px-3 md:px-8 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_auto_1fr] items-center gap-2 md:gap-3">
+            <div class="flex items-center gap-2 md:gap-3 min-w-0">
                 <button type="button" id="sidebar-open-btn" title="Buka menu" class="md:hidden p-2 rounded-xl bg-bg-hover text-text-secondary hover:text-text-primary shrink-0">
                     <span class="material-symbols-outlined icon-md">menu</span>
                 </button>
                 @yield('header-title', '')
             </div>
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-2 px-2 min-w-0 justify-center" title="Thesis Logbook Management">
+            <a href="{{ route('dashboard') }}" class="hidden md:flex items-center gap-2 px-2 min-w-0 justify-center" title="Thesis Logbook Management">
                 <span class="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-brand-light text-brand flex items-center justify-center shrink-0">
                     <span class="material-symbols-outlined icon-md">assignment_turned_in</span>
                 </span>

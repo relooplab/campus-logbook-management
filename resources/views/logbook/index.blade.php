@@ -3,9 +3,9 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Logbook Bimbingan</h1> @auth @if (auth()->user()->isMahasiswa())
             <div class="flex flex-wrap gap-2"> <a href="{{ route("logbook.create") }}"
-                    class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">+ Logbook</a>
+                    class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">+ Logbook</a>
                 <a href="{{ route("logbook.create-revisi") }}"
-                    class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">+ Entri
+                    class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">+ Entri
                     Revisi</a>
             </div>
         @endif @endauth
@@ -34,7 +34,7 @@
                 name="keyword" value="{{ $filters["keyword"] ?? "" }}" placeholder="Topik / nama / isi"
                 class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
         <div class="flex gap-2 w-full sm:w-auto"> <button
-                class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Cari</button> <a
+                class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Cari</button> <a
                 href="{{ route("logbook.index") }}"
                 class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm text-center">Reset</a>
         </div>

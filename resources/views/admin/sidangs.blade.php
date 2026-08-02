@@ -64,7 +64,7 @@
                     <option value="lulus_revisi">Lulus + Revisi</option>
                     <option value="mengulang">Mengulang</option>
                 </select> <button
-                    class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Simpan</button>
+                    class="w-full px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Simpan</button>
                 <p class="text-xs text-text-secondary">Sidang Akhir dengan hasil Lulus/Lulus+Revisi otomatis menandai
                     mahasiswa <b>tamat</b>.</p>
             </form>

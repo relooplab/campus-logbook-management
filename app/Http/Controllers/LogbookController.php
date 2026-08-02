@@ -148,8 +148,7 @@ class LogbookController extends Controller
             $taIds = MahasiswaTa::where('pembimbing_1_id', $user->id)
                 ->orWhere('pembimbing_2_id', $user->id)
                 ->pluck('id');
-            $query = LogbookEntry::whereIn('mahasiswa_ta_id', $taIds)
-                ->orWhere('dosen_id', $user->id)
+            $query = LogbookEntry::where(fn ($q) => $q->whereIn('mahasiswa_ta_id', $taIds)->orWhere('dosen_id', $user->id))
                 ->with(['mahasiswaTa.mahasiswa']);
         } else {
             $query = LogbookEntry::with(['mahasiswaTa.mahasiswa']);

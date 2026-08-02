@@ -40,9 +40,9 @@
             @enderror
         </div>
         <div class="flex flex-wrap gap-2 pt-2"> <button type="submit"
-                class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm font-semibold">Simpan
+                class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan
                 Revisi</button> <button type="submit" name="submit" value="1"
-                class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm font-semibold">Kirim
+                class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Kirim
                 ke
                 Pembimbing</button> <a href="{{ route("logbook.index") }}"
                 class="px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Batal</a>

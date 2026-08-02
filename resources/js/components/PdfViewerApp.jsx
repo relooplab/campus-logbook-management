@@ -317,13 +317,13 @@ function PdfViewerApp() {
         </button>
         {buildFeedbackUrl && (
           <button onClick={buildFeedback}
-            className="px-3 py-1.5 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">
+            className="px-3 py-1.5 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">
             ⚡ Jadikan Feedback
           </button>
         )}
         {burnUrl && (
           <a href={burnUrl.replace('__TYPE__', activeType)} target="_blank" rel="noopener"
-            className="ml-auto px-3 py-1.5 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">
+            className="ml-auto px-3 py-1.5 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">
             Unduh PDF dengan Anotasi
           </a>
         )}
@@ -412,7 +412,7 @@ function PdfViewerApp() {
             <div className="flex justify-end gap-2 mt-3">
               <button onClick={() => setModal(null)} className="px-3 py-2 rounded-md bg-bg-panel dark:bg-bg-panel text-sm">Batal</button>
               <button onClick={saveAnnotation} disabled={modal.saving}
-                className="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">
+                className="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">
                 {modal.saving ? 'Menyimpan…' : 'Simpan'}
               </button>
             </div>

@@ -23,16 +23,16 @@
     @else
         {{-- ===== Pengumuman belum dibaca (banner) ===== --}}
         @foreach ($unreadAnnouncements as $a)
-            <div class="px-4 py-3.5 rounded-card border border-status-pending/30 bg-status-pending/10 flex items-start gap-3">
-                <span class="material-symbols-outlined icon-lg">campaign</span>
-                <div class="flex-1 text-sm">
-                    <p class="font-semibold text-text-primary">{{ $a->title }}</p>
-                    <p class="text-text-secondary">{{ $a->body }}</p>
+            <div class="px-4 py-3.5 rounded-card border border-status-pending/30 bg-status-pending/10 flex flex-wrap items-start gap-3">
+                <span class="material-symbols-outlined icon-lg shrink-0">campaign</span>
+                <div class="flex-1 min-w-0 text-sm">
+                    <p class="font-semibold text-text-primary break-words">{{ $a->title }}</p>
+                    <p class="text-text-secondary break-words">{{ $a->body }}</p>
                     <p class="text-xs text-text-secondary mt-1">Dari: {{ $a->sender?->name }} · {{ $a->created_at?->diffForHumans() }}</p>
                 </div>
-                <form method="POST" action="{{ route('announcements.read', $a) }}" class="flex-shrink-0">
+                <form method="POST" action="{{ route('announcements.read', $a) }}" class="w-full sm:w-auto sm:flex-shrink-0">
                     @csrf
-                    <button class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Tandai Dibaca</button>
+                    <button class="w-full sm:w-auto px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Tandai Dibaca</button>
                 </form>
             </div>
         @endforeach

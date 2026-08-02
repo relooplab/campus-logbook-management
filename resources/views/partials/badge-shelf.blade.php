@@ -3,7 +3,7 @@
 
     // Palet warna khas per achievement.
     // Setiap entri: [bg/border/text light, bg/border/text dark, label "Terbuka" light+dark].
-    // Saat locked: grayscale netral (bg-panel/border) agar tidak menonjol.
+    // Saat locked: kartu netral + ikon grayscale (opacity-50), tidak clickable (cursor-default).
     $achvColors = [
         'langkah_pertama' => [
             'bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]',
@@ -56,9 +56,9 @@
         @endphp
         <div
             class="flex flex-col items-center text-center rounded-lg p-2 border
-                {{ $locked ? 'opacity-60 grayscale bg-bg-panel border-border' : ($colors[0] . ' ' . $colors[1]) }}"
+                {{ $locked ? 'cursor-default bg-bg-panel border-border' : ($colors[0] . ' ' . $colors[1]) }}"
             title="{{ $name }}: {{ $desc }}">
-            <span class="text-2xl">{{ $icon }}</span>
+            <span class="text-2xl {{ $locked ? 'opacity-50 grayscale' : '' }}">{{ $icon }}</span>
             <span class="mt-1 text-[10px] font-medium leading-tight">{{ $name }}</span>
             <span class="text-[9px] text-text-secondary">{{ $desc }}</span>
             @if (!$locked && $colors)

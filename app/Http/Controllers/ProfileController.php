@@ -40,6 +40,7 @@ class ProfileController extends Controller
             $rules['orcid'] = ['nullable', 'string', 'max:40'];
             $rules['sinta'] = ['nullable', 'string', 'max:40'];
             $rules['researchgate'] = ['nullable', 'url', 'max:255'];
+            $rules['jadwal_bimbingan_url'] = ['nullable', 'url', 'max:255'];
         }
 
         $validated = $request->validate($rules);

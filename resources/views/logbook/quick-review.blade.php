@@ -72,7 +72,7 @@
             <p id="revisi-error" class="hidden text-xs text-status-danger mt-1">Feedback wajib diisi.</p>
             <div class="flex flex-wrap gap-2">
                 <form method="POST" action="{{ route("quick-review.approve-next", $entry) }}" id="approve-form"> @csrf <button type="submit" id="approve-btn"
-                        class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">check</span>
+                        class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">check</span>
                         Setujui & Next</button> </form>
                 <form method="POST" action="{{ route("quick-review.revisi-next", $entry) }}" id="revisi-form">
                     @csrf <input type="hidden" name="feedback_dosen" id="revisi-feedback">

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
+use App\Services\MahasiswaDashboardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -10,9 +12,16 @@ use Illuminate\View\View;
 
 class MahasiswaTaController extends Controller
 {
+    public function __construct(private MahasiswaDashboardService $dashboardService)
+    {
+    }
+
     /**
      * Halaman detail mahasiswa (view dosen): profil, judul TA, fase,
      * riwayat logbook lengkap, workspace link, tombol update fase.
+     * Dosen juga dapat melihat ringkasan dashboard mahasiswa (milestone,
+     * progres bimbingan, achievement, statistik & streak, aktivitas 12 bulan,
+     * timeline bimbingan).
      */
     public function show(Request $request, MahasiswaTa $mahasiswaTa): View
     {
@@ -37,11 +46,37 @@ class MahasiswaTaController extends Controller
 
         $entries = $mahasiswaTa->entries()->with('comments')->orderByDesc('created_at')->get();
 
-        $approved = $entries->where('status', \App\Models\LogbookEntry::STATUS_APPROVED)->count();
+        $approved = $entries->where('status', LogbookEntry::STATUS_APPROVED)->count();
         $target = $mahasiswaTa->target_sesi ?? 7;
         $percent = $target > 0 ? (int) round($approved / $target * 100) : 0;
 
-        return view('mahasiswa.show', compact('mahasiswaTa', 'entries', 'approved', 'target', 'percent'));
+        // ---- Data card dashboard (sama seperti dashboard mahasiswa) ----
+        // Milestone fase.
+        $faseKeys = array_keys(MahasiswaTa::FASES);
+        $faseIndex = array_search($mahasiswaTa->fase, $faseKeys, true);
+        if ($faseIndex === false) $faseIndex = 0;
+
+        // Achievement (unlocked + total) milik mahasiswa pemilik TA.
+        $mahasiswa = $mahasiswaTa->mahasiswa;
+        $unlockedAchievements = $mahasiswa ? $mahasiswa->achievements()->get() : collect();
+        $unlockedCodes = $unlockedAchievements->pluck('code')->map(fn ($c) => (string) $c);
+        $totalAchievements = \App\Models\Achievement::count();
+
+        // Statistik & streak, timeline, heatmap (aktivitas 12 bulan).
+        $stats = $this->dashboardService->buildStats($mahasiswaTa, $entries);
+        $timeline = $this->dashboardService->buildTimeline($mahasiswaTa, $entries);
+        $heatmap = $this->dashboardService->buildHeatmap($mahasiswaTa, $entries);
+
+        // Health indicator (self-awareness).
+        $regularity = $mahasiswaTa->regularity_status;
+        $regularityTooltip = $mahasiswaTa->regularity_tooltip;
+
+        return view('mahasiswa.show', compact(
+            'mahasiswaTa', 'entries', 'approved', 'target', 'percent',
+            'faseKeys', 'faseIndex',
+            'unlockedAchievements', 'unlockedCodes', 'totalAchievements',
+            'stats', 'timeline', 'heatmap', 'regularity', 'regularityTooltip'
+        ));
     }
 
     /**

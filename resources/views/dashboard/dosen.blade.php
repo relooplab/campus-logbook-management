@@ -16,7 +16,7 @@
     </div>
 
     {{-- ===== Stat cards (icon-circle + delta badge) ===== --}}
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-5">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
         <a href="{{ route('dashboard.dosen.mahasiswa-list') }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-brand/30 transition-colors">
             <div class="flex items-center justify-between mb-3">
                 <span class="icon-circle w-10 h-10 bg-brand-light text-brand">

@@ -5,7 +5,7 @@
 <div class="flex flex-wrap items-center gap-1">
     @foreach ($faseKeys as $i => $key)
         @php $state = $i < $faseIndex ? 'done' : ($i === $faseIndex ? 'active' : 'todo'); @endphp <div class="flex items-center">
-            <div class="flex flex-col items-center text-center w-24">
+            <div class="flex flex-col items-center text-center w-20 sm:w-24">
                 @if ($state === "done")
                     <span
                         class="h-8 w-8 rounded-full bg-brand text-white flex items-center justify-center shadow"><span class="material-symbols-outlined icon-sm">check</span></span>

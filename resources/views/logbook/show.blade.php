@@ -44,7 +44,7 @@
         <div class="flex flex-wrap gap-2 text-sm">
             @if ($logbook->lampiran_path || $logbook->catatan_perbaikan_path) <a
                     href="{{ route("logbook.pdf-viewer", $logbook) }}"
-                    class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-white">
+                    class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white">
                     @if ($canReview)
                         Review PDF &amp; Beri Anotasi
                     @else
@@ -63,10 +63,11 @@
     </div> {{-- Action items / todo dari feedback (mahasiswa) --}} @if ($owner && $logbook->feedback_dosen)
         <div class="bg-bg-surface rounded-xl border border-border p-5">
             <h2 class="font-semibold mb-3"><span class="material-symbols-outlined icon-sm align-text-bottom">assignment</span> Action Items (dari feedback)</h2>
-            <form class="mb-2 flex gap-2" onsubmit="addActionItem(event)"> @csrf <input type="text" id="ai-input"
+            <div class="mb-2 flex gap-2"> <input type="text" id="ai-input"
                     placeholder="Tulis tugas kecil... (mis. 'Perbaiki sitasi BAB 2')"
-                    class="flex-1 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <button
-                    class="px-3 py-2 rounded-md bg-brand text-white text-sm">+ Tambah</button> </form>
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();addActionItem(event);}"
+                    class="flex-1 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <button type="button" onclick="addActionItem(event)"
+                    class="px-3 py-2 rounded-md bg-brand text-white text-sm">+ Tambah</button> </div>
             <div id="ai-list" class="space-y-1">
                 @foreach ($logbook->actionItems as $item)
                     <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-bg-panel hover:bg-bg-hover">
@@ -83,7 +84,7 @@
             <div class="flex flex-wrap gap-2"> <a href="{{ route("logbook.edit", $logbook) }}"
                     class="px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Edit</a>
                 <form method="POST" action="{{ route("logbook.submit", $logbook) }}"> @csrf <button
-                        class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Kirim ke
+                        class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Kirim ke
                         Pembimbing</button> </form>
             </div>
             @endif @if ($canReview && $logbook->status === "submitted")
@@ -93,7 +94,7 @@
                         <div class="px-4 py-3 rounded-md bg-brand/10 border border-brand/20">
                             <p class="text-sm mb-2">Buka PDF, seret untuk menandai area, dan beri komentar sebelum
                                 memutuskan.</p> <a href="{{ route("logbook.pdf-viewer", $logbook) }}"
-                                class="inline-block px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Buka
+                                class="inline-block px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Buka
                                 PDF &amp; Anotasi</a>
                         </div>
                     @else
@@ -101,7 +102,7 @@
                     @endif
                     <form method="POST" action="{{ route("logbook.approve", $logbook) }}" class="mb-3"> @csrf
                         <button
-                            class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-white text-sm">Setujui
+                            class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Setujui
                             (Approve)</button>
                     </form>
                     <form method="POST" action="{{ route("logbook.request-revisi", $logbook) }}" class="space-y-2">
