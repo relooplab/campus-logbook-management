@@ -48,14 +48,8 @@
                     @endif
                 </div>
                 <div class="sm:col-span-2 pt-2 border-t border-border">
-                    <p class="text-sm font-semibold mb-3">Pengaturan Upload & Template</p>
+                    <p class="text-sm font-semibold mb-3">Pengaturan Upload</p>
                     <div class="grid sm:grid-cols-2 gap-4">
-                        <div class="sm:col-span-2"> <label class="block text-sm font-medium mb-1">Link Template Catatan Perbaikan</label>
-                            <input type="url" name="template_url" value="{{ old("template_url", $institution->template_url) }}"
-                                placeholder="https://docs.google.com/..."
-                                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                            <p class="text-xs text-text-secondary mt-1">Link ini ditampilkan di halaman Entri Revisi sebagai "Template Catatan Perbaikan".</p>
-                        </div>
                         <div> <label class="block text-sm font-medium mb-1">Maks Ukuran Upload (MB)</label>
                             <input type="number" name="max_upload_size_mb" min="1" max="100" required
                                 value="{{ old("max_upload_size_mb", $institution->max_upload_size_mb ?? 10) }}"

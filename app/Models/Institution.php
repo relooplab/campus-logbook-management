@@ -22,7 +22,6 @@ class Institution extends Model
         'website',
         'logo_path',
         'footer_note',
-        'template_url',
         'max_upload_size_mb',
         'allowed_file_types',
         'mail_mailer',
@@ -91,14 +90,6 @@ class Institution extends Model
     public static function flush(): void
     {
         Cache::forget('institution.active');
-    }
-
-    /**
-     * Link template catatan perbaikan (bisa diisi admin).
-     */
-    public function templateUrl(): ?string
-    {
-        return $this->template_url ?: config('app.template_url');
     }
 
     /**
