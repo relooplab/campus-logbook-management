@@ -18,8 +18,10 @@
   --text-secondary: 107 117 102;
 
   --brand: 124 148 115;
-  --brand-fill: 124 148 115;
-  --brand-fill-hover: 100 120 92;
+  /* Fix: bg-brand-fill + text-white cuma 3.44:1 (di bawah WCAG AA 4.5:1) kalau
+     dipakai warna --brand biasa. Dipakai shade lebih gelap khusus tombol solid. */
+  --brand-fill: 100 120 92;
+  --brand-fill-hover: 82 98 75;
   --brand-hover: 100 120 92;
   --brand-light: 228 234 219;
 

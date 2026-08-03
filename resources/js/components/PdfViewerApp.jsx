@@ -18,7 +18,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.mjs?v=' + WORKER
  */
 
 const DATA = window.PDF_VIEWER_DATA || {};
-const { draftUrl, catatanUrl, hasCatatan, entryId, csrf, commentsUrl, storeUrl, resolveUrl, deleteUrl, burnUrl, buildFeedbackUrl } = DATA;
+const { draftUrl, catatanUrl, hasCatatan, entryId, csrf, commentsUrl, storeUrl, resolveUrl, deleteUrl, burnUrl, buildFeedbackUrl, canReview } = DATA;
 
 const TYPE_LABEL = { draft: 'File Perbaikan/Draft', catatan: 'Catatan Perbaikan' };
 
@@ -39,12 +39,14 @@ function toAnnotation(item) {
   const selector = payload.target?.selector || {};
   const { page, x1, y1, x2, y2 } = parseSelector(selector.value);
   const body = Array.isArray(payload.body) ? payload.body[0] : {};
+  const resolutionStatus = item.resolution_status || (body.resolved ? 'resolved' : 'open');
   return {
     id: item.id,
     page,
     x1, y1, x2, y2,
     comment: body.value || '',
-    resolved: Boolean(body.resolved),
+    resolved: resolutionStatus === 'resolved',
+    resolutionStatus,
     user: item.user?.name || '',
     created: item.created_at,
   };
@@ -235,17 +237,30 @@ function PdfViewerApp() {
         alert('Gagal mengubah status anotasi. Status: ' + res.status);
         return;
       }
-      setAnnotations((a) => a.map((x) => (x.id === id ? { ...x, resolved: !x.resolved } : x)));
+      const d = await res.json();
+      setAnnotations((a) => a.map((x) => (x.id === id ? {
+        ...x,
+        resolved: d.resolution_status === 'resolved',
+        resolutionStatus: d.resolution_status,
+      } : x)));
       // Perbarui juga state selected agar modal tetap terbuka dan menampilkan status terbaru
-      setSelected((s) => (s && s.id === id ? { ...s, resolved: !s.resolved } : s));
+      setSelected((s) => (s && s.id === id ? {
+        ...s,
+        resolved: d.resolution_status === 'resolved',
+        resolutionStatus: d.resolution_status,
+      } : s));
     } catch (e) {
       alert('Gagal mengubah status anotasi.');
     }
   }
   async function removeAnnotation(id) {
-    await fetch(deleteUrl.replace('{id}', id), {
+    const res = await fetch(deleteUrl.replace('{id}', id), {
       method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf, Accept: 'application/json' }, credentials: 'same-origin',
     });
+    if (!res.ok) {
+      alert('Gagal menghapus anotasi. Status: ' + res.status);
+      return;
+    }
     setAnnotations((a) => a.filter((x) => x.id !== id));
     setSelected(null);
   }
@@ -364,11 +379,11 @@ function PdfViewerApp() {
                           top: (a.y1 * size.height) + 'px',
                           width: ((a.x2 - a.x1) * size.width) + 'px',
                           height: ((a.y2 - a.y1) * size.height) + 'px',
-                          borderColor: a.resolved ? '#7C9473' : '#C9A97E',
-                          backgroundColor: (a.resolved ? 'rgba(124,148,115,.15)' : 'rgba(201,169,126,.15)'),
+                           borderColor: a.resolutionStatus === 'resolved' ? '#7C9473' : a.resolutionStatus === 'addressed' ? '#D97706' : '#C9A97E',
+                           backgroundColor: (a.resolutionStatus === 'resolved' ? 'rgba(124,148,115,.15)' : a.resolutionStatus === 'addressed' ? 'rgba(217,119,6,.15)' : 'rgba(201,169,126,.15)'),
                         }}>
                         <span className="absolute -top-3 -left-1 text-white text-[10px] px-1 rounded"
-                          style={{ backgroundColor: a.resolved ? '#7C9473' : '#C9A97E' }}>
+                           style={{ backgroundColor: a.resolutionStatus === 'resolved' ? '#7C9473' : a.resolutionStatus === 'addressed' ? '#D97706' : '#C9A97E' }}>
                           {a.id}
                         </span>
                       </div>
@@ -430,7 +445,7 @@ function PdfViewerApp() {
             <div className="flex items-center gap-2">
               <button onClick={() => toggleResolve(selected.id)}
                 className="px-3 py-2 rounded-md bg-sand text-white text-sm">
-                {selected.resolved ? 'Buka' : 'Tandai Selesai'}
+                {selected.resolutionStatus === 'resolved' ? 'Buka kembali' : selected.resolutionStatus === 'addressed' ? 'Buka kembali' : canReview ? 'Tandai Selesai' : 'Tandai Sudah Diperbaiki'}
               </button>
               <button onClick={() => removeAnnotation(selected.id)}
                 className="px-3 py-2 rounded-md bg-status-danger text-white text-sm">Hapus</button>

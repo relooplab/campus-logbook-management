@@ -22,6 +22,8 @@ class LogbookEntry extends Model
     public const STATUS_APPROVED = 'approved';
     public const STATUS_REVISI = 'revisi';
 
+    public const MAX_REVISION_ROUND = 3;
+
     public const JENISES = [self::JENIS_LOGBOOK, self::JENIS_REVISI];
     public const STATUSES = [
         self::STATUS_DRAFT,
@@ -32,6 +34,8 @@ class LogbookEntry extends Model
 
     protected $fillable = [
         'mahasiswa_ta_id',
+        'parent_entry_id',
+        'revision_round',
         'dosen_id',
         'tanggal_bimbingan',
         'tanggal_pengiriman',
@@ -47,6 +51,7 @@ class LogbookEntry extends Model
         'status',
         'submitted_at',
         'reviewed_at',
+        'review_opened_at',
     ];
 
     protected function casts(): array
@@ -55,14 +60,28 @@ class LogbookEntry extends Model
             'tanggal_bimbingan' => 'date',
             'tanggal_pengiriman' => 'date',
             'sesi_ke' => 'integer',
+            'revision_round' => 'integer',
             'submitted_at' => 'datetime',
             'reviewed_at' => 'datetime',
+            'review_opened_at' => 'datetime',
         ];
     }
 
     public function mahasiswaTa(): BelongsTo
     {
         return $this->belongsTo(MahasiswaTa::class);
+    }
+
+    /** Entri asal yang direvisi oleh entri ini (parent). */
+    public function parentEntry(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_entry_id');
+    }
+
+    /** Entri-entri revisi yang merujuk ke entri ini (children). */
+    public function revisionChildren(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_entry_id');
     }
 
     public function dosen(): BelongsTo
@@ -91,11 +110,34 @@ class LogbookEntry extends Model
     }
 
     /**
-     * True when the entry still allows editing by the owner (draft/revisi).
+     * True when the entry still allows editing by the owner (draft/revisi)
+     * dan tidak terkunci oleh siklus revisi yang sudah dimulai.
      */
     public function isEditable(): bool
     {
-        return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_REVISI], true);
+        if (!in_array($this->status, [self::STATUS_DRAFT, self::STATUS_REVISI], true)) {
+            return false;
+        }
+
+        return !$this->isLockedByActiveRevision();
+    }
+
+    /**
+     * Entri dikunci permanen dari edit/submit ulang bila sudah pernah menjadi
+     * parent revisi. Semua perbaikan selanjutnya harus lewat jalur revisi baru.
+     */
+    public function isLockedByActiveRevision(): bool
+    {
+        return $this->revisionChildren()->exists();
+    }
+
+    /**
+     * Apakah entri ini sudah melewati batas ronde revisi yang wajar.
+     */
+    public function exceedsRevisionRoundLimit(): bool
+    {
+        return $this->jenis === self::JENIS_REVISI
+            && $this->revision_round >= self::MAX_REVISION_ROUND;
     }
 
     /**
@@ -134,7 +176,16 @@ class LogbookEntry extends Model
             }
         }
 
-        return $this->dosen_id ? $this->dosen : null;
+        if ($this->dosen_id) {
+            return $this->dosen;
+        }
+
+        // Entri revisi tanpa dosen_id: pakai dosen_id entri asal (parent).
+        if ($this->parent_entry_id) {
+            return $this->parentEntry?->dosen;
+        }
+
+        return null;
     }
 
     /**

@@ -7,6 +7,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Masuk') · {{ $inst->app_name }}</title>
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('favicon-32x32.png') }}" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -53,8 +56,8 @@
 <body class="bg-bg-base text-text-primary min-h-screen flex items-center justify-center p-4 font-sans antialiased">
     <div class="w-full max-w-md">
         <div class="text-center mb-6">
-            <div class="inline-flex w-14 h-14 rounded-2xl bg-brand-light text-brand items-center justify-center mb-3">
-                <span class="material-symbols-outlined icon-lg">assignment_turned_in</span>
+            <div class="inline-flex w-14 h-14 rounded-2xl bg-brand-light text-brand items-center justify-center mb-3 p-2.5">
+                @include('partials.logo-mark')
             </div>
             <h1 class="font-heading font-extrabold text-2xl text-text-primary">{{ $inst->app_name }}</h1>
             <p class="text-sm text-text-secondary mt-1">Aplikasi pencatatan &amp; monitoring bimbingan Tugas Akhir mahasiswa</p>

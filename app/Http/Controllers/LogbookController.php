@@ -11,7 +11,9 @@ use App\Models\PdfComment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class LogbookController extends Controller
@@ -40,7 +42,16 @@ class LogbookController extends Controller
         $ta = $request->user()->mahasiswaTa;
         abort_unless($ta, 403, 'Anda belum memiliki data TA.');
 
-        return view('logbook.create-revisi', compact('ta'));
+        $parents = $ta->entries()
+            ->where('status', LogbookEntry::STATUS_REVISI)
+            ->whereDoesntHave('revisionChildren')
+            ->with('comments.user')
+            ->latest('reviewed_at')
+            ->get();
+
+        $selectedParentId = $request->query('parent_entry_id');
+
+        return view('logbook.create-revisi', compact('ta', 'parents', 'selectedParentId'));
     }
 
     public function store(StoreLogbookEntryRequest $request): RedirectResponse
@@ -99,15 +110,37 @@ class LogbookController extends Controller
         $data = $request->validated();
         $submit = $request->boolean('submit');
 
-        // Buat entry dulu agar path unik bisa memakai id.
-        $entry = $ta->entries()->create([
-            'sesi_ke' => 0,
-            'jenis' => LogbookEntry::JENIS_REVISI,
-            'progres_kendala' => $data['progres_kendala'],
-            'tanggal_pengiriman' => $data['tanggal_pengiriman'],
-            'status' => $submit ? LogbookEntry::STATUS_SUBMITTED : LogbookEntry::STATUS_DRAFT,
-            'submitted_at' => $submit ? now() : null,
-        ]);
+        [$parent, $entry] = DB::transaction(function () use ($ta, $data, $submit) {
+            $parent = $ta->entries()
+                ->whereKey($data['parent_entry_id'])
+                ->where('status', LogbookEntry::STATUS_REVISI)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($parent->revisionChildren()
+                ->whereIn('status', [LogbookEntry::STATUS_DRAFT, LogbookEntry::STATUS_SUBMITTED, LogbookEntry::STATUS_REVISI])
+                ->exists()) {
+                throw ValidationException::withMessages([
+                    'parent_entry_id' => 'Entri induk sudah memiliki revisi aktif. Pilih entri induk lain.',
+                ]);
+            }
+
+            // Buat entry dulu agar path unik bisa memakai id.
+            $entry = $ta->entries()->create([
+                'parent_entry_id' => $parent->id,
+                'revision_round' => ($parent->revision_round ?? 0) + 1,
+                'sesi_ke' => 0,
+                'jenis' => LogbookEntry::JENIS_REVISI,
+                'dosen_id' => $parent->dosen_id ?: $parent->reviewDosen()?->id,
+                'topik' => $parent->topik,
+                'progres_kendala' => $data['progres_kendala'],
+                'tanggal_pengiriman' => $data['tanggal_pengiriman'],
+                'status' => $submit ? LogbookEntry::STATUS_SUBMITTED : LogbookEntry::STATUS_DRAFT,
+                'submitted_at' => $submit ? now() : null,
+            ]);
+
+            return [$parent, $entry];
+        });
 
         $entry->update([
             'lampiran_path' => $this->storeUniqueFile($request->file('lampiran'), 'lampiran', $entry->id),
@@ -115,6 +148,16 @@ class LogbookController extends Controller
             'catatan_perbaikan_path' => $this->storeUniqueFile($request->file('catatan_perbaikan'), 'catatan', $entry->id),
             'catatan_original_name' => $request->file('catatan_perbaikan')->getClientOriginalName(),
         ]);
+
+        $commentIds = collect($data['addressed_comment_ids'] ?? [])->filter()->values();
+        if ($submit && $commentIds->isNotEmpty()) {
+            $parent->comments()
+                ->whereIn('id', $commentIds)
+                ->update([
+                    'resolution_status' => PdfComment::STATUS_ADDRESSED,
+                    'is_resolved' => false,
+                ]);
+        }
 
         if ($submit) {
             $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($entry, 'Ada entri revisi baru menunggu review.'));
@@ -125,7 +168,7 @@ class LogbookController extends Controller
             );
         }
 
-        return redirect()->route('logbook.index')
+        return redirect()->route('logbook.show', $entry)
             ->with('success', $submit
                 ? 'Entri revisi dikirim ke pembimbing.'
                 : 'Entri revisi tersimpan sebagai draf.');
@@ -178,7 +221,10 @@ class LogbookController extends Controller
     public function show(Request $request, LogbookEntry $logbook): View
     {
         $this->authorize('view', $logbook);
-        $logbook->load(['mahasiswaTa.mahasiswa', 'mahasiswaTa.pembimbing1', 'mahasiswaTa.pembimbing2', 'dosen', 'comments.user']);
+        $logbook->load([
+            'mahasiswaTa.mahasiswa', 'mahasiswaTa.pembimbing1', 'mahasiswaTa.pembimbing2', 'dosen', 'comments.user',
+            'parentEntry.comments.user', 'parentEntry.parentEntry', 'revisionChildren',
+        ]);
 
         $draftPdf = $logbook->lampiran_path ? Storage::disk('local')->path($logbook->lampiran_path) : null;
         $catatanPdf = $logbook->catatan_perbaikan_path ? Storage::disk('local')->path($logbook->catatan_perbaikan_path) : null;
@@ -215,6 +261,19 @@ class LogbookController extends Controller
             // file_type yang diganti (komentar kontekstual terhadap versi file).
             $resolvedCount = $this->resolveCommentsForType($logbook, PdfComment::FILE_TYPE_DRAFT);
             $this->logAttachmentChange($logbook, 'lampiran_path', $oldPath, $newPath, $resolvedCount);
+        }
+
+        if ($request->hasFile('catatan_perbaikan')) {
+            $oldPath = $logbook->catatan_perbaikan_path;
+            $newPath = $this->storeUniqueFile($request->file('catatan_perbaikan'), 'catatan', $logbook->id);
+
+            $logbook->update([
+                'catatan_perbaikan_path' => $newPath,
+                'catatan_original_name' => $request->file('catatan_perbaikan')->getClientOriginalName(),
+            ]);
+
+            $resolvedCount += $this->resolveCommentsForType($logbook, PdfComment::FILE_TYPE_CATATAN);
+            $this->logAttachmentChange($logbook, 'catatan_perbaikan_path', $oldPath, $newPath, $resolvedCount);
         }
 
         if ($logbook->jenis === LogbookEntry::JENIS_REVISI) {
@@ -294,8 +353,11 @@ class LogbookController extends Controller
     {
         $count = $logbook->comments()
             ->fileType($fileType)
-            ->where('is_resolved', false)
-            ->update(['is_resolved' => true]);
+            ->whereIn('resolution_status', [PdfComment::STATUS_OPEN, PdfComment::STATUS_ADDRESSED])
+            ->update([
+                'resolution_status' => PdfComment::STATUS_RESOLVED,
+                'is_resolved' => true,
+            ]);
 
         return (int) $count;
     }
@@ -345,6 +407,7 @@ class LogbookController extends Controller
             'status' => LogbookEntry::STATUS_APPROVED,
             'reviewed_at' => now(),
         ]);
+        $this->resolveCommentsOnApproval($logbook);
 
         $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda telah disetujui oleh pembimbing.'));
         $logbook->notifyParties(
@@ -366,7 +429,7 @@ class LogbookController extends Controller
         $this->authorize('review', $logbook);
 
         $validated = $request->validate([
-            'feedback_dosen' => ['required', 'string'],
+            'feedback_dosen' => ['required', 'string', 'min:20'],
         ]);
 
         $logbook->update([
@@ -449,7 +512,7 @@ class LogbookController extends Controller
 
                 // Warna outline: merah untuk anotasi (tanpa isian agar tulisan tidak tertutup).
                 // Tetap menampilkan label nomor + nama + isi komentar di atas area.
-                $color = $c->is_resolved ? [16, 185, 129] : [220, 38, 38];
+                $color = $c->isResolved() ? [16, 185, 129] : ($c->resolution_status === PdfComment::STATUS_ADDRESSED ? [217, 119, 6] : [220, 38, 38]);
                 [$r, $g, $b] = $color;
                 $pdf->SetDrawColor($r, $g, $b);
                 $pdf->SetFillColor($r, $g, $b);
@@ -545,8 +608,8 @@ class LogbookController extends Controller
         $row = 0;
         foreach ($only as $idx => $c) {
             $num = $idx + 1;
-            $status = $c->is_resolved ? 'Selesai' : 'Belum';
-            $statusColor = $c->is_resolved ? [16, 185, 129] : [245, 158, 11];
+            $status = $c->isResolved() ? 'Selesai' : ($c->resolution_status === PdfComment::STATUS_ADDRESSED ? 'Dijawab' : 'Terbuka');
+            $statusColor = $c->isResolved() ? [16, 185, 129] : ($c->resolution_status === PdfComment::STATUS_ADDRESSED ? [217, 119, 6] : [245, 158, 11]);
             $name = trim((string) ($c->user?->name ?? '-'));
             $text = trim((string) $c->comment);
 
@@ -650,6 +713,9 @@ class LogbookController extends Controller
     public function viewer(Request $request, LogbookEntry $logbook): View
     {
         $this->authorize('view', $logbook);
+        if ($request->user()->isDosen() && $request->user()->can('review', $logbook) && !$logbook->review_opened_at) {
+            $logbook->update(['review_opened_at' => now()]);
+        }
         $logbook->load('comments.user');
 
         return view('logbook.pdf-viewer', compact('logbook'));
@@ -671,7 +737,9 @@ class LogbookController extends Controller
                     'id' => $c->id,
                     'user' => $c->user,
                     'file_type' => $c->file_type,
-                    'payload' => $c->payload ?? $c->buildPayloadFromColumns(),
+                    // Bangun ulang agar status terbaru tidak tertutup payload lama.
+                    'payload' => $c->buildPayloadFromColumns(),
+                    'resolution_status' => $c->resolution_status ?: ($c->is_resolved ? PdfComment::STATUS_RESOLVED : PdfComment::STATUS_OPEN),
                     'created_at' => $c->created_at,
                 ];
             });
@@ -716,6 +784,7 @@ class LogbookController extends Controller
             $comment->y2 = $request->input('y2');
             $comment->comment = $request->input('comment');
             $comment->is_resolved = false;
+            $comment->resolution_status = PdfComment::STATUS_OPEN;
         }
 
         $logbook->comments()->save($comment);
@@ -745,7 +814,24 @@ class LogbookController extends Controller
             'user' => $comment->user,
             'file_type' => $comment->file_type,
             'payload' => $comment->payload,
+            'resolution_status' => $comment->resolution_status,
             'created_at' => $comment->created_at,
         ], 201);
+    }
+
+    /** Resolve current and parent annotations when a review is approved. */
+    private function resolveCommentsOnApproval(LogbookEntry $logbook): void
+    {
+        $entries = collect([$logbook, $logbook->parentEntry])->filter();
+
+        foreach ($entries as $entry) {
+            $entry->comments()
+                ->where('resolution_status', '!=', PdfComment::STATUS_RESOLVED)
+                ->get()
+                ->each(function (PdfComment $comment) {
+                    $comment->setResolutionStatus(PdfComment::STATUS_RESOLVED);
+                    $comment->save();
+                });
+        }
     }
 }

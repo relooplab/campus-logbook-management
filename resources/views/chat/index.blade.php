@@ -2,7 +2,7 @@
 <div class="max-w-4xl mx-auto space-y-4">
     <div class="flex items-center justify-between">
         <h1 class="text-xl font-bold">Chat</h1> <a href="{{ route("dashboard") }}"
-            class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">← Dashboard</a>
+            class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">← Dashboard</a>
     </div>
     @if ($conversations->isEmpty())
         <div class="px-4 py-10 rounded-lg bg-bg-surface border border-border text-center text-text-secondary"> Belum ada

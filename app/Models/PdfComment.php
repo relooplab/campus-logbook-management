@@ -15,6 +15,9 @@ class PdfComment extends Model
     public const FILE_TYPE_CATATAN = 'catatan';
 
     public const FILE_TYPES = [self::FILE_TYPE_DRAFT, self::FILE_TYPE_CATATAN];
+    public const STATUS_OPEN = 'open';
+    public const STATUS_ADDRESSED = 'addressed';
+    public const STATUS_RESOLVED = 'resolved';
 
     protected $fillable = [
         'logbook_entry_id',
@@ -27,6 +30,7 @@ class PdfComment extends Model
         'y2',
         'comment',
         'is_resolved',
+        'resolution_status',
         'payload',
     ];
 
@@ -40,6 +44,29 @@ class PdfComment extends Model
             'is_resolved' => 'boolean',
             'payload' => 'array',
         ];
+    }
+
+    public function isOpen(): bool
+    {
+        return ($this->resolution_status ?: ($this->is_resolved ? self::STATUS_RESOLVED : self::STATUS_OPEN)) === self::STATUS_OPEN;
+    }
+
+    public function isResolved(): bool
+    {
+        return ($this->resolution_status ?: ($this->is_resolved ? self::STATUS_RESOLVED : self::STATUS_OPEN)) === self::STATUS_RESOLVED;
+    }
+
+    public function setResolutionStatus(string $status): void
+    {
+        $this->resolution_status = $status;
+        $this->is_resolved = $status === self::STATUS_RESOLVED;
+
+        $payload = $this->payload;
+        if (is_array($payload) && isset($payload['body'][0]) && is_array($payload['body'][0])) {
+            $payload['body'][0]['resolved'] = $this->is_resolved;
+            $payload['body'][0]['resolution_status'] = $status;
+            $this->payload = $payload;
+        }
     }
 
     public function entry(): BelongsTo
@@ -135,7 +162,8 @@ class PdfComment extends Model
         $body = $this->payload['body'] ?? null;
         if (is_array($body) && isset($body[0]['value'])) {
             $this->comment = $body[0]['value'];
-            $this->is_resolved = !empty($body[0]['resolved']);
+            $status = $body[0]['resolution_status'] ?? (!empty($body[0]['resolved']) ? self::STATUS_RESOLVED : self::STATUS_OPEN);
+            $this->setResolutionStatus($status);
         }
     }
 
@@ -154,7 +182,8 @@ class PdfComment extends Model
                     'type' => 'TextualBody',
                     'value' => $this->comment,
                     'purpose' => 'commenting',
-                    'resolved' => (bool) $this->is_resolved,
+                    'resolved' => $this->isResolved(),
+                    'resolution_status' => $this->resolution_status ?: ($this->is_resolved ? self::STATUS_RESOLVED : self::STATUS_OPEN),
                 ],
             ],
             'target' => [

@@ -59,9 +59,15 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        // Antrean review: submitted entries belonging to those TAs.
+        // Antrean review hanya untuk TA yang benar-benar dibimbing (bukan diuji).
         $taIds = $tas->pluck('id');
-        $queue = LogbookEntry::whereIn('mahasiswa_ta_id', $taIds)
+        $reviewTaIds = MahasiswaTa::where('pembimbing_1_id', $user->id)
+            ->orWhere('pembimbing_2_id', $user->id)
+            ->pluck('id');
+        $queue = LogbookEntry::where(function ($query) use ($reviewTaIds, $user) {
+                $query->whereIn('mahasiswa_ta_id', $reviewTaIds)
+                    ->orWhere('dosen_id', $user->id);
+            })
             ->where('status', LogbookEntry::STATUS_SUBMITTED)
             ->with(['mahasiswaTa.mahasiswa'])
             ->latest()
@@ -71,7 +77,7 @@ class DashboardController extends Controller
         $entries = LogbookEntry::whereIn('mahasiswa_ta_id', $taIds)->get();
         $perTa = $tas->map(function ($ta) use ($entries) {
             $e = $entries->where('mahasiswa_ta_id', $ta->id);
-            $approved = $e->where('status', LogbookEntry::STATUS_APPROVED)->count();
+            $approved = $e->where('jenis', LogbookEntry::JENIS_LOGBOOK)->where('status', LogbookEntry::STATUS_APPROVED)->count();
             $total = $e->count();
             $target = $ta->target_sesi ?? 7;
             $percent = $target > 0 ? (int) round($approved / $target * 100) : 0;
@@ -157,7 +163,7 @@ class DashboardController extends Controller
             ? $ta->entries()->with('comments')->latest()->get()
             : collect();
 
-        $approved = $entries->where('status', LogbookEntry::STATUS_APPROVED)->count();
+        $approved = $entries->where('jenis', LogbookEntry::JENIS_LOGBOOK)->where('status', LogbookEntry::STATUS_APPROVED)->count();
         $target = $ta?->target_sesi ?? 7;
         $progressPercent = $target > 0 ? (int) round($approved / $target * 100) : 0;
 

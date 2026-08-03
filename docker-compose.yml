@@ -9,14 +9,14 @@ x-app-env: &app-env
   APP_DEBUG: "false"
   APP_URL: "${APP_URL:-http://localhost:8280}"
   # Fix #3: APP_KEY wajib di-set (di-generate manual) agar Laravel boot.
-  APP_KEY: "${APP_KEY:-}"
+  APP_KEY: "${APP_KEY:?APP_KEY must be set in the deployment environment}"
   # Fix #5: DB_CONNECTION di-set di semua worker (default sqlite jika kosong).
   DB_CONNECTION: mysql
   DB_HOST: logbook-ta-db
   DB_PORT: 3306
   DB_DATABASE: logbook_ta
   DB_USERNAME: logbook
-  DB_PASSWORD: "${DB_PASSWORD:-logbooksecret}"
+  DB_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD must be set in the deployment environment}"
   REDIS_HOST: logbook-ta-redis
   REDIS_PORT: 6379
   CACHE_STORE: redis
@@ -24,9 +24,9 @@ x-app-env: &app-env
   SESSION_DRIVER: redis
   # Fix #4: BROADCAST + seluruh env Reverb/Pusher (crash bila hanya SERVER_HOST).
   BROADCAST_CONNECTION: reverb
-  REVERB_APP_ID: "${REVERB_APP_ID:-lbta-local}"
-  REVERB_APP_KEY: "${REVERB_APP_KEY:-lbta-key}"
-  REVERB_APP_SECRET: "${REVERB_APP_SECRET:-lbta-secret}"
+  REVERB_APP_ID: "${REVERB_APP_ID:?REVERB_APP_ID must be set in the deployment environment}"
+  REVERB_APP_KEY: "${REVERB_APP_KEY:?REVERB_APP_KEY must be set in the deployment environment}"
+  REVERB_APP_SECRET: "${REVERB_APP_SECRET:?REVERB_APP_SECRET must be set in the deployment environment}"
   REVERB_HOST: logbook-ta-reverb
   REVERB_PORT: 8080
   REVERB_SCHEME: http
@@ -89,14 +89,14 @@ services:
     environment:
       MYSQL_DATABASE: logbook_ta
       MYSQL_USER: logbook
-      MYSQL_PASSWORD: "${DB_PASSWORD:-logbooksecret}"
-      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-rootsecret}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD must be set in the deployment environment}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD must be set in the deployment environment}"
       TZ: Asia/Jakarta
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootsecret}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD must be set in the deployment environment}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -124,8 +124,9 @@ services:
     container_name: logbook-ta-mailpit
     restart: unless-stopped
     ports:
-      - "8225:8025"   # UI
-      - "8226:1025"   # SMTP
+      # Bind Mailpit to localhost by default; do not expose it publicly.
+      - "${MAILPIT_BIND_IP:-127.0.0.1}:8225:8025"   # UI
+      - "${MAILPIT_BIND_IP:-127.0.0.1}:8226:1025"   # SMTP
     networks: [backend]
 
   # ------------------------------------------------------------ queue

@@ -2,7 +2,7 @@
 <div class="space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Persetujuan Registrasi Mahasiswa ({{ $pending->count() }})</h1> <a
-            href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">←
+            href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">←
             Dashboard</a>
     </div>
     @if ($pending->isEmpty())

@@ -24,6 +24,8 @@ class LogbookEntryPolicy
         }
         if ($entry->dosen_id) {
             $ids[] = $entry->dosen_id;
+        } elseif ($entry->parent_entry_id && $entry->parentEntry?->dosen_id) {
+            $ids[] = $entry->parentEntry->dosen_id;
         }
 
         return array_values(array_unique(array_filter($ids)));
@@ -73,6 +75,7 @@ class LogbookEntryPolicy
     public function review(User $user, LogbookEntry $entry): bool
     {
         return $user->isDosen()
+            && $entry->status === LogbookEntry::STATUS_SUBMITTED
             && in_array($user->id, $this->pembimbingIds($entry->mahasiswaTa, $entry), true);
     }
 

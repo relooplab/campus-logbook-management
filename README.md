@@ -218,7 +218,11 @@ php artisan serve
 
 **Faster setup:** Run `./setup-local.sh [port] [host]` to automate all steps above. See script comments for options.
 
-### Demo Accounts
+### Demo Accounts (Local/Testing Only)
+
+These accounts are created only when `APP_ENV` is `local` or `testing`. The
+production seeder never creates them. Never use the demo password in a
+production deployment.
 
 The database seeder creates three accounts for testing:
 
@@ -237,6 +241,8 @@ The database seeder creates three accounts for testing:
 **Critical:** Set `APP_KEY` and ensure `APP_KEY`, `REVERB_APP_KEY`, `REVERB_APP_SECRET` are available to Docker Compose:
 - Without `APP_KEY`, Laravel fails to boot
 - Without Reverb keys, commands crash during container startup
+- Docker Compose intentionally fails when these values or database passwords are missing.
+- Do not use development defaults or publish Mailpit ports to the internet.
 
 ```bash
 # Generate and set APP_KEY if needed
@@ -261,9 +267,9 @@ ssh deploy@<server> 'cd <app-path> && docker compose build app'
 ssh deploy@<server> 'cd <app-path> && \
   docker compose up -d --force-recreate app queue scheduler nginx'
 
-# 4. Run migrations and seed data
+# 4. Run migrations
 ssh deploy@<server> 'docker exec logbook-ta-app php artisan migrate --force'
-ssh deploy@<server> 'docker exec logbook-ta-app php artisan db:seed --force'
+# `db:seed` is optional; in APP_ENV=production it does not create demo users.
 
 # 5. Verify all services
 ssh deploy@<server> 'cd <app-path> && docker compose ps'
@@ -274,8 +280,8 @@ ssh deploy@<server> 'cd <app-path> && docker compose ps'
 | Service | Port | URL |
 |---|---|---|
 | Application (Nginx) | 8280 | `http://<server-ip>:8280` |
-| Mailpit Web UI | 8225 | `http://<server-ip>:8225` |
-| Mailpit SMTP | 8226 | For local mail testing |
+| Mailpit Web UI | 8225 | `http://127.0.0.1:8225` (local only) |
+| Mailpit SMTP | 8226 | Local mail testing only |
 
 ### Troubleshooting
 

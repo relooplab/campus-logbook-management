@@ -11,7 +11,7 @@
                         class="h-8 w-8 rounded-full bg-brand text-white flex items-center justify-center shadow"><span class="material-symbols-outlined icon-sm">check</span></span>
                 @elseif ($state === "active")
                     <span
-                        class="h-8 w-8 rounded-full bg-brand text-white flex items-center justify-center shadow animate-pulse">●</span>
+                        class="h-8 w-8 rounded-full bg-brand text-white flex items-center justify-center shadow animate-pulse ring-2 ring-brand ring-offset-2 ring-offset-bg-panel">●</span>
                 @else
                     <span
                         class="h-8 w-8 rounded-full bg-bg-panel text-text-secondary flex items-center justify-center">○</span>

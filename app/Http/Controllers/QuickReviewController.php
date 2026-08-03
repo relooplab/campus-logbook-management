@@ -24,9 +24,14 @@ class QuickReviewController extends Controller
             ->orWhere('pembimbing_2_id', $user->id)
             ->pluck('id');
 
-        $entry = LogbookEntry::where('status', LogbookEntry::STATUS_SUBMITTED)
-            ->whereIn('mahasiswa_ta_id', $taIds)
-            ->with(['mahasiswaTa.mahasiswa', 'comments.user'])
+        $queue = LogbookEntry::where('status', LogbookEntry::STATUS_SUBMITTED)
+            ->where(function ($query) use ($taIds, $user) {
+                $query->whereIn('mahasiswa_ta_id', $taIds)
+                    ->orWhere('dosen_id', $user->id);
+            });
+        $queueCount = (clone $queue)->count();
+        $entry = $queue
+            ->with(['mahasiswaTa.mahasiswa', 'comments.user', 'parentEntry.comments.user'])
             ->oldest('submitted_at')
             ->first();
 
@@ -40,7 +45,7 @@ class QuickReviewController extends Controller
         // Feedback draft dari localStorage (diset tombol "Jadikan Feedback").
         $feedbackDraft = $request->session()->pull('feedback_draft');
 
-        return view('logbook.quick-review', compact('entry', 'templates', 'lastFeedback', 'feedbackDraft'));
+        return view('logbook.quick-review', compact('entry', 'templates', 'lastFeedback', 'feedbackDraft', 'queueCount'));
     }
 
     /**
@@ -54,6 +59,7 @@ class QuickReviewController extends Controller
             'status' => LogbookEntry::STATUS_APPROVED,
             'reviewed_at' => now(),
         ]);
+        $this->resolveCommentsOnApproval($logbook);
 
         $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda telah disetujui.'));
         $logbook->notifyParties('Entri '.($logbook->jenis === 'revisi' ? 'revisi' : 'logbook sesi '.$logbook->sesi_ke).' telah disetujui.', route('logbook.show', $logbook), 'Entri Disetujui');
@@ -73,7 +79,7 @@ class QuickReviewController extends Controller
         $this->authorize('review', $logbook);
 
         $validated = $request->validate([
-            'feedback_dosen' => ['required', 'string'],
+            'feedback_dosen' => ['required', 'string', 'min:20'],
         ]);
 
         $logbook->update([
@@ -124,10 +130,17 @@ class QuickReviewController extends Controller
      */
     public function buildFeedbackFromComments(Request $request, LogbookEntry $logbook): JsonResponse
     {
-        $this->authorize('view', $logbook);
+        $this->authorize('review', $logbook);
 
-        $comments = $logbook->comments()
-            ->where('is_resolved', false)
+        $entryIds = [$logbook->id];
+        $cursor = $logbook->parentEntry;
+        while ($cursor) {
+            $entryIds[] = $cursor->id;
+            $cursor = $cursor->parentEntry;
+        }
+
+        $comments = \App\Models\PdfComment::whereIn('logbook_entry_id', $entryIds)
+            ->where('resolution_status', \App\Models\PdfComment::STATUS_OPEN)
             ->orderBy('page_number')
             ->get();
 
@@ -135,7 +148,13 @@ class QuickReviewController extends Controller
             return response()->json(['feedback' => '']);
         }
 
-        $lines = $comments->map(fn ($c, $i) => ($i + 1).'. (Hal. '.$c->page_number.') '.$c->comment);
+        $lines = $comments->map(function ($c, $i) use ($logbook) {
+            $source = $c->logbook_entry_id === $logbook->id
+                ? 'Ronde ini'
+                : 'Ronde sebelumnya, entri #'.$c->logbook_entry_id;
+
+            return ($i + 1).'. ('.$source.', Hal. '.$c->page_number.') '.$c->comment;
+        });
         $feedback = $lines->implode("\n");
 
         // Simpan ke session untuk dipakai di quick review.
@@ -152,5 +171,20 @@ class QuickReviewController extends Controller
             ->whereNotNull('feedback_dosen')
             ->orderByDesc('id')
             ->value('feedback_dosen');
+    }
+
+    private function resolveCommentsOnApproval(LogbookEntry $logbook): void
+    {
+        $entries = collect([$logbook, $logbook->parentEntry])->filter();
+
+        foreach ($entries as $entry) {
+            $entry->comments()
+                ->where('resolution_status', '!=', \App\Models\PdfComment::STATUS_RESOLVED)
+                ->get()
+                ->each(function ($comment) {
+                    $comment->setResolutionStatus(\App\Models\PdfComment::STATUS_RESOLVED);
+                    $comment->save();
+                });
+        }
     }
 }

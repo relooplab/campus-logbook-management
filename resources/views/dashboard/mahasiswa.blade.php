@@ -10,9 +10,9 @@
             <p class="text-sm text-text-secondary mt-0.5">Pantau progres bimbingan Tugas Akhir Anda</p>
         </div>
         <div class="flex flex-wrap gap-2">
-            <a href="{{ route('logbook.create') }}" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">+ Logbook</a>
-            <a href="{{ route('logbook.create-revisi') }}" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">+ Entri Revisi</a>
-            <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Semua Entri</a>
+            <a href="{{ route('logbook.create') }}" class="px-4 py-2 rounded-xl bg-brand-fill text-white text-sm font-semibold shadow-md hover:bg-brand-fill-hover hover:shadow-lg transition-shadow" title="Tambah entri logbook bimbingan baru (aksi utama)">+ Logbook</a>
+            <a href="{{ route('logbook.create-revisi') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">+ Entri Revisi</a>
+            <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-transparent border border-border text-text-secondary text-sm font-medium hover:bg-bg-hover hover:text-text-primary">Semua Entri</a>
         </div>
     </div>
 
@@ -70,19 +70,19 @@
                 <div class="mt-4 grid sm:grid-cols-2 gap-3 text-sm">
                     <div class="px-3 py-2.5 rounded-xl bg-bg-panel">
                         <span class="text-text-secondary">Pembimbing 1:</span>
-                        <span class="font-medium text-text-primary">{{ $ta->pembimbing1?->name ?? '—' }}</span>
+                        <span class="font-medium text-text-primary">{{ $ta->pembimbing1?->name ?? 'Belum ditentukan' }}</span>
                     </div>
                     <div class="px-3 py-2.5 rounded-xl bg-bg-panel">
                         <span class="text-text-secondary">Pembimbing 2:</span>
-                        <span class="font-medium text-text-primary">{{ $ta->pembimbing2?->name ?? '—' }}</span>
+                        <span class="font-medium text-text-primary">{{ $ta->pembimbing2?->name ?? 'Belum ditentukan' }}</span>
                     </div>
                     <div class="px-3 py-2.5 rounded-xl bg-bg-panel">
                         <span class="text-text-secondary">Penguji 1:</span>
-                        <span class="font-medium text-text-primary">{{ $ta->penguji1?->name ?? '—' }}</span>
+                        <span class="font-medium text-text-primary">{{ $ta->penguji1?->name ?? 'Belum ditentukan' }}</span>
                     </div>
                     <div class="px-3 py-2.5 rounded-xl bg-bg-panel">
                         <span class="text-text-secondary">Penguji 2:</span>
-                        <span class="font-medium text-text-primary">{{ $ta->penguji2?->name ?? '—' }}</span>
+                        <span class="font-medium text-text-primary">{{ $ta->penguji2?->name ?? 'Belum ditentukan' }}</span>
                     </div>
                 </div>
                 <div class="mt-4 flex gap-2">

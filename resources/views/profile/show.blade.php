@@ -2,7 +2,7 @@
 <div class="max-w-2xl space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Profil</h1> <a href="{{ url()->previous() }}"
-            class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">← Kembali</a>
+            class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">← Kembali</a>
     </div>
     <div class="bg-bg-surface rounded-xl border border-border p-6">
         <div class="flex items-center gap-4">

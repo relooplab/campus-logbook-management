@@ -49,7 +49,7 @@
             class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Kirim
             ke
             Pembimbing</button> <a href="{{ route("logbook.index") }}"
-            class="px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Batal</a>
+            class="px-4 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</a>
     </div>
 </form>
 </div>

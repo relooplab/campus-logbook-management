@@ -44,7 +44,10 @@ class AchievementService
 
     private function approvedCount(MahasiswaTa $ta): int
     {
-        return $ta->entries()->where('status', LogbookEntry::STATUS_APPROVED)->count();
+        return $ta->entries()
+            ->where('jenis', LogbookEntry::JENIS_LOGBOOK)
+            ->where('status', LogbookEntry::STATUS_APPROVED)
+            ->count();
     }
 
     private function langkahPertama(MahasiswaTa $ta): bool
@@ -75,7 +78,7 @@ class AchievementService
     private function zeroRevisi(MahasiswaTa $ta): bool
     {
         // 3 entri approved berturut-turut tanpa revisi di antaranya.
-        $seq = $ta->entries()->orderBy('id')->pluck('status')->values();
+        $seq = $ta->entries()->where('jenis', LogbookEntry::JENIS_LOGBOOK)->orderBy('id')->pluck('status')->values();
         $run = 0;
         foreach ($seq as $s) {
             if ($s === LogbookEntry::STATUS_REVISI) {
@@ -122,7 +125,9 @@ class AchievementService
         if ($entryIds->isEmpty()) return false;
         $total = PdfComment::whereIn('logbook_entry_id', $entryIds)->count();
         if ($total === 0) return false;
-        $unresolved = PdfComment::whereIn('logbook_entry_id', $entryIds)->where('is_resolved', false)->count();
+        $unresolved = PdfComment::whereIn('logbook_entry_id', $entryIds)
+            ->whereIn('resolution_status', [PdfComment::STATUS_OPEN, PdfComment::STATUS_ADDRESSED])
+            ->count();
         return $unresolved === 0;
     }
 

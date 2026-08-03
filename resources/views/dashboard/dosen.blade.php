@@ -191,7 +191,7 @@
                                 <td class="py-2.5 pr-4">{{ $ta->judul_ta }}</td>
                                 <td class="py-2.5 pr-4 text-xs">{{ $ta->pembimbing1?->name }}{{ $ta->pembimbing2 ? ' & ' . $ta->pembimbing2->name : '' }}</td>
                                 <td class="py-2.5">
-                                    <form method="POST" action="{{ route('mahasiswa-ta.fase', $ta) }}" class="flex items-center gap-1">
+                                    <form method="POST" action="{{ route('mahasiswa-ta.fase', $ta) }}" class="flex items-center gap-1" onsubmit="return confirm('Ubah fase TA ini? Pastikan sudah benar.')">
                                         @csrf
                                         <select name="fase" class="rounded-lg border border-border bg-bg-surface px-2 py-1.5 text-xs">
                                             @foreach (\App\Models\MahasiswaTa::FASES as $key => $label)

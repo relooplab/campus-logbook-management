@@ -5,7 +5,7 @@
         <h1 class="text-xl font-bold"> Viewer PDF & Anotasi —
             {{ $logbook->jenis === "revisi" ? "Revisi" : "Sesi " . $logbook->sesi_ke }} </h1>
         <a href="{{ route("logbook.show", $logbook) }}"
-            class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">← Kembali</a>
+            class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">← Kembali</a>
     </div>
     <div id="pdf-viewer-root"></div>
 </div>
@@ -30,11 +30,12 @@
         resolveUrl: @json(url("/pdf-comments/{id}/resolve")),
         deleteUrl: @json(url("/pdf-comments/{id}")),
         burnUrl: @json(route("logbook.pdf.burn", ["logbook" => $logbook, "type" => "__TYPE__"])),
-        buildFeedbackUrl: @if (auth()->user()->isDosen())
+        buildFeedbackUrl: @if (auth()->user()->can('review', $logbook))
             @json(route("quick-review.build-feedback", $logbook))
         @else
             null
         @endif ,
+        canReview: @json(auth()->user()->can('review', $logbook)),
     };
 </script>
 @endsection

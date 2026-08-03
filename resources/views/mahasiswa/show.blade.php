@@ -7,7 +7,7 @@
 <div class="space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Detail Mahasiswa</h1> <a href="{{ url()->previous() }}"
-            class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">← Kembali</a>
+            class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">← Kembali</a>
     </div> {{-- Kartu profil mahasiswa --}} <div
         class="bg-bg-surface rounded-xl border border-border p-6 flex flex-wrap items-center gap-4">
         <div
@@ -90,7 +90,7 @@
         <div class="px-3 py-2 rounded-md bg-bg-panel sm:col-span-2"> <span class="text-text-secondary">Fase:</span>
             <span class="font-medium block">{{ $mahasiswaTa->faseLabel() }}</span>
             @if ($isDosen && $mahasiswaTa->isPembimbing(auth()->user()))
-                <form method="POST" action="{{ route("mahasiswa-ta.fase", $mahasiswaTa) }}" class="mt-2 flex gap-1">
+                <form method="POST" action="{{ route("mahasiswa-ta.fase", $mahasiswaTa) }}" class="mt-2 flex gap-1" onsubmit="return confirm('Ubah fase TA mahasiswa ini? Pastikan perubahan sudah benar.')">
                     @csrf <select name="fase"
                         class="rounded-md border border-border bg-bg-surface px-2 py-1 text-xs">
                         @foreach (\App\Models\MahasiswaTa::FASES as $key => $label)

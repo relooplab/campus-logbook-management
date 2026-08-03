@@ -14,7 +14,7 @@ class LogbookEntryObserver
     private function forgetCache(LogbookEntry $entry): void
     {
         if ($taId = $entry->mahasiswa_ta_id) {
-            Cache::forget("regularity:{$taId}");
+            Cache::forget("regularity2:{$taId}");
         }
     }
 

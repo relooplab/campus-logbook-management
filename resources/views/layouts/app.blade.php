@@ -12,6 +12,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Thesis Logbook Management') · Thesis Logbook Management</title>
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('favicon-32x32.png') }}" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -255,8 +258,8 @@
                 @yield('header-title', '')
             </div>
             <a href="{{ route('dashboard') }}" class="hidden md:flex items-center gap-2 px-2 min-w-0 justify-center" title="Thesis Logbook Management">
-                <span class="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-brand-light text-brand flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined icon-md">assignment_turned_in</span>
+                <span class="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-brand-light text-brand flex items-center justify-center shrink-0 p-1.5">
+                    @include('partials.logo-mark')
                 </span>
                 <span class="hidden sm:flex flex-col min-w-0 leading-tight">
                     <span class="font-heading font-extrabold text-sm md:text-base text-text-primary truncate">Thesis Logbook</span>

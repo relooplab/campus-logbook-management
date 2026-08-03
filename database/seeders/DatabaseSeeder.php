@@ -43,6 +43,12 @@ class DatabaseSeeder extends Seeder
             );
         }
 
+        // Akun demo hanya boleh dibuat di local/testing. Seeder production
+        // tetap menyiapkan role, institusi, dan achievement tanpa password demo.
+        if (! app()->environment(['local', 'testing'])) {
+            return;
+        }
+
         // Admin + dosen dalam satu akun (multi-role), NIDN sebagai identifier.
         $adminDosen = User::firstOrCreate(
             ['email' => 'admin@example.com'],

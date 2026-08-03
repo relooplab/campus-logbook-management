@@ -35,7 +35,7 @@ class SendWeeklyDigest extends Command
 
             $unresolvedComments = PdfComment::whereIn('logbook_entry_id', function ($q) use ($taIds) {
                 $q->select('id')->from('logbook_entries')->whereIn('mahasiswa_ta_id', $taIds);
-            })->where('is_resolved', false)->count();
+            })->whereIn('resolution_status', [PdfComment::STATUS_OPEN, PdfComment::STATUS_ADDRESSED])->count();
 
             $dosen->notify(new WeeklyDigestNotification(
                 "Digest mingguan Anda:\n• {$waiting} entri menunggu review\n• {$redCount} mahasiswa status merah\n• {$unresolvedComments} komentar PDF belum direspons",

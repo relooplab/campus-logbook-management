@@ -196,7 +196,6 @@ class MahasiswaTa extends Model
         $now = now();
 
         $lastEntry = $this->entries()
-            ->whereIn('status', [LogbookEntry::STATUS_SUBMITTED, LogbookEntry::STATUS_APPROVED])
             ->whereNotNull('tanggal_bimbingan')
             ->orderByDesc('tanggal_bimbingan')
             ->first();
@@ -205,10 +204,11 @@ class MahasiswaTa extends Model
             return ['status' => 'red', 'days_since' => null, 'avg_interval' => null];
         }
 
-        $daysSinceLast = (int) $lastEntry->tanggal_bimbingan->diffInDays($now);
+        // Guard: tanggal di masa depan (data lama/impor) dianggap "bimbingan hari ini".
+        $daysSinceLast = (int) max(0, $lastEntry->tanggal_bimbingan->startOfDay()
+            ->diffInDays($now->copy()->startOfDay()));
 
         $dates = $this->entries()
-            ->whereIn('status', [LogbookEntry::STATUS_SUBMITTED, LogbookEntry::STATUS_APPROVED])
             ->whereNotNull('tanggal_bimbingan')
             ->orderByDesc('tanggal_bimbingan')
             ->limit(5)

@@ -8,9 +8,9 @@
 @else
     <div class="space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <h1 class="text-xl font-bold">Quick Review —
+            <h1 class="text-xl font-bold">Quick Review (1 dari {{ $queueCount }}) —
                 {{ $entry->jenis === "revisi" ? "Revisi" : "Sesi " . $entry->sesi_ke }}</h1> <a
-                href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">←
+                href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">←
                 Dashboard</a>
         </div> {{-- Ringkasan entry --}} <div class="bg-bg-surface rounded-xl border border-border p-5 space-y-3">
             <div class="flex items-center justify-between">
@@ -22,13 +22,32 @@
             <dl class="grid sm:grid-cols-2 gap-2 text-sm">
                 <div class="px-3 py-2 rounded-md bg-bg-panel">
                     <dt class="text-text-secondary">Tanggal</dt>
-                    <dd>{{ $entry->tanggal_bimbingan?->format("d M Y") ?? "—" }}</dd>
+                    <dd>{{ ($entry->jenis === "revisi" ? $entry->tanggal_pengiriman : $entry->tanggal_bimbingan)?->format("d M Y") ?? "—" }}</dd>
+                </div>
+                <div class="px-3 py-2 rounded-md bg-bg-panel">
+                    <dt class="text-text-secondary">Menunggu review</dt>
+                    <dd>{{ $entry->submitted_at?->diffForHumans() ?? "—" }} ({{ $entry->submitted_at?->diffInDays(now()) ?? 0 }} hari)</dd>
                 </div>
                 <div class="px-3 py-2 rounded-md bg-bg-panel">
                     <dt class="text-text-secondary">Topik</dt>
                     <dd>{{ $entry->topik ?? "Revisi" }}</dd>
                 </div>
             </dl>
+            @if ($entry->parentEntry)
+                <div class="px-3 py-2 rounded-md bg-brand/10 border border-brand/20 text-sm">
+                    <p class="font-semibold">Revisi ke-{{ $entry->revision_round }} dari entri #{{ $entry->parentEntry->id }}</p>
+                    <p class="whitespace-pre-wrap mt-1">{{ $entry->parentEntry->feedback_dosen }}</p>
+                    <p class="text-xs text-text-secondary mt-2">Anotasi ronde sebelumnya: {{ $entry->parentEntry->comments->count() }} · ronde ini: {{ $entry->comments->count() }}</p>
+                    @if ($entry->parentEntry->comments->isNotEmpty())
+                        <div class="mt-2 space-y-1">
+                            @foreach ($entry->parentEntry->comments as $comment)
+                                <p class="text-xs"><span class="font-semibold">Hal. {{ $comment->page_number }}</span> · {{ $comment->comment }} <span class="text-text-secondary">({{ $comment->resolution_status }})</span></p>
+                            @endforeach
+                        </div>
+                    @endif
+                    <a href="{{ route("logbook.show", $entry->parentEntry) }}" class="text-brand hover:underline">Buka entri induk</a>
+                </div>
+            @endif
             <div>
                 <h3 class="text-sm font-semibold text-text-secondary mb-1">Ringkasan Perbaikan</h3>
                 <div class="text-sm whitespace-pre-wrap">{{ $entry->progres_kendala }}</div>
@@ -37,6 +56,9 @@
                 <a href="{{ route("logbook.pdf-viewer", $entry) }}" target="_blank"
                     class="inline-block px-3 py-2 rounded-md bg-brand text-white text-sm">Lihat PDF &
                     Anotasi</a>
+            @endif
+            @if ($entry->exceedsRevisionRoundLimit())
+                <p class="text-xs text-status-pending">Ronde revisi sudah mencapai batas perhatian. Pertimbangkan bimbingan tatap muka sebelum siklus berikutnya.</p>
             @endif
         </div> {{-- Feedback terakhir untuk mahasiswa ini (reuse) --}} @if ($lastFeedback)
             <div class="bg-bg-surface rounded-xl border border-border p-4">
@@ -66,15 +88,15 @@
                     class="text-xs px-3 py-1.5 rounded-md bg-brand/10 text-brand">
                     <span class="material-symbols-outlined icon-sm align-text-bottom">bolt</span> Jadikan dari Komentar </button>
             </div>
-            <textarea name="feedback_dosen" id="feedback_dosen" rows="4" required
+            <textarea name="feedback_dosen" id="feedback_dosen" rows="4" required minlength="20"
                 placeholder="Tulis feedback / alasan revisi..."
-                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">{{ $feedbackDraft ?? "" }}</textarea>
-            <p id="revisi-error" class="hidden text-xs text-status-danger mt-1">Feedback wajib diisi.</p>
+                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">{{ old("feedback_dosen", $feedbackDraft ?? "") }}</textarea>
+            <p id="revisi-error" class="hidden text-xs text-status-danger mt-1">Feedback wajib diisi minimal 20 karakter.</p>
             <div class="flex flex-wrap gap-2">
-                <form method="POST" action="{{ route("quick-review.approve-next", $entry) }}" id="approve-form"> @csrf <button type="submit" id="approve-btn"
+                <form method="POST" action="{{ route("quick-review.approve-next", $entry) }}" id="approve-form" data-pdf-opened="{{ $entry->review_opened_at ? "1" : "0" }}"> @csrf <button type="submit" id="approve-btn"
                         class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">check</span>
                         Setujui & Next</button> </form>
-                <form method="POST" action="{{ route("quick-review.revisi-next", $entry) }}" id="revisi-form">
+                <form method="POST" action="{{ route("quick-review.revisi-next", $entry) }}" id="revisi-form" data-pdf-opened="{{ $entry->review_opened_at ? "1" : "0" }}">
                     @csrf <input type="hidden" name="feedback_dosen" id="revisi-feedback">
                     <button type="submit" id="revisi-btn"
                         class="px-4 py-2 rounded-md bg-status-pending hover:bg-status-pending/90 text-white text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">autorenew</span>
@@ -95,7 +117,7 @@
                 placeholder="Isi feedback..."></textarea>
         </div>
         <div class="flex justify-end gap-2 mt-4"> <button type="button" id="tpl-cancel"
-                class="px-3 py-2 rounded-md bg-bg-panel text-sm">Batal</button> <button type="button" id="tpl-save"
+                class="px-3 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</button> <button type="button" id="tpl-save"
                 class="px-3 py-2 rounded-md bg-brand text-white text-sm">Simpan</button> </div>
     </div>
 </div>
@@ -129,7 +151,7 @@
         if (revisiBtn && revisiForm && revisiFeedback && revisiError) {
             revisiBtn.addEventListener('click', function (e) {
                 e.preventDefault();
-                if (!feedback.value.trim()) {
+                if (feedback.value.trim().length < 20) {
                     revisiError.classList.remove('hidden');
                     feedback.focus();
                     return;
@@ -154,7 +176,11 @@
         // Cegah double-submit pada tombol "Setujui & Next" dan "Revisi & Next".
         var approveForm = document.getElementById('approve-form');
         if (approveForm) {
-            approveForm.addEventListener('submit', function () {
+            approveForm.addEventListener('submit', function (e) {
+                if (approveForm.dataset.pdfOpened !== '1' && !window.confirm('Lampiran PDF belum tercatat dibuka. Tetap setujui?')) {
+                    e.preventDefault();
+                    return;
+                }
                 var btn = document.getElementById('approve-btn');
                 if (btn) {
                     btn.disabled = true;
@@ -163,7 +189,12 @@
             });
         }
         if (revisiForm) {
-            revisiForm.addEventListener('submit', function () {
+            revisiForm.addEventListener('submit', function (e) {
+                if (revisiForm.dataset.pdfOpened !== '1' && !window.confirm('Lampiran PDF belum tercatat dibuka. Tetap minta revisi?')) {
+                    e.preventDefault();
+                    revisiBtn.disabled = false;
+                    return;
+                }
                 var btn = document.getElementById('revisi-btn');
                 if (btn) {
                     btn.disabled = true;

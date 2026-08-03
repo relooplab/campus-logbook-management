@@ -30,7 +30,11 @@ class Institution extends Model
     public static function active(): self
     {
         return Cache::remember('institution.active', now()->addDay(), function () {
-            return static::first() ?? static::create(['institution_name' => 'Perguruan Tinggi', 'email' => 'no-reply@example.com']);
+            return static::first() ?? static::create([
+                'app_name' => 'Thesis Logbook Management',
+                'institution_name' => 'Perguruan Tinggi',
+                'email' => 'no-reply@example.com',
+            ]);
         });
     }
 

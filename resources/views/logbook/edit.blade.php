@@ -36,7 +36,7 @@
         </div> {{-- Lampiran draft --}} <div> <label class="block text-sm font-medium mb-1">Lampiran Draft
                 (PDF)</label>
             @if ($logbook->lampiran_path)
-                <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-bg-panel"> <span class="material-symbols-outlined icon-lg">description</span>
+                    <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-bg-panel"> <span class="material-symbols-outlined icon-lg">description</span>
                     <div class="flex-1">
                         <p class="text-sm font-medium">
                             {{ $logbook->lampiran_original_name ?: basename($logbook->lampiran_path) }}</p>
@@ -71,13 +71,23 @@
                 </div>
                 <div class="flex items-center gap-1"> <a href="{{ route("logbook.catatan-pdf", $logbook) }}"
                         target="_blank" class="px-2 py-1 rounded-md bg-bg-panel hover:bg-bg-hover text-xs">Lihat</a>
-                    <form method="POST" action="{{ route("logbook.remove-catatan", $logbook) }}"
+                        <form method="POST" action="{{ route("logbook.remove-catatan", $logbook) }}"
                         onsubmit="return confirm('Hapus catatan perbaikan ini?')"> @csrf @method("DELETE")
                         <button
                             class="px-2 py-1 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-xs">Hapus</button>
-                    </form>
+                        </form>
+                        <label class="px-2 py-1 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-xs cursor-pointer">
+                            Ganti <input type="file" name="catatan_perbaikan" accept="application/pdf" class="hidden">
+                        </label>
                 </div>
             </div>
+        </div>
+    @elseif ($logbook->jenis === "revisi")
+        <div> <label class="block text-sm font-medium mb-1" for="catatan_perbaikan">Catatan Perbaikan (PDF)</label>
+            <input type="file" name="catatan_perbaikan" id="catatan_perbaikan" accept="application/pdf" required class="w-full text-sm">
+            @error("catatan_perbaikan")
+                <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
+            @enderror
         </div>
     @endif
     <div
@@ -87,7 +97,7 @@
     <div class="flex flex-wrap gap-2 pt-2"> <button type="submit"
             class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan</button>
         <a href="{{ route("logbook.show", $logbook) }}"
-            class="px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Batal</a>
+            class="px-4 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</a>
     </div>
 </form>
 </div>

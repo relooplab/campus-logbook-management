@@ -29,9 +29,15 @@ class MahasiswaDashboardService
             : null;
 
         // Kecepatan merespons revisi (reviewed_at revisi -> submitted_at ulang).
-        $responses = $entries->whereNotNull('feedback_dosen')->whereNotNull('submitted_at');
+        // Hanya entry yang benar-benar sudah diresubmit (submitted_at > reviewed_at)
+        // yang dihitung; hindari nilai negatif dari entry masih berstatus REVISI.
+        $responses = $entries
+            ->whereNotNull('feedback_dosen')
+            ->whereNotNull('submitted_at')
+            ->whereNotNull('reviewed_at')
+            ->filter(fn ($e) => $e->submitted_at->greaterThan($e->reviewed_at));
         $avgResponse = $responses->isNotEmpty()
-            ? (int) round($responses->avg(fn ($e) => $e->submitted_at->diffInDays($e->reviewed_at)))
+            ? (int) round(max(0, $responses->avg(fn ($e) => $e->submitted_at->diffInDays($e->reviewed_at))))
             : null;
 
         // Streak konsistensi (minggu beruntun dengan >= 1 bimbingan).
@@ -73,6 +79,7 @@ class MahasiswaDashboardService
             $label = $e->jenis === LogbookEntry::JENIS_REVISI ? 'Revisi' : 'Entri #'.$e->sesi_ke.' "'.($e->topik ?: 'Logbook').'"';
             $items[] = [
                 'date' => $e->created_at->format('d M'),
+                'ts' => $e->created_at->timestamp,
                 'label' => $label,
                 'status' => $e->status,
                 'type' => 'entry',
@@ -82,6 +89,7 @@ class MahasiswaDashboardService
             if ($commentCount > 0) {
                 $items[] = [
                     'date' => $e->created_at->format('d M'),
+                    'ts' => $e->created_at->timestamp,
                     'label' => "Komentar pada draft ({$commentCount} area)",
                     'status' => 'comment',
                     'type' => 'comment',
@@ -94,6 +102,7 @@ class MahasiswaDashboardService
             foreach ($ta->workspaceFiles()->with('uploader')->latest()->take(3)->get() as $wf) {
                 $items[] = [
                     'date' => $wf->created_at->format('d M'),
+                    'ts' => $wf->created_at->timestamp,
                     'label' => '📁 '.($wf->bab ? $wf->bab.' — ' : '').'File diunggah oleh '.($wf->uploader?->name ?? ''),
                     'status' => 'comment',
                     'type' => 'workspace',
@@ -101,16 +110,20 @@ class MahasiswaDashboardService
             }
         }
 
-        // Item "masa depan" sesi berikutnya.
+        // Item "masa depan" sesi berikutnya (selalu di paling bawah).
         $next = $ta ? $ta->entries()->where('jenis', LogbookEntry::JENIS_LOGBOOK)->count() + 1 : 1;
         $last = $entries->first();
         $daysSince = $last ? (int) $last->created_at->diffInDays(now()) : null;
         $items[] = [
             'date' => 'Akan datang',
+            'ts' => PHP_INT_MAX, // selalu di paling bawah setelah sort
             'label' => "Sesi {$next} — belum ada bimbingan".($daysSince ? " ({$daysSince} hari sejak sesi terakhir)" : ''),
             'status' => 'future',
             'type' => 'future',
         ];
+
+        // Urutkan kronologis menurun (terbaru dulu), item "Akan datang" di paling bawah.
+        usort($items, fn ($a, $b) => $b['ts'] <=> $a['ts']);
 
         return $items;
     }

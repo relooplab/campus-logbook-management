@@ -46,7 +46,7 @@ class MahasiswaTaController extends Controller
 
         $entries = $mahasiswaTa->entries()->with('comments')->orderByDesc('created_at')->get();
 
-        $approved = $entries->where('status', LogbookEntry::STATUS_APPROVED)->count();
+        $approved = $entries->where('jenis', LogbookEntry::JENIS_LOGBOOK)->where('status', LogbookEntry::STATUS_APPROVED)->count();
         $target = $mahasiswaTa->target_sesi ?? 7;
         $percent = $target > 0 ? (int) round($approved / $target * 100) : 0;
 

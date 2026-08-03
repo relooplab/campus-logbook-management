@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreRevisiRequest extends FormRequest
 {
@@ -18,7 +19,17 @@ class StoreRevisiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tanggal_pengiriman' => ['required', 'date'],
+            'parent_entry_id' => [
+                'required',
+                'integer',
+                Rule::exists('logbook_entries', 'id')->where(function ($query) {
+                    $query->where('mahasiswa_ta_id', $this->user()?->mahasiswaTa?->id)
+                        ->where('status', 'revisi');
+                }),
+            ],
+            'addressed_comment_ids' => ['nullable', 'array'],
+            'addressed_comment_ids.*' => ['integer', 'distinct'],
+            'tanggal_pengiriman' => ['required', 'date', 'before_or_equal:today'],
             'progres_kendala' => ['required', 'string'],
             'lampiran' => ['required', 'file', 'mimes:pdf', 'max:10240'],
             'catatan_perbaikan' => ['required', 'file', 'mimes:pdf', 'max:10240'],
@@ -29,6 +40,8 @@ class StoreRevisiRequest extends FormRequest
     {
         return [
             'tanggal_pengiriman.required' => 'Tanggal pengiriman revisi wajib diisi.',
+            'tanggal_pengiriman.before_or_equal' => 'Tanggal tidak boleh di masa depan.',
+            'parent_entry_id.required' => 'Entri asal revisi wajib dipilih.',
             'progres_kendala.required' => 'Ringkasan perbaikan wajib diisi.',
             'lampiran.required' => 'File perbaikan (PDF) wajib diunggah.',
             'lampiran.mimes' => 'File perbaikan harus berupa PDF.',

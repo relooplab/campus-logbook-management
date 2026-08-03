@@ -87,7 +87,7 @@
                     name="password" required minlength="6"
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
             <div class="flex justify-end gap-2 mt-4"> <button type="button" id="reset-cancel"
-                    class="px-3 py-2 rounded-md bg-bg-panel text-sm">Batal</button> <button
+                    class="px-3 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</button> <button
                     class="px-3 py-2 rounded-md bg-brand text-white text-sm">Reset</button> </div>
         </form>
     </div>
