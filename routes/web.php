@@ -17,6 +17,7 @@ use App\Http\Controllers\MahasiswaTaController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ActionItemController;
 use App\Http\Controllers\PdfCommentController;
+use App\Http\Controllers\ProfilPerusahaanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuickReviewController;
 use App\Http\Controllers\SchedulingController;
@@ -95,6 +96,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/kp/{mahasiswaTa}/logbook-harian/{logbookHarian}/edit', [LogbookHarianController::class, 'edit'])->name('logbook-harian.edit');
     Route::put('/kp/{mahasiswaTa}/logbook-harian/{logbookHarian}', [LogbookHarianController::class, 'update'])->name('logbook-harian.update');
     Route::delete('/kp/{mahasiswaTa}/logbook-harian/{logbookHarian}', [LogbookHarianController::class, 'destroy'])->name('logbook-harian.destroy');
+
+    // ------------------------------------------------------ profil perusahaan KP
+    Route::get('/kp/{mahasiswaTa}/profil-perusahaan', [ProfilPerusahaanController::class, 'index'])->name('profil-perusahaan.index');
+    Route::put('/kp/{mahasiswaTa}/profil-perusahaan', [ProfilPerusahaanController::class, 'update'])->name('profil-perusahaan.update');
 
     // -------------------------------------------------- jadwal bimbingan
     Route::get('/jadwal-bimbingan', [SchedulingController::class, 'index'])->name('scheduling.index');

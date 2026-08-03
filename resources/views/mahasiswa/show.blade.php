@@ -42,6 +42,8 @@
             @if ($mahasiswaTa->isKp())
                 <a href="{{ route("logbook-harian.index", $mahasiswaTa) }}"
                     class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Logbook Harian</a>
+                <a href="{{ route("profil-perusahaan.index", $mahasiswaTa) }}"
+                    class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Profil Perusahaan</a>
             @endif
         </div>
     </div> {{-- Kontak mahasiswa (hanya untuk dosen) --}} @php $mhs = $mahasiswaTa->mahasiswa; @endphp

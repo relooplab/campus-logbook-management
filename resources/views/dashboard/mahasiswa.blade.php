@@ -153,6 +153,7 @@
                     @endif
                     @if ($ta->isKp())
                         <a href="{{ route('logbook-harian.index', $ta) }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Logbook Harian</a>
+                        <a href="{{ route('profil-perusahaan.index', $ta) }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Profil Perusahaan</a>
                     @endif
                 </div>
             </div>
