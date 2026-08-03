@@ -236,13 +236,16 @@ These accounts are created only when `APP_ENV` is `local` or `testing`. The
 production seeder never creates them. Never use the demo password in a
 production deployment.
 
-The database seeder creates three accounts for testing:
+The database seeder creates the following accounts for testing:
 
 | Role | Email | Password |
 |---|---|---|
 | Admin + Supervisor (NIDN 0001010101) | `admin@example.com` | `password` |
-| Supervisor 2 (NIDN 0002020202) | `supervisor2@example.com` | `password` |
-| Student (NIM 200401001) | `student@example.com` | `password` |
+| Administrator Sistem | `administrator@example.com` | `password` |
+| Supervisor 2 (NIDN 0002020202) | `dosen2@example.com` | `password` |
+| Student — TA (NIM 200401001) | `mahasiswa@example.com` | `password` |
+| Student — KP (pemilik kelompok, NIM 200401002) | `mahasiswa_kp@example.com` | `password` |
+| Student — KP (anggota kelompok, NIM 200401003) | `mahasiswa_kp2@example.com` | `password` |
 
 ---
 
@@ -387,7 +390,7 @@ MAIL_FROM_ADDRESS=noreply@example.com
 # Test login (expect 302 redirect to dashboard, then 200 on dashboard)
 TOKEN=$(grep -oP 'name="_token" value="\K[^"]+' <<< "$(curl -s localhost:8000/login)")
 curl -c cookies.txt -X POST localhost:8000/login \
-  -d "_token=$TOKEN" -d "email=student@example.com" -d "password=password"
+  -d "_token=$TOKEN" -d "email=mahasiswa@example.com" -d "password=password"
 
 # Test logbook submission (expect 302 redirect after POST)
 curl -b cookies.txt -X POST localhost:8000/logbook \
