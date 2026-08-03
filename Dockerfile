@@ -63,7 +63,14 @@ RUN mkdir -p /public-dist \
     && rm -rf public/storage
 
 # Finalize autoload + assets
-RUN composer install --no-interaction --no-scripts --no-dev --optimize-autoloader --no-progress \
+# Fix worker crash "PailServiceProvider not found":
+# - Hapus cache stale bootstrap/cache/packages.php & services.php yang di-copy
+#   dari lokal (COPY . .) — bisa memuat provider dev-only (laravel/pail, dll)
+#   yang tidak terpasang di image production (--no-dev).
+# - Jalankan composer install TANPA --no-scripts agar `package:discover`
+#   meregenerasi provider hanya dari dependency yang benar-benar terpasang.
+RUN rm -f bootstrap/cache/packages.php bootstrap/cache/services.php \
+    && composer install --no-interaction --no-dev --optimize-autoloader --no-progress \
     && mkdir -p storage/framework/{sessions,views,cache} storage/logs \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rw storage bootstrap/cache
