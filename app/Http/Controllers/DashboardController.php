@@ -158,7 +158,7 @@ class DashboardController extends Controller
     private function mahasiswaDashboard(User $user): View
     {
         // Program yang ditampilkan: default program aktif; bisa dipilih via ?program=kp|ta.
-        $programs = $user->mahasiswaPrograms()->with(['pembimbing1', 'pembimbing2', 'penguji1', 'penguji2'])->get();
+        $programs = $user->allPrograms()->with(['pembimbing1', 'pembimbing2', 'penguji1', 'penguji2', 'members'])->get();
         $activeProgram = $user->programAktif;
 
         $requested = request()->query('program');

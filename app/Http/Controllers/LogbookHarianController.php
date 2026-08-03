@@ -26,7 +26,7 @@ class LogbookHarianController extends Controller
         abort_unless($mahasiswaTa->isKp(), 404, 'Program bukan KP.');
 
         $user = $request->user();
-        if ($user->isMahasiswa() && $user->id !== $mahasiswaTa->user_id) {
+        if ($user->isMahasiswa() && !$mahasiswaTa->isMember($user)) {
             abort(403);
         }
         if ($user->isDosen() && !$mahasiswaTa->isPembimbing($user)) {
@@ -47,7 +47,7 @@ class LogbookHarianController extends Controller
     public function create(Request $request, MahasiswaTa $mahasiswaTa): View
     {
         abort_unless($mahasiswaTa->isKp(), 404, 'Program bukan KP.');
-        abort_unless($request->user()->id === $mahasiswaTa->user_id, 403, 'Hanya mahasiswa pemilik KP yang dapat menambah catatan.');
+        abort_unless($mahasiswaTa->isMember($request->user()), 403, 'Hanya anggota kelompok KP yang dapat menambah catatan.');
 
         return view('logbook-harian.create', compact('mahasiswaTa'));
     }
@@ -58,7 +58,7 @@ class LogbookHarianController extends Controller
     public function store(Request $request, MahasiswaTa $mahasiswaTa): RedirectResponse
     {
         abort_unless($mahasiswaTa->isKp(), 404, 'Program bukan KP.');
-        abort_unless($request->user()->id === $mahasiswaTa->user_id, 403, 'Hanya mahasiswa pemilik KP yang dapat menambah catatan.');
+        abort_unless($mahasiswaTa->isMember($request->user()), 403, 'Hanya anggota kelompok KP yang dapat menambah catatan.');
 
         $validated = $request->validate([
             'tanggal' => ['required', 'date'],
@@ -95,7 +95,7 @@ class LogbookHarianController extends Controller
     public function edit(Request $request, MahasiswaTa $mahasiswaTa, LogbookHarianKp $logbookHarian): View
     {
         abort_unless($mahasiswaTa->isKp(), 404, 'Program bukan KP.');
-        abort_unless($request->user()->id === $mahasiswaTa->user_id, 403, 'Hanya mahasiswa pemilik KP yang dapat mengubah catatan.');
+        abort_unless($mahasiswaTa->isMember($request->user()), 403, 'Hanya anggota kelompok KP yang dapat mengubah catatan.');
         abort_unless($logbookHarian->mahasiswa_ta_id === $mahasiswaTa->id, 404);
 
         return view('logbook-harian.edit', compact('mahasiswaTa', 'logbookHarian'));
@@ -107,7 +107,7 @@ class LogbookHarianController extends Controller
     public function update(Request $request, MahasiswaTa $mahasiswaTa, LogbookHarianKp $logbookHarian): RedirectResponse
     {
         abort_unless($mahasiswaTa->isKp(), 404, 'Program bukan KP.');
-        abort_unless($request->user()->id === $mahasiswaTa->user_id, 403, 'Hanya mahasiswa pemilik KP yang dapat mengubah catatan.');
+        abort_unless($mahasiswaTa->isMember($request->user()), 403, 'Hanya anggota kelompok KP yang dapat mengubah catatan.');
         abort_unless($logbookHarian->mahasiswa_ta_id === $mahasiswaTa->id, 404);
 
         $validated = $request->validate([
@@ -144,7 +144,7 @@ class LogbookHarianController extends Controller
     public function destroy(Request $request, MahasiswaTa $mahasiswaTa, LogbookHarianKp $logbookHarian): RedirectResponse
     {
         abort_unless($mahasiswaTa->isKp(), 404, 'Program bukan KP.');
-        abort_unless($request->user()->id === $mahasiswaTa->user_id, 403, 'Hanya mahasiswa pemilik KP yang dapat menghapus catatan.');
+        abort_unless($mahasiswaTa->isMember($request->user()), 403, 'Hanya anggota kelompok KP yang dapat menghapus catatan.');
         abort_unless($logbookHarian->mahasiswa_ta_id === $mahasiswaTa->id, 404);
 
         $this->deleteFoto($logbookHarian->foto_1);

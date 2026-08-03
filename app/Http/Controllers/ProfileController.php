@@ -17,7 +17,7 @@ class ProfileController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
-        $programs = $user->mahasiswaPrograms()->with(['pembimbing1', 'pembimbing2'])->get();
+        $programs = $user->allPrograms()->with(['pembimbing1', 'pembimbing2', 'members'])->get();
 
         return view('profile.index', ['user' => $user, 'programs' => $programs]);
     }
@@ -70,7 +70,7 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        abort_unless($user->id === $mahasiswaTa->user_id, 403, 'Anda bukan pemilik program ini.');
+        abort_unless($mahasiswaTa->isMember($user), 403, 'Anda bukan anggota program ini.');
 
         $isKp = $mahasiswaTa->isKp();
 

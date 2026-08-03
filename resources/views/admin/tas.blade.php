@@ -48,7 +48,16 @@
                             <tr class="border-b border-border">
                                 <td class="py-3 px-4"><input type="checkbox" name="ids[]" value="{{ $ta->id }}"
                                         class="row-check bg-bg-surface"></td>
-                                <td class="py-3 px-4">{{ $ta->mahasiswa?->name }}</td>
+                                <td class="py-3 px-4">
+                                    {{ $ta->mahasiswa?->name }}
+                                    @if ($jenis === "kp" && $ta->members->isNotEmpty())
+                                        <div class="text-xs text-text-secondary mt-0.5">
+                                            @foreach ($ta->members as $member)
+                                                <div>+ {{ $member->name }}</div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </td>
                                 <td class="py-3 px-4 max-w-[220px] truncate">{{ $jenis === "kp" ? ($ta->tempat_kp ?: "—") : $ta->judul_ta }}</td>
                                 <td class="py-3 px-4">{{ $ta->pembimbing1?->name ?? "—" }}</td>
                                 <td class="py-3 px-4 table-col-pembimbing2">{{ $ta->pembimbing2?->name ?? "—" }}</td>
@@ -96,6 +105,13 @@
                         class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                     <input type="text" name="pembimbing_lapangan" placeholder="Pembimbing Lapangan (opsional)"
                         class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <select name="member_ids[]" multiple size="3"
+                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <option value="" disabled>Anggota kelompok lainnya (opsional, Ctrl+klik untuk pilih banyak)...</option>
+                        @foreach ($mahasiswaList as $m)
+                            <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->identifier }})</option>
+                        @endforeach
+                    </select>
                     <div class="grid grid-cols-2 gap-2">
                         <input type="date" name="periode_mulai" placeholder="Periode mulai"
                             class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
@@ -152,6 +168,15 @@
                     <div class="sm:col-span-2">
                         <input type="text" name="pembimbing_lapangan" value="{{ $ta->pembimbing_lapangan }}" placeholder="Pembimbing Lapangan"
                             class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs text-text-secondary mb-1">Anggota Kelompok Lainnya</label>
+                        <select name="member_ids[]" multiple size="3"
+                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            @foreach ($mahasiswaList as $m)
+                                <option value="{{ $m->id }}" @selected($ta->members->contains('id', $m->id))>{{ $m->name }} ({{ $m->identifier }})</option>
+                            @endforeach
+                        </select>
                     </div>
                     <input type="date" name="periode_mulai" value="{{ $ta->periode_mulai?->format("Y-m-d") }}"
                         class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">

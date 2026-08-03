@@ -226,7 +226,7 @@ class ChatController extends Controller
     {
         if (!$ta) return false;
         return $user->isAdmin()
-            || $ta->user_id === $user->id
+            || $ta->isMember($user)
             || $ta->isPembimbing($user)
             || $ta->isPenguji($user);
     }
@@ -234,8 +234,14 @@ class ChatController extends Controller
     private function scopeForUser($q, User $user): void
     {
         if ($user->isAdmin()) return;
-        $q->where(function ($w) use ($user) {
+
+        $memberProgramIds = \DB::table('mahasiswa_ta_members')
+            ->where('user_id', $user->id)
+            ->pluck('mahasiswa_ta_id');
+
+        $q->where(function ($w) use ($user, $memberProgramIds) {
             $w->where('user_id', $user->id)
+                ->orWhereIn('id', $memberProgramIds)
                 ->orWhere('pembimbing_1_id', $user->id)
                 ->orWhere('pembimbing_2_id', $user->id)
                 ->orWhere('penguji_1_id', $user->id)

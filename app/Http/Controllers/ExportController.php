@@ -83,7 +83,7 @@ class ExportController extends Controller
             return;
         }
 
-        if ($user->isMahasiswa() && $mahasiswaTa->user_id === $user->id) {
+        if ($user->isMahasiswa() && $mahasiswaTa->isMember($user)) {
             return;
         }
 

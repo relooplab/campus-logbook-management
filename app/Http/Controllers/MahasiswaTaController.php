@@ -36,12 +36,13 @@ class MahasiswaTaController extends Controller
             // admin boleh lihat semua
         } elseif ($user->isDosen() && !$mahasiswaTa->isPembimbing($user) && !$mahasiswaTa->isPenguji($user)) {
             abort(403, 'Anda bukan pembimbing atau penguji mahasiswa ini.');
-        } elseif ($user->isMahasiswa() && $user->id !== $mahasiswaTa->user_id) {
+        } elseif ($user->isMahasiswa() && !$mahasiswaTa->isMember($user)) {
             abort(403);
         }
 
         $mahasiswaTa->load([
             'mahasiswa',
+            'members',
             'pembimbing1',
             'pembimbing2',
             'penguji1',

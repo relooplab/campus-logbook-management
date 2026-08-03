@@ -134,7 +134,7 @@ class AdminController extends Controller
     public function tas(Request $request): View
     {
         $jenis = $request->query('jenis', 'ta');
-        $query = MahasiswaTa::with(['mahasiswa', 'pembimbing1', 'pembimbing2'])->withCount('entries');
+        $query = MahasiswaTa::with(['mahasiswa', 'pembimbing1', 'pembimbing2', 'members'])->withCount('entries');
 
         if ($jenis === 'kp' || $jenis === 'ta') {
             $query->jenis($jenis);
@@ -185,9 +185,16 @@ class AdminController extends Controller
             'target_sesi' => ['required', 'integer', 'min:1'],
             'periode_mulai' => ['nullable', 'date'],
             'periode_selesai' => ['nullable', 'date', 'after_or_equal:periode_mulai'],
+            'member_ids' => [$isKp ? 'nullable' : 'prohibited', 'array'],
+            'member_ids.*' => ['integer', 'exists:users,id'],
         ]);
 
-        MahasiswaTa::create($validated);
+        $program = MahasiswaTa::create($validated);
+
+        // Anggota kelompok tambahan (khusus KP).
+        if ($isKp && !empty($validated['member_ids'])) {
+            $program->members()->sync(array_diff($validated['member_ids'], [$program->user_id]));
+        }
 
         return back()->with('success', 'Data '.($isKp ? 'KP' : 'TA').' dibuat.');
     }
@@ -208,9 +215,17 @@ class AdminController extends Controller
             'periode_mulai' => ['nullable', 'date'],
             'periode_selesai' => ['nullable', 'date', 'after_or_equal:periode_mulai'],
             'status_ta' => ['nullable', 'in:'.implode(',', \App\Models\MahasiswaTa::STATUS_TA)],
+            'member_ids' => [$isKp ? 'nullable' : 'prohibited', 'array'],
+            'member_ids.*' => ['integer', 'exists:users,id'],
         ]);
 
         $mahasiswaTa->update($validated);
+
+        // Sinkronkan anggota kelompok tambahan (khusus KP).
+        if ($isKp) {
+            $memberIds = array_diff($validated['member_ids'] ?? [], [$mahasiswaTa->user_id]);
+            $mahasiswaTa->members()->sync($memberIds);
+        }
 
         return back()->with('success', 'Data '.($isKp ? 'KP' : 'TA').' diperbarui.');
     }

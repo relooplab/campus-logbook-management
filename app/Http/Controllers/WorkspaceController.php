@@ -54,7 +54,7 @@ class WorkspaceController extends Controller
     public function store(StoreWorkspaceFileRequest $request, MahasiswaTa $mahasiswaTa): RedirectResponse
     {
         $this->authorize('viewWorkspace', $mahasiswaTa);
-        abort_unless($request->user()->id === $mahasiswaTa->user_id, 403, 'Hanya mahasiswa pemilik TA yang dapat menambah file.');
+        abort_unless($mahasiswaTa->isMember($request->user()), 403, 'Hanya anggota kelompok yang dapat menambah file.');
 
         $bab = $request->input('bab');
 
@@ -118,7 +118,7 @@ class WorkspaceController extends Controller
     {
         $this->authorize('viewWorkspace', $file->mahasiswaTa);
 
-        abort_unless($request->user()->id === $file->mahasiswaTa->user_id, 403, 'Hanya mahasiswa pemilik TA yang dapat mengedit metadata.');
+        abort_unless($file->mahasiswaTa->isMember($request->user()), 403, 'Hanya anggota kelompok yang dapat mengedit metadata.');
 
         $validated = $request->validate([
             'bab' => ['nullable', 'string', 'max:50'],
@@ -137,7 +137,7 @@ class WorkspaceController extends Controller
     {
         $this->authorize('viewWorkspace', $file->mahasiswaTa);
 
-        abort_unless($request->user()->id === $file->mahasiswaTa->user_id, 403, 'Hanya mahasiswa pemilik TA yang dapat menghapus.');
+        abort_unless($file->mahasiswaTa->isMember($request->user()), 403, 'Hanya anggota kelompok yang dapat menghapus.');
 
         Storage::disk('local')->delete($file->path);
         $file->delete();

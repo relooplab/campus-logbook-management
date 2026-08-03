@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Achievement;
 use App\Models\Institution;
+use App\Models\LogbookHarianKp;
 use App\Models\MahasiswaTa;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -95,12 +96,65 @@ class DatabaseSeeder extends Seeder
 
         // Data pokok TA mahasiswa.
         MahasiswaTa::firstOrCreate(
-            ['user_id' => $mahasiswa->id],
+            ['user_id' => $mahasiswa->id, 'jenis' => MahasiswaTa::JENIS_TA],
             [
                 'judul_ta' => 'Perancangan Sistem Pengolahan Air Limbah Domestik Terpusat di Kawasan Permukiman',
                 'pembimbing_1_id' => $adminDosen->id,
                 'pembimbing_2_id' => $dosen2->id,
                 'target_sesi' => 7,
+            ]
+        );
+
+        // ---------------------------------------------------------------
+        // Akun demo mahasiswa KP (Kerja Praktek) kelompok.
+        // ---------------------------------------------------------------
+        $mahasiswaKp1 = User::firstOrCreate(
+            ['email' => 'mahasiswa_kp@example.com'],
+            [
+                'name' => 'Mahasiswa KP Satu',
+                'password' => Hash::make('password'),
+                'identifier' => '200401002', // NIM
+            ]
+        );
+        $mahasiswaKp1->syncRoles([$mahasiswaRole]);
+
+        $mahasiswaKp2 = User::firstOrCreate(
+            ['email' => 'mahasiswa_kp2@example.com'],
+            [
+                'name' => 'Mahasiswa KP Dua',
+                'password' => Hash::make('password'),
+                'identifier' => '200401003', // NIM
+            ]
+        );
+        $mahasiswaKp2->syncRoles([$mahasiswaRole]);
+
+        // Program KP kelompok (pemilik = mahasiswaKp1, anggota = mahasiswaKp2).
+        $kp = MahasiswaTa::firstOrCreate(
+            ['user_id' => $mahasiswaKp1->id, 'jenis' => MahasiswaTa::JENIS_KP],
+            [
+                'tempat_kp' => 'PT. Teknologi Nusantara',
+                'pembimbing_1_id' => $adminDosen->id,
+                'pembimbing_2_id' => $dosen2->id,
+                'pembimbing_lapangan' => 'Bapak Rudi, S.T.',
+                'target_sesi' => 7,
+                'periode_mulai' => now()->subMonth(),
+                'periode_selesai' => now()->addMonth(),
+                'fase' => 'pelaksanaan',
+                'status_ta' => MahasiswaTa::STATUS_AKTIF,
+            ]
+        );
+
+        // Anggota kelompok kedua (demo fitur KP kelompok).
+        if (! $kp->members()->where('user_id', $mahasiswaKp2->id)->exists()) {
+            $kp->members()->attach($mahasiswaKp2->id);
+        }
+
+        // Contoh logbook harian KP.
+        LogbookHarianKp::firstOrCreate(
+            ['mahasiswa_ta_id' => $kp->id, 'tanggal' => now()->subDay()->toDateString()],
+            [
+                'kegiatan' => 'Mengikuti briefing dan mempelajari alur kerja divisi IT di PT. Teknologi Nusantara.',
+                'kendala' => 'Perlu adaptasi dengan tools internal perusahaan.',
             ]
         );
     }

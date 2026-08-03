@@ -191,10 +191,21 @@
                     <span class="material-symbols-outlined icon-md">edit_note</span>
                     <span class="sidebar-label">Entri Revisi</span>
                 </a>
+                @php $kp = $user->allPrograms()->where('jenis', 'kp')->first(); @endphp
                 <a href="{{ route('logbook.feedback') }}" class="{{ $navLink }} {{ $active('logbook.feedback') }}">
                     <span class="material-symbols-outlined icon-md">forum</span>
                     <span class="sidebar-label">Logbook Feedback</span>
                 </a>
+                @if ($kp)
+                    <a href="{{ route('logbook-harian.index', $kp) }}" class="{{ $navLink }} {{ $active('logbook-harian.*') }}">
+                        <span class="material-symbols-outlined icon-md">event_note</span>
+                        <span class="sidebar-label">Logbook Harian KP</span>
+                    </a>
+                    <a href="{{ route('profil-perusahaan.index', $kp) }}" class="{{ $navLink }} {{ $active('profil-perusahaan.*') }}">
+                        <span class="material-symbols-outlined icon-md">business</span>
+                        <span class="sidebar-label">Profil Perusahaan</span>
+                    </a>
+                @endif
                 @if ($user->mahasiswaTa)
                     <a href="{{ route('workspace.index', $user->mahasiswaTa) }}" class="{{ $navLink }} {{ $active('workspace.*') }}">
                         <span class="material-symbols-outlined icon-md">workspaces</span>

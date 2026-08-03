@@ -6,6 +6,7 @@ use App\Models\Scopes\InstitutionScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 
@@ -59,6 +60,7 @@ class MahasiswaTa extends Model
         'jenis',
         'judul_ta',
         'tempat_kp',
+        'profil_perusahaan',
         'pembimbing_1_id',
         'pembimbing_2_id',
         'pembimbing_lapangan',
@@ -122,6 +124,41 @@ class MahasiswaTa extends Model
     public function mahasiswa(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Anggota tambahan kelompok (khusus KP). Pemilik utama tetap di user_id.
+     */
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'mahasiswa_ta_members', 'mahasiswa_ta_id', 'user_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * Apakah user adalah anggota program ini (pemilik utama ATAU anggota pivot).
+     */
+    public function isMember(User $user): bool
+    {
+        if ($this->user_id === $user->id) {
+            return true;
+        }
+
+        return $this->members()->where('user_id', $user->id)->exists();
+    }
+
+    /**
+     * Semua anggota program (pemilik utama + anggota pivot), tanpa duplikasi.
+     */
+    public function allMembers()
+    {
+        $members = $this->members()->get();
+
+        if ($this->mahasiswa && !$members->contains('id', $this->user_id)) {
+            $members = $members->prepend($this->mahasiswa);
+        }
+
+        return $members->values();
     }
 
     public function institution(): BelongsTo

@@ -32,11 +32,11 @@ class LogbookEntryPolicy
     }
 
     /**
-     * Mahasiswa pemilik TA.
+     * Mahasiswa pemilik/anggota program (termasuk anggota kelompok KP).
      */
     public function owner(User $user, LogbookEntry $entry): bool
     {
-        return $entry->mahasiswaTa?->user_id === $user->id;
+        return $entry->mahasiswaTa?->isMember($user) ?? false;
     }
 
     public function create(User $user, ?MahasiswaTa $ta = null): bool
@@ -46,7 +46,7 @@ class LogbookEntryPolicy
         }
 
         return $ta
-            ? $ta->user_id === $user->id
+            ? $ta->isMember($user)
             : $user->programAktif()->exists();
     }
 

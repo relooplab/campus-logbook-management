@@ -23,6 +23,16 @@
             <p class="text-sm text-text-secondary">{{ $mahasiswaTa->mahasiswa?->email }} ·
                 {{ $mahasiswaTa->mahasiswa?->identifier }}</p>
             <p class="text-sm text-text-primary mt-1">{{ $mahasiswaTa->isKp() ? ($mahasiswaTa->tempat_kp ?: 'Tempat KP') : $mahasiswaTa->judul_ta }}</p>
+            @if ($mahasiswaTa->isKp() && $mahasiswaTa->members->isNotEmpty())
+                <div class="mt-2">
+                    <span class="text-xs text-text-secondary">Anggota Kelompok:</span>
+                    <div class="flex flex-wrap gap-1.5 mt-1">
+                        @foreach ($mahasiswaTa->allMembers() as $member)
+                            <span class="inline-block px-2 py-0.5 rounded-full text-xs bg-bg-panel border border-border">{{ $member->name }}</span>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
         <div class="text-center">
             <div class="text-2xl font-bold text-brand">{{ $approved }}/{{ $target }}</div>

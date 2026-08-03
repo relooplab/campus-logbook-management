@@ -101,6 +101,16 @@
                     @if ($ta->periode_mulai)
                         <p class="text-sm text-text-secondary mt-1">Periode: {{ $ta->periode_mulai->format('d M Y') }} – {{ $ta->periode_selesai?->format('d M Y') ?? 'sekarang' }}</p>
                     @endif
+                    @if ($ta->members->isNotEmpty())
+                        <div class="mt-3">
+                            <p class="text-xs text-text-secondary mb-1">Anggota Kelompok:</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach ($ta->allMembers() as $member)
+                                    <span class="inline-block px-2 py-0.5 rounded-full text-xs bg-bg-panel border border-border">{{ $member->name }}</span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 @else
                     <h2 class="font-heading font-semibold text-text-primary mb-1">Judul TA</h2>
                     <p class="text-text-primary">{{ $ta->judul_ta }}</p>

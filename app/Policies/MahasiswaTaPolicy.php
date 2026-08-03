@@ -16,7 +16,7 @@ class MahasiswaTaPolicy
             return true;
         }
 
-        if ($user->id === $mahasiswaTa->user_id) {
+        if ($mahasiswaTa->isMember($user)) {
             return true;
         }
 

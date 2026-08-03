@@ -197,7 +197,8 @@ class User extends Authenticatable
     }
 
     /**
-     * Semua program mahasiswa (KP + TA) milik user ini.
+     * Program milik user ini sebagai pemilik utama (KP + TA).
+     * Relasi standar (dipakai oleh whereHas/whereDoesntHave).
      */
     public function mahasiswaPrograms(): HasMany
     {
@@ -205,13 +206,32 @@ class User extends Authenticatable
     }
 
     /**
+     * Semua program yang diikuti user (pemilik utama ATAU anggota pivot KP).
+     */
+    public function allPrograms()
+    {
+        $memberProgramIds = \DB::table('mahasiswa_ta_members')
+            ->where('user_id', $this->id)
+            ->pluck('mahasiswa_ta_id');
+
+        return MahasiswaTa::where('user_id', $this->id)
+            ->orWhereIn('id', $memberProgramIds);
+    }
+
+    /**
      * Program yang sedang aktif (status_ta = aktif). Logbook bimbingan
-     * otomatis masuk ke program ini. Ditetapkan oleh dosen/admin.
+     * otomatis masuk ke program ini. Termasuk program KP kelompok di mana
+     * user menjadi anggota pivot.
      */
     public function programAktif(): HasOne
     {
+        $memberProgramIds = \DB::table('mahasiswa_ta_members')
+            ->where('user_id', $this->id)
+            ->pluck('mahasiswa_ta_id');
+
         return $this->hasOne(MahasiswaTa::class, 'user_id')
-            ->where('status_ta', MahasiswaTa::STATUS_AKTIF);
+            ->where('status_ta', MahasiswaTa::STATUS_AKTIF)
+            ->where(fn ($q) => $q->where('user_id', $this->id)->orWhereIn('id', $memberProgramIds));
     }
 
     /**
