@@ -1,5 +1,10 @@
 @php
     $labels = \App\Models\MahasiswaTa::FASES;
+    // Dukungan milestone KP: jika faseKeys berisi kunci FASES_KP (mis. 'pelaksanaan'),
+    // gunakan label fase KP agar tidak error "Undefined array key".
+    if (array_intersect($faseKeys ?? [], array_keys(\App\Models\MahasiswaTa::FASES_KP))) {
+        $labels = \App\Models\MahasiswaTa::FASES_KP;
+    }
 @endphp
 
 <div class="flex flex-wrap items-center gap-1">
