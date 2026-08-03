@@ -78,6 +78,43 @@ class AdminController extends Controller
         return back()->with('success', 'Pengguna dihapus.');
     }
 
+    // ------------------------------------------------------- persetujuan dosen
+
+    /**
+     * Daftar dosen yang mendaftar mandiri & menunggu persetujuan admin.
+     */
+    public function dosenApprovals(): View
+    {
+        $pending = User::role('dosen')
+            ->where('registration_status', 'pending')
+            ->orderBy('created_at')
+            ->get();
+
+        return view('admin.dosen-approvals', compact('pending'));
+    }
+
+    /**
+     * Setujui akun dosen (dari registrasi mandiri).
+     */
+    public function approveDosen(User $dosen): RedirectResponse
+    {
+        abort_if($dosen->registration_status !== 'pending', 400, 'Status dosen bukan pending.');
+
+        $dosen->update(['registration_status' => 'approved']);
+
+        return back()->with('success', "Dosen '{$dosen->name}' disetujui.");
+    }
+
+    /**
+     * Tolak registrasi dosen.
+     */
+    public function rejectDosen(User $dosen): RedirectResponse
+    {
+        $dosen->update(['registration_status' => 'rejected']);
+
+        return back()->with('success', "Registrasi '{$dosen->name}' ditolak.");
+    }
+
     /**
      * Reset password user oleh admin.
      */

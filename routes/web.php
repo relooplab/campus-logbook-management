@@ -170,6 +170,11 @@ Route::middleware('auth')->group(function () {
         Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
         Route::post('/users/{user}/reset-password', [AdminController::class, 'resetPassword'])->name('users.reset-password');
 
+        // Persetujuan registrasi dosen oleh admin.
+        Route::get('/approve-dosen', [AdminController::class, 'dosenApprovals'])->name('approve-dosen');
+        Route::post('/approve-dosen/{dosen}/approve', [AdminController::class, 'approveDosen'])->name('approve-dosen.approve');
+        Route::post('/approve-dosen/{dosen}/reject', [AdminController::class, 'rejectDosen'])->name('approve-dosen.reject');
+
         Route::get('/tas', [AdminController::class, 'tas'])->name('tas');
         Route::post('/tas', [AdminController::class, 'storeTa'])->name('tas.store');
         Route::put('/tas/{mahasiswaTa}', [AdminController::class, 'updateTa'])->name('tas.update');

@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+
+        // Catat waktu terakhir aktif user pada setiap request.
+        $middleware->append(\App\Http\Middleware\UpdateLastActive::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

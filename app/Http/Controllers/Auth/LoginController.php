@@ -25,13 +25,15 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $user = $request->user();
 
-            // Mahasiswa pending registrasi belum boleh login penuh.
-            if ($user->isMahasiswa() && $user->registration_status === 'pending') {
+            // Akun pending registrasi belum boleh login penuh (mahasiswa -> dosen; dosen -> admin).
+            if (($user->isMahasiswa() || $user->isDosen()) && $user->registration_status === 'pending') {
                 Auth::logout();
                 $request->session()->invalidate();
 
+                $approver = $user->isDosen() ? 'admin' : 'dosen';
+
                 return back()
-                    ->withErrors(['email' => 'Akun masih menunggu persetujuan dosen.'])
+                    ->withErrors(['email' => "Akun masih menunggu persetujuan {$approver}."])
                     ->onlyInput('email');
             }
 

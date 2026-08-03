@@ -15,14 +15,30 @@
                 @endif
             </div>
             <div>
-                <h2 class="font-semibold text-lg">{{ $profile->name }}</h2>
+                <div class="flex items-center gap-2">
+                    <h2 class="font-semibold text-lg">{{ $profile->name }}</h2>
+                    @if ($profile->lastActiveStatus() === 'online')
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-status-success/10 text-status-success">
+                            <span class="w-2 h-2 rounded-full bg-status-success animate-pulse"></span> Online
+                        </span>
+                    @elseif ($profile->lastActiveStatus() === 'offline')
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-bg-panel text-text-secondary">
+                            <span class="w-2 h-2 rounded-full bg-text-secondary/50"></span> Offline
+                        </span>
+                    @endif
+                </div>
                 <p class="text-sm text-text-secondary">{{ $profile->email }}</p>
                 @if ($profile->identifier)
                     <p class="text-xs text-text-secondary">{{ $profile->identifier }}</p>
-                    @endif @foreach ($profile->roles as $r)
-                        <span
-                            class="inline-block px-2 py-0.5 rounded-full text-xs bg-bg-panel mt-1 mr-1">{{ ucfirst($r->name) }}</span>
-                    @endforeach
+                    @endif
+                <p class="text-xs text-text-secondary mt-0.5">
+                    <span class="material-symbols-outlined icon-sm align-text-bottom">schedule</span>
+                    Terakhir aktif: {{ $profile->lastActiveLabel() }}
+                </p>
+                @foreach ($profile->roles as $r)
+                    <span
+                        class="inline-block px-2 py-0.5 rounded-full text-xs bg-bg-panel mt-1 mr-1">{{ ucfirst($r->name) }}</span>
+                @endforeach
             </div>
         </div> {{-- Kontak --}} <div class="mt-6 grid sm:grid-cols-2 gap-3 text-sm">
             @if ($profile->whatsapp)

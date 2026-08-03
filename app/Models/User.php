@@ -37,6 +37,7 @@ class User extends Authenticatable
         'sinta',
         'researchgate',
         'jadwal_bimbingan_url',
+        'last_active_at',
     ];
 
     /**
@@ -60,6 +61,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'examiner_supervisor_names' => 'array',
+            'last_active_at' => 'datetime',
         ];
     }
 
@@ -136,6 +138,44 @@ class User extends Authenticatable
     public function isMahasiswa(): bool
     {
         return $this->hasRole('mahasiswa');
+    }
+
+    /**
+     * Ambang batas (menit) untuk dianggap "online" sejak terakhir aktif.
+     */
+    public const ONLINE_THRESHOLD_MINUTES = 5;
+
+    /**
+     * Apakah user sedang online (aktif dalam 5 menit terakhir).
+     */
+    public function isOnline(): bool
+    {
+        return $this->last_active_at !== null
+            && $this->last_active_at->diffInMinutes(now()) < self::ONLINE_THRESHOLD_MINUTES;
+    }
+
+    /**
+     * Status ringkas: 'online' | 'offline' | 'never'.
+     */
+    public function lastActiveStatus(): string
+    {
+        if ($this->last_active_at === null) {
+            return 'never';
+        }
+
+        return $this->isOnline() ? 'online' : 'offline';
+    }
+
+    /**
+     * Label "terakhir aktif" untuk ditampilkan (mis. "5 menit lalu").
+     */
+    public function lastActiveLabel(): string
+    {
+        if ($this->last_active_at === null) {
+            return 'Belum pernah aktif';
+        }
+
+        return $this->last_active_at->diffForHumans();
     }
 
     /**

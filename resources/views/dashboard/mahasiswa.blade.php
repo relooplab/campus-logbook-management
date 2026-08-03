@@ -9,10 +9,10 @@
             <h1 class="font-heading font-bold text-2xl text-text-primary">Dashboard Mahasiswa</h1>
             <p class="text-sm text-text-secondary mt-0.5">Pantau progres bimbingan Tugas Akhir Anda</p>
         </div>
-        <div class="flex flex-wrap gap-2">
-            <a href="{{ route('logbook.create') }}" class="px-4 py-2 rounded-xl bg-brand-fill text-white text-sm font-semibold shadow-md hover:bg-brand-fill-hover hover:shadow-lg transition-shadow" title="Tambah entri logbook bimbingan baru (aksi utama)">+ Logbook</a>
-            <a href="{{ route('logbook.create-revisi') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">+ Entri Revisi</a>
-            <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-transparent border border-border text-text-secondary text-sm font-medium hover:bg-bg-hover hover:text-text-primary">Semua Entri</a>
+        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+            <a href="{{ route('logbook.create') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand-fill text-white text-sm font-semibold shadow-md hover:bg-brand-fill-hover hover:shadow-lg transition-shadow text-center" title="Tambah entri logbook bimbingan baru (aksi utama)">+ Logbook</a>
+            <a href="{{ route('logbook.create-revisi') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border text-center">+ Entri Revisi</a>
+            <a href="{{ route('logbook.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-transparent border border-border text-text-secondary text-sm font-medium hover:bg-bg-hover hover:text-text-primary text-center">Semua Entri</a>
         </div>
     </div>
 
@@ -54,7 +54,7 @@
 
         {{-- ===== Milestone Journey (fase) ===== --}}
         <div class="card p-6">
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                 <h2 class="font-heading font-semibold text-text-primary">Milestone Journey</h2>
                 <span class="text-sm text-text-secondary">{{ $ta->faseLabel() }} · {{ $progressPercent }}%</span>
             </div>
@@ -101,7 +101,7 @@
                         @endif
                     </div>
                 </div>
-                <div class="mt-4 flex gap-2">
+                <div class="mt-4 flex flex-wrap gap-2">
                     @if ($ta->pembimbing1 || $ta->pembimbing2)
                         <a href="{{ route('logbook.export.pdf', $ta) }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Rekap PDF</a>
                         <a href="{{ route('logbook.export.excel', $ta) }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Excel</a>

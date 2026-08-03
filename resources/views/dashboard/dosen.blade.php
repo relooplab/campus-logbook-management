@@ -9,9 +9,9 @@
             <h1 class="font-heading font-bold text-2xl text-text-primary">Dashboard Dosen</h1>
             <p class="text-sm text-text-secondary mt-0.5">Ringkasan aktivitas bimbingan &amp; pengujian TA</p>
         </div>
-        <div class="flex flex-wrap gap-2">
-            <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Semua Entri</a>
-            <a href="{{ route('notifications.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Notifikasi</a>
+        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+            <a href="{{ route('logbook.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border text-center">Semua Entri</a>
+            <a href="{{ route('notifications.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border text-center">Notifikasi</a>
         </div>
     </div>
 
@@ -81,9 +81,9 @@
                     <thead>
                         <tr class="text-left text-text-secondary border-b border-border">
                             <th class="py-2 pr-4 font-medium">Mahasiswa</th>
-                            <th class="py-2 pr-4 font-medium">Jenis</th>
+                            <th class="py-2 pr-4 font-medium hidden sm:table-cell">Jenis</th>
                             <th class="py-2 pr-4 font-medium">Topik/Sesi</th>
-                            <th class="py-2 pr-4 font-medium">Dikirim</th>
+                            <th class="py-2 pr-4 font-medium hidden md:table-cell">Dikirim</th>
                             <th class="py-2 font-medium">Aksi</th>
                         </tr>
                     </thead>
@@ -91,9 +91,9 @@
                         @foreach ($queue as $entry)
                             <tr class="border-b border-border last:border-0">
                                 <td class="py-2.5 pr-4">{{ $entry->mahasiswaTa?->mahasiswa?->name }}</td>
-                                <td class="py-2.5 pr-4">{{ ucfirst($entry->jenis) }}</td>
+                                <td class="py-2.5 pr-4 hidden sm:table-cell">{{ ucfirst($entry->jenis) }}</td>
                                 <td class="py-2.5 pr-4">{{ $entry->jenis === 'revisi' ? 'Revisi' : 'Sesi ' . $entry->sesi_ke . ' — ' . $entry->topik }}</td>
-                                <td class="py-2.5 pr-4 text-text-secondary">{{ $entry->submitted_at?->format('d M H:i') }}</td>
+                                <td class="py-2.5 pr-4 text-text-secondary hidden md:table-cell">{{ $entry->submitted_at?->format('d M H:i') }}</td>
                                 <td class="py-2.5">
                                     <a href="{{ route('logbook.show', $entry) }}" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Review</a>
                                 </td>
@@ -124,9 +124,9 @@
                     <thead>
                         <tr class="text-left text-text-secondary border-b border-border">
                             <th class="py-2 pr-4 font-medium">Mahasiswa</th>
-                            <th class="py-2 pr-4 font-medium">Fase</th>
-                            <th class="py-2 pr-4 font-medium">Terakhir</th>
-                            <th class="py-2 pr-4 font-medium">Progres</th>
+                            <th class="py-2 pr-4 font-medium hidden sm:table-cell">Fase</th>
+                            <th class="py-2 pr-4 font-medium hidden md:table-cell">Terakhir</th>
+                            <th class="py-2 pr-4 font-medium hidden sm:table-cell">Progres</th>
                             <th class="py-2 font-medium">Status</th>
                         </tr>
                     </thead>
@@ -141,12 +141,12 @@
                                         <span class="material-symbols-outlined icon-sm text-status-danger align-middle" title="Sudah dikirim email inaktivitas">warning</span>
                                     @endif
                                 </td>
-                                <td class="py-2.5 pr-4 text-xs">{{ $ta->faseLabel() }}</td>
-                                <td class="py-2.5 pr-4 text-xs text-text-secondary">
+                                <td class="py-2.5 pr-4 text-xs hidden sm:table-cell">{{ $ta->faseLabel() }}</td>
+                                <td class="py-2.5 pr-4 text-xs text-text-secondary hidden md:table-cell">
                                     {{ $row['tooltip'] }}
                                     @if ($row['menunggu']) · <span class="text-status-pending">{{ $row['menunggu'] }} menunggu</span> @endif
                                 </td>
-                                <td class="py-2.5 pr-4">
+                                <td class="py-2.5 pr-4 hidden sm:table-cell">
                                     <div class="flex items-center gap-2">
                                         <span class="text-xs w-16">{{ $row['approved'] }}/{{ $row['target'] }}</span>
                                         <div class="h-2 w-24 rounded-full bg-bg-panel overflow-hidden">
@@ -179,8 +179,8 @@
                     <thead>
                         <tr class="text-left text-text-secondary border-b border-border">
                             <th class="py-2 pr-4 font-medium">Mahasiswa</th>
-                            <th class="py-2 pr-4 font-medium">Judul TA</th>
-                            <th class="py-2 pr-4 font-medium">Pembimbing</th>
+                            <th class="py-2 pr-4 font-medium hidden md:table-cell">Judul TA</th>
+                            <th class="py-2 pr-4 font-medium hidden lg:table-cell">Pembimbing</th>
                             <th class="py-2 font-medium">Fase</th>
                         </tr>
                     </thead>
@@ -188,17 +188,17 @@
                         @foreach ($tas as $ta)
                             <tr class="border-b border-border last:border-0">
                                 <td class="py-2.5 pr-4"><a href="{{ route('mahasiswa-ta.show', $ta) }}" class="hover:text-brand">{{ $ta->mahasiswa?->name }}</a> <span class="text-text-secondary text-xs">({{ $ta->mahasiswa?->identifier }})</span></td>
-                                <td class="py-2.5 pr-4">{{ $ta->judul_ta }}</td>
-                                <td class="py-2.5 pr-4 text-xs">{{ $ta->pembimbing1?->name }}{{ $ta->pembimbing2 ? ' & ' . $ta->pembimbing2->name : '' }}</td>
+                                <td class="py-2.5 pr-4 hidden md:table-cell">{{ $ta->judul_ta }}</td>
+                                <td class="py-2.5 pr-4 text-xs hidden lg:table-cell">{{ $ta->pembimbing1?->name }}{{ $ta->pembimbing2 ? ' & ' . $ta->pembimbing2->name : '' }}</td>
                                 <td class="py-2.5">
-                                    <form method="POST" action="{{ route('mahasiswa-ta.fase', $ta) }}" class="flex items-center gap-1" onsubmit="return confirm('Ubah fase TA ini? Pastikan sudah benar.')">
+                                    <form method="POST" action="{{ route('mahasiswa-ta.fase', $ta) }}" class="flex flex-col sm:flex-row sm:items-center gap-1.5" onsubmit="return confirm('Ubah fase TA ini? Pastikan sudah benar.')">
                                         @csrf
-                                        <select name="fase" class="rounded-lg border border-border bg-bg-surface px-2 py-1.5 text-xs">
+                                        <select name="fase" class="w-full sm:w-auto rounded-lg border border-border bg-bg-surface px-2 py-1.5 text-xs">
                                             @foreach (\App\Models\MahasiswaTa::FASES as $key => $label)
                                                 <option value="{{ $key }}" @selected($ta->fase === $key)>{{ $label }}</option>
                                             @endforeach
                                         </select>
-                                        <button class="px-3 py-1.5 rounded-lg bg-brand text-white text-xs font-medium hover:opacity-90">Update</button>
+                                        <button class="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-brand text-white text-xs font-medium hover:opacity-90">Update</button>
                                     </form>
                                 </td>
                             </tr>

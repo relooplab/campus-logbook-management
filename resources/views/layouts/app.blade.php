@@ -226,6 +226,10 @@
                     <span class="material-symbols-outlined icon-md">group</span>
                     <span class="sidebar-label">Pengguna</span>
                 </a>
+                <a href="{{ route('admin.approve-dosen') }}" class="{{ $navLink }} {{ $active('admin.approve-dosen') }}">
+                    <span class="material-symbols-outlined icon-md">approval</span>
+                    <span class="sidebar-label">Persetujuan Dosen</span>
+                </a>
                 <a href="{{ route('admin.tas') }}" class="{{ $navLink }} {{ $active('admin.tas') }}">
                     <span class="material-symbols-outlined icon-md">archive</span>
                     <span class="sidebar-label">Data TA</span>
@@ -246,9 +250,11 @@
         </nav>
 
         <div id="sidebar-footer" class="p-4 border-t border-border space-y-1">
-            <a href="{{ route('scheduling.index') }}" class="{{ $navLink }} {{ $active('scheduling.*') }}">
-                <span class="material-symbols-outlined icon-sm">calendar_month</span> <span class="sidebar-label">Jadwalkan Bimbingan</span>
-            </a>
+            @if ($user->isMahasiswa())
+                <a href="{{ route('scheduling.index') }}" class="{{ $navLink }} {{ $active('scheduling.*') }}">
+                    <span class="material-symbols-outlined icon-sm">calendar_month</span> <span class="sidebar-label">Jadwalkan Bimbingan</span>
+                </a>
+            @endif
             <a href="https://reloop.notion.site/3b1155a221e880829514df5d0a8dcfd6" target="_blank" rel="noopener"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors bg-status-pending/15 text-status-pending hover:bg-status-pending/25 hover:text-status-pending border border-status-pending/30"
                 title="Laporkan masalah atau kirim ide untuk pengembangan aplikasi">

@@ -56,13 +56,13 @@
         <h2 class="font-heading font-semibold text-text-primary mb-3">Import Mahasiswa (Excel)</h2>
         <form method="POST" action="{{ route('admin.import-mahasiswa') }}" enctype="multipart/form-data" class="flex flex-wrap items-end gap-3">
             @csrf
-            <div>
+            <div class="w-full sm:w-auto">
                 <label class="block text-xs text-text-secondary mb-1">File Excel (nama, nim, email, pembimbing1_nidn, pembimbing2_nidn)</label>
-                <input type="file" name="file" accept=".xlsx,.xls,.csv" required class="text-sm">
+                <input type="file" name="file" accept=".xlsx,.xls,.csv" required class="text-sm w-full sm:w-auto">
             </div>
-            <div>
+            <div class="w-full sm:w-auto">
                 <label class="block text-xs text-text-secondary mb-1">Pembimbing Default</label>
-                <select name="pembimbing_default" class="rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                <select name="pembimbing_default" class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     @foreach (\App\Models\User::role('dosen')->get() as $d)
                         <option value="{{ $d->id }}">{{ $d->name }}</option>
                     @endforeach
@@ -85,18 +85,18 @@
                 <thead>
                     <tr class="text-left text-text-secondary border-b border-border">
                         <th class="py-2 pr-4 font-medium">Mahasiswa</th>
-                        <th class="py-2 pr-4 font-medium">Judul</th>
-                        <th class="py-2 pr-4 font-medium">Pembimbing</th>
-                        <th class="py-2 font-medium">Entri</th>
+                        <th class="py-2 pr-4 font-medium hidden md:table-cell">Judul</th>
+                        <th class="py-2 pr-4 font-medium hidden sm:table-cell">Pembimbing</th>
+                        <th class="py-2 font-medium hidden sm:table-cell">Entri</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($tas as $ta)
                         <tr class="border-b border-border last:border-0">
                             <td class="py-2.5 pr-4">{{ $ta->mahasiswa?->name }}</td>
-                            <td class="py-2.5 pr-4">{{ $ta->judul_ta }}</td>
-                            <td class="py-2.5 pr-4 text-xs">{{ $ta->pembimbing1?->name }}{{ $ta->pembimbing2 ? ' & ' . $ta->pembimbing2->name : '' }}</td>
-                            <td class="py-2.5">{{ $ta->entries_count }}</td>
+                            <td class="py-2.5 pr-4 hidden md:table-cell">{{ $ta->judul_ta }}</td>
+                            <td class="py-2.5 pr-4 text-xs hidden sm:table-cell">{{ $ta->pembimbing1?->name }}{{ $ta->pembimbing2 ? ' & ' . $ta->pembimbing2->name : '' }}</td>
+                            <td class="py-2.5 hidden sm:table-cell">{{ $ta->entries_count }}</td>
                         </tr>
                     @endforeach
                 </tbody>
