@@ -60,6 +60,8 @@ class MahasiswaTa extends Model
         'jenis',
         'judul_ta',
         'tempat_kp',
+        'alamat_perusahaan',
+        'jenis_instansi',
         'profil_perusahaan',
         'pembimbing_1_id',
         'pembimbing_2_id',

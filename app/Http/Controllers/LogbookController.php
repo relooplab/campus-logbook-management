@@ -152,9 +152,11 @@ class LogbookController extends Controller
         $entry->update([
             'lampiran_path' => $this->storeUniqueFile($request->file('lampiran'), 'lampiran', $entry->id),
             'lampiran_original_name' => $request->file('lampiran')->getClientOriginalName(),
-            'catatan_perbaikan_path' => $this->storeUniqueFile($request->file('catatan_perbaikan'), 'catatan', $entry->id),
-            'catatan_original_name' => $request->file('catatan_perbaikan')->getClientOriginalName(),
+            'riwayat_perbaikan' => $data['riwayat_perbaikan'],
         ]);
+
+        // Generate PDF catatan perbaikan otomatis dari tabel riwayat perbaikan.
+        $this->generateCatatanPerbaikanPdf($entry);
 
         $commentIds = collect($data['addressed_comment_ids'] ?? [])->filter()->values();
         if ($submit && $parent && $commentIds->isNotEmpty()) {
@@ -315,24 +317,15 @@ class LogbookController extends Controller
             $this->logAttachmentChange($logbook, 'lampiran_path', $oldPath, $newPath, $resolvedCount);
         }
 
-        if ($request->hasFile('catatan_perbaikan')) {
-            $oldPath = $logbook->catatan_perbaikan_path;
-            $newPath = $this->storeUniqueFile($request->file('catatan_perbaikan'), 'catatan', $logbook->id);
-
-            $logbook->update([
-                'catatan_perbaikan_path' => $newPath,
-                'catatan_original_name' => $request->file('catatan_perbaikan')->getClientOriginalName(),
-            ]);
-
-            $resolvedCount += $this->resolveCommentsForType($logbook, PdfComment::FILE_TYPE_CATATAN);
-            $this->logAttachmentChange($logbook, 'catatan_perbaikan_path', $oldPath, $newPath, $resolvedCount);
-        }
-
         if ($logbook->jenis === LogbookEntry::JENIS_REVISI) {
             $logbook->update([
                 'tanggal_pengiriman' => $data['tanggal_pengiriman'],
                 'progres_kendala' => $data['progres_kendala'],
+                'riwayat_perbaikan' => $data['riwayat_perbaikan'],
             ]);
+
+            // Generate ulang PDF catatan perbaikan dari tabel.
+            $this->generateCatatanPerbaikanPdf($logbook);
         } else {
             $logbook->update([
                 'tanggal_bimbingan' => $data['tanggal_bimbingan'],
@@ -395,6 +388,36 @@ class LogbookController extends Controller
         $name = $id.'/'.(string) \Illuminate\Support\Str::uuid().'.'.$ext;
 
         return $file->storeAs($dir.'/'.$id, basename($name), 'local');
+    }
+
+    /**
+     * Generate PDF catatan perbaikan otomatis dari tabel riwayat_perbaikan.
+     * PDF disimpan ke catatan_perbaikan_path (agar tampil di tab "Catatan"
+     * PDF viewer & bisa diunduh). File lama di-orphan (tidak dihapus).
+     */
+    private function generateCatatanPerbaikanPdf(LogbookEntry $logbook): void
+    {
+        if (empty($logbook->riwayat_perbaikan)) {
+            return;
+        }
+
+        try {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.catatan-perbaikan', [
+                'logbook' => $logbook,
+                'riwayat' => $logbook->riwayat_perbaikan,
+                'pesan' => $logbook->progres_kendala,
+            ]);
+
+            $path = 'catatan/'.$logbook->id.'/'.(string) \Illuminate\Support\Str::uuid().'.pdf';
+            Storage::disk('local')->put($path, $pdf->output());
+
+            $logbook->update([
+                'catatan_perbaikan_path' => $path,
+                'catatan_original_name' => 'catatan-perbaikan-'.$logbook->id.'.pdf',
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /**

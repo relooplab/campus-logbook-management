@@ -46,10 +46,53 @@
                 @endforeach
             </div>
         @endif
-        <div>
-            <h3 class="text-sm font-semibold text-text-secondary mb-1">Ringkasan Perbaikan</h3>
-            <div class="text-sm whitespace-pre-wrap">{{ $logbook->progres_kendala }}</div>
-        </div>
+        @if ($logbook->jenis === "revisi")
+            <div>
+                <h3 class="text-sm font-semibold text-text-secondary mb-1">Pesan untuk Dosen</h3>
+                <div class="text-sm whitespace-pre-wrap">{{ $logbook->progres_kendala ?: "—" }}</div>
+            </div>
+            @if (!empty($logbook->riwayat_perbaikan))
+                <div>
+                    <h3 class="text-sm font-semibold text-text-secondary mb-2">Catatan Perbaikan</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm border border-border">
+                            <thead>
+                                <tr class="bg-bg-panel text-left text-text-secondary">
+                                    <th class="py-2 px-2 border-b border-border w-[6%]">No</th>
+                                    <th class="py-2 px-2 border-b border-border w-[16%]">Halaman/Bagian</th>
+                                    <th class="py-2 px-2 border-b border-border w-[28%]">Komentar Dosen</th>
+                                    <th class="py-2 px-2 border-b border-border w-[34%]">Perbaikan yang Dilakukan</th>
+                                    <th class="py-2 px-2 border-b border-border w-[16%]">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($logbook->riwayat_perbaikan as $i => $r)
+                                    <tr class="border-b border-border">
+                                        <td class="py-2 px-2">{{ $i + 1 }}</td>
+                                        <td class="py-2 px-2">{{ $r['halaman'] ?? '—' }}</td>
+                                        <td class="py-2 px-2">{{ $r['komentar_dosen'] ?? '—' }}</td>
+                                        <td class="py-2 px-2">{{ $r['perbaikan'] ?? '—' }}</td>
+                                        <td class="py-2 px-2">
+                                            @php $status = $r['status'] ?? '—'; @endphp
+                                            <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium
+                                                {{ $status === 'Sudah' ? 'bg-status-success/10 text-status-success' : '' }}
+                                                {{ $status === 'Sebagian' ? 'bg-status-pending/10 text-status-pending' : '' }}
+                                                {{ $status === 'Belum' ? 'bg-status-danger/10 text-status-danger' : '' }}
+                                            ">{{ $status }}</span>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+        @else
+            <div>
+                <h3 class="text-sm font-semibold text-text-secondary mb-1">Ringkasan Perbaikan</h3>
+                <div class="text-sm whitespace-pre-wrap">{{ $logbook->progres_kendala }}</div>
+            </div>
+        @endif
         @if ($logbook->feedback_dosen)
             <div class="px-4 py-3 rounded-md bg-status-pending/10 border-l-4 border-status-pending text-sm">
                 <div class="flex items-center gap-1.5 mb-1 text-xs font-semibold text-status-pending uppercase tracking-wide"><span class="material-symbols-outlined icon-sm">forum</span> Feedback Dosen</div><div class="text-sm">{{ $logbook->feedback_dosen }}</div>

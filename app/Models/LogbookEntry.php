@@ -22,6 +22,12 @@ class LogbookEntry extends Model
     public const STATUS_APPROVED = 'approved';
     public const STATUS_REVISI = 'revisi';
 
+    /** Status perbaikan pada tabel riwayat perbaikan. */
+    public const PERBAIKAN_SUDAH = 'Sudah';
+    public const PERBAIKAN_SEBAGIAN = 'Sebagian';
+    public const PERBAIKAN_BELUM = 'Belum';
+    public const PERBAIKAN_STATUSES = [self::PERBAIKAN_SUDAH, self::PERBAIKAN_SEBAGIAN, self::PERBAIKAN_BELUM];
+
     public const MAX_REVISION_ROUND = 3;
 
     public const JENISES = [self::JENIS_LOGBOOK, self::JENIS_REVISI];
@@ -43,6 +49,7 @@ class LogbookEntry extends Model
         'sesi_ke',
         'jenis',
         'progres_kendala',
+        'riwayat_perbaikan',
         'lampiran_path',
         'lampiran_original_name',
         'catatan_perbaikan_path',
@@ -62,6 +69,7 @@ class LogbookEntry extends Model
             'tanggal_pengiriman' => 'date',
             'sesi_ke' => 'integer',
             'revision_round' => 'integer',
+            'riwayat_perbaikan' => 'array',
             'submitted_at' => 'datetime',
             'reviewed_at' => 'datetime',
             'review_opened_at' => 'datetime',

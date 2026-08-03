@@ -32,6 +32,29 @@
             @enderror
         </div>
         <div>
+            <label class="block text-sm font-medium mb-1" for="alamat_perusahaan">Alamat Perusahaan</label>
+            <input type="text" name="alamat_perusahaan" id="alamat_perusahaan" maxlength="500"
+                value="{{ old("alamat_perusahaan", $mahasiswaTa->alamat_perusahaan) }}"
+                placeholder="Alamat perusahaan / instansi tempat KP"
+                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
+            @error("alamat_perusahaan")
+                <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-1" for="jenis_instansi">Jenis Instansi</label>
+            <select name="jenis_instansi" id="jenis_instansi"
+                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
+                <option value="">— Pilih jenis instansi —</option>
+                @foreach ($jenisInstansi as $key => $label)
+                    <option value="{{ $key }}" @selected(old("jenis_instansi", $mahasiswaTa->jenis_instansi) === $key)>{{ $label }}</option>
+                @endforeach
+            </select>
+            @error("jenis_instansi")
+                <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+        <div>
             <label class="block text-sm font-medium mb-1" for="pembimbing_lapangan">Pembimbing Lapangan</label>
             <input type="text" name="pembimbing_lapangan" id="pembimbing_lapangan" maxlength="255"
                 value="{{ old("pembimbing_lapangan", $mahasiswaTa->pembimbing_lapangan) }}"

@@ -23,8 +23,15 @@ class RevisionWorkflowTest extends AuditSmokeTest
             'parent_entry_id' => $this->entrySubmitted->id,
             'tanggal_pengiriman' => now()->toDateString(),
             'progres_kendala' => 'Metodologi dan hasil pengujian sudah diperbaiki.',
+            'riwayat_perbaikan' => [
+                [
+                    'halaman' => 'Bab 3',
+                    'komentar_dosen' => 'Perbaiki metodologi.',
+                    'perbaikan' => 'Metodologi sudah diperbaiki.',
+                    'status' => 'Sudah',
+                ],
+            ],
             'lampiran' => UploadedFile::fake()->create('draft.pdf', 100, 'application/pdf'),
-            'catatan_perbaikan' => UploadedFile::fake()->create('catatan.pdf', 100, 'application/pdf'),
         ]);
 
         $response->assertRedirect();
@@ -45,8 +52,15 @@ class RevisionWorkflowTest extends AuditSmokeTest
             'parent_entry_id' => $this->entrySubmitted->id,
             'tanggal_pengiriman' => now()->toDateString(),
             'progres_kendala' => 'Perbaikan sudah dikerjakan dengan ringkasan yang jelas.',
+            'riwayat_perbaikan' => [
+                [
+                    'halaman' => 'Bab 3',
+                    'komentar_dosen' => 'Perbaiki metodologi.',
+                    'perbaikan' => 'Metodologi sudah diperbaiki.',
+                    'status' => 'Sudah',
+                ],
+            ],
             'lampiran' => UploadedFile::fake()->create('draft.pdf', 100, 'application/pdf'),
-            'catatan_perbaikan' => UploadedFile::fake()->create('catatan.pdf', 100, 'application/pdf'),
         ];
 
         $this->actingAs($this->mhs)->post(route('logbook.store-revisi'), $payload)->assertRedirect();
@@ -70,8 +84,15 @@ class RevisionWorkflowTest extends AuditSmokeTest
             'addressed_comment_ids' => [$comment->id],
             'tanggal_pengiriman' => now()->toDateString(),
             'progres_kendala' => 'Perbaikan sedang disiapkan dalam draft.',
+            'riwayat_perbaikan' => [
+                [
+                    'halaman' => 'Bab 3',
+                    'komentar_dosen' => 'Tambahkan penjelasan pada bagian ini.',
+                    'perbaikan' => 'Penjelasan sedang disiapkan.',
+                    'status' => 'Sebagian',
+                ],
+            ],
             'lampiran' => UploadedFile::fake()->create('draft.pdf', 100, 'application/pdf'),
-            'catatan_perbaikan' => UploadedFile::fake()->create('catatan.pdf', 100, 'application/pdf'),
         ])->assertRedirect();
 
         $this->assertDatabaseHas('pdf_comments', [
