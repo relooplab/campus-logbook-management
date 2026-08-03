@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Jadwal Bimbingan')
+@section('title', 'Jadwalkan Bimbingan')
 
 @section('content')
 <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="font-heading font-bold text-2xl text-text-primary">Jadwal Bimbingan</h1>
+            <h1 class="font-heading font-bold text-2xl text-text-primary">Jadwalkan Bimbingan</h1>
             <p class="text-sm text-text-secondary mt-0.5">Pilih dosen untuk membuka link jadwal bimbingan mereka</p>
         </div>
     </div>
@@ -41,7 +41,7 @@
                         <span
                             class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand/10 text-brand text-xs font-medium">
                             <span class="material-symbols-outlined icon-sm">calendar_month</span>
-                            Buka Jadwal Bimbingan
+                            Buka Jadwalkan Bimbingan
                         </span>
                     </div>
                     <span class="material-symbols-outlined icon-md text-text-secondary mt-1 flex-shrink-0">open_in_new</span>

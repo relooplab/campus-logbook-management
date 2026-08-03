@@ -83,6 +83,7 @@ class MahasiswaDashboardService
                 'label' => $label,
                 'status' => $e->status,
                 'type' => 'entry',
+                'url' => route('logbook.show', $e),
             ];
             // Tambah sub-item untuk komentar PDF pada entry tersebut.
             $commentCount = $e->comments->count();
@@ -93,6 +94,7 @@ class MahasiswaDashboardService
                     'label' => "Komentar pada draft ({$commentCount} area)",
                     'status' => 'comment',
                     'type' => 'comment',
+                    'url' => route('logbook.show', $e),
                 ];
             }
         }

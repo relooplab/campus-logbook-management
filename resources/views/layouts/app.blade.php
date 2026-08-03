@@ -90,7 +90,7 @@
             }
         })();
     </script>
-    <link rel="stylesheet" href="{{ asset('css/global.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/global.css') }}?v={{ @filemtime(public_path('css/global.css')) }}">
     <style>
         .progress-bar { transition: width .4s ease; }
         @media (min-width: 768px) {
@@ -191,6 +191,10 @@
                     <span class="material-symbols-outlined icon-md">edit_note</span>
                     <span class="sidebar-label">Entri Revisi</span>
                 </a>
+                <a href="{{ route('logbook.feedback') }}" class="{{ $navLink }} {{ $active('logbook.feedback') }}">
+                    <span class="material-symbols-outlined icon-md">forum</span>
+                    <span class="sidebar-label">Logbook Feedback</span>
+                </a>
                 @if ($user->mahasiswaTa)
                     <a href="{{ route('workspace.index', $user->mahasiswaTa) }}" class="{{ $navLink }} {{ $active('workspace.*') }}">
                         <span class="material-symbols-outlined icon-md">workspaces</span>
@@ -241,9 +245,15 @@
             @endif
         </nav>
 
-        <div id="sidebar-footer" class="p-4 border-t border-border">
+        <div id="sidebar-footer" class="p-4 border-t border-border space-y-1">
             <a href="{{ route('scheduling.index') }}" class="{{ $navLink }} {{ $active('scheduling.*') }}">
-                <span class="material-symbols-outlined icon-sm">calendar_month</span> <span class="sidebar-label">Jadwal Bimbingan</span>
+                <span class="material-symbols-outlined icon-sm">calendar_month</span> <span class="sidebar-label">Jadwalkan Bimbingan</span>
+            </a>
+            <a href="https://reloop.notion.site/3b1155a221e880829514df5d0a8dcfd6" target="_blank" rel="noopener"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors bg-status-pending/15 text-status-pending hover:bg-status-pending/25 hover:text-status-pending border border-status-pending/30"
+                title="Laporkan masalah atau kirim ide untuk pengembangan aplikasi">
+                <span class="material-symbols-outlined icon-sm">feedback</span>
+                <span class="sidebar-label">Kirim Masukan</span>
             </a>
         </div>
     </aside>

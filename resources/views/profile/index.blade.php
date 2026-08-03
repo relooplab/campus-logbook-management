@@ -77,12 +77,12 @@
                                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                         </div>
                         <div class="sm:col-span-2">
-                            <label class="block text-sm font-medium mb-1" for="jadwal_bimbingan_url">Link Jadwal Bimbingan</label>
+                            <label class="block text-sm font-medium mb-1" for="jadwal_bimbingan_url">Link Jadwalkan Bimbingan</label>
                             <input type="url" name="jadwal_bimbingan_url" id="jadwal_bimbingan_url"
                                 value="{{ old("jadwal_bimbingan_url", $user->jadwal_bimbingan_url) }}"
                                 placeholder="https://cal.com/... atau https://forms.gle/..."
                                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                            <p class="text-xs text-text-secondary mt-1">Link ini akan ditampilkan sebagai card di halaman Jadwal Bimbingan agar mahasiswa dapat memesan/bergabung sesi bimbingan Anda. Kosongkan jika belum tersedia.</p>
+                            <p class="text-xs text-text-secondary mt-1">Link ini akan ditampilkan sebagai card di halaman Jadwalkan Bimbingan agar mahasiswa dapat memesan/bergabung sesi bimbingan Anda. Kosongkan jika belum tersedia.</p>
                         </div>
                     </div>
                 </div>

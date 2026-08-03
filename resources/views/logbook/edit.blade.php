@@ -1,4 +1,10 @@
 @extends("layouts.app") @section("title", "Edit Logbook") @section("content")
+@php
+    $inst = \App\Models\Institution::active();
+    $maxMb = $inst->maxUploadSizeMb();
+    $accept = $inst->fileAccept();
+    $typesLabel = strtoupper(implode(", ", $inst->allowedFileTypes()));
+@endphp
 <div class="max-w-2xl">
     <h1 class="text-xl font-bold mb-4">Edit Entri</h1> @include("partials.status-badge", ["status" => $logbook->status]) <form method="POST"
         action="{{ route("logbook.update", $logbook) }}" enctype="multipart/form-data"
@@ -34,7 +40,7 @@
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
         </div> {{-- Lampiran draft --}} <div> <label class="block text-sm font-medium mb-1">Lampiran Draft
-                (PDF)</label>
+                ({{ $typesLabel }})</label>
             @if ($logbook->lampiran_path)
                     <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-bg-panel"> <span class="material-symbols-outlined icon-lg">description</span>
                     <div class="flex-1">
@@ -48,7 +54,7 @@
                             target="_blank" class="px-2 py-1 rounded-md bg-bg-panel hover:bg-bg-hover text-xs">Lihat</a>
                         <label
                             class="px-2 py-1 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-xs cursor-pointer">
-                            Ganti <input type="file" name="lampiran" accept="application/pdf" class="hidden">
+                            Ganti <input type="file" name="lampiran" accept="{{ $accept }}" class="hidden">
                         </label>
                         <form method="POST" action="{{ route("logbook.remove-lampiran", $logbook) }}"
                             onsubmit="return confirm('Hapus lampiran ini? File tidak bisa dikembalikan.')"> @csrf
@@ -58,12 +64,12 @@
                     </div>
                 </div>
             @else
-                <input type="file" name="lampiran" accept="application/pdf" class="w-full text-sm">
+                <input type="file" name="lampiran" accept="{{ $accept }}" class="w-full text-sm">
                 @endif @error("lampiran")
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
     </div> {{-- Catatan perbaikan (untuk revisi) --}} @if ($logbook->catatan_perbaikan_path)
-        <div> <label class="block text-sm font-medium mb-1">Catatan Perbaikan (PDF)</label>
+        <div> <label class="block text-sm font-medium mb-1">Catatan Perbaikan ({{ $typesLabel }})</label>
             <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-bg-panel"> <span class="material-symbols-outlined icon-lg">description</span>
                 <div class="flex-1">
                     <p class="text-sm font-medium">
@@ -77,14 +83,14 @@
                             class="px-2 py-1 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-xs">Hapus</button>
                         </form>
                         <label class="px-2 py-1 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-xs cursor-pointer">
-                            Ganti <input type="file" name="catatan_perbaikan" accept="application/pdf" class="hidden">
+                            Ganti <input type="file" name="catatan_perbaikan" accept="{{ $accept }}" class="hidden">
                         </label>
                 </div>
             </div>
         </div>
     @elseif ($logbook->jenis === "revisi")
-        <div> <label class="block text-sm font-medium mb-1" for="catatan_perbaikan">Catatan Perbaikan (PDF)</label>
-            <input type="file" name="catatan_perbaikan" id="catatan_perbaikan" accept="application/pdf" required class="w-full text-sm">
+        <div> <label class="block text-sm font-medium mb-1" for="catatan_perbaikan">Catatan Perbaikan ({{ $typesLabel }})</label>
+            <input type="file" name="catatan_perbaikan" id="catatan_perbaikan" accept="{{ $accept }}" required class="w-full text-sm">
             @error("catatan_perbaikan")
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror

@@ -32,7 +32,7 @@ class InactivityReminderNotification extends Notification implements ShouldQueue
             ->line("Tercatat tidak ada aktivitas bimbingan sejak {$this->lastActivityDate} ({$this->inactiveDays} hari).")
             ->line('Fase TA Anda saat ini: '.$this->faseLabel.'.')
             ->line('Segera hubungi pembimbing dan jadwalkan bimbingan:')
-            ->action('Jadwal Bimbingan', config('app.jadwal_url'))
+            ->action('Jadwalkan Bimbingan', config('app.jadwal_url'))
             ->line('Catat logbook: '.$this->appUrl.'/logbook/create');
     }
 

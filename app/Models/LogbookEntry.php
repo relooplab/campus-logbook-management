@@ -48,6 +48,7 @@ class LogbookEntry extends Model
         'catatan_perbaikan_path',
         'catatan_original_name',
         'feedback_dosen',
+        'feedback_note',
         'status',
         'submitted_at',
         'reviewed_at',

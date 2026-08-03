@@ -1,4 +1,10 @@
 @extends("layouts.app") @section("title", "Tambah Logbook") @section("content")
+@php
+    $inst = \App\Models\Institution::active();
+    $maxMb = $inst->maxUploadSizeMb();
+    $accept = $inst->fileAccept();
+    $typesLabel = strtoupper(implode(", ", $inst->allowedFileTypes()));
+@endphp
 <div class="max-w-2xl">
     <h1 class="text-xl font-bold mb-4">Tambah Entri Logbook</h1>
     <form method="POST" action="{{ route("logbook.store") }}" enctype="multipart/form-data"
@@ -37,8 +43,8 @@
             <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
         @enderror <p id="autosave-msg" class="text-xs text-text-secondary mt-1"></p>
     </div>
-    <div> <label class="block text-sm font-medium mb-1" for="lampiran">Lampiran (PDF, opsional, maks 10 MB)</label>
-        <input type="file" name="lampiran" id="lampiran" accept="application/pdf" class="w-full text-sm">
+    <div> <label class="block text-sm font-medium mb-1" for="lampiran">Lampiran ({{ $typesLabel }}, opsional, maks {{ $maxMb }} MB)</label>
+        <input type="file" name="lampiran" id="lampiran" accept="{{ $accept }}" class="w-full text-sm">
         @error("lampiran")
             <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
         @enderror
@@ -48,7 +54,7 @@
             Draf</button> <button type="submit" name="submit" value="1"
             class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Kirim
             ke
-            Pembimbing</button> <a href="{{ route("logbook.index") }}"
+            dosen</button> <a href="{{ route("logbook.index") }}"
             class="px-4 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</a>
     </div>
 </form>

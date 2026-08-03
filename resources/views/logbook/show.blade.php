@@ -74,32 +74,12 @@
                             Catatan di Browser</a>
                     @endif
         </div>
-    </div> {{-- Action items / todo dari feedback (mahasiswa) --}} @if ($owner && $logbook->feedback_dosen)
-        <div class="bg-bg-surface rounded-xl border border-border p-5">
-            <h2 class="font-semibold mb-3"><span class="material-symbols-outlined icon-sm align-text-bottom">assignment</span> Action Items (dari feedback)</h2>
-            <div class="mb-2 flex gap-2"> <input type="text" id="ai-input"
-                    placeholder="Tulis tugas kecil... (mis. 'Perbaiki sitasi BAB 2')"
-                    onkeydown="if(event.key==='Enter'){event.preventDefault();addActionItem(event);}"
-                    class="flex-1 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <button type="button" onclick="addActionItem(event)"
-                    class="px-3 py-2 rounded-md bg-brand text-white text-sm">+ Tambah</button> </div>
-            <div id="ai-list" class="space-y-1">
-                @foreach ($logbook->actionItems as $item)
-                    <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-bg-panel hover:bg-bg-hover">
-                        <input type="checkbox" data-id="{{ $item->id }}" {{ $item->is_done ? "checked" : "" }}
-                            onchange="toggleActionItem(this)" class="rounded bg-bg-surface"> <span
-                            class="text-sm {{ $item->is_done ? "line-through text-text-secondary" : "" }}">{{ $item->text }}</span>
-                        <button type="button" data-id="{{ $item->id }}" onclick="delActionItem(this)"
-                            class="ml-auto text-status-danger"><span class="material-symbols-outlined icon-sm">close</span></button>
-                    </div>
-                @endforeach
-            </div>
-            <p id="ai-done-msg" class="text-xs text-brand mt-2"></p>
-        </div> @endif {{-- Actions berdasarkan role & status --}} @if ($owner && $logbook->isEditable())
+    </div> {{-- Actions berdasarkan role & status --}} @if ($owner && $logbook->isEditable())
             <div class="flex flex-wrap gap-2"> <a href="{{ route("logbook.edit", $logbook) }}"
                     class="px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Edit</a>
                 <form method="POST" action="{{ route("logbook.submit", $logbook) }}"> @csrf <button
                         class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Kirim ke
-                        Pembimbing</button> </form>
+                        dosen</button> </form>
             </div>
             @endif
             @if ($owner && $logbook->status === "revisi" && !$logbook->isLockedByActiveRevision())
@@ -142,70 +122,6 @@
 </div>
 @endsection @section("scripts")
 <script>
-    var entryId = {{ $logbook->id }};
-    var csrf = document.querySelector('meta[name="csrf-token"]').content;
-
-    function addActionItem(e) {
-        e.preventDefault();
-        var input = document.getElementById('ai-input');
-        var text = input.value.trim();
-        if (!text) return;
-        fetch('/logbook/' + entryId + '/action-items', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrf,
-                'Accept': 'application/json'
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({
-                text: text
-            })
-        }).then(function(r) {
-            return r.json();
-        }).then(function(item) {
-            input.value = '';
-            location.reload();
-        });
-    }
-
-    function toggleActionItem(cb) {
-        var id = cb.dataset.id;
-        fetch('/logbook/' + entryId + '/action-items/' + id + '/toggle', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrf,
-                'Accept': 'application/json'
-            },
-            credentials: 'same-origin'
-        }).then(function(r) {
-            return r.json();
-        }).then(function(d) {
-            cb.nextElementSibling.classList.toggle('line-through', d.is_done);
-            cb.nextElementSibling.classList.toggle('text-text-secondary', d.is_done);
-            if (d.all_done) {
-                document.getElementById('ai-done-msg').innerHTML =
-                    '<span class="material-symbols-outlined icon-sm align-text-bottom">check_circle</span> Semua tugas selesai — siap kirim revisi ke pembimbing!';
-            } else {
-                document.getElementById('ai-done-msg').innerHTML = '';
-            }
-        });
-    }
-
-    function delActionItem(btn) {
-        var id = btn.dataset.id;
-        fetch('/logbook/' + entryId + '/action-items/' + id, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': csrf,
-                'Accept': 'application/json'
-            },
-            credentials: 'same-origin'
-        }).then(function() {
-            location.reload();
-        });
-    }
-
     var approveForm = document.getElementById('review-approve-form');
     if (approveForm) {
         approveForm.addEventListener('submit', function (event) {

@@ -137,6 +137,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/logbook', [LogbookController::class, 'store'])->name('logbook.store');
     Route::get('/logbook/create-revisi', [LogbookController::class, 'createRevisi'])->name('logbook.create-revisi');
     Route::post('/logbook/revisi', [LogbookController::class, 'storeRevisi'])->name('logbook.store-revisi');
+    Route::get('/logbook/feedback', [LogbookController::class, 'feedback'])->name('logbook.feedback');
+    Route::put('/logbook/{logbook}/feedback-note', [LogbookController::class, 'updateFeedbackNote'])->name('logbook.feedback-note');
 
     Route::get('/logbook/{logbook}', [LogbookController::class, 'show'])->name('logbook.show');
     Route::get('/logbook/{logbook}/edit', [LogbookController::class, 'edit'])->name('logbook.edit');

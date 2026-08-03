@@ -1,27 +1,36 @@
 @extends("layouts.app") @section("title", "Entri Revisi") @section("content")
+@php
+    $inst = \App\Models\Institution::active();
+    $templateUrl = $inst->templateUrl();
+    $maxMb = $inst->maxUploadSizeMb();
+    $accept = $inst->fileAccept();
+    $typesLabel = strtoupper(implode(", ", $inst->allowedFileTypes()));
+@endphp
 <div class="max-w-2xl">
     <h1 class="text-xl font-bold mb-4">Entri Revisi</h1>
-    <div class="mb-4 px-4 py-3 rounded-md bg-brand/10 text-sm border border-brand/20">
-        Gunakan template catatan perbaikan: <a href="{{ config("app.template_url") }}" target="_blank" rel="noopener"
-            class="text-brand font-medium underline">Template Catatan Perbaikan</a> </div>
+    @if ($templateUrl)
+        <div class="mb-4 px-4 py-3 rounded-md bg-brand/10 text-sm border border-brand/20">
+            Gunakan template catatan perbaikan: <a href="{{ $templateUrl }}" target="_blank" rel="noopener"
+                class="text-brand font-medium underline">Template Catatan Perbaikan</a> </div>
+    @endif
     @if ($parents->isEmpty())
         <div class="mb-4 px-4 py-3 rounded-md bg-status-pending/10 border border-status-pending/30 text-sm">
-            Tidak ada feedback revisi aktif yang dapat dijawab.
+            Anda bisa membuat entri revisi langsung tanpa harus ada logbook sebelumnya. Jika ingin menjawab feedback dari entri yang sudah ada, pilih entri asal di bawah.
         </div>
     @endif
-    @if ($parents->isNotEmpty())
     <form method="POST" action="{{ route("logbook.store-revisi") }}" enctype="multipart/form-data"
         class="bg-bg-surface rounded-xl border border-border p-6 space-y-4"> @csrf <div> <label
-                class="block text-sm font-medium mb-1" for="parent_entry_id">Feedback yang dijawab</label>
-            <select name="parent_entry_id" id="parent_entry_id" required
+                class="block text-sm font-medium mb-1" for="parent_entry_id">Feedback yang dijawab (opsional)</label>
+            <select name="parent_entry_id" id="parent_entry_id"
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                <option value="">Pilih entri asal</option>
+                <option value="">Tidak ada — revisi mandiri</option>
                 @foreach ($parents as $parent)
                     <option value="{{ $parent->id }}" @selected(old("parent_entry_id", $selectedParentId) == $parent->id)>
                         Entri #{{ $parent->id }} · {{ $parent->revision_round ? "Revisi ke-{$parent->revision_round}" : "Logbook" }} · {{ $parent->reviewed_at?->format("d M Y") }}
                     </option>
                 @endforeach
             </select>
+            <p class="text-xs text-text-secondary mt-1">Kosongkan jika ingin membuat revisi tanpa menghubungkan ke entri logbook yang ada.</p>
             @error("parent_entry_id")
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
@@ -64,15 +73,13 @@
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
         </div>
-        <div> <label class="block text-sm font-medium mb-1" for="lampiran">File Perbaikan/Draft (PDF, wajib, maks 10
-                MB)</label> <input type="file" name="lampiran" id="lampiran" accept="application/pdf" required
+        <div> <label class="block text-sm font-medium mb-1" for="lampiran">File Perbaikan/Draft ({{ $typesLabel }}, wajib, maks {{ $maxMb }} MB)</label> <input type="file" name="lampiran" id="lampiran" accept="{{ $accept }}" required
                 class="w-full text-sm"> @error("lampiran")
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
         </div>
-        <div> <label class="block text-sm font-medium mb-1" for="catatan_perbaikan">Catatan Perbaikan (PDF, wajib, maks
-                10 MB)</label> <input type="file" name="catatan_perbaikan" id="catatan_perbaikan"
-                accept="application/pdf" required class="w-full text-sm"> @error("catatan_perbaikan")
+        <div> <label class="block text-sm font-medium mb-1" for="catatan_perbaikan">Catatan Perbaikan ({{ $typesLabel }}, wajib, maks {{ $maxMb }} MB)</label> <input type="file" name="catatan_perbaikan" id="catatan_perbaikan"
+                accept="{{ $accept }}" required class="w-full text-sm"> @error("catatan_perbaikan")
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
         </div>
@@ -81,13 +88,10 @@
                 Revisi</button> <button type="submit" name="submit" value="1"
                 class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Kirim
                 ke
-                Pembimbing</button> <a href="{{ route("logbook.index") }}"
+                dosen</button> <a href="{{ route("logbook.index") }}"
                 class="px-4 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</a>
         </div>
     </form>
-    @else
-        <a href="{{ route("logbook.index") }}" class="inline-block px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Kembali ke Logbook</a>
-    @endif
 </div>
 @endsection @section("scripts")
 @include("partials.tb-script")

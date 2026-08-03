@@ -60,6 +60,17 @@ class DatabaseSeeder extends Seeder
         );
         $adminDosen->syncRoles([$adminRole, $dosenRole]);
 
+        // Administrator khusus (role admin saja).
+        $administrator = User::firstOrCreate(
+            ['email' => 'administrator@example.com'],
+            [
+                'name' => 'Administrator Sistem',
+                'password' => Hash::make('password'),
+                'identifier' => 'ADM001',
+            ]
+        );
+        $administrator->syncRoles([$adminRole]);
+
         // Dosen pembimbing kedua (opsional).
         $dosen2 = User::firstOrCreate(
             ['email' => 'dosen2@example.com'],

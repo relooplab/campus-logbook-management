@@ -63,7 +63,7 @@
                                  @endif @if ($profile->jadwal_bimbingan_url)
                                      <a href="{{ $profile->jadwal_bimbingan_url }}" target="_blank" rel="noopener"
                                          class="px-3 py-1.5 rounded-md bg-brand/10 text-brand"><span class="material-symbols-outlined icon-sm align-text-bottom">calendar_month</span>
-                                         Jadwal Bimbingan</a>
+                                         Jadwalkan Bimbingan</a>
                                  @endif
                 </div>
             </div>

@@ -42,6 +42,8 @@ class LogbookController extends Controller
         $ta = $request->user()->mahasiswaTa;
         abort_unless($ta, 403, 'Anda belum memiliki data TA.');
 
+        // Mahasiswa dapat membuat entri revisi tanpa harus ada logbook dulu.
+        // Daftar parent (entri berstatus revisi) tetap tersedia untuk dipilih.
         $parents = $ta->entries()
             ->where('status', LogbookEntry::STATUS_REVISI)
             ->whereDoesntHave('revisionChildren')
@@ -98,7 +100,7 @@ class LogbookController extends Controller
 
         return redirect()->route('logbook.index')
             ->with('success', $submit
-                ? 'Entri logbook dikirim ke pembimbing.'
+                ? 'Entri logbook dikirim ke dosen.'
                 : 'Entri logbook tersimpan sebagai draf.');
     }
 
@@ -111,28 +113,33 @@ class LogbookController extends Controller
         $submit = $request->boolean('submit');
 
         [$parent, $entry] = DB::transaction(function () use ($ta, $data, $submit) {
-            $parent = $ta->entries()
-                ->whereKey($data['parent_entry_id'])
-                ->where('status', LogbookEntry::STATUS_REVISI)
-                ->lockForUpdate()
-                ->firstOrFail();
+            // Mahasiswa dapat membuat entri revisi tanpa harus ada logbook dulu.
+            // Jika parent dipilih, validasi & tautkan ke entri induk.
+            $parent = null;
+            if (!empty($data['parent_entry_id'])) {
+                $parent = $ta->entries()
+                    ->whereKey($data['parent_entry_id'])
+                    ->where('status', LogbookEntry::STATUS_REVISI)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-            if ($parent->revisionChildren()
-                ->whereIn('status', [LogbookEntry::STATUS_DRAFT, LogbookEntry::STATUS_SUBMITTED, LogbookEntry::STATUS_REVISI])
-                ->exists()) {
-                throw ValidationException::withMessages([
-                    'parent_entry_id' => 'Entri induk sudah memiliki revisi aktif. Pilih entri induk lain.',
-                ]);
+                if ($parent->revisionChildren()
+                    ->whereIn('status', [LogbookEntry::STATUS_DRAFT, LogbookEntry::STATUS_SUBMITTED, LogbookEntry::STATUS_REVISI])
+                    ->exists()) {
+                    throw ValidationException::withMessages([
+                        'parent_entry_id' => 'Entri induk sudah memiliki revisi aktif. Pilih entri induk lain.',
+                    ]);
+                }
             }
 
             // Buat entry dulu agar path unik bisa memakai id.
             $entry = $ta->entries()->create([
-                'parent_entry_id' => $parent->id,
-                'revision_round' => ($parent->revision_round ?? 0) + 1,
+                'parent_entry_id' => $parent?->id,
+                'revision_round' => $parent ? ($parent->revision_round ?? 0) + 1 : null,
                 'sesi_ke' => 0,
                 'jenis' => LogbookEntry::JENIS_REVISI,
-                'dosen_id' => $parent->dosen_id ?: $parent->reviewDosen()?->id,
-                'topik' => $parent->topik,
+                'dosen_id' => $parent?->dosen_id ?: $parent?->reviewDosen()?->id ?: $ta->pembimbing_1_id,
+                'topik' => $parent?->topik,
                 'progres_kendala' => $data['progres_kendala'],
                 'tanggal_pengiriman' => $data['tanggal_pengiriman'],
                 'status' => $submit ? LogbookEntry::STATUS_SUBMITTED : LogbookEntry::STATUS_DRAFT,
@@ -150,7 +157,7 @@ class LogbookController extends Controller
         ]);
 
         $commentIds = collect($data['addressed_comment_ids'] ?? [])->filter()->values();
-        if ($submit && $commentIds->isNotEmpty()) {
+        if ($submit && $parent && $commentIds->isNotEmpty()) {
             $parent->comments()
                 ->whereIn('id', $commentIds)
                 ->update([
@@ -170,7 +177,7 @@ class LogbookController extends Controller
 
         return redirect()->route('logbook.show', $entry)
             ->with('success', $submit
-                ? 'Entri revisi dikirim ke pembimbing.'
+                ? 'Entri revisi dikirim ke dosen.'
                 : 'Entri revisi tersimpan sebagai draf.');
     }
 
@@ -214,6 +221,51 @@ class LogbookController extends Controller
         $entries = $query->latest()->paginate(20)->withQueryString();
 
         return view('logbook.index', compact('entries', 'filters'));
+    }
+
+    // ---------------------------------------------------------------- feedback page
+
+    /**
+     * Halaman "Logbook Feedback": semua feedback dosen untuk mahasiswa ini.
+     * Kolom: tanggal | topik | feedback | note (dapat diisi mahasiswa).
+     */
+    public function feedback(Request $request): View
+    {
+        $user = $request->user();
+        abort_unless($user->isMahasiswa(), 403);
+
+        $ta = $user->mahasiswaTa;
+        abort_unless($ta, 403, 'Anda belum memiliki data TA.');
+
+        $feedbacks = $ta->entries()
+            ->whereNotNull('feedback_dosen')
+            ->with('dosen')
+            ->latest('reviewed_at')
+            ->get()
+            ->filter(function ($e) {
+                return filled($e->feedback_dosen);
+            })
+            ->values();
+
+        return view('logbook.feedback', compact('feedbacks'));
+    }
+
+    /**
+     * Simpan catatan (note) mahasiswa untuk feedback dosen tertentu.
+     * Pemilik TA dapat mengisi/mengubah note kapan saja (tidak terbatas
+     * oleh status entri draft/revisi).
+     */
+    public function updateFeedbackNote(Request $request, LogbookEntry $logbook): RedirectResponse
+    {
+        $this->authorize('owner', $logbook);
+
+        $validated = $request->validate([
+            'feedback_note' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $logbook->update(['feedback_note' => $validated['feedback_note'] ?? null]);
+
+        return back()->with('success', 'Catatan feedback berhasil disimpan.');
     }
 
     // ---------------------------------------------------------------- show
@@ -396,7 +448,7 @@ class LogbookController extends Controller
             'Entri Baru Menunggu Review',
         );
 
-        return back()->with('success', 'Entri dikirim ke pembimbing.');
+        return back()->with('success', 'Entri dikirim ke dosen.');
     }
 
     public function approve(LogbookEntry $logbook): RedirectResponse

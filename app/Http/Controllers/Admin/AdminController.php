@@ -229,6 +229,10 @@ class AdminController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
             'website' => ['nullable', 'url', 'max:255'],
             'footer_note' => ['nullable', 'string', 'max:500'],
+            // Pengaturan upload & template (bisa diisi admin).
+            'template_url' => ['nullable', 'url', 'max:255'],
+            'max_upload_size_mb' => ['required', 'integer', 'min:1', 'max:100'],
+            'allowed_file_types' => ['required', 'string', 'max:255'],
         ]);
 
         // Logo (opsional).

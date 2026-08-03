@@ -70,19 +70,35 @@
                 <div class="mt-4 grid sm:grid-cols-2 gap-3 text-sm">
                     <div class="px-3 py-2.5 rounded-xl bg-bg-panel">
                         <span class="text-text-secondary">Pembimbing 1:</span>
-                        <span class="font-medium text-text-primary">{{ $ta->pembimbing1?->name ?? 'Belum ditentukan' }}</span>
+                        @if ($ta->pembimbing1)
+                            <a href="{{ route('profile.show', $ta->pembimbing1) }}" class="font-medium text-text-primary hover:text-brand hover:underline">{{ $ta->pembimbing1->name }}</a>
+                        @else
+                            <span class="font-medium text-text-primary">Belum ditentukan</span>
+                        @endif
                     </div>
                     <div class="px-3 py-2.5 rounded-xl bg-bg-panel">
                         <span class="text-text-secondary">Pembimbing 2:</span>
-                        <span class="font-medium text-text-primary">{{ $ta->pembimbing2?->name ?? 'Belum ditentukan' }}</span>
+                        @if ($ta->pembimbing2)
+                            <a href="{{ route('profile.show', $ta->pembimbing2) }}" class="font-medium text-text-primary hover:text-brand hover:underline">{{ $ta->pembimbing2->name }}</a>
+                        @else
+                            <span class="font-medium text-text-primary">Belum ditentukan</span>
+                        @endif
                     </div>
                     <div class="px-3 py-2.5 rounded-xl bg-bg-panel">
                         <span class="text-text-secondary">Penguji 1:</span>
-                        <span class="font-medium text-text-primary">{{ $ta->penguji1?->name ?? 'Belum ditentukan' }}</span>
+                        @if ($ta->penguji1)
+                            <a href="{{ route('profile.show', $ta->penguji1) }}" class="font-medium text-text-primary hover:text-brand hover:underline">{{ $ta->penguji1->name }}</a>
+                        @else
+                            <span class="font-medium text-text-primary">Belum ditentukan</span>
+                        @endif
                     </div>
                     <div class="px-3 py-2.5 rounded-xl bg-bg-panel">
                         <span class="text-text-secondary">Penguji 2:</span>
-                        <span class="font-medium text-text-primary">{{ $ta->penguji2?->name ?? 'Belum ditentukan' }}</span>
+                        @if ($ta->penguji2)
+                            <a href="{{ route('profile.show', $ta->penguji2) }}" class="font-medium text-text-primary hover:text-brand hover:underline">{{ $ta->penguji2->name }}</a>
+                        @else
+                            <span class="font-medium text-text-primary">Belum ditentukan</span>
+                        @endif
                     </div>
                 </div>
                 <div class="mt-4 flex gap-2">

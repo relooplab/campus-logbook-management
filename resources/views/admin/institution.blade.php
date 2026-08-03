@@ -47,6 +47,29 @@
                         <p class="text-xs text-text-secondary mt-1">Logo saat ini tersimpan.</p>
                     @endif
                 </div>
+                <div class="sm:col-span-2 pt-2 border-t border-border">
+                    <p class="text-sm font-semibold mb-3">Pengaturan Upload & Template</p>
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="sm:col-span-2"> <label class="block text-sm font-medium mb-1">Link Template Catatan Perbaikan</label>
+                            <input type="url" name="template_url" value="{{ old("template_url", $institution->template_url) }}"
+                                placeholder="https://docs.google.com/..."
+                                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            <p class="text-xs text-text-secondary mt-1">Link ini ditampilkan di halaman Entri Revisi sebagai "Template Catatan Perbaikan".</p>
+                        </div>
+                        <div> <label class="block text-sm font-medium mb-1">Maks Ukuran Upload (MB)</label>
+                            <input type="number" name="max_upload_size_mb" min="1" max="100" required
+                                value="{{ old("max_upload_size_mb", $institution->max_upload_size_mb ?? 10) }}"
+                                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        </div>
+                        <div> <label class="block text-sm font-medium mb-1">Jenis File Diizinkan</label>
+                            <input type="text" name="allowed_file_types" required
+                                value="{{ old("allowed_file_types", $institution->allowed_file_types ?? "pdf") }}"
+                                placeholder="pdf,doc,docx"
+                                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            <p class="text-xs text-text-secondary mt-1">Pisahkan dengan koma, mis. pdf,doc,docx</p>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="flex items-center gap-3 pt-2"> <button
                     class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan</button>

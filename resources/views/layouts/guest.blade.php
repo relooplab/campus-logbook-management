@@ -51,7 +51,7 @@
             if (saved === 'light') document.documentElement.classList.remove('dark');
         })();
     </script>
-    <link rel="stylesheet" href="{{ asset('css/global.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/global.css') }}?v={{ @filemtime(public_path('css/global.css')) }}">
 </head>
 <body class="bg-bg-base text-text-primary min-h-screen flex items-center justify-center p-4 font-sans antialiased">
     <div class="w-full max-w-md">
