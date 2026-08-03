@@ -111,16 +111,13 @@ class LogbookEntry extends Model
     }
 
     /**
-     * True when the entry still allows editing by the owner (draft/revisi)
-     * dan tidak terkunci oleh siklus revisi yang sudah dimulai.
+     * True when the entry still allows editing by the owner (draft).
+     * Begitu entri sudah masuk alur review (submitted/approved/revisi),
+     * entri tidak boleh diedit langsung; perbaikan harus lewat jalur revisi baru.
      */
     public function isEditable(): bool
     {
-        if (!in_array($this->status, [self::STATUS_DRAFT, self::STATUS_REVISI], true)) {
-            return false;
-        }
-
-        return !$this->isLockedByActiveRevision();
+        return $this->status === self::STATUS_DRAFT && !$this->isLockedByActiveRevision();
     }
 
     /**
