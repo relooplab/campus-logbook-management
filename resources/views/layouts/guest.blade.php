@@ -71,6 +71,18 @@
         <div class="bg-bg-surface rounded-card shadow-lg border border-border p-6">
             @yield('guest-content')
         </div>
+        <div class="mt-6 flex items-center justify-center gap-3 text-sm">
+            <a href="https://github.com/relooplab/thesis-logbook-management" target="_blank" rel="noopener"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors"
+                title="Lihat kode sumber aplikasi di GitHub">
+                <span class="material-symbols-outlined icon-sm">code</span> GitHub
+            </a>
+            <a href="https://reloop.notion.site/3b1155a221e880829514df5d0a8dcfd6" target="_blank" rel="noopener"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold bg-status-pending/15 text-status-pending hover:bg-status-pending/25 border border-status-pending/30 transition-colors"
+                title="Laporkan masalah atau kirim ide untuk pengembangan aplikasi">
+                <span class="material-symbols-outlined icon-sm">feedback</span> Kirim Masukan
+            </a>
+        </div>
     </div>
     @yield('guest-scripts')
 </body>

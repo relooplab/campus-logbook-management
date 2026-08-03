@@ -25,6 +25,14 @@ class Institution extends Model
         'template_url',
         'max_upload_size_mb',
         'allowed_file_types',
+        'mail_mailer',
+        'mail_host',
+        'mail_port',
+        'mail_username',
+        'mail_password',
+        'mail_encryption',
+        'mail_from_address',
+        'mail_from_name',
     ];
 
     /**
@@ -42,15 +50,41 @@ class Institution extends Model
     }
 
     /**
-     * Sinkron nilai brand ke konfigurasi yang berjalan.
+     * Sinkron nilai brand + pengaturan email ke konfigurasi yang berjalan.
+     * Dipanggil di AppServiceProvider::boot() setiap request.
      */
     public function applyToConfig(): void
     {
         config(['app.name' => $this->app_name ?: 'Thesis Logbook Management']);
 
-        if ($this->email) {
-            config(['mail.from.address' => $this->email]);
-            config(['mail.from.name' => $this->app_name ?: 'Thesis Logbook Management']);
+        // From address: prioritas mail_from_address, fallback email institusi.
+        $fromAddress = $this->mail_from_address ?: $this->email;
+        $fromName = $this->mail_from_name ?: ($this->app_name ?: 'Thesis Logbook Management');
+
+        if ($fromAddress) {
+            config(['mail.from.address' => $fromAddress]);
+            config(['mail.from.name' => $fromName]);
+        }
+
+        // Pengaturan SMTP dinamis (bisa diisi admin).
+        if ($this->mail_mailer) {
+            config(['mail.default' => $this->mail_mailer]);
+        }
+
+        if ($this->mail_host) {
+            config(['mail.mailers.smtp.host' => $this->mail_host]);
+        }
+        if ($this->mail_port) {
+            config(['mail.mailers.smtp.port' => (int) $this->mail_port]);
+        }
+        if ($this->mail_username !== null) {
+            config(['mail.mailers.smtp.username' => $this->mail_username]);
+        }
+        if ($this->mail_password !== null) {
+            config(['mail.mailers.smtp.password' => $this->mail_password]);
+        }
+        if ($this->mail_encryption !== null) {
+            config(['mail.mailers.smtp.encryption' => $this->mail_encryption ?: null]);
         }
     }
 

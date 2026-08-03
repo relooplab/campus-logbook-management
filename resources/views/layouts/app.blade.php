@@ -255,6 +255,12 @@
                 <span class="material-symbols-outlined icon-sm">feedback</span>
                 <span class="sidebar-label">Kirim Masukan</span>
             </a>
+            <a href="https://github.com/relooplab/thesis-logbook-management" target="_blank" rel="noopener"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+                title="Lihat kode sumber aplikasi di GitHub">
+                <span class="material-symbols-outlined icon-sm">code</span>
+                <span class="sidebar-label">GitHub</span>
+            </a>
         </div>
     </aside>
 

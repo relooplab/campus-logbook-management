@@ -233,6 +233,15 @@ class AdminController extends Controller
             'template_url' => ['nullable', 'url', 'max:255'],
             'max_upload_size_mb' => ['required', 'integer', 'min:1', 'max:100'],
             'allowed_file_types' => ['required', 'string', 'max:255'],
+            // Pengaturan email (SMTP) — bisa diisi admin.
+            'mail_mailer' => ['nullable', 'string', 'max:20', 'in:smtp,log,array,sendmail,mailgun,ses,postmark,resend'],
+            'mail_host' => ['nullable', 'string', 'max:255'],
+            'mail_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
+            'mail_username' => ['nullable', 'string', 'max:255'],
+            'mail_password' => ['nullable', 'string', 'max:255'],
+            'mail_encryption' => ['nullable', 'string', 'max:20', 'in:ssl,tls,null'],
+            'mail_from_address' => ['nullable', 'email', 'max:255'],
+            'mail_from_name' => ['nullable', 'string', 'max:255'],
         ]);
 
         // Logo (opsional).
@@ -245,7 +254,32 @@ class AdminController extends Controller
         Institution::flush();
         $institution->applyToConfig();
 
-        return back()->with('success', 'Profil institusi diperbarui.');
+        return back()->with('success', 'Profil institusi & pengaturan email diperbarui.');
+    }
+
+    /**
+     * Kirim email uji untuk memverifikasi konfigurasi SMTP.
+     */
+    public function testMail(Request $request): RedirectResponse
+    {
+        $institution = Institution::active();
+        $institution->applyToConfig();
+
+        $to = $request->input('to') ?: $request->user()->email;
+
+        try {
+            \Illuminate\Support\Facades\Mail::raw(
+                'Ini adalah email uji dari '.config('app.name').'. Konfigurasi SMTP berhasil!',
+                function ($message) use ($to) {
+                    $message->to($to)
+                        ->subject('Email Uji — '.config('app.name'));
+                }
+            );
+
+            return back()->with('success', 'Email uji berhasil dikirim ke '.$to.'.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal mengirim email uji: '.$e->getMessage());
+        }
     }
 
     // ------------------------------------------------------- review massal

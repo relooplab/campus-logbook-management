@@ -92,6 +92,18 @@ Single supervisor manages their own cohort of students. Students self-register v
 
 Multi-tenant deployment with centralized administration. Features institution-level settings, bulk Excel import for student onboarding, coordinator roles, and institution-wide reports. Enabled via `APP_MODE=institution` in `.env`.
 
+#### Mode Comparison
+
+| Aspect | Individual Mode | Institution Mode |
+|--------|----------------|------------------|
+| `institution_id` | `NULL` (personal data) | Assigned (multi-tenant) |
+| Tenant scope | Not active | Active (filtered per institution) |
+| Bulk Excel import | ❌ | ✅ |
+| Student registration | Auto-approved | Requires supervisor/admin approval |
+| Institution-wide reports | ❌ | ✅ |
+| Multi-supervisor / multi-institution | ❌ | ✅ |
+| Sidebar badge | "Individual" | "Institution" |
+
 **Implementation details:**
 
 - Feature detection via `app/Support/Feature.php` (gates like `Feature::isInstitution()`, `Feature::has('bulk_import')`)
