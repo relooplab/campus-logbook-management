@@ -22,7 +22,7 @@
                 <thead>
                     <tr class="text-left text-text-secondary border-b border-border">
                         <th class="py-3 px-4">Mahasiswa</th>
-                        <th class="py-3 px-4">Status TA</th>
+                        <th class="py-3 px-4">Status</th>
                         <th class="py-3 px-4">Fase</th>
                         <th class="py-3 px-4">Keteraturan</th>
                         <th class="py-3 px-4">Aksi</th>
@@ -30,9 +30,9 @@
                 </thead>
                 <tbody>
                     @foreach ($list as $row)
-                        @php $ta = $row['ta']; @endphp <tr class="border-b border-border hover:bg-bg-hover cursor-pointer"
-                            onclick="window.location='{{ route("mahasiswa-ta.show", $ta) }}'">
-                            <td class="py-3 px-4"><a href="{{ route("mahasiswa-ta.show", $ta) }}"
+                        @php $ta = $row['ta']; $detailRoute = $ta->isKp() ? "mahasiswa-kp.show" : "mahasiswa-ta.show"; @endphp <tr class="border-b border-border hover:bg-bg-hover cursor-pointer"
+                            onclick="window.location='{{ route($detailRoute, $ta) }}'">
+                            <td class="py-3 px-4"><a href="{{ route($detailRoute, $ta) }}"
                                     class="hover:underline">{{ $ta->mahasiswa?->name }}</a> <span
                                     class="text-text-secondary text-xs">({{ $ta->mahasiswa?->identifier }})</span></td>
                             <td class="py-3 px-4"> <span
@@ -43,7 +43,7 @@
                                     class="inline-block w-3 h-3 rounded-full mr-1 align-middle {{ $row["regularity"] === "green" ? "bg-status-success" : "" }} {{ $row["regularity"] === "yellow" ? "bg-status-pending" : "" }} {{ $row["regularity"] === "red" ? "bg-status-danger" : "" }}"
                                     title="{{ $row["tooltip"] }}"></span> <span
                                     class="text-xs text-text-secondary">{{ ucfirst($row["regularity"]) }}</span> </td>
-                            <td class="py-3 px-4"><a href="{{ route("mahasiswa-ta.show", $ta) }}"
+                            <td class="py-3 px-4"><a href="{{ route($detailRoute, $ta) }}"
                                     class="text-brand hover:underline">Detail</a></td>
                         </tr>
                     @endforeach

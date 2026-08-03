@@ -47,7 +47,7 @@ class LogbookEntryPolicy
 
         return $ta
             ? $ta->user_id === $user->id
-            : $user->mahasiswaTa()->exists();
+            : $user->programAktif()->exists();
     }
 
     public function view(User $user, LogbookEntry $entry): bool

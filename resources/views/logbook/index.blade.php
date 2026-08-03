@@ -62,7 +62,12 @@
                     @foreach ($entries as $entry)
                         <tr class="border-b border-border hover:bg-bg-panel hover:bg-bg-hover/50">
                             @if (!auth()->user()->isMahasiswa())
-                                <td class="py-3 px-4">{{ $entry->mahasiswaTa?->mahasiswa?->name }}</td>
+                                <td class="py-3 px-4">
+                                    {{ $entry->mahasiswaTa?->mahasiswa?->name }}
+                                    @if ($entry->mahasiswaTa)
+                                        <span class="ml-1 text-[10px] px-1.5 py-0.5 rounded {{ $entry->mahasiswaTa->isKp() ? 'bg-brand/10 text-brand' : 'bg-bg-panel text-text-secondary' }}">{{ $entry->mahasiswaTa->jenisLabel() }}</span>
+                                    @endif
+                                </td>
                             @endif
                             <td class="py-3 px-4">{{ $entry->jenis === "revisi" ? "—" : $entry->sesi_ke }}</td>
                             <td class="py-3 px-4 table-col-jenis">{{ ucfirst($entry->jenis) }}</td>

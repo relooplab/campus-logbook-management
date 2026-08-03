@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MahasiswaTa;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,10 @@ class ProfileController extends Controller
      */
     public function index(Request $request): View
     {
-        return view('profile.index', ['user' => $request->user()]);
+        $user = $request->user();
+        $programs = $user->mahasiswaPrograms()->with(['pembimbing1', 'pembimbing2'])->get();
+
+        return view('profile.index', ['user' => $user, 'programs' => $programs]);
     }
 
     /**
@@ -56,6 +60,28 @@ class ProfileController extends Controller
         $user->update($validated);
 
         return back()->with('success', 'Profil berhasil diperbarui.');
+    }
+
+    /**
+     * Perbarui judul TA / tempat KP (wajib diisi mahasiswa saat program aktif).
+     * Hanya pemilik program yang dapat mengubah.
+     */
+    public function updateProgram(Request $request, MahasiswaTa $mahasiswaTa): RedirectResponse
+    {
+        $user = $request->user();
+
+        abort_unless($user->id === $mahasiswaTa->user_id, 403, 'Anda bukan pemilik program ini.');
+
+        $isKp = $mahasiswaTa->isKp();
+
+        $validated = $request->validate([
+            'judul_ta' => [$isKp ? 'nullable' : 'required', 'string', 'max:255'],
+            'tempat_kp' => [$isKp ? 'required' : 'nullable', 'string', 'max:255'],
+        ]);
+
+        $mahasiswaTa->update($validated);
+
+        return back()->with('success', 'Data '.($isKp ? 'KP' : 'TA').' berhasil diperbarui.');
     }
 
     /**

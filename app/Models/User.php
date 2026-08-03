@@ -183,7 +183,35 @@ class User extends Authenticatable
      */
     public function mahasiswaTa(): HasOne
     {
-        return $this->hasOne(MahasiswaTa::class, 'user_id');
+        return $this->hasOne(MahasiswaTa::class, 'user_id')
+            ->where('jenis', MahasiswaTa::JENIS_TA);
+    }
+
+    /**
+     * The KP record owned by this user (mahasiswa).
+     */
+    public function mahasiswaKp(): HasOne
+    {
+        return $this->hasOne(MahasiswaTa::class, 'user_id')
+            ->where('jenis', MahasiswaTa::JENIS_KP);
+    }
+
+    /**
+     * Semua program mahasiswa (KP + TA) milik user ini.
+     */
+    public function mahasiswaPrograms(): HasMany
+    {
+        return $this->hasMany(MahasiswaTa::class, 'user_id');
+    }
+
+    /**
+     * Program yang sedang aktif (status_ta = aktif). Logbook bimbingan
+     * otomatis masuk ke program ini. Ditetapkan oleh dosen/admin.
+     */
+    public function programAktif(): HasOne
+    {
+        return $this->hasOne(MahasiswaTa::class, 'user_id')
+            ->where('status_ta', MahasiswaTa::STATUS_AKTIF);
     }
 
     /**

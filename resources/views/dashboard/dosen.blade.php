@@ -136,7 +136,7 @@
                             <tr class="border-b border-border health-row last:border-0" data-health="{{ $row['regularity'] }}">
                                 <td class="py-2.5 pr-4">
                                     <span class="inline-block w-3 h-3 rounded-full mr-2 align-middle {{ $row['regularity'] === 'green' ? 'bg-status-success' : '' }} {{ $row['regularity'] === 'yellow' ? 'bg-status-pending' : '' }} {{ $row['regularity'] === 'red' ? 'bg-status-danger' : '' }}" title="{{ $row['tooltip'] }}"></span>
-                                    <a href="{{ route('mahasiswa-ta.show', $ta) }}" class="font-medium hover:text-brand align-middle">{{ $ta->mahasiswa?->name }}</a>
+                                    <a href="{{ route($ta->isKp() ? 'mahasiswa-kp.show' : 'mahasiswa-ta.show', $ta) }}" class="font-medium hover:text-brand align-middle">{{ $ta->mahasiswa?->name }}</a>
                                     @if ($row['warned'])
                                         <span class="material-symbols-outlined icon-sm text-status-danger align-middle" title="Sudah dikirim email inaktivitas">warning</span>
                                     @endif
@@ -168,9 +168,9 @@
         @endif
     </div>
 
-    {{-- ===== Manajemen Fase TA ===== --}}
+    {{-- ===== Manajemen Fase Mahasiswa ===== --}}
     <div class="card p-6">
-        <h2 class="font-heading font-semibold text-text-primary mb-4">Manajemen Fase TA ({{ $tas->count() }})</h2>
+        <h2 class="font-heading font-semibold text-text-primary mb-4">Manajemen Fase Mahasiswa ({{ $tas->count() }})</h2>
         @if ($tas->isEmpty())
             <p class="text-sm text-text-secondary">Belum ada mahasiswa bimbingan.</p>
         @else
@@ -179,7 +179,7 @@
                     <thead>
                         <tr class="text-left text-text-secondary border-b border-border">
                             <th class="py-2 pr-4 font-medium">Mahasiswa</th>
-                            <th class="py-2 pr-4 font-medium hidden md:table-cell">Judul TA</th>
+                            <th class="py-2 pr-4 font-medium hidden md:table-cell">{{ $tas->first()?->isKp() ? 'Tempat KP' : 'Judul TA' }}</th>
                             <th class="py-2 pr-4 font-medium hidden lg:table-cell">Pembimbing</th>
                             <th class="py-2 font-medium">Fase</th>
                         </tr>
@@ -187,14 +187,14 @@
                     <tbody>
                         @foreach ($tas as $ta)
                             <tr class="border-b border-border last:border-0">
-                                <td class="py-2.5 pr-4"><a href="{{ route('mahasiswa-ta.show', $ta) }}" class="hover:text-brand">{{ $ta->mahasiswa?->name }}</a> <span class="text-text-secondary text-xs">({{ $ta->mahasiswa?->identifier }})</span></td>
-                                <td class="py-2.5 pr-4 hidden md:table-cell">{{ $ta->judul_ta }}</td>
+                                <td class="py-2.5 pr-4"><a href="{{ route($ta->isKp() ? 'mahasiswa-kp.show' : 'mahasiswa-ta.show', $ta) }}" class="hover:text-brand">{{ $ta->mahasiswa?->name }}</a> <span class="text-text-secondary text-xs">({{ $ta->mahasiswa?->identifier }})</span></td>
+                                <td class="py-2.5 pr-4 hidden md:table-cell">{{ $ta->isKp() ? ($ta->tempat_kp ?: '—') : $ta->judul_ta }}</td>
                                 <td class="py-2.5 pr-4 text-xs hidden lg:table-cell">{{ $ta->pembimbing1?->name }}{{ $ta->pembimbing2 ? ' & ' . $ta->pembimbing2->name : '' }}</td>
                                 <td class="py-2.5">
-                                    <form method="POST" action="{{ route('mahasiswa-ta.fase', $ta) }}" class="flex flex-col sm:flex-row sm:items-center gap-1.5" onsubmit="return confirm('Ubah fase TA ini? Pastikan sudah benar.')">
+                                    <form method="POST" action="{{ route($ta->isKp() ? 'mahasiswa-kp.fase' : 'mahasiswa-ta.fase', $ta) }}" class="flex flex-col sm:flex-row sm:items-center gap-1.5" onsubmit="return confirm('Ubah fase {{ $ta->jenisLabel() }} ini? Pastikan sudah benar.')">
                                         @csrf
                                         <select name="fase" class="w-full sm:w-auto rounded-lg border border-border bg-bg-surface px-2 py-1.5 text-xs">
-                                            @foreach (\App\Models\MahasiswaTa::FASES as $key => $label)
+                                            @foreach ($ta->isKp() ? \App\Models\MahasiswaTa::FASES_KP : \App\Models\MahasiswaTa::FASES as $key => $label)
                                                 <option value="{{ $key }}" @selected($ta->fase === $key)>{{ $label }}</option>
                                             @endforeach
                                         </select>

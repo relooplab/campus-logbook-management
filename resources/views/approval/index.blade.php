@@ -23,7 +23,8 @@
                 </div>
                 <form method="POST" action="{{ route("approval.approve", $m) }}" class="grid sm:grid-cols-2 gap-3">
                     @csrf <div class="sm:col-span-2"> <label class="block text-xs text-text-secondary mb-1">Judul
-                            TA</label> <input type="text" name="judul_ta" required
+                            TA (opsional)</label> <input type="text" name="judul_ta"
+                            placeholder="Boleh diisi mahasiswa nanti via profil"
                             class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
                     <div> <label class="block text-xs text-text-secondary mb-1">Peran Anda untuk mahasiswa ini</label>
                         <select name="role_dosen"

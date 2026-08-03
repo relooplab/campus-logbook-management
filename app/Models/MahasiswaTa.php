@@ -23,6 +23,11 @@ class MahasiswaTa extends Model
         static::addGlobalScope(new InstitutionScope());
     }
 
+    /** Jenis program mahasiswa. */
+    public const JENIS_TA = 'ta';
+    public const JENIS_KP = 'kp';
+    public const JENISES = [self::JENIS_TA, self::JENIS_KP];
+
     /** Fase perjalanan TA. */
     public const FASES = [
         'proposal' => 'Seminar Proposal',
@@ -34,6 +39,14 @@ class MahasiswaTa extends Model
         'achievement' => 'Achievement Unlocked',
     ];
 
+    /** Fase perjalanan KP. */
+    public const FASES_KP = [
+        'pelaksanaan' => 'Pelaksanaan',
+        'laporan' => 'Penyusunan Laporan',
+        'seminar_kp' => 'Seminar KP',
+        'selesai' => 'Selesai',
+    ];
+
     /** Status siklus TA. */
     public const STATUS_AKTIF = 'aktif';
     public const STATUS_TAMAT = 'tamat';
@@ -43,12 +56,17 @@ class MahasiswaTa extends Model
     protected $fillable = [
         'institution_id',
         'user_id',
+        'jenis',
         'judul_ta',
+        'tempat_kp',
         'pembimbing_1_id',
         'pembimbing_2_id',
+        'pembimbing_lapangan',
         'penguji_1_id',
         'penguji_2_id',
         'target_sesi',
+        'periode_mulai',
+        'periode_selesai',
         'fase',
         'status_ta',
     ];
@@ -57,19 +75,48 @@ class MahasiswaTa extends Model
     {
         return [
             'target_sesi' => 'integer',
+            'periode_mulai' => 'date',
+            'periode_selesai' => 'date',
         ];
+    }
+
+    public function isTa(): bool
+    {
+        return $this->jenis === self::JENIS_TA;
+    }
+
+    public function isKp(): bool
+    {
+        return $this->jenis === self::JENIS_KP;
+    }
+
+    /**
+     * Label program: "TA" atau "KP".
+     */
+    public function jenisLabel(): string
+    {
+        return $this->isKp() ? 'KP' : 'TA';
     }
 
     public function faseLabel(): string
     {
-        return self::FASES[$this->fase] ?? $this->fase;
+        $fases = $this->isKp() ? self::FASES_KP : self::FASES;
+        return $fases[$this->fase] ?? $this->fase;
     }
 
     public function faseIndex(): int
     {
-        $keys = array_keys(self::FASES);
+        $keys = $this->isKp() ? array_keys(self::FASES_KP) : array_keys(self::FASES);
         $i = array_search($this->fase, $keys, true);
         return $i === false ? 0 : $i;
+    }
+
+    /**
+     * Scope: filter program berdasarkan jenis (ta/kp).
+     */
+    public function scopeJenis($q, string $jenis)
+    {
+        return $q->where('jenis', $jenis);
     }
 
     public function mahasiswa(): BelongsTo
@@ -113,6 +160,14 @@ class MahasiswaTa extends Model
     public function entries(): HasMany
     {
         return $this->hasMany(LogbookEntry::class, 'mahasiswa_ta_id');
+    }
+
+    /**
+     * Logbook harian KP (kegiatan lapangan).
+     */
+    public function logbookHarian(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\LogbookHarianKp::class, 'mahasiswa_ta_id');
     }
 
     public function inactivityNotifications(): \Illuminate\Database\Eloquent\Relations\HasMany

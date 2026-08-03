@@ -12,6 +12,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DosenSidangController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\LogbookController;
+use App\Http\Controllers\LogbookHarianController;
 use App\Http\Controllers\MahasiswaTaController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ActionItemController;
@@ -74,12 +75,26 @@ Route::middleware('auth')->group(function () {
     Route::get('/profil', [ProfileController::class, 'index'])->name('profile.index');
     Route::put('/profil', [ProfileController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profil/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::put('/profil/program/{mahasiswaTa}', [ProfileController::class, 'updateProgram'])->name('profile.program');
     Route::get('/profil/{user}', [ProfileController::class, 'show'])->name('profile.show');
 
     // ------------------------------------------------------ detail & fase TA
     Route::get('/mahasiswa-ta/{mahasiswaTa}', [MahasiswaTaController::class, 'show'])->name('mahasiswa-ta.show');
     Route::post('/mahasiswa-ta/{mahasiswaTa}/fase', [MahasiswaTaController::class, 'updateFase'])
         ->name('mahasiswa-ta.fase');
+
+    // ------------------------------------------------------ detail & fase KP
+    Route::get('/mahasiswa-kp/{mahasiswaTa}', [MahasiswaTaController::class, 'show'])->name('mahasiswa-kp.show');
+    Route::post('/mahasiswa-kp/{mahasiswaTa}/fase', [MahasiswaTaController::class, 'updateFase'])
+        ->name('mahasiswa-kp.fase');
+
+    // ------------------------------------------------------ logbook harian KP
+    Route::get('/kp/{mahasiswaTa}/logbook-harian', [LogbookHarianController::class, 'index'])->name('logbook-harian.index');
+    Route::get('/kp/{mahasiswaTa}/logbook-harian/create', [LogbookHarianController::class, 'create'])->name('logbook-harian.create');
+    Route::post('/kp/{mahasiswaTa}/logbook-harian', [LogbookHarianController::class, 'store'])->name('logbook-harian.store');
+    Route::get('/kp/{mahasiswaTa}/logbook-harian/{logbookHarian}/edit', [LogbookHarianController::class, 'edit'])->name('logbook-harian.edit');
+    Route::put('/kp/{mahasiswaTa}/logbook-harian/{logbookHarian}', [LogbookHarianController::class, 'update'])->name('logbook-harian.update');
+    Route::delete('/kp/{mahasiswaTa}/logbook-harian/{logbookHarian}', [LogbookHarianController::class, 'destroy'])->name('logbook-harian.destroy');
 
     // -------------------------------------------------- jadwal bimbingan
     Route::get('/jadwal-bimbingan', [SchedulingController::class, 'index'])->name('scheduling.index');

@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>Rekap Bimbingan TA</title>
+    <title>Rekap Bimbingan {{ $mahasiswaTa->isKp() ? 'KP' : 'TA' }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #111; }
         h1 { font-size: 16px; text-align: center; margin: 0 0 2px; }
@@ -20,14 +20,24 @@
     @php $inst = \App\Models\Institution::active(); @endphp
     <h1>{{ strtoupper($inst->institution_name) }}</h1>
     @if ($inst->faculty)<h2>{{ $inst->faculty }}{{ $inst->study_program ? ' — '.$inst->study_program : '' }}</h2>@endif
-    <h2 style="margin-top:4px">REKAPITULASI BIMBINGAN TUGAS AKHIR</h2>
+    <h2 style="margin-top:4px">REKAPITULASI BIMBINGAN {{ $mahasiswaTa->isKp() ? 'KERJA PRAKTEK' : 'TUGAS AKHIR' }}</h2>
 
     <div class="header">
         <table>
             <tr><td style="width:180px"><strong>Nama Mahasiswa</strong></td><td>: {{ $mahasiswaTa->mahasiswa->name }} ({{ $mahasiswaTa->mahasiswa->identifier }})</td></tr>
-            <tr><td><strong>Judul TA</strong></td><td>: {{ $mahasiswaTa->judul_ta }}</td></tr>
+            @if ($mahasiswaTa->isKp())
+                <tr><td><strong>Tempat KP</strong></td><td>: {{ $mahasiswaTa->tempat_kp ?? '—' }}</td></tr>
+                @if ($mahasiswaTa->periode_mulai)
+                    <tr><td><strong>Periode</strong></td><td>: {{ $mahasiswaTa->periode_mulai->format('d/m/Y') }} – {{ $mahasiswaTa->periode_selesai?->format('d/m/Y') ?? 'sekarang' }}</td></tr>
+                @endif
+            @else
+                <tr><td><strong>Judul TA</strong></td><td>: {{ $mahasiswaTa->judul_ta }}</td></tr>
+            @endif
             <tr><td><strong>Pembimbing 1</strong></td><td>: {{ $mahasiswaTa->pembimbing1?->name ?? '—' }}</td></tr>
             <tr><td><strong>Pembimbing 2</strong></td><td>: {{ $mahasiswaTa->pembimbing2?->name ?? '—' }}</td></tr>
+            @if ($mahasiswaTa->isKp())
+                <tr><td><strong>Pembimbing Lapangan</strong></td><td>: {{ $mahasiswaTa->pembimbing_lapangan ?? '—' }}</td></tr>
+            @endif
             <tr><td><strong>Target Sesi</strong></td><td>: {{ $target }}</td></tr>
             <tr><td><strong>Sesi Disetujui</strong></td><td>: {{ $approved }}</td></tr>
         </table>

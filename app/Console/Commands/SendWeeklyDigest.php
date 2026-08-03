@@ -45,9 +45,9 @@ class SendWeeklyDigest extends Command
         }
 
         // ---------- Mahasiswa ----------
-        $mahasiswa = User::role('mahasiswa')->with('mahasiswaTa')->get();
+        $mahasiswa = User::role('mahasiswa')->with('programAktif')->get();
         foreach ($mahasiswa as $m) {
-            $ta = $m->mahasiswaTa;
+            $ta = $m->programAktif;
             if (!$ta) continue;
 
             $lastEntry = $ta->entries()->latest('tanggal_bimbingan')->first();

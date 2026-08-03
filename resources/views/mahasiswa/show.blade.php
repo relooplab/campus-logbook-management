@@ -22,7 +22,7 @@
             <h2 class="font-semibold text-lg">{{ $mahasiswaTa->mahasiswa?->name }}</h2>
             <p class="text-sm text-text-secondary">{{ $mahasiswaTa->mahasiswa?->email }} ·
                 {{ $mahasiswaTa->mahasiswa?->identifier }}</p>
-            <p class="text-sm text-text-primary mt-1">{{ $mahasiswaTa->judul_ta }}</p>
+            <p class="text-sm text-text-primary mt-1">{{ $mahasiswaTa->isKp() ? ($mahasiswaTa->tempat_kp ?: 'Tempat KP') : $mahasiswaTa->judul_ta }}</p>
         </div>
         <div class="text-center">
             <div class="text-2xl font-bold text-brand">{{ $approved }}/{{ $target }}</div>
@@ -38,6 +38,10 @@
                 <a href="{{ route("logbook.export.pdf", $mahasiswaTa) }}"
                     class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Rekap
                     PDF</a>
+            @endif
+            @if ($mahasiswaTa->isKp())
+                <a href="{{ route("logbook-harian.index", $mahasiswaTa) }}"
+                    class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Logbook Harian</a>
             @endif
         </div>
     </div> {{-- Kontak mahasiswa (hanya untuk dosen) --}} @php $mhs = $mahasiswaTa->mahasiswa; @endphp
@@ -83,17 +87,22 @@
                 class="font-medium block">@include("partials.user-link", ["user" => $mahasiswaTa->pembimbing1])</span> </div>
         <div class="px-3 py-2 rounded-md bg-bg-panel"> <span class="text-text-secondary">Pembimbing 2:</span> <span
                 class="font-medium block">@include("partials.user-link", ["user" => $mahasiswaTa->pembimbing2])</span> </div>
-        <div class="px-3 py-2 rounded-md bg-bg-panel"> <span class="text-text-secondary">Penguji 1:</span> <span
-                class="font-medium block">@include("partials.user-link", ["user" => $mahasiswaTa->penguji1])</span> </div>
-        <div class="px-3 py-2 rounded-md bg-bg-panel"> <span class="text-text-secondary">Penguji 2:</span> <span
-                class="font-medium block">@include("partials.user-link", ["user" => $mahasiswaTa->penguji2])</span> </div>
+        @if ($mahasiswaTa->isKp())
+            <div class="px-3 py-2 rounded-md bg-bg-panel"> <span class="text-text-secondary">Pembimbing Lapangan:</span>
+                <span class="font-medium block">{{ $mahasiswaTa->pembimbing_lapangan ?: 'Belum ditentukan' }}</span> </div>
+        @else
+            <div class="px-3 py-2 rounded-md bg-bg-panel"> <span class="text-text-secondary">Penguji 1:</span> <span
+                    class="font-medium block">@include("partials.user-link", ["user" => $mahasiswaTa->penguji1])</span> </div>
+            <div class="px-3 py-2 rounded-md bg-bg-panel"> <span class="text-text-secondary">Penguji 2:</span> <span
+                    class="font-medium block">@include("partials.user-link", ["user" => $mahasiswaTa->penguji2])</span> </div>
+        @endif
         <div class="px-3 py-2 rounded-md bg-bg-panel sm:col-span-2"> <span class="text-text-secondary">Fase:</span>
             <span class="font-medium block">{{ $mahasiswaTa->faseLabel() }}</span>
             @if ($isDosen && $mahasiswaTa->isPembimbing(auth()->user()))
-                <form method="POST" action="{{ route("mahasiswa-ta.fase", $mahasiswaTa) }}" class="mt-2 flex gap-1" onsubmit="return confirm('Ubah fase TA mahasiswa ini? Pastikan perubahan sudah benar.')">
+                <form method="POST" action="{{ route($mahasiswaTa->isKp() ? "mahasiswa-kp.fase" : "mahasiswa-ta.fase", $mahasiswaTa) }}" class="mt-2 flex gap-1" onsubmit="return confirm('Ubah fase {{ $mahasiswaTa->jenisLabel() }} mahasiswa ini? Pastikan perubahan sudah benar.')">
                     @csrf <select name="fase"
                         class="rounded-md border border-border bg-bg-surface px-2 py-1 text-xs">
-                        @foreach (\App\Models\MahasiswaTa::FASES as $key => $label)
+                        @foreach ($mahasiswaTa->isKp() ? \App\Models\MahasiswaTa::FASES_KP : \App\Models\MahasiswaTa::FASES as $key => $label)
                             <option value="{{ $key }}" @selected($mahasiswaTa->fase === $key)>{{ $label }}
                             </option>
                         @endforeach
@@ -143,12 +152,36 @@
             <p class="mt-3 text-xs text-text-secondary">Minimal {{ $target }} sesi bimbingan perlu disetujui.</p>
         </div>
 
+        {{-- Logbook Harian (khusus KP) --}}
+        @if ($mahasiswaTa->isKp())
+            <div class="card p-6 bg-bg-surface rounded-xl border border-border">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <h2 class="font-heading font-semibold text-text-primary">Logbook Harian KP</h2>
+                    <a href="{{ route('logbook-harian.index', $mahasiswaTa) }}" class="text-sm text-brand hover:underline">Lihat Semua →</a>
+                </div>
+                @if ($logbookHarian->isEmpty())
+                    <p class="text-sm text-text-secondary">Belum ada catatan harian.</p>
+                @else
+                    <div class="space-y-2">
+                        @foreach ($logbookHarian->take(5) as $lh)
+                            <div class="px-3 py-2.5 rounded-xl bg-bg-panel">
+                                <div class="text-xs font-semibold text-text-secondary">{{ $lh->tanggal->format('d M Y') }}</div>
+                                <p class="text-sm mt-0.5">{{ \Illuminate\Support\Str::limit($lh->kegiatan, 120) }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        @endif
+
         {{-- Achievement + Statistik & Streak --}}
         <div class="grid lg:grid-cols-2 gap-5">
-            <div class="card p-6 bg-bg-surface rounded-xl border border-border">
-                <h2 class="font-heading font-semibold text-text-primary mb-3">Achievement ({{ $unlockedAchievements->count() }}/{{ $totalAchievements }})</h2>
-                @include('partials.badge-shelf', ['unlockedAchievements' => $unlockedAchievements, 'unlockedCodes' => $unlockedCodes, 'totalAchievements' => $totalAchievements])
-            </div>
+            @if ($mahasiswaTa->isTa())
+                <div class="card p-6 bg-bg-surface rounded-xl border border-border">
+                    <h2 class="font-heading font-semibold text-text-primary mb-3">Achievement ({{ $unlockedAchievements->count() }}/{{ $totalAchievements }})</h2>
+                    @include('partials.badge-shelf', ['unlockedAchievements' => $unlockedAchievements, 'unlockedCodes' => $unlockedCodes, 'totalAchievements' => $totalAchievements])
+                </div>
+            @endif
 
             <div class="card p-6 bg-bg-surface rounded-xl border border-border">
                 <h2 class="font-heading font-semibold text-text-primary mb-3">Statistik & Streak</h2>

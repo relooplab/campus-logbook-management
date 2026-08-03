@@ -22,8 +22,8 @@ class LogbookController extends Controller
 
     public function create(Request $request): View
     {
-        $ta = $request->user()->mahasiswaTa;
-        abort_unless($ta, 403, 'Anda belum memiliki data TA.');
+        $ta = $request->user()->programAktif;
+        abort_unless($ta, 403, 'Anda belum memiliki program aktif (TA/KP).');
 
         // Auto-fill: sesi berikutnya & topik sebelumnya.
         $lastEntry = $ta->entries()
@@ -39,8 +39,8 @@ class LogbookController extends Controller
 
     public function createRevisi(Request $request): View
     {
-        $ta = $request->user()->mahasiswaTa;
-        abort_unless($ta, 403, 'Anda belum memiliki data TA.');
+        $ta = $request->user()->programAktif;
+        abort_unless($ta, 403, 'Anda belum memiliki program aktif (TA/KP).');
 
         // Mahasiswa dapat membuat entri revisi tanpa harus ada logbook dulu.
         // Daftar parent (entri berstatus revisi) tetap tersedia untuk dipilih.
@@ -58,7 +58,7 @@ class LogbookController extends Controller
 
     public function store(StoreLogbookEntryRequest $request): RedirectResponse
     {
-        $ta = $request->user()->mahasiswaTa;
+        $ta = $request->user()->programAktif;
         abort_unless($ta, 403);
 
         $data = $request->validated();
@@ -106,7 +106,7 @@ class LogbookController extends Controller
 
     public function storeRevisi(StoreRevisiRequest $request): RedirectResponse
     {
-        $ta = $request->user()->mahasiswaTa;
+        $ta = $request->user()->programAktif;
         abort_unless($ta, 403);
 
         $data = $request->validated();
@@ -189,7 +189,7 @@ class LogbookController extends Controller
         $filters = $request->only(['status', 'jenis', 'date_from', 'date_to', 'keyword']);
 
         if ($user->isMahasiswa()) {
-            $ta = $user->mahasiswaTa;
+            $ta = $user->programAktif;
             $query = $ta
                 ? $ta->entries()->with('comments')
                 : LogbookEntry::query()->whereRaw('1 = 0');
@@ -234,8 +234,8 @@ class LogbookController extends Controller
         $user = $request->user();
         abort_unless($user->isMahasiswa(), 403);
 
-        $ta = $user->mahasiswaTa;
-        abort_unless($ta, 403, 'Anda belum memiliki data TA.');
+        $ta = $user->programAktif;
+        abort_unless($ta, 403, 'Anda belum memiliki program aktif (TA/KP).');
 
         $feedbacks = $ta->entries()
             ->whereNotNull('feedback_dosen')

@@ -43,7 +43,7 @@ class MahasiswaImport implements ToCollection, WithHeadingRow
             $p1 = $this->findDosen((string) ($row['pembimbing1_nidn'] ?? '')) ?? $this->defaultPembimbingId;
 
             MahasiswaTa::firstOrCreate(
-                ['user_id' => $user->id],
+                ['user_id' => $user->id, 'jenis' => MahasiswaTa::JENIS_TA],
                 [
                     'judul_ta' => 'Judul belum diisi',
                     'pembimbing_1_id' => $p1,

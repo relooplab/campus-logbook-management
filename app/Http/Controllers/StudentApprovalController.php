@@ -34,7 +34,7 @@ class StudentApprovalController extends Controller
     public function approve(Request $request, User $mahasiswa): RedirectResponse
     {
         $validated = $request->validate([
-            'judul_ta' => ['required', 'string', 'max:255'],
+            'judul_ta' => ['nullable', 'string', 'max:255'],
             'role_dosen' => ['required', 'in:pembimbing_1,pembimbing_2,penguji_1,penguji_2'],
             'target_sesi' => ['nullable', 'integer', 'min:1'],
             'allow_examiner' => ['nullable', 'boolean'],
@@ -54,7 +54,7 @@ class StudentApprovalController extends Controller
 
         // Buat data TA & assign peran dosen.
         $ta = MahasiswaTa::updateOrCreate(
-            ['user_id' => $mahasiswa->id],
+            ['user_id' => $mahasiswa->id, 'jenis' => MahasiswaTa::JENIS_TA],
             [
                 'judul_ta' => $validated['judul_ta'],
                 $roleColumn => $dosen->id,

@@ -133,10 +133,19 @@ class AdminController extends Controller
 
     public function tas(Request $request): View
     {
+        $jenis = $request->query('jenis', 'ta');
         $query = MahasiswaTa::with(['mahasiswa', 'pembimbing1', 'pembimbing2'])->withCount('entries');
 
+        if ($jenis === 'kp' || $jenis === 'ta') {
+            $query->jenis($jenis);
+        }
+
         if ($request->query('keyword')) {
-            $query->where('judul_ta', 'like', '%'.$request->query('keyword').'%');
+            $kw = $request->query('keyword');
+            $query->where(function ($q) use ($kw) {
+                $q->where('judul_ta', 'like', "%{$kw}%")
+                    ->orWhere('tempat_kp', 'like', "%{$kw}%");
+            });
         }
 
         if ($pembimbing = $request->query('pembimbing')) {
@@ -147,43 +156,63 @@ class AdminController extends Controller
 
         $tas = $query->paginate(20)->withQueryString();
         $dosenList = User::role('dosen')->orderBy('name')->get();
-        $mahasiswaList = User::role('mahasiswa')->doesntHave('mahasiswaTa')->orderBy('name')->get();
+        $mahasiswaList = User::role('mahasiswa')
+            ->whereDoesntHave('mahasiswaPrograms', fn ($q) => $q->where('jenis', $jenis))
+            ->orderBy('name')
+            ->get();
 
-        return view('admin.tas', compact('tas', 'dosenList', 'mahasiswaList'));
+        return view('admin.tas', compact('tas', 'dosenList', 'mahasiswaList', 'jenis'));
     }
 
     public function storeTa(Request $request): RedirectResponse
     {
+        $jenis = $request->input('jenis', MahasiswaTa::JENIS_TA);
+        $isKp = $jenis === MahasiswaTa::JENIS_KP;
+
         $validated = $request->validate([
-            'user_id' => ['required', 'exists:users,id'],
-            'judul_ta' => ['required', 'string', 'max:255'],
+            'user_id' => ['required', 'exists:users,id',
+                \Illuminate\Validation\Rule::unique('mahasiswa_ta', 'user_id')
+                    ->where(fn ($q) => $q->where('jenis', $jenis)),
+            ],
+            'jenis' => ['required', 'in:'.implode(',', MahasiswaTa::JENISES)],
+            'judul_ta' => ['nullable', 'string', 'max:255'],
+            'tempat_kp' => ['nullable', 'string', 'max:255'],
             'pembimbing_1_id' => ['nullable', 'exists:users,id'],
             'pembimbing_2_id' => ['nullable', 'exists:users,id'],
+            'pembimbing_lapangan' => [$isKp ? 'nullable' : 'prohibited', 'string', 'max:255'],
             'penguji_1_id' => ['nullable', 'exists:users,id'],
             'penguji_2_id' => ['nullable', 'exists:users,id'],
             'target_sesi' => ['required', 'integer', 'min:1'],
+            'periode_mulai' => ['nullable', 'date'],
+            'periode_selesai' => ['nullable', 'date', 'after_or_equal:periode_mulai'],
         ]);
 
         MahasiswaTa::create($validated);
 
-        return back()->with('success', 'Data TA dibuat.');
+        return back()->with('success', 'Data '.($isKp ? 'KP' : 'TA').' dibuat.');
     }
 
     public function updateTa(Request $request, MahasiswaTa $mahasiswaTa): RedirectResponse
     {
+        $isKp = $mahasiswaTa->isKp();
+
         $validated = $request->validate([
-            'judul_ta' => ['required', 'string', 'max:255'],
+            'judul_ta' => ['nullable', 'string', 'max:255'],
+            'tempat_kp' => ['nullable', 'string', 'max:255'],
             'pembimbing_1_id' => ['nullable', 'exists:users,id'],
             'pembimbing_2_id' => ['nullable', 'exists:users,id'],
+            'pembimbing_lapangan' => [$isKp ? 'nullable' : 'prohibited', 'string', 'max:255'],
             'penguji_1_id' => ['nullable', 'exists:users,id'],
             'penguji_2_id' => ['nullable', 'exists:users,id'],
             'target_sesi' => ['required', 'integer', 'min:1'],
+            'periode_mulai' => ['nullable', 'date'],
+            'periode_selesai' => ['nullable', 'date', 'after_or_equal:periode_mulai'],
             'status_ta' => ['nullable', 'in:'.implode(',', \App\Models\MahasiswaTa::STATUS_TA)],
         ]);
 
         $mahasiswaTa->update($validated);
 
-        return back()->with('success', 'Assign pembimbing/penguji diperbarui.');
+        return back()->with('success', 'Data '.($isKp ? 'KP' : 'TA').' diperbarui.');
     }
 
     // ------------------------------------------------------- sidang (admin)
@@ -241,7 +270,7 @@ class AdminController extends Controller
 
         $mahasiswaTa->update(['status_ta' => $validated['status_ta']]);
 
-        return back()->with('success', 'Status TA diperbarui.');
+        return back()->with('success', 'Status program diperbarui.');
     }
 
     // ------------------------------------------------------- institusi

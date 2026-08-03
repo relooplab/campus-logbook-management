@@ -50,6 +50,11 @@ class Sidang extends Model
 
     public function jenisLabel(): string
     {
+        // Seminar KP memakai tabel sidang yang sama.
+        if ($this->mahasiswaTa?->isKp()) {
+            return 'Seminar KP';
+        }
+
         return $this->jenis === self::JENIS_SIDANG ? 'Sidang Akhir' : 'Seminar Proposal';
     }
 

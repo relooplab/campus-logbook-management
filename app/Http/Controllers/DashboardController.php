@@ -157,7 +157,16 @@ class DashboardController extends Controller
 
     private function mahasiswaDashboard(User $user): View
     {
-        $ta = $user->mahasiswaTa()->with(['pembimbing1', 'pembimbing2', 'penguji1', 'penguji2'])->first();
+        // Program yang ditampilkan: default program aktif; bisa dipilih via ?program=kp|ta.
+        $programs = $user->mahasiswaPrograms()->with(['pembimbing1', 'pembimbing2', 'penguji1', 'penguji2'])->get();
+        $activeProgram = $user->programAktif;
+
+        $requested = request()->query('program');
+        $program = $requested === 'kp' || $requested === 'ta'
+            ? $programs->firstWhere('jenis', $requested)
+            : null;
+
+        $ta = $program ?: ($activeProgram ?: $programs->first());
 
         $entries = $ta
             ? $ta->entries()->with('comments')->latest()->get()
@@ -168,14 +177,19 @@ class DashboardController extends Controller
         $progressPercent = $target > 0 ? (int) round($approved / $target * 100) : 0;
 
         // ---- Milestone fase ----
-        $faseKeys = array_keys(\App\Models\MahasiswaTa::FASES);
+        $faseKeys = $ta && $ta->isKp() ? array_keys(\App\Models\MahasiswaTa::FASES_KP) : array_keys(\App\Models\MahasiswaTa::FASES);
         $faseIndex = $ta ? array_search($ta->fase, $faseKeys, true) : 0;
         if ($faseIndex === false) $faseIndex = 0;
 
-        // ---- Achievement (unlocked + total) ----
-        $unlockedAchievements = $ta ? $user->achievements()->get() : collect();
+        // ---- Achievement (unlocked + total) - hanya untuk TA ----
+        $unlockedAchievements = $ta && $ta->isTa() ? $user->achievements()->get() : collect();
         $unlockedCodes = $unlockedAchievements->pluck('code')->map(fn ($c) => (string) $c);
-        $totalAchievements = \App\Models\Achievement::count();
+        $totalAchievements = $ta && $ta->isTa() ? \App\Models\Achievement::count() : 0;
+
+        // ---- Logbook harian (hanya KP) ----
+        $logbookHarian = $ta && $ta->isKp()
+            ? $ta->logbookHarian()->orderByDesc('tanggal')->get()
+            : collect();
 
         // ---- Statistik & streak ----
         $stats = $this->dashboardService->buildStats($ta, $entries);
@@ -198,9 +212,10 @@ class DashboardController extends Controller
             ->get();
 
         return view('dashboard.mahasiswa', compact(
-            'ta', 'entries', 'approved', 'target', 'progressPercent',
+            'programs', 'activeProgram', 'ta', 'entries', 'approved', 'target', 'progressPercent',
             'faseKeys', 'faseIndex',
             'unlockedAchievements', 'unlockedCodes', 'totalAchievements',
+            'logbookHarian',
             'stats', 'timeline', 'heatmap', 'regularity', 'regularityTooltip',
             'unreadAnnouncements'
         ));
