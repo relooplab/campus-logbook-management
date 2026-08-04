@@ -25,6 +25,8 @@ Aplikasi ini membantu dosen pembimbing/penguji dan mahasiswa memantau proses bim
 - **Chat & komunikasi** — percakapan langsung antara dosen dan mahasiswa.
 - **Pengumuman** — pengumuman resmi ke seluruh mahasiswa.
 - **Catatan sidang & riwayat menguji** — dosen mencatat hasil sidang/pengujian.
+- **Pemberian bahan seminar/sidang** — mahasiswa mengirim undangan & materi seminar/sidang ke dosen.
+- **Finalisasi TA/KP** — mahasiswa mengirim kelengkapan akhir (abstrak, cover, pengesahan, file lengkap) untuk persetujuan dosen.
 - **Notifikasi & pelacakan kesehatan bimbingan** — indikator keteraturan bimbingan.
 
 ### Mode Aplikasi
@@ -69,6 +71,10 @@ Setiap peran memiliki dashboard ringkas:
 - **Admin**: statistik mahasiswa, dosen, data TA, dan entri menunggu review; import mahasiswa via Excel; daftar data TA terbaru.
 - **Dosen**: statistik total bimbingan, sedang progres, tamat, diuji, dan menunggu review; antrean review; health indicator; manajemen fase TA.
 - **Mahasiswa**: pengumuman belum dibaca, status kesehatan bimbingan, milestone journey (fase), judul & pembimbing TA, progres bimbingan, achievement, statistik & streak, heatmap aktivitas 12 bulan, dan timeline bimbingan.
+
+> **💡 Dashboard Admin & Dosen Terpisah** — Jika akun Anda memiliki peran **admin sekaligus dosen**, dashboard admin dan dosen **tidak digabung**. Anda dapat berpindah mode melalui **klik foto profil** di pojok kanan atas → pilih **"Mode Dashboard"** → **Dosen** atau **Admin**. Mode yang dipilih tersimpan selama sesi berlangsung.
+>
+> **🔒 Label "Admin" Tersembunyi** — Label peran "admin" **tidak pernah ditampilkan** di halaman profil siapa pun (profil sendiri maupun profil orang lain). Status admin tetap bersifat pribadi.
 
 ### 3.3 Logbook Bimbingan
 
@@ -167,7 +173,30 @@ Keteraturan bimbingan dihitung dari tanggal bimbingan terakhir:
 - **Fase** TA dapat diperbarui oleh dosen (dari dashboard atau halaman detail mahasiswa).
 - **Status TA**: `Aktif`, `Tamat`, `Nonaktif` — dikelola admin.
 
-### 3.17 Direktori Organisasi (Perguruan Tinggi → Fakultas → Departemen → Prodi)
+### 3.17 Pemberian Bahan Seminar/Sidang
+
+Mahasiswa mengirim **bahan seminar/sidang** (undangan + materi) kepada dosen pembimbing/penguji:
+
+- **Jenis otomatis** — jenis seminar (Seminar Proposal, Seminar Hasil, Sidang Akhir, Seminar KP) ditentukan otomatis dari fase TA/KP saat ini.
+- **Data yang diisi**: tanggal, waktu, lokasi, surat undangan (file), pilihan "undangan sebagai" (Pembimbing 1/2 atau Penguji 1/2), dan materi.
+- **Materi** dapat diunggah langsung **atau dipilih dari file workspace** (salah satu wajib diisi).
+- **Catatan hardcopy** — dosen dapat menambahkan/mengubah catatan hardcopy pada submission.
+- **Notifikasi** — dosen terkait (pembimbing & penguji) menerima notifikasi saat bahan dikirim.
+- **Edit** — mahasiswa dapat mengubah submission selama belum dikonversi ke riwayat sidang.
+- **Konversi ke riwayat sidang** — dosen dapat mengonversi submission menjadi catatan sidang (memilih penguji & hasil).
+
+### 3.18 Finalisasi TA/KP
+
+Mahasiswa mengirim **kelengkapan akhir** TA/KP untuk persetujuan dosen pembimbing:
+
+- **Item TA**: Abstrak, Kata Kunci, Cover, Lembar Pengesahan, dan File Lengkap (PDF).
+- **Item KP**: File Lengkap (PDF) saja.
+- **Alur persetujuan** — setiap item harus **disetujui oleh kedua pembimbing** (Pembimbing 1 & 2) sebelum dianggap final.
+- **Penolakan & buka kembali** — dosen dapat menolak item (status menjadi `rejected`) atau membuka kembali item yang sudah disetujui.
+- **Input nilai** — dosen dapat mengisi nilai akhir (0–100).
+- **Milestone otomatis** — jika semua item disetujui dan fase TA adalah `sidang`, fase otomatis maju ke **Achievement Unlocked**.
+
+### 3.19 Direktori Organisasi (Perguruan Tinggi → Fakultas → Departemen → Prodi)
 
 Aplikasi memiliki **direktori organisasi hierarkis** untuk memetakan afiliasi pengguna:
 
@@ -184,7 +213,7 @@ Perguruan Tinggi (universities)
 - **Mahasiswa otomatis mengikuti institusi dosen** — saat dosen meng-invite atau menyetujui mahasiswa, universitas dosen otomatis disalin ke mahasiswa (mahasiswa tidak perlu input ulang).
 - **Tampilan** — universitas ditampilkan di dashboard (dosen & mahasiswa), sidebar, dan halaman profil.
 
-### 3.18 Grup & Cross-link Dosen
+### 3.20 Grup & Cross-link Dosen
 
 Dosen dapat membentuk **grup** untuk kolaborasi dan cross-link dengan dosen lain di universitas yang sama.
 
@@ -195,7 +224,7 @@ Dosen dapat membentuk **grup** untuk kolaborasi dan cross-link dengan dosen lain
 - **Undangan pending**: dosen melihat undangan yang menunggu di halaman **Grup Dosen** dan dapat menerima/menolak.
 - **Akses "hanya hubungan langsung"**: dosen dalam grup yang sama (atau TA bersama) dapat melihat data bimbingan rekan — data hanya bisa diakses jika ada hubungan langsung.
 
-### 3.19 Workspace Dosen
+### 3.21 Workspace Dosen
 
 Selain workspace mahasiswa, dosen juga memiliki **workspace pribadi** melalui menu **Workspace Saya**:
 
@@ -204,7 +233,7 @@ Selain workspace mahasiswa, dosen juga memiliki **workspace pribadi** melalui me
 - Filter & pencarian file.
 - Hanya dosen yang bersangkutan yang dapat mengakses file workspace pribadinya.
 
-### 3.20 Dashboard & UI (Institusi & Grup)
+### 3.22 Dashboard & UI (Institusi & Grup)
 
 - **Dashboard dosen** menampilkan kartu **"Institusi & Grup"**: perguruan tinggi (NPSN), NIDN, dan jumlah grup yang diikuti.
 - **Dashboard mahasiswa** menampilkan kartu **"Universitas"**.
@@ -263,6 +292,27 @@ Selain workspace mahasiswa, dosen juga memiliki **workspace pribadi** melalui me
 
 Jika akun Anda diizinkan menjadi penguji, Anda dapat mencatat riwayat sidang/menguji mahasiswa lain melalui menu **Catat Sidang** (lihat alur dosen di 4.2.5).
 
+#### 4.1.7 Mengirim Bahan Seminar/Sidang
+
+1. Buka halaman detail TA/KP Anda → klik **Kirim Bahan Seminar/Sidang** (atau dari dashboard).
+2. Jenis seminar (Seminar Proposal / Seminar Hasil / Sidang Akhir / Seminar KP) terisi otomatis dari fase Anda.
+3. Isi **Tanggal**, **Waktu**, dan **Lokasi** seminar/sidang.
+4. Unggah **Surat Undangan** (file) dan pilih **"Undangan sebagai"** (Pembimbing 1/2 atau Penguji 1/2).
+5. Pilih **Materi**: unggah file baru **atau** ambil dari **Workspace** (salah satu wajib).
+6. (Opsional) Tambahkan **Catatan Keterangan**.
+7. Klik **Kirim** → dosen terkait menerima notifikasi.
+8. Anda dapat **mengedit** submission selama belum dikonversi menjadi riwayat sidang oleh dosen.
+
+#### 4.1.8 Finalisasi TA/KP
+
+1. Buka menu **Finalisasi** pada halaman detail TA/KP Anda.
+2. Isi **Abstrak** dan **Kata Kunci** (khusus TA).
+3. Unggah **Cover** dan **Lembar Pengesahan** (PDF, khusus TA).
+4. Unggah **File Lengkap** (PDF) — wajib untuk TA dan KP.
+5. Klik **Kirim untuk Persetujuan** → setiap item dikirim ke kedua pembimbing.
+6. Pantau status persetujuan: `pending` → `approved` (jika kedua pembimbing menyetujui) atau `rejected` (jika ada yang menolak).
+7. Jika ada item ditolak, perbaiki dan kirim ulang.
+
 ---
 
 ### 4.2 Alur Kerja Dosen
@@ -315,13 +365,31 @@ Mode cepat untuk meninjau antrean satu per satu:
 5. Klik **Simpan Sidang** → tercatat di riwayat menguji.
 6. Gunakan **Export PDF** untuk mengunduh riwayat menguji.
 
-#### 4.2.6 Berkomunikasi & Mengumumkan
+#### 4.2.6 Mereview Bahan Seminar/Sidang
+
+1. Saat mahasiswa mengirim bahan seminar/sidang, Anda menerima **notifikasi**.
+2. Buka detail submission (dari notifikasi, dashboard, atau halaman mahasiswa).
+3. **Unduh Surat Undangan** dan **Materi** untuk diperiksa.
+4. (Opsional) Perbarui **Catatan Hardcopy** pada submission.
+5. Jika sudah sesuai, Anda dapat **Konversi ke Riwayat Sidang**: pilih **Penguji** dan **Hasil** (Lulus / Lulus + Revisi / Mengulang).
+6. Submission yang sudah dikonversi tidak dapat diubah lagi oleh mahasiswa.
+
+#### 4.2.7 Menyetujui Finalisasi TA/KP
+
+1. Buka menu **Review Finalisasi** (di sidebar) untuk melihat daftar finalisasi mahasiswa bimbingan Anda.
+2. Periksa setiap item (Abstrak, Kata Kunci, Cover, Pengesahan, File Lengkap).
+3. Klik **Setujui** atau **Tolak** per item.
+4. Item dianggap **final** hanya jika **kedua pembimbing** menyetujui.
+5. (Opsional) Isi **Nilai** akhir (0–100).
+6. Jika semua item disetujui dan fase TA adalah `sidang`, fase otomatis maju ke **Achievement Unlocked**.
+
+#### 4.2.8 Berkomunikasi & Mengumumkan
 
 - **Chat** dengan mahasiswa bimbingan (mulai dari halaman detail mahasiswa).
 - Buat **pengumuman** dan pantau laporan pembacaannya; kirim pengingat ke yang belum membaca.
 - Pantau **notifikasi** untuk entri baru dan komentar PDF.
 
-#### 4.2.7 Deret Utama Alur Bimbingan (Ringkasan)
+#### 4.2.9 Deret Utama Alur Bimbingan (Ringkasan)
 
 ```
 Mahasiswa mendaftar → Dosen menyetujui & assign
@@ -404,6 +472,18 @@ A: Otomatis saat dicatat **Sidang Akhir** dengan hasil **Lulus** atau **Lulus + 
 
 **Q: Apa itu health indicator?**
 A: Indikator keteraturan bimbingan: 🟢 Sehat (<15 hari), 🟡 Perhatian (15–40 hari), 🔴 Kritis (>40 hari). Membantu dosen dan mahasiswa memantau konsistensi bimbingan.
+
+**Q: Saya dosen sekaligus admin, bagaimana cara berpindah dashboard?**
+A: Klik **foto profil** di pojok kanan atas → pada menu dropdown pilih **"Mode Dashboard"** → pilih **Dosen** atau **Admin**. Mode yang dipilih tersimpan selama sesi berlangsung.
+
+**Q: Mengapa label "admin" tidak muncul di profil saya?**
+A: Label peran "admin" sengaja disembunyikan dari semua halaman profil agar status administratif tetap pribadi. Label "dosen" dan "mahasiswa" tetap ditampilkan.
+
+**Q: Bagaimana cara mengirim bahan seminar/sidang?**
+A: Buka halaman detail TA/KP → klik **Kirim Bahan Seminar/Sidang** → isi tanggal, waktu, lokasi, unggah surat undangan, pilih materi (upload atau dari workspace), lalu kirim. Dosen terkait akan menerima notifikasi.
+
+**Q: Bagaimana cara menyetujui finalisasi TA/KP?**
+A: Buka menu **Review Finalisasi** → periksa setiap item → klik **Setujui** atau **Tolak**. Item dianggap final jika **kedua pembimbing** menyetujui.
 
 ---
 

@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-08-04
+
+### Added
+
+#### Seminar/Examination Material Submission
+- Students submit seminar/examination materials (invitation letter + presentation material) with date, time, and location.
+- Seminar type is determined automatically from the current thesis/KP phase (Proposal Seminar, Results Seminar, Final Examination, KP Seminar).
+- Material can be uploaded directly or selected from the student's workspace files.
+- A "invitation as" option (Supervisor 1/2 or Examiner 1/2) for the invitation letter.
+- Hardcopy note field that lecturers can update.
+- Notifications to related lecturers (supervisors & examiners) when materials are sent.
+- Students can edit a submission until it is converted to an examination record.
+- Lecturers can convert a submission into an examination record (selecting examiner & result).
+- New models: `SeminarSubmission`, and migrations for `seminar_submissions` + `institutions.seminar_hardcopy_note`.
+
+#### Thesis/Internship Finalization
+- Students submit finalization items (TA: abstract, keywords, cover, approval page, full PDF; KP: full PDF only).
+- Approval workflow where each item must be approved by both supervisors (Supervisor 1 & 2).
+- Per-item reject and unlock actions.
+- Final grade input (0–100).
+- Automatic phase advancement to "Achievement Unlocked" when all items are approved and the TA phase is `sidang`.
+- New models: `ThesisFinalization`, `FinalizationApproval`, and `thesis_finalizations` tables + `finalization` review page.
+
+#### Separated Admin & Lecturer Dashboards
+- Users with both `admin` and `dosen` roles can now switch between the two dashboards via a segmented control in the profile picture dropdown.
+- The selected dashboard mode is persisted per session (`session('dashboard_mode')`).
+- New route `GET /dashboard/switch` and `DashboardController::switchDashboard`.
+
+#### Hidden Admin Label
+- The "admin" role label is never shown on any profile page (own or others'), keeping administrative status private.
+- Updated `profile/show.blade.php` and `profile/index.blade.php` to filter out the `admin` role.
+
+### Changed
+- `DashboardController`: dual-role handling with session-based dashboard mode.
+- `routes/web.php`: added `dashboard.switch` route.
+- `layouts/app.blade.php`: added dashboard mode switch in the profile dropdown.
+- Updated `README.md`, `docs/USER-GUIDE.md`, and `docs/USER-GUIDE-EN.md`.
+
+### Tests
+- All existing tests continue to pass.
+
 ## [0.2.1] - 2026-08-04
 
 ### Security & Access Control
@@ -101,4 +142,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `StudentApprovalTest` (invite by email, duplicate rejection, approve & assign role).
 - All 24 tests pass (65 assertions).
 
+[0.3.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.3
 [0.2.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.2.0

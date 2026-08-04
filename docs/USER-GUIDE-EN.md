@@ -25,6 +25,8 @@ This application helps supervising/examining lecturers and students monitor the 
 - **Chat & communication** — direct messaging between lecturers and students.
 - **Announcements** — official announcements sent to all students.
 - **Examination records & examining history** — lecturers record examination/session results.
+- **Seminar/examination material submission** — students send invitation letters & materials for seminars/examinations to lecturers.
+- **Thesis/Internship finalization** — students submit final requirements (abstract, cover, approval page, full file) for lecturer approval.
 - **Notifications & supervision health tracking** — indicators of supervision regularity.
 
 ### Application Modes
@@ -69,6 +71,10 @@ Each role has a summary dashboard:
 - **Admin**: statistics for students, lecturers, thesis data, and entries awaiting review; Excel student import; list of recent thesis data.
 - **Lecturer**: statistics for total supervision, in progress, completed, examined, and awaiting review; review queue; health indicators; thesis phase management.
 - **Student**: unread announcements, supervision health status, milestone journey (phases), thesis title & supervisors, supervision progress, achievements, statistics & streaks, 12-month activity heatmap, and supervision timeline.
+
+> **💡 Separated Admin & Lecturer Dashboards** — If your account has **both admin and lecturer** roles, the admin and lecturer dashboards are **not combined**. You can switch modes by **clicking your profile picture** in the top-right corner → select **"Dashboard Mode"** → **Lecturer** or **Admin**. The selected mode is persisted for the session.
+>
+> **🔒 Hidden "Admin" Label** — The "admin" role label is **never shown** on any profile page (your own or others'). Administrative status remains private.
 
 ### 3.3 Supervision Logbook
 
@@ -167,7 +173,30 @@ Supervision regularity is calculated from the last supervision date:
 - The thesis **phase** can be updated by the lecturer (from the dashboard or the student detail page).
 - **Thesis status**: `Active`, `Completed`, `Inactive` — managed by the admin.
 
-### 3.17 Organizational Directory (University → Faculty → Department → Study Program)
+### 3.17 Seminar/Examination Material Submission
+
+Students send **seminar/examination materials** (invitation + presentation material) to supervising/examining lecturers:
+
+- **Automatic type** — the seminar type (Proposal Seminar, Results Seminar, Final Examination, KP Seminar) is determined automatically from the current thesis/KP phase.
+- **Data to fill**: date, time, location, invitation letter (file), "invitation as" option (Supervisor 1/2 or Examiner 1/2), and material.
+- **Material** can be uploaded directly **or selected from the workspace files** (one is required).
+- **Hardcopy note** — lecturers can add/update a hardcopy note on the submission.
+- **Notifications** — related lecturers (supervisors & examiners) receive a notification when materials are sent.
+- **Edit** — students can modify the submission as long as it has not been converted to an examination record.
+- **Convert to examination record** — lecturers can convert the submission into an examination record (selecting examiner & result).
+
+### 3.18 Thesis/Internship Finalization
+
+Students submit **final requirements** for TA/KP approval by supervising lecturers:
+
+- **TA items**: Abstract, Keywords, Cover, Approval Page, and Full File (PDF).
+- **KP items**: Full File (PDF) only.
+- **Approval workflow** — each item must be **approved by both supervisors** (Supervisor 1 & 2) before it is considered final.
+- **Rejection & unlock** — lecturers can reject an item (status becomes `rejected`) or unlock an already-approved item.
+- **Grade input** — lecturers can enter the final grade (0–100).
+- **Automatic milestone** — if all items are approved and the TA phase is `sidang`, the phase automatically advances to **Achievement Unlocked**.
+
+### 3.19 Organizational Directory (University → Faculty → Department → Study Program)
 
 The application has a **hierarchical organizational directory** to map user affiliations:
 
@@ -184,7 +213,7 @@ University (universities)
 - **Students automatically follow their supervisor's institution** — when a lecturer invites or approves a student, the lecturer's university is automatically copied to the student (no re-entry).
 - **Display** — the university is shown on the dashboard (lecturer & student), sidebar, and profile page.
 
-### 3.18 Lecturer Groups & Cross-linking
+### 3.20 Lecturer Groups & Cross-linking
 
 Lecturers can form **groups** for collaboration and cross-linking with other lecturers at the same university.
 
@@ -195,7 +224,7 @@ Lecturers can form **groups** for collaboration and cross-linking with other lec
 - **Pending invitations**: lecturers see pending invitations on the **Lecturer Groups** page and can accept/reject them.
 - **"Direct relation only" access**: lecturers in the same group (or sharing a thesis) can view each other's supervision data — data is only accessible when there is a direct relationship.
 
-### 3.19 Lecturer Workspace
+### 3.21 Lecturer Workspace
 
 In addition to the student workspace, lecturers also have a **personal workspace** via the **My Workspace** menu:
 
@@ -204,7 +233,7 @@ In addition to the student workspace, lecturers also have a **personal workspace
 - Filter & search files.
 - Only the lecturer concerned can access their personal workspace files.
 
-### 3.20 Dashboard & UI (Institution & Groups)
+### 3.22 Dashboard & UI (Institution & Groups)
 
 - The **lecturer dashboard** shows the **"Institution & Groups"** card: university (NPSN), NIDN, and the number of groups joined.
 - The **student dashboard** shows the **"University"** card.
@@ -263,6 +292,27 @@ In addition to the student workspace, lecturers also have a **personal workspace
 
 If your account is permitted to be an examiner, you can record examination sessions of other students through the **Record Examination** menu (see the lecturer workflow in 4.2.5).
 
+#### 4.1.7 Submitting Seminar/Examination Materials
+
+1. Open your TA/KP detail page → click **Submit Seminar/Examination Materials** (or from the dashboard).
+2. The seminar type (Proposal Seminar / Results Seminar / Final Examination / KP Seminar) is filled automatically from your phase.
+3. Fill in **Date**, **Time**, and **Location** of the seminar/examination.
+4. Upload the **Invitation Letter** (file) and select **"Invitation as"** (Supervisor 1/2 or Examiner 1/2).
+5. Choose **Material**: upload a new file **or** take it from the **Workspace** (one is required).
+6. (Optional) Add **Remarks**.
+7. Click **Submit** → related lecturers receive a notification.
+8. You can **edit** the submission as long as it has not been converted into an examination record by a lecturer.
+
+#### 4.1.8 Thesis/Internship Finalization
+
+1. Open the **Finalization** menu on your TA/KP detail page.
+2. Fill in **Abstract** and **Keywords** (TA only).
+3. Upload **Cover** and **Approval Page** (PDF, TA only).
+4. Upload the **Full File** (PDF) — required for both TA and KP.
+5. Click **Submit for Approval** → each item is sent to both supervisors.
+6. Monitor approval status: `pending` → `approved` (if both supervisors approve) or `rejected` (if any rejects).
+7. If an item is rejected, fix it and resubmit.
+
 ---
 
 ### 4.2 Lecturer Workflow
@@ -315,13 +365,31 @@ A fast mode to review the queue one by one:
 5. Click **Save Examination** → recorded in the examining history.
 6. Use **Export PDF** to download the examining history.
 
-#### 4.2.6 Communicating & Announcing
+#### 4.2.6 Reviewing Seminar/Examination Materials
+
+1. When a student submits seminar/examination materials, you receive a **notification**.
+2. Open the submission detail (from the notification, dashboard, or student page).
+3. **Download the Invitation Letter** and **Material** for review.
+4. (Optional) Update the **Hardcopy Note** on the submission.
+5. If everything is in order, you can **Convert to Examination Record**: select the **Examiner** and **Result** (Pass / Pass + Revision / Repeat).
+6. A converted submission can no longer be modified by the student.
+
+#### 4.2.7 Approving Thesis/Internship Finalization
+
+1. Open the **Finalization Review** menu (in the sidebar) to see the list of finalizations from your supervised students.
+2. Review each item (Abstract, Keywords, Cover, Approval Page, Full File).
+3. Click **Approve** or **Reject** per item.
+4. An item is considered **final** only if **both supervisors** approve it.
+5. (Optional) Enter the final **Grade** (0–100).
+6. If all items are approved and the TA phase is `sidang`, the phase automatically advances to **Achievement Unlocked**.
+
+#### 4.2.8 Communicating & Announcing
 
 - **Chat** with supervised students (start from the student detail page).
 - Create **announcements** and monitor their read reports; send reminders to those who have not read.
 - Monitor **notifications** for new entries and PDF comments.
 
-#### 4.2.7 Main Supervision Workflow (Summary)
+#### 4.2.9 Main Supervision Workflow (Summary)
 
 ```
 Student registers → Lecturer approves & assigns
@@ -404,6 +472,18 @@ A: Automatically when a **Final Examination** is recorded with a **Pass** or **P
 
 **Q: What is the health indicator?**
 A: An indicator of supervision regularity: 🟢 Healthy (<15 days), 🟡 Attention (15–40 days), 🔴 Critical (>40 days). It helps lecturers and students monitor supervision consistency.
+
+**Q: I am both a lecturer and an admin. How do I switch dashboards?**
+A: Click your **profile picture** in the top-right corner → in the dropdown menu select **"Dashboard Mode"** → choose **Lecturer** or **Admin**. The selected mode is persisted for the session.
+
+**Q: Why doesn't the "admin" label appear on my profile?**
+A: The "admin" role label is intentionally hidden from all profile pages so that administrative status remains private. The "lecturer" and "student" labels are still shown.
+
+**Q: How do I submit seminar/examination materials?**
+A: Open your TA/KP detail page → click **Submit Seminar/Examination Materials** → fill in date, time, location, upload the invitation letter, choose the material (upload or from workspace), then submit. Related lecturers will receive a notification.
+
+**Q: How do I approve thesis/internship finalization?**
+A: Open the **Finalization Review** menu → review each item → click **Approve** or **Reject**. An item is considered final if **both supervisors** approve it.
 
 ---
 

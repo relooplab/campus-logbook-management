@@ -73,8 +73,12 @@ The application follows a cohesive design system optimized for thesis mentoring 
 - **Feedback templates & history** — Reusable feedback snippets to accelerate reviews; system displays prior feedback for context.
 - **Inline comments to feedback** — Aggregate all unresolved PDF annotations into a draft feedback summary for the student.
 - **Student action items** — Break feedback down into a checklist; students track completion and receive "ready to resubmit" hints when all items are done.
+- **Seminar/Sidang submission** — Students submit seminar/examination materials (invitation letter + presentation material) with date, time, and location. Materials can be uploaded directly or selected from the workspace. Lecturers receive notifications and can add hardcopy notes.
+- **Thesis finalization** — Students submit finalization items (abstract, keywords, cover, approval page, full PDF) for supervisor approval. Both supervisors must approve each item; a final grade can be recorded. When all items are approved, the thesis phase automatically advances to "Achievement Unlocked".
 
 ### Dashboards & Monitoring
+- **Separated admin & lecturer dashboards** — Users with both `admin` and `dosen` roles can switch between the two dashboards via a segmented control in the profile picture dropdown. The selected mode is persisted per session.
+- **Hidden admin label** — The "admin" role label is never shown on any profile page (own or others'), keeping administrative status private.
 
 - **Student dashboard** — Gamified experience with activity timeline, milestone tracking (thesis phase progression), 8 achievement badges (auto-unlocked), stat cards with streak counter, and a GitHub-style contribution heatmap (12-month view).
 - **Supervisor dashboard** — Interactive stat cards (Total supervised, In progress, Graduated, Examined, Awaiting review), per-student health indicator (green/yellow/red, computed from mentoring frequency, cached 6h), and prioritized review queue.
