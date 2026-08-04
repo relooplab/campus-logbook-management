@@ -362,6 +362,22 @@
                             <span class="material-symbols-outlined icon-sm">person</span>
                             Profil
                         </a>
+                        @if ($user->isAdmin() && $user->isDosen())
+                            @php $dashMode = session('dashboard_mode', 'admin'); @endphp
+                            <div class="px-4 py-2.5 border-t border-border">
+                                <p class="text-[10px] uppercase tracking-widest text-text-secondary mb-1.5">Mode Dashboard</p>
+                                <div class="flex rounded-lg bg-bg-panel p-0.5 gap-0.5">
+                                    <a href="{{ route('dashboard.switch', ['mode' => 'dosen']) }}"
+                                        class="flex-1 text-center px-2 py-1.5 rounded-md text-xs font-medium {{ $dashMode === 'dosen' ? 'bg-brand text-white' : 'text-text-secondary hover:text-text-primary' }}">
+                                        Dosen
+                                    </a>
+                                    <a href="{{ route('dashboard.switch', ['mode' => 'admin']) }}"
+                                        class="flex-1 text-center px-2 py-1.5 rounded-md text-xs font-medium {{ $dashMode === 'admin' ? 'bg-brand text-white' : 'text-text-secondary hover:text-text-primary' }}">
+                                        Admin
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-hover hover:text-status-danger">

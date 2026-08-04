@@ -192,6 +192,54 @@
         @endif
     </div>
 
+    {{-- ===== Agenda Terdekat ===== --}}
+    @if ($agendaTerdekat->isNotEmpty())
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-heading font-semibold text-text-primary">Agenda Terdekat</h2>
+                <span class="text-xs text-text-secondary">Jadwal seminar/sidang yang akan datang</span>
+            </div>
+            <div class="space-y-2">
+                @foreach ($agendaTerdekat as $agenda)
+                    <a href="{{ route('seminar-submission.show', $agenda) }}" class="flex items-center gap-3 p-3 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
+                        <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
+                            <span class="material-symbols-outlined icon-md">event</span>
+                        </span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-text-primary">{{ $agenda->mahasiswaTa->mahasiswa?->name }} — {{ $agenda->jenisLabel() }}</p>
+                            <p class="text-xs text-text-secondary">{{ $agenda->tanggal->format('d M Y') }} · {{ $agenda->waktu?->format('H:i') }}{{ $agenda->lokasi ? ' · ' . $agenda->lokasi : '' }}</p>
+                        </div>
+                        <span class="text-brand text-xs font-medium">Lihat →</span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    {{-- ===== Submission Bahan Seminar/Sidang ===== --}}
+    @if ($submissions->isNotEmpty())
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-heading font-semibold text-text-primary">Bahan Seminar/Sidang ({{ $submissions->count() }})</h2>
+                <span class="text-xs text-text-secondary">Pengiriman bahan dari mahasiswa</span>
+            </div>
+            <div class="space-y-2">
+                @foreach ($submissions->take(10) as $submission)
+                    <a href="{{ route('seminar-submission.show', $submission) }}" class="flex items-center gap-3 p-3 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
+                        <span class="icon-circle w-10 h-10 {{ $submission->status === \App\Models\SeminarSubmission::STATUS_SUBMITTED ? 'bg-status-success/15 text-status-success' : 'bg-bg-hover text-text-secondary' }}">
+                            <span class="material-symbols-outlined icon-md">upload_file</span>
+                        </span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-text-primary">{{ $submission->mahasiswaTa->mahasiswa?->name }} — {{ $submission->jenisLabel() }}</p>
+                            <p class="text-xs text-text-secondary">{{ $submission->statusLabel() }} · {{ $submission->tanggal->format('d M Y') }}</p>
+                        </div>
+                        <span class="text-brand text-xs font-medium">Lihat →</span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     {{-- ===== Health Indicator Bimbingan ===== --}}
     <div class="card p-6">
         <div class="flex flex-wrap items-center justify-between gap-3 mb-4">

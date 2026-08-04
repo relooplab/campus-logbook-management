@@ -11,6 +11,7 @@ use App\Http\Controllers\StudentApprovalController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DosenSidangController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\FinalizationController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\LogbookController;
 use App\Http\Controllers\LogbookHarianController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\ProfilPerusahaanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuickReviewController;
 use App\Http\Controllers\SchedulingController;
+use App\Http\Controllers\SeminarSubmissionController;
 use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
@@ -55,6 +57,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/dashboard/switch', [DashboardController::class, 'switchDashboard'])->name('dashboard.switch');
 
     // Persetujuan registrasi mahasiswa (dosen/admin).
     Route::middleware('role_or_permission:dosen|admin')->group(function () {
@@ -134,6 +137,26 @@ Route::middleware('auth')->group(function () {
     // -------------------------------------------------- workspace pribadi (dosen)
     Route::get('/workspace-saya', [WorkspaceController::class, 'personalIndex'])->name('workspace.personal');
     Route::post('/workspace-saya', [WorkspaceController::class, 'personalStore'])->name('workspace.personal-store');
+
+    // -------------------------------------------------- pemberian bahan seminar/sidang
+    Route::get('/seminar-submission/{mahasiswaTa}/create', [SeminarSubmissionController::class, 'create'])->name('seminar-submission.create');
+    Route::post('/seminar-submission/{mahasiswaTa}', [SeminarSubmissionController::class, 'store'])->name('seminar-submission.store');
+    Route::get('/seminar-submission/{submission}', [SeminarSubmissionController::class, 'show'])->name('seminar-submission.show');
+    Route::get('/seminar-submission/{submission}/edit', [SeminarSubmissionController::class, 'edit'])->name('seminar-submission.edit');
+    Route::put('/seminar-submission/{submission}', [SeminarSubmissionController::class, 'update'])->name('seminar-submission.update');
+    Route::put('/seminar-submission/{submission}/hardcopy-note', [SeminarSubmissionController::class, 'updateHardcopyNote'])->name('seminar-submission.hardcopy-note');
+    Route::get('/seminar-submission/{submission}/undangan/download', [SeminarSubmissionController::class, 'downloadUndangan'])->name('seminar-submission.undangan-download');
+    Route::get('/seminar-submission/{submission}/materi/download', [SeminarSubmissionController::class, 'downloadMateri'])->name('seminar-submission.materi-download');
+    Route::post('/seminar-submission/{submission}/convert-to-sidang', [SeminarSubmissionController::class, 'convertToSidang'])->name('seminar-submission.convert-to-sidang');
+
+    // -------------------------------------------------- finalisasi TA/KP
+    Route::get('/finalisasi/{mahasiswaTa}', [FinalizationController::class, 'index'])->name('finalization.index');
+    Route::post('/finalisasi/{mahasiswaTa}', [FinalizationController::class, 'store'])->name('finalization.store');
+    Route::get('/finalisasi/review', [FinalizationController::class, 'review'])->name('finalization.review');
+    Route::post('/finalisasi/{finalization}/approve/{item}', [FinalizationController::class, 'approveItem'])->name('finalization.approve');
+    Route::post('/finalisasi/{finalization}/reject/{item}', [FinalizationController::class, 'rejectItem'])->name('finalization.reject');
+    Route::post('/finalisasi/{finalization}/unlock/{item}', [FinalizationController::class, 'unlockItem'])->name('finalization.unlock');
+    Route::post('/finalisasi/{finalization}/nilai', [FinalizationController::class, 'inputNilai'])->name('finalization.nilai');
 
     // -------------------------------------------------- grup & cross-link (dosen)
     Route::middleware('role_or_permission:dosen|admin')->group(function () {

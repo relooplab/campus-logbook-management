@@ -224,6 +224,16 @@ class MahasiswaTa extends Model
         return $this->hasMany(\App\Models\Sidang::class, 'mahasiswa_ta_id');
     }
 
+    public function seminarSubmissions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\SeminarSubmission::class, 'mahasiswa_ta_id');
+    }
+
+    public function finalization(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\App\Models\ThesisFinalization::class);
+    }
+
     /**
      * Scope: TA di mana user adalah pembimbing (P1/P2) ATAU penguji.
      */

@@ -108,6 +108,11 @@ class MahasiswaTaController extends Controller
             'fase' => ['required', 'in:'.implode(',', array_keys($fases))],
         ]);
 
+        if ($mahasiswaTa->isTa() && $validated['fase'] === 'achievement') {
+            $finalization = $mahasiswaTa->finalization;
+            abort_unless($finalization && $finalization->allItemsApproved(), 403, 'Finalisasi TA belum disetujui semua item.');
+        }
+
         $old = $mahasiswaTa->faseLabel();
         $mahasiswaTa->update(['fase' => $validated['fase']]);
         $new = $mahasiswaTa->faseLabel();

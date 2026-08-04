@@ -365,6 +365,7 @@ class AdminController extends Controller
             // Pengaturan upload (bisa diisi admin).
             'max_upload_size_mb' => ['required', 'integer', 'min:1', 'max:100'],
             'allowed_file_types' => ['required', 'string', 'max:255'],
+            'seminar_hardcopy_note' => ['nullable', 'string'],
             // Pengaturan email (SMTP) — bisa diisi admin.
             'mail_mailer' => ['nullable', 'string', 'max:20', 'in:smtp,log,array,sendmail,mailgun,ses,postmark,resend'],
             'mail_host' => ['nullable', 'string', 'max:255'],

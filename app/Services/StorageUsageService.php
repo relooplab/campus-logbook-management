@@ -38,18 +38,56 @@ class StorageUsageService
         // 1. Workspace pribadi dosen.
         $total += WorkspaceFile::where('user_id', $dosen->id)->sum('size');
 
-        // 2. Ids mahasiswa yang dibimbing dosen.
-        $taIds = MahasiswaTa::where('pembimbing_1_id', $dosen->id)
-            ->orWhere('pembimbing_2_id', $dosen->id)
-            ->pluck('id');
+        // 2. Program (TA/KP) yang dibebani ke dosen ini.
+        //    Pembimbing 1 (valid) -> fallback pembimbing 2. Penguji tidak dihitung.
+        $programIds = MahasiswaTa::where(function ($q) use ($dosen) {
+            $q->where('pembimbing_1_id', $dosen->id)
+              ->whereHas('pembimbing1', fn ($u) => $u->where('registration_status', 'approved'))
+              ->orWhere(function ($q2) use ($dosen) {
+                  $q2->where('pembimbing_2_id', $dosen->id)
+                     ->where(function ($q3) {
+                         $q3->whereNull('pembimbing_1_id')
+                            ->orWhereDoesntHave('pembimbing1', fn ($u) => $u->where('registration_status', 'approved'));
+                     });
+              });
+        })->pluck('id');
 
-        // 3. Workspace mahasiswa bimbingan.
-        $total += WorkspaceFile::whereIn('mahasiswa_ta_id', $taIds)->sum('size');
+        // 3. Workspace mahasiswa dari program yang dibebani.
+        $total += WorkspaceFile::whereIn('mahasiswa_ta_id', $programIds)->sum('size');
 
-        // 4. Lampiran logbook & revisi mahasiswa bimbingan.
-        $total += LogbookEntry::whereIn('mahasiswa_ta_id', $taIds)
+        // 4. Lampiran logbook & revisi dari program yang dibebani.
+        $total += LogbookEntry::whereIn('mahasiswa_ta_id', $programIds)
             ->whereNotNull('lampiran_path')
             ->sum('lampiran_size');
+
+        // 5. Foto logbook harian KP dari program yang dibebani.
+        $total += $this->logbookHarianKpBytes($programIds);
+
+        return (int) $total;
+    }
+
+    private function logbookHarianKpBytes($programIds): int
+    {
+        if ($programIds->isEmpty()) {
+            return 0;
+        }
+
+        $total = 0;
+        $entries = \App\Models\LogbookHarianKp::whereIn('mahasiswa_ta_id', $programIds)
+            ->where(fn ($q) => $q->whereNotNull('foto_1')->orWhereNotNull('foto_2'))
+            ->get(['foto_1', 'foto_2']);
+
+        foreach ($entries as $e) {
+            foreach (['foto_1', 'foto_2'] as $col) {
+                if ($e->{$col}) {
+                    try {
+                        $total += \Illuminate\Support\Facades\Storage::disk('public')->size($e->{$col});
+                    } catch (\Throwable $ex) {
+                        // File mungkin tidak ada; abaikan.
+                    }
+                }
+            }
+        }
 
         return (int) $total;
     }

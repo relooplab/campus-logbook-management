@@ -71,6 +71,27 @@ class OrganizationalDirectoryTest extends AuditSmokeTest
         $this->assertEquals('Universitas Gadjah Mada', $university->name);
     }
 
+    public function test_storage_charged_to_pembimbing1_only(): void
+    {
+        $service = app(\App\Services\StorageUsageService::class);
+
+        $baselineDosen = $service->totalBytes($this->dosen);
+        $baselineDosen2 = $service->totalBytes($this->dosen2);
+
+        // $this->ta sudah punya pembimbing_1 = dosen, pembimbing_2 = dosen2.
+        \App\Models\WorkspaceFile::create([
+            'mahasiswa_ta_id' => $this->ta->id,
+            'uploaded_by' => $this->mhs->id,
+            'original_name' => 'file.pdf',
+            'path' => 'workspace/test.pdf',
+            'mime_type' => 'application/pdf',
+            'size' => 1000,
+        ]);
+
+        $this->assertSame($baselineDosen + 1000, $service->totalBytes($this->dosen));
+        $this->assertSame($baselineDosen2, $service->totalBytes($this->dosen2));
+    }
+
     public function test_invited_student_inherits_dosen_university(): void
     {
         // Dosen punya universitas.

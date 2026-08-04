@@ -65,6 +65,13 @@
                     </div>
                 </div>
                 <div class="sm:col-span-2 pt-2 border-t border-border">
+                    <p class="text-sm font-semibold mb-3">Catatan Hardcopy Seminar/Sidang</p>
+                    <label class="block text-sm font-medium mb-1">Catatan default (dapat diubah dosen per submission)</label>
+                    <textarea name="seminar_hardcopy_note" rows="3"
+                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">{{ old("seminar_hardcopy_note", $institution->seminar_hardcopy_note) }}</textarea>
+                    <p class="text-xs text-text-secondary mt-1">Ditampilkan pada form pemberian bahan seminar/sidang.</p>
+                </div>
+                <div class="sm:col-span-2 pt-2 border-t border-border">
                     <p class="text-sm font-semibold mb-3">Pengaturan Email (SMTP)</p>
                     <div class="grid sm:grid-cols-2 gap-4">
                         <div> <label class="block text-sm font-medium mb-1">Mailer</label>

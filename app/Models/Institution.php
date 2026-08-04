@@ -24,6 +24,7 @@ class Institution extends Model
         'footer_note',
         'max_upload_size_mb',
         'allowed_file_types',
+        'seminar_hardcopy_note',
         'mail_mailer',
         'mail_host',
         'mail_port',
@@ -66,7 +67,7 @@ class Institution extends Model
         }
 
         // Pengaturan SMTP dinamis (bisa diisi admin).
-        if ($this->mail_mailer) {
+        if ($this->mail_mailer && ($this->mail_mailer !== 'smtp' || $this->mail_host)) {
             config(['mail.default' => $this->mail_mailer]);
         }
 

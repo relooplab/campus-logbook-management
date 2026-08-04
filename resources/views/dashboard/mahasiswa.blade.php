@@ -162,7 +162,53 @@
             </div>
             @include('partials.milestone', ['faseKeys' => $faseKeys, 'faseIndex' => $faseIndex])
             <p class="mt-3 text-xs text-text-secondary">Fase ditetapkan oleh dosen pembimbing.</p>
+
+            @php
+                $isSeminarMilestone = $ta->isKp()
+                    ? in_array($ta->fase, ['seminar_kp'])
+                    : in_array($ta->fase, ['proposal', 'seminar_hasil', 'sidang']);
+            @endphp
+            @if ($isSeminarMilestone)
+                <div class="mt-4 pt-4 border-t border-border">
+                    @if ($seminarSubmission)
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p class="text-sm font-medium text-text-primary">Bahan {{ $seminarSubmission->jenisLabel() }}: {{ $seminarSubmission->statusLabel() }}</p>
+                                <p class="text-xs text-text-secondary">Jadwal: {{ $seminarSubmission->tanggal->format('d M Y') }} · {{ $seminarSubmission->waktu?->format('H:i') }}</p>
+                            </div>
+                            <a href="{{ route('seminar-submission.show', $seminarSubmission) }}" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Lihat Detail</a>
+                        </div>
+                    @else
+                        <a href="{{ route('seminar-submission.create', $ta) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">
+                            <span class="material-symbols-outlined icon-sm">upload_file</span> Isi Bahan {{ $ta->faseLabel() }}
+                        </a>
+                    @endif
+                </div>
+            @endif
         </div>
+
+        {{-- ===== Agenda Terdekat ===== --}}
+        @if ($agendaTerdekat->isNotEmpty())
+            <div class="card p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-heading font-semibold text-text-primary">Agenda Terdekat</h2>
+                </div>
+                <div class="space-y-2">
+                    @foreach ($agendaTerdekat as $agenda)
+                        <a href="{{ route('seminar-submission.show', $agenda) }}" class="flex items-center gap-3 p-3 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
+                            <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
+                                <span class="material-symbols-outlined icon-md">event</span>
+                            </span>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-text-primary">{{ $agenda->jenisLabel() }}</p>
+                                <p class="text-xs text-text-secondary">{{ $agenda->tanggal->format('d M Y') }} · {{ $agenda->waktu?->format('H:i') }}{{ $agenda->lokasi ? ' · ' . $agenda->lokasi : '' }}</p>
+                            </div>
+                            <span class="text-brand text-xs font-medium">Lihat →</span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         {{-- ===== Info Program + Progres ===== --}}
         <div class="grid md:grid-cols-3 gap-5">

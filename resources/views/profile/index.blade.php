@@ -14,7 +14,7 @@
             <div>
                 <h2 class="font-semibold text-lg">{{ $user->name }}</h2>
                 <p class="text-sm text-text-secondary">{{ $user->email }}</p>
-                @foreach ($user->roles as $r)
+                @foreach ($user->roles->where('name', '!=', 'admin') as $r)
                     <span
                         class="inline-block px-2 py-0.5 rounded-full text-xs bg-bg-panel mt-1 mr-1">{{ ucfirst($r->name) }}</span>
                 @endforeach

@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Group;
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
+use App\Models\SeminarSubmission;
 use App\Models\User;
 use App\Services\MahasiswaDashboardService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -20,6 +22,13 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
+        // User dengan role admin + dosen: gunakan mode dashboard dari session.
+        if ($user->isAdmin() && $user->isDosen()) {
+            return session('dashboard_mode', 'admin') === 'dosen'
+                ? $this->dosenDashboard($user)
+                : $this->adminDashboard($user);
+        }
+
         if ($user->isAdmin()) {
             return $this->adminDashboard($user);
         }
@@ -29,6 +38,23 @@ class DashboardController extends Controller
         }
 
         return $this->mahasiswaDashboard($user);
+    }
+
+    /**
+     * Ganti mode dashboard (khusus user dengan role admin + dosen).
+     */
+    public function switchDashboard(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        abort_unless($user->isAdmin() && $user->isDosen(), 403);
+
+        $mode = $request->query('mode', 'admin');
+        $mode = in_array($mode, ['admin', 'dosen'], true) ? $mode : 'admin';
+
+        session(['dashboard_mode' => $mode]);
+
+        return redirect()->route('dashboard');
     }
 
     private function adminDashboard(User $user): View
@@ -126,10 +152,26 @@ class DashboardController extends Controller
         $groupCount = Group::whereHas('memberships', fn ($q) => $q->where('user_id', $user->id)->where('status', 'approved'))
             ->count();
 
+        // ---- Agenda terdekat: jadwal seminar/sidang mahasiswa bimbingan/pengujian ----
+        $agendaTerdekat = SeminarSubmission::where('status', SeminarSubmission::STATUS_SUBMITTED)
+            ->where('tanggal', '>=', now()->toDateString())
+            ->whereIn('mahasiswa_ta_id', $taIds)
+            ->with(['mahasiswaTa.mahasiswa'])
+            ->orderBy('tanggal')
+            ->orderBy('waktu')
+            ->limit(10)
+            ->get();
+
+        // ---- Submission terbaru mahasiswa bimbingan/pengujian ----
+        $submissions = SeminarSubmission::whereIn('mahasiswa_ta_id', $taIds)
+            ->with(['mahasiswaTa.mahasiswa'])
+            ->latest()
+            ->get();
+
         return view('dashboard.dosen', compact(
             'tas', 'queue', 'perTa', 'healthCount', 'stats',
             'pendingRegistrations', 'needsAttention',
-            'university', 'groupCount'
+            'university', 'groupCount', 'agendaTerdekat', 'submissions'
         ));
     }
 
@@ -241,6 +283,24 @@ class DashboardController extends Controller
             ? ($user->primaryUniversity() ?? $ta?->pembimbing1?->primaryUniversity())
             : $user->primaryUniversity();
 
+        $nilai = $ta?->finalization?->nilai;
+
+        // ---- Agenda terdekat (jadwal seminar/sidang yang akan datang) ----
+        $agendaTerdekat = $ta
+            ? SeminarSubmission::where('mahasiswa_ta_id', $ta->id)
+                ->where('status', SeminarSubmission::STATUS_SUBMITTED)
+                ->where('tanggal', '>=', now()->toDateString())
+                ->orderBy('tanggal')
+                ->orderBy('waktu')
+                ->limit(10)
+                ->get()
+            : collect();
+
+        // ---- Submission terbaru untuk status tombol ----
+        $seminarSubmission = $ta
+            ? $ta->seminarSubmissions()->latest()->first()
+            : null;
+
         return view('dashboard.mahasiswa', compact(
             'programs', 'activeProgram', 'ta', 'entries', 'approved', 'target', 'progressPercent',
             'faseKeys', 'faseIndex',
@@ -249,7 +309,7 @@ class DashboardController extends Controller
             'stats', 'timeline', 'heatmap', 'regularity', 'regularityTooltip',
             'unreadAnnouncements',
             'draftCount', 'revisiCount', 'unresolvedActionItems',
-            'university'
+            'university', 'nilai', 'agendaTerdekat', 'seminarSubmission'
         ));
     }
 
