@@ -12,7 +12,7 @@
                 @endif
             </p>
         </div>
-        @if (auth()->user()->id === $mahasiswaTa->user_id)
+        @if ($mahasiswaTa->isMember(auth()->user()))
             <a href="{{ route('logbook-harian.create', $mahasiswaTa) }}"
                 class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">+ Tambah Catatan</a>
         @endif
@@ -26,7 +26,7 @@
 
     @if ($entries->isEmpty())
         <div class="rounded-xl border border-border bg-bg-surface p-8 text-center text-text-secondary text-sm">
-            Belum ada catatan harian. @if (auth()->user()->id === $mahasiswaTa->user_id) Klik "Tambah Catatan" untuk mengisi kegiatan harian. @endif
+            Belum ada catatan harian. @if ($mahasiswaTa->isMember(auth()->user())) Klik "Tambah Catatan" untuk mengisi kegiatan harian. @endif
         </div>
     @else
         <div class="space-y-3">
@@ -34,17 +34,22 @@
                 <div class="rounded-xl border border-border bg-bg-surface p-4">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <div class="text-sm font-semibold">{{ $entry->tanggal->format("d M Y") }}</div>
-                        @if (auth()->user()->id === $mahasiswaTa->user_id)
-                            <div class="flex gap-2">
-                                <a href="{{ route("logbook-harian.edit", [$mahasiswaTa, $entry]) }}"
-                                    class="text-xs text-brand hover:underline">Edit</a>
-                                <form method="POST" action="{{ route("logbook-harian.destroy", [$mahasiswaTa, $entry]) }}"
-                                    onsubmit="return confirm('Hapus catatan harian ini?')">
-                                    @csrf @method("DELETE")
-                                    <button type="submit" class="text-xs text-status-danger hover:underline">Hapus</button>
-                                </form>
-                            </div>
-                        @endif
+                        <div class="flex items-center gap-2">
+                            @if ($entry->creator)
+                                <span class="text-xs text-text-secondary">oleh {{ $entry->creator->name }}</span>
+                            @endif
+                            @if ($entry->created_by === auth()->id())
+                                <div class="flex gap-2">
+                                    <a href="{{ route("logbook-harian.edit", [$mahasiswaTa, $entry]) }}"
+                                        class="text-xs text-brand hover:underline">Edit</a>
+                                    <form method="POST" action="{{ route("logbook-harian.destroy", [$mahasiswaTa, $entry]) }}"
+                                        onsubmit="return confirm('Hapus catatan harian ini?')">
+                                        @csrf @method("DELETE")
+                                        <button type="submit" class="text-xs text-status-danger hover:underline">Hapus</button>
+                                    </form>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                     <p class="text-sm mt-2 whitespace-pre-line">{{ $entry->kegiatan }}</p>
                     @if ($entry->kendala)

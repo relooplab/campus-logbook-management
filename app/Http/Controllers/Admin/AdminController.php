@@ -287,16 +287,16 @@ class AdminController extends Controller
             'jenis' => ['required', 'in:'.implode(',', MahasiswaTa::JENISES)],
             'judul_ta' => ['nullable', 'string', 'max:255'],
             'tempat_kp' => ['nullable', 'string', 'max:255'],
-            'pembimbing_1_id' => ['nullable', 'exists:users,id'],
-            'pembimbing_2_id' => ['nullable', 'exists:users,id'],
+            'pembimbing_1_id' => ['nullable', 'exists:users,id', $this->roleRule('dosen')],
+            'pembimbing_2_id' => ['nullable', 'exists:users,id', $this->roleRule('dosen')],
             'pembimbing_lapangan' => [$isKp ? 'nullable' : 'prohibited', 'string', 'max:255'],
-            'penguji_1_id' => ['nullable', 'exists:users,id'],
-            'penguji_2_id' => ['nullable', 'exists:users,id'],
+            'penguji_1_id' => ['nullable', 'exists:users,id', $this->roleRule('dosen')],
+            'penguji_2_id' => ['nullable', 'exists:users,id', $this->roleRule('dosen')],
             'target_sesi' => ['required', 'integer', 'min:1'],
             'periode_mulai' => ['nullable', 'date'],
             'periode_selesai' => ['nullable', 'date', 'after_or_equal:periode_mulai'],
             'member_ids' => [$isKp ? 'nullable' : 'prohibited', 'array'],
-            'member_ids.*' => ['integer', 'exists:users,id'],
+            'member_ids.*' => ['integer', 'exists:users,id', $this->roleRule('mahasiswa')],
         ]);
 
         $program = MahasiswaTa::create($validated);
@@ -316,17 +316,17 @@ class AdminController extends Controller
         $validated = $request->validate([
             'judul_ta' => ['nullable', 'string', 'max:255'],
             'tempat_kp' => ['nullable', 'string', 'max:255'],
-            'pembimbing_1_id' => ['nullable', 'exists:users,id'],
-            'pembimbing_2_id' => ['nullable', 'exists:users,id'],
+            'pembimbing_1_id' => ['nullable', 'exists:users,id', $this->roleRule('dosen')],
+            'pembimbing_2_id' => ['nullable', 'exists:users,id', $this->roleRule('dosen')],
             'pembimbing_lapangan' => [$isKp ? 'nullable' : 'prohibited', 'string', 'max:255'],
-            'penguji_1_id' => ['nullable', 'exists:users,id'],
-            'penguji_2_id' => ['nullable', 'exists:users,id'],
+            'penguji_1_id' => ['nullable', 'exists:users,id', $this->roleRule('dosen')],
+            'penguji_2_id' => ['nullable', 'exists:users,id', $this->roleRule('dosen')],
             'target_sesi' => ['required', 'integer', 'min:1'],
             'periode_mulai' => ['nullable', 'date'],
             'periode_selesai' => ['nullable', 'date', 'after_or_equal:periode_mulai'],
             'status_ta' => ['nullable', 'in:'.implode(',', \App\Models\MahasiswaTa::STATUS_TA)],
             'member_ids' => [$isKp ? 'nullable' : 'prohibited', 'array'],
-            'member_ids.*' => ['integer', 'exists:users,id'],
+            'member_ids.*' => ['integer', 'exists:users,id', $this->roleRule('mahasiswa')],
         ]);
 
         $mahasiswaTa->update($validated);
@@ -552,38 +552,98 @@ class AdminController extends Controller
             'ids' => ['required', 'array'],
             'ids.*' => ['integer'],
             'action' => ['required', 'in:approve,revisi,delete,assign_dosen'],
+            'feedback_dosen' => ['required_if:action,revisi', 'string', 'min:20'],
         ]);
 
         // Assign pembimbing massal ke data TA.
         if ($validated['action'] === 'assign_dosen') {
             $request->validate(['dosen_id' => ['required', 'exists:users,id']]);
 
+            $dosen = User::find($request->integer('dosen_id'));
+            abort_unless($dosen && $dosen->hasRole('dosen'), 422, 'User yang dipilih bukan dosen.');
+
             $count = MahasiswaTa::whereIn('id', $validated['ids'])
-                ->update(['pembimbing_1_id' => $request->integer('dosen_id')]);
+                ->update(['pembimbing_1_id' => $dosen->id]);
 
             return back()->with('success', "{$count} data TA di-assign pembimbing 1.");
         }
 
-        $entries = \App\Models\LogbookEntry::whereIn('id', $validated['ids']);
+        if ($validated['action'] === 'delete') {
+            $count = \App\Models\LogbookEntry::whereIn('id', $validated['ids'])->delete();
 
-        switch ($validated['action']) {
-            case 'approve':
-                $entries->update([
+            return back()->with('success', "{$count} entri dihapus.");
+        }
+
+        // approve/revisi: hanya entri yang benar-benar menunggu review, dengan
+        // efek samping yang sama seperti alur review satuan (resolve komentar,
+        // notifikasi, evaluasi achievement) agar mahasiswa tetap diberi tahu.
+        $entries = \App\Models\LogbookEntry::whereIn('id', $validated['ids'])
+            ->where('status', \App\Models\LogbookEntry::STATUS_SUBMITTED)
+            ->get();
+
+        foreach ($entries as $entry) {
+            if ($validated['action'] === 'approve') {
+                $entry->update([
                     'status' => \App\Models\LogbookEntry::STATUS_APPROVED,
                     'reviewed_at' => now(),
                 ]);
-                break;
-            case 'revisi':
-                $entries->update([
+                $this->resolveCommentsOnApproval($entry);
+
+                $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($entry, 'Entri Anda telah disetujui oleh pembimbing.'));
+                $entry->notifyParties(
+                    'Entri '.($entry->jenis === 'revisi' ? 'revisi' : 'logbook sesi '.$entry->sesi_ke).' telah disetujui.',
+                    route('logbook.show', $entry),
+                    'Entri Disetujui',
+                );
+
+                if ($owner = $entry->mahasiswaTa?->mahasiswa) {
+                    app(\App\Services\AchievementService::class)->evaluateForUser($owner);
+                }
+            } else {
+                $entry->update([
                     'status' => \App\Models\LogbookEntry::STATUS_REVISI,
+                    'feedback_dosen' => $validated['feedback_dosen'],
                     'reviewed_at' => now(),
                 ]);
-                break;
-            case 'delete':
-                $entries->delete();
-                break;
+
+                $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($entry, 'Entri Anda diminta revisi: '.$validated['feedback_dosen']));
+                $entry->notifyParties(
+                    'Entri Anda diminta revisi: '.$validated['feedback_dosen'],
+                    route('logbook.show', $entry),
+                    'Permintaan Revisi',
+                );
+            }
         }
 
-        return back()->with('success', 'Aksi massal berhasil dijalankan.');
+        return back()->with('success', $entries->count().' entri berhasil diproses.');
+    }
+
+    /**
+     * Aturan validasi: pastikan user_id yang dipilih benar memiliki role tertentu
+     * (mis. pembimbing/penguji harus dosen, member_ids harus mahasiswa).
+     */
+    private function roleRule(string $role): \Closure
+    {
+        return function (string $attribute, $value, \Closure $fail) use ($role) {
+            if ($value && !User::find($value)?->hasRole($role)) {
+                $fail("User yang dipilih untuk {$attribute} bukan {$role}.");
+            }
+        };
+    }
+
+    /** Resolve semua komentar PDF (entri ini & induknya) saat entri disetujui. */
+    private function resolveCommentsOnApproval(\App\Models\LogbookEntry $logbook): void
+    {
+        $entries = collect([$logbook, $logbook->parentEntry])->filter();
+
+        foreach ($entries as $entry) {
+            $entry->comments()
+                ->where('resolution_status', '!=', \App\Models\PdfComment::STATUS_RESOLVED)
+                ->get()
+                ->each(function ($comment) {
+                    $comment->setResolutionStatus(\App\Models\PdfComment::STATUS_RESOLVED);
+                    $comment->save();
+                });
+        }
     }
 }

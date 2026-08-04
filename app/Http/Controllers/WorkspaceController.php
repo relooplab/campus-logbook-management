@@ -51,6 +51,61 @@ class WorkspaceController extends Controller
     }
 
     /**
+     * Halaman workspace utama — menyesuaikan role user.
+     * - Mahasiswa: redirect ke workspace TA/KP aktif miliknya.
+     * - Dosen: workspace pribadi + daftar TA bimbingan.
+     * - Admin: daftar semua TA/KP.
+     */
+    public function roleIndex(Request $request): View|\Illuminate\Http\RedirectResponse
+    {
+        $user = $request->user();
+
+        // Mahasiswa: redirect ke workspace TA/KP aktif.
+        if ($user->isMahasiswa()) {
+            $ta = $user->programAktif ?: $user->allPrograms()->first();
+            if ($ta) {
+                return redirect()->route('workspace.index', $ta);
+            }
+
+            return view('workspace.role', [
+                'user' => $user,
+                'personalFiles' => collect(),
+                'personalGrouped' => collect(),
+                'personalTotalBytes' => 0,
+                'tas' => collect(),
+            ]);
+        }
+
+        // Dosen: workspace pribadi + daftar TA bimbingan.
+        if ($user->isDosen()) {
+            $personalFiles = WorkspaceFile::where('user_id', $user->id)->with('uploader')
+                ->orderByDesc('created_at')->get();
+            $personalGrouped = $personalFiles->groupBy(fn ($f) => $f->bab ?: 'Lainnya');
+            $personalTotalBytes = $personalFiles->sum('size');
+
+            $tas = MahasiswaTa::bimbinganOleh($user)
+                ->with(['mahasiswa', 'pembimbing1', 'pembimbing2'])
+                ->latest()
+                ->get();
+
+            return view('workspace.role', compact('user', 'personalFiles', 'personalGrouped', 'personalTotalBytes', 'tas'));
+        }
+
+        // Admin: daftar semua TA/KP.
+        $tas = MahasiswaTa::with(['mahasiswa', 'pembimbing1', 'pembimbing2'])
+            ->latest()
+            ->get();
+
+        return view('workspace.role', [
+            'user' => $user,
+            'personalFiles' => collect(),
+            'personalGrouped' => collect(),
+            'personalTotalBytes' => 0,
+            'tas' => $tas,
+        ]);
+    }
+
+    /**
      * Upload multi-file — hanya mahasiswa pemilik TA.
      */
     public function store(StoreWorkspaceFileRequest $request, MahasiswaTa $mahasiswaTa): RedirectResponse
@@ -86,6 +141,7 @@ class WorkspaceController extends Controller
     public function personalIndex(Request $request): View
     {
         $user = $request->user();
+        abort_unless($user->isDosen() || $user->isAdmin(), 403, 'Halaman ini khusus dosen.');
 
         $query = WorkspaceFile::where('user_id', $user->id)->with('uploader');
 
@@ -111,13 +167,15 @@ class WorkspaceController extends Controller
      */
     public function personalStore(Request $request): RedirectResponse
     {
+        $user = $request->user();
+        abort_unless($user->isDosen() || $user->isAdmin(), 403, 'Halaman ini khusus dosen.');
+
         $validated = $request->validate([
             'files' => ['required', 'array', 'max:5'],
             'files.*' => ['file', 'max:25600'], // 25 MB
             'bab' => ['nullable', 'string', 'max:50'],
         ]);
 
-        $user = $request->user();
         $bab = $request->input('bab');
 
         foreach ($request->file('files') as $file) {

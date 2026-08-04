@@ -60,15 +60,10 @@ class LogbookHarianController extends Controller
         abort_unless($mahasiswaTa->isKp(), 404, 'Program bukan KP.');
         abort_unless($mahasiswaTa->isMember($request->user()), 403, 'Hanya anggota kelompok KP yang dapat menambah catatan.');
 
-        $validated = $request->validate([
-            'tanggal' => ['required', 'date'],
-            'kegiatan' => ['required', 'string', 'max:5000'],
-            'kendala' => ['nullable', 'string', 'max:5000'],
-            'foto_1' => ['nullable', 'file', 'image', 'max:5120'],
-            'foto_2' => ['nullable', 'file', 'image', 'max:5120'],
-        ]);
+        $validated = $request->validate($this->rules($mahasiswaTa));
 
         $entry = $mahasiswaTa->logbookHarian()->create([
+            'created_by' => $request->user()->id,
             'tanggal' => $validated['tanggal'],
             'kegiatan' => $validated['kegiatan'],
             'kendala' => $validated['kendala'] ?? null,
@@ -97,6 +92,8 @@ class LogbookHarianController extends Controller
         abort_unless($mahasiswaTa->isKp(), 404, 'Program bukan KP.');
         abort_unless($mahasiswaTa->isMember($request->user()), 403, 'Hanya anggota kelompok KP yang dapat mengubah catatan.');
         abort_unless($logbookHarian->mahasiswa_ta_id === $mahasiswaTa->id, 404);
+        // Bug 3: Hanya penulis asli yang boleh mengedit catatan.
+        abort_unless($logbookHarian->created_by === $request->user()->id, 403, 'Anda bukan penulis catatan ini.');
 
         return view('logbook-harian.edit', compact('mahasiswaTa', 'logbookHarian'));
     }
@@ -109,14 +106,10 @@ class LogbookHarianController extends Controller
         abort_unless($mahasiswaTa->isKp(), 404, 'Program bukan KP.');
         abort_unless($mahasiswaTa->isMember($request->user()), 403, 'Hanya anggota kelompok KP yang dapat mengubah catatan.');
         abort_unless($logbookHarian->mahasiswa_ta_id === $mahasiswaTa->id, 404);
+        // Bug 3: Hanya penulis asli yang boleh mengubah catatan.
+        abort_unless($logbookHarian->created_by === $request->user()->id, 403, 'Anda bukan penulis catatan ini.');
 
-        $validated = $request->validate([
-            'tanggal' => ['required', 'date'],
-            'kegiatan' => ['required', 'string', 'max:5000'],
-            'kendala' => ['nullable', 'string', 'max:5000'],
-            'foto_1' => ['nullable', 'file', 'image', 'max:5120'],
-            'foto_2' => ['nullable', 'file', 'image', 'max:5120'],
-        ]);
+        $validated = $request->validate($this->rules($mahasiswaTa));
 
         $logbookHarian->update([
             'tanggal' => $validated['tanggal'],
@@ -146,6 +139,8 @@ class LogbookHarianController extends Controller
         abort_unless($mahasiswaTa->isKp(), 404, 'Program bukan KP.');
         abort_unless($mahasiswaTa->isMember($request->user()), 403, 'Hanya anggota kelompok KP yang dapat menghapus catatan.');
         abort_unless($logbookHarian->mahasiswa_ta_id === $mahasiswaTa->id, 404);
+        // Bug 3: Hanya penulis asli yang boleh menghapus catatan.
+        abort_unless($logbookHarian->created_by === $request->user()->id, 403, 'Anda bukan penulis catatan ini.');
 
         $this->deleteFoto($logbookHarian->foto_1);
         $this->deleteFoto($logbookHarian->foto_2);
@@ -157,10 +152,26 @@ class LogbookHarianController extends Controller
 
     /**
      * Simpan foto ke disk public: logbook-harian/{entry_id}/foto{n}.{ext}.
+     * Bug 1 (RCE): ekstensi ditentukan dari deteksi konten server (getimagesize),
+     * bukan dari nama asli client — mencegah file polyglot dieksekusi sebagai PHP.
      */
     private function storeFoto($file, int $entryId, int $index): string
     {
-        $ext = $file->getClientOriginalExtension() ?: 'jpg';
+        // Verifikasi file benar-benar gambar via deteksi konten server.
+        $imageInfo = @getimagesize($file->getRealPath());
+        if ($imageInfo === false) {
+            abort(422, 'File harus berupa gambar yang valid.');
+        }
+
+        // Peta MIME -> ekstensi aman (hanya ekstensi gambar).
+        $mimeToExt = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+        ];
+        $ext = $mimeToExt[$imageInfo['mime']] ?? 'jpg';
+
         $name = 'foto'.$index.'.'.$ext;
 
         return $file->storeAs('logbook-harian/'.$entryId, $name, 'public');
@@ -174,6 +185,30 @@ class LogbookHarianController extends Controller
         if ($path) {
             Storage::disk('public')->delete($path);
         }
+    }
+
+    /**
+     * Aturan validasi logbook harian, termasuk batasan tanggal terhadap periode KP.
+     * Bug 2: tanggal harus dalam rentang periode_mulai s/d periode_selesai KP.
+     */
+    private function rules(MahasiswaTa $mahasiswaTa): array
+    {
+        $rules = [
+            'tanggal' => ['required', 'date'],
+            'kegiatan' => ['required', 'string', 'max:5000'],
+            'kendala' => ['nullable', 'string', 'max:5000'],
+            'foto_1' => ['nullable', 'file', 'image', 'max:5120'],
+            'foto_2' => ['nullable', 'file', 'image', 'max:5120'],
+        ];
+
+        if ($mahasiswaTa->periode_mulai) {
+            $rules['tanggal'][] = 'after_or_equal:'.$mahasiswaTa->periode_mulai->format('Y-m-d');
+        }
+        if ($mahasiswaTa->periode_selesai) {
+            $rules['tanggal'][] = 'before_or_equal:'.$mahasiswaTa->periode_selesai->format('Y-m-d');
+        }
+
+        return $rules;
     }
 
     /**

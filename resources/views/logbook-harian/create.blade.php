@@ -14,7 +14,12 @@
         <div>
             <label class="block text-xs text-text-secondary mb-1" for="tanggal">Tanggal Kegiatan</label>
             <input type="date" name="tanggal" id="tanggal" required value="{{ old('tanggal', now()->format('Y-m-d')) }}"
+                min="{{ $mahasiswaTa->periode_mulai?->format('Y-m-d') }}"
+                max="{{ $mahasiswaTa->periode_selesai?->format('Y-m-d') }}"
                 class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+            @if ($mahasiswaTa->periode_mulai)
+                <p class="text-xs text-text-secondary mt-1">Periode KP: {{ $mahasiswaTa->periode_mulai->format('d M Y') }} – {{ $mahasiswaTa->periode_selesai?->format('d M Y') ?? 'sekarang' }}</p>
+            @endif
             @error('tanggal')
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror

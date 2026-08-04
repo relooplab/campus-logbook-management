@@ -5,7 +5,7 @@
 @section('content')
 @php
     $user = auth()->user();
-    $owner = $user->isMahasiswa() && $logbook->mahasiswaTa?->user_id === $user->id;
+    $owner = $user->isMahasiswa() && $logbook->mahasiswaTa?->isMember($user);
     $canReview = $user->can('review', $logbook);
 @endphp
 

@@ -28,7 +28,8 @@
                 class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm text-center">Reset</a>
         </div>
     </form> {{-- Daftar entri dengan checkbox + bulk action --}} <form method="POST" action="{{ route("admin.bulk") }}" id="bulk-form"> @csrf <input
-            type="hidden" name="action" value="" id="bulk-action">
+            type="hidden" name="action" value="" id="bulk-action"> <input
+            type="hidden" name="feedback_dosen" value="" id="bulk-feedback">
         <div class="bg-bg-surface rounded-xl border border-border overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
@@ -89,6 +90,14 @@
             }
             var action = btn.dataset.action;
             if (action === 'delete' && !confirm('Hapus ' + checked + ' entri?')) return;
+            if (action === 'revisi') {
+                var feedback = prompt('Masukkan catatan revisi untuk entri terpilih (minimal 20 karakter):');
+                if (!feedback || feedback.trim().length < 20) {
+                    alert('Catatan revisi wajib diisi (minimal 20 karakter).');
+                    return;
+                }
+                document.getElementById('bulk-feedback').value = feedback.trim();
+            }
             document.getElementById('bulk-action').value = action;
             document.getElementById('bulk-form').submit();
         });

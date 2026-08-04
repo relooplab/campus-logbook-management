@@ -157,12 +157,14 @@
         </div>
 
         @auth
-            @if (\App\Support\Feature::isInstitution())
-                <div class="px-6 pb-2 sidebar-label"><span class="text-[10px] px-2 py-0.5 rounded-full bg-brand-light text-brand"><span class="material-symbols-outlined icon-sm align-text-bottom" style="font-size:12px">apartment</span> Institusi</span></div>
-            @else
-                <div class="px-6 pb-2 sidebar-label"><span class="text-[10px] px-2 py-0.5 rounded-full bg-brand-light text-brand"><span class="material-symbols-outlined icon-sm align-text-bottom" style="font-size:12px">eco</span> Individual</span></div>
-            @endif
-            @php $primaryUniv = $user->primaryUniversity(); @endphp
+            @php
+                $primaryUniv = $user->primaryUniversity();
+                // User dengan role ganda dosen+admin: sidebar mengikuti mode dashboard aktif.
+                $isDualAdminDosen = $user->isAdmin() && $user->isDosen();
+                $dashMode = $isDualAdminDosen ? session('dashboard_mode', 'admin') : null;
+                $showDosenMenu = $user->isDosen() && ($dashMode === null || $dashMode === 'dosen');
+                $showAdminMenu = $user->isAdmin() && ($dashMode === null || $dashMode === 'admin');
+            @endphp
             @if ($primaryUniv)
                 <div class="px-6 pb-2 sidebar-label">
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-bg-panel text-text-secondary truncate max-w-full inline-block" title="{{ $primaryUniv->name }}">
@@ -221,7 +223,7 @@
                         <span class="sidebar-label">Workspace</span>
                     </a>
                 @endif
-            @elseif ($user->isDosen())
+            @elseif ($showDosenMenu)
                 <a href="{{ route('logbook.index') }}" class="{{ $navLink }} {{ $active('logbook.index') }}">
                     <span class="material-symbols-outlined icon-md">inbox</span>
                     <span class="sidebar-label">Antrean Review</span>
@@ -230,9 +232,9 @@
                     <span class="material-symbols-outlined icon-md">bolt</span>
                     <span class="sidebar-label">Quick Review</span>
                 </a>
-                <a href="{{ route('workspace.personal') }}" class="{{ $navLink }} {{ $active('workspace.personal') }}">
+                <a href="{{ route('workspace.role') }}" class="{{ $navLink }} {{ $active('workspace.role') }}">
                     <span class="material-symbols-outlined icon-md">folder</span>
-                    <span class="sidebar-label">Workspace Saya</span>
+                    <span class="sidebar-label">Workspace</span>
                 </a>
                 <a href="{{ route('groups.index') }}" class="{{ $navLink }} {{ $active('groups.*') }}">
                     <span class="material-symbols-outlined icon-md">groups</span>
@@ -248,7 +250,7 @@
                 </a>
             @endif
 
-            @if ($user->isAdmin())
+            @if ($showAdminMenu)
                 <div class="px-3 pt-4 pb-1 text-[10px] uppercase tracking-widest text-text-secondary sidebar-label">Administrasi</div>
                 @if ($user->isSystemAdmin())
                     <a href="{{ route('admin.system.admins') }}" class="{{ $navLink }} {{ $active('admin.system.admins') }}">

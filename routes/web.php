@@ -127,6 +127,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/import-mahasiswa', [UtilityController::class, 'importMahasiswa'])->name('admin.import-mahasiswa');
 
     // ------------------------------------------------------ workspace
+    Route::get('/workspace', [WorkspaceController::class, 'roleIndex'])->name('workspace.role');
     Route::get('/workspace/{mahasiswaTa}', [WorkspaceController::class, 'index'])->name('workspace.index');
     Route::post('/workspace/{mahasiswaTa}/files', [WorkspaceController::class, 'store'])->name('workspace.store');
     Route::get('/workspace/files/{file}/download', [WorkspaceController::class, 'download'])->name('workspace.download');
@@ -134,8 +135,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/workspace/files/{file}', [WorkspaceController::class, 'update'])->name('workspace.update');
     Route::delete('/workspace/files/{file}', [WorkspaceController::class, 'destroy'])->name('workspace.destroy');
 
-    // -------------------------------------------------- workspace pribadi (dosen)
-    Route::get('/workspace-saya', [WorkspaceController::class, 'personalIndex'])->name('workspace.personal');
+    // -------------------------------------------------- workspace pribadi (dosen) — redirect ke /workspace
+    Route::get('/workspace-saya', fn () => redirect()->route('workspace.role'))->name('workspace.personal');
     Route::post('/workspace-saya', [WorkspaceController::class, 'personalStore'])->name('workspace.personal-store');
 
     // -------------------------------------------------- pemberian bahan seminar/sidang
@@ -163,6 +164,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/grup', [GroupController::class, 'index'])->name('groups.index');
         Route::post('/grup', [GroupController::class, 'store'])->name('groups.store');
         Route::post('/grup/{group}/invite', [GroupController::class, 'invite'])->name('groups.invite');
+        Route::post('/grup/{group}/join', [GroupController::class, 'join'])->name('groups.join');
         Route::post('/grup/{group}/approve', [GroupController::class, 'approve'])->name('groups.approve');
         Route::post('/grup/{group}/reject', [GroupController::class, 'reject'])->name('groups.reject');
     });

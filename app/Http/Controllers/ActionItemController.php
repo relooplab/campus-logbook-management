@@ -30,6 +30,7 @@ class ActionItemController extends Controller
     public function toggle(Request $request, LogbookEntry $logbook, \App\Models\ActionItem $item): JsonResponse
     {
         $this->authorize('update', $logbook);
+        abort_unless($item->logbook_entry_id === $logbook->id, 404);
         $item->update(['is_done' => !$item->is_done]);
 
         // Semua selesai?
@@ -42,6 +43,7 @@ class ActionItemController extends Controller
     public function destroy(Request $request, LogbookEntry $logbook, \App\Models\ActionItem $item): JsonResponse
     {
         $this->authorize('update', $logbook);
+        abort_unless($item->logbook_entry_id === $logbook->id, 404);
         $item->delete();
 
         return response()->json(['ok' => true]);

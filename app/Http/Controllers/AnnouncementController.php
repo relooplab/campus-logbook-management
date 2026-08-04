@@ -66,14 +66,22 @@ class AnnouncementController extends Controller
         // Tentukan penerima.
         if ($validated['target_mode'] === 'manual') {
             $recipientIds = $request->input('target_mahasiswa', []);
-            $recipients = $recipientIds
-                ? MahasiswaTa::whereIn('id', $recipientIds)->pluck('user_id')
-                : collect();
+            $query = MahasiswaTa::whereIn('id', $recipientIds);
+            // Filter: dosen hanya bisa kirim ke mahasiswa bimbingannya (P1/P2).
+            // Admin bebas memilih semua mahasiswa.
+            if (!$user->isAdmin()) {
+                $query->where(fn ($q) => $q->where('pembimbing_1_id', $user->id)
+                    ->orWhere('pembimbing_2_id', $user->id));
+            }
+            $recipients = $recipientIds ? $query->pluck('user_id') : collect();
         } else {
-            // Semua mahasiswa bimbingan dosen ini.
-            $recipients = MahasiswaTa::where('pembimbing_1_id', $user->id)
-                ->orWhere('pembimbing_2_id', $user->id)
-                ->pluck('user_id');
+            // Semua mahasiswa bimbingan dosen ini (admin: semua mahasiswa).
+            $query = MahasiswaTa::query();
+            if (!$user->isAdmin()) {
+                $query->where(fn ($q) => $q->where('pembimbing_1_id', $user->id)
+                    ->orWhere('pembimbing_2_id', $user->id));
+            }
+            $recipients = $query->pluck('user_id');
         }
 
         $announcement = Announcement::create([

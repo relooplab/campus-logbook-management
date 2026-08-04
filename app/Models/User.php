@@ -135,8 +135,8 @@ class User extends Authenticatable
             return true;
         }
 
-        // Admin selalu punya akses.
-        if ($this->isAdmin() || $other->isAdmin()) {
+        // Admin selalu punya akses melihat siapa saja (bukan sebaliknya).
+        if ($this->isAdmin()) {
             return true;
         }
 
@@ -166,13 +166,16 @@ class User extends Authenticatable
             return $sharedGroup;
         }
 
-        // Dosen dengan mahasiswa: cek TA bimbingan/pengujian.
-        if ($this->isDosen() && $other->isMahasiswa()) {
-            return MahasiswaTa::where('user_id', $other->id)
-                ->where(fn ($q) => $q->where('pembimbing_1_id', $this->id)
-                    ->orWhere('pembimbing_2_id', $this->id)
-                    ->orWhere('penguji_1_id', $this->id)
-                    ->orWhere('penguji_2_id', $this->id))
+        // Dosen dengan mahasiswa (kedua arah): cek TA bimbingan/pengujian.
+        if (($this->isDosen() && $other->isMahasiswa()) || ($this->isMahasiswa() && $other->isDosen())) {
+            $dosenId = $this->isDosen() ? $this->id : $other->id;
+            $mahasiswaId = $this->isMahasiswa() ? $this->id : $other->id;
+
+            return MahasiswaTa::where('user_id', $mahasiswaId)
+                ->where(fn ($q) => $q->where('pembimbing_1_id', $dosenId)
+                    ->orWhere('pembimbing_2_id', $dosenId)
+                    ->orWhere('penguji_1_id', $dosenId)
+                    ->orWhere('penguji_2_id', $dosenId))
                 ->exists();
         }
 

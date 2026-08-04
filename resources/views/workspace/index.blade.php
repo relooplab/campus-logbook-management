@@ -1,9 +1,9 @@
 @extends("layouts.app") @section("title", "Workspace") @section("content")
 @php
     $user = auth()->user();
-    // Hanya mahasiswa pemilik TA yang bisa upload/edit/hapus.
-    $canUpload = $user->id === $mahasiswaTa->user_id;
-    $isOwner = $user->id === $mahasiswaTa->user_id;
+    // Anggota program (pemilik utama + anggota kelompok KP) bisa upload/edit/hapus.
+    $canUpload = $mahasiswaTa->isMember($user);
+    $isOwner = $mahasiswaTa->isMember($user);
     $allFiles = $grouped->flatten(1);
     $babs = $mahasiswaTa->workspaceFiles()->whereNotNull('bab')->distinct()->pluck('bab');
 @endphp
@@ -94,7 +94,7 @@
                     {{ $bab }}</div>
                 <div class="divide-y divide-border">
                         @foreach ($files as $file)
-                            @php $canModify = $user->id === $mahasiswaTa->user_id; @endphp <div class="px-4 py-3 flex items-start gap-3"> <span
+                            @php $canModify = $mahasiswaTa->isMember($user); @endphp <div class="px-4 py-3 flex items-start gap-3"> <span
                                     class="text-2xl">{{ $file->icon() }}</span>
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-wrap items-center gap-2"> <a

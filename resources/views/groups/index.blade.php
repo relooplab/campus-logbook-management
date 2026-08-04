@@ -55,7 +55,7 @@
                 </div>
                 <div>
                     <label class="block text-xs text-text-secondary mb-1">Level</label>
-                    <select name="level" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                    <select name="level" id="group-level" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
                         <option value="universitas">Universitas</option>
                         <option value="fakultas">Fakultas</option>
                         <option value="departemen">Departemen</option>
@@ -64,6 +64,39 @@
                 </div>
                 <div class="flex items-end">
                     <button type="submit" class="w-full px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Buat Grup</button>
+                </div>
+
+                {{-- Dropdown fakultas (level = fakultas) --}}
+                <div id="group-faculty-wrap" class="hidden sm:col-span-2">
+                    <label class="block text-xs text-text-secondary mb-1">Fakultas</label>
+                    <select name="faculty_id" id="group-faculty" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                        <option value="">— Pilih fakultas —</option>
+                        @foreach ($faculties as $faculty)
+                            <option value="{{ $faculty->id }}">{{ $faculty->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Dropdown departemen (level = departemen) --}}
+                <div id="group-department-wrap" class="hidden sm:col-span-2">
+                    <label class="block text-xs text-text-secondary mb-1">Departemen</label>
+                    <select name="department_id" id="group-department" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                        <option value="">— Pilih departemen —</option>
+                        @foreach ($departments as $department)
+                            <option value="{{ $department->id }}">{{ $department->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Dropdown prodi (level = prodi) --}}
+                <div id="group-prodi-wrap" class="hidden sm:col-span-2">
+                    <label class="block text-xs text-text-secondary mb-1">Program Studi</label>
+                    <select name="study_program_id" id="group-prodi" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                        <option value="">— Pilih program studi —</option>
+                        @foreach ($studyPrograms as $program)
+                            <option value="{{ $program->id }}">{{ $program->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </form>
         @endif
@@ -125,9 +158,8 @@
                             <p class="font-medium text-text-primary">{{ $group->name }}</p>
                             <p class="text-xs text-text-secondary">{{ ucfirst($group->level) }} · {{ $group->members->count() }} anggota</p>
                         </div>
-                        <form method="POST" action="{{ route('groups.invite', $group) }}">
+                        <form method="POST" action="{{ route('groups.join', $group) }}">
                             @csrf
-                            <input type="hidden" name="user_id" value="{{ auth()->id() }}">
                             <button type="submit" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Gabung</button>
                         </form>
                     </div>
@@ -136,4 +168,28 @@
         </div>
     @endif
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    // Toggle dropdown fakultas/departemen/prodi sesuai level grup.
+    (function () {
+        var levelSelect = document.getElementById('group-level');
+        if (!levelSelect) return;
+
+        var facultyWrap = document.getElementById('group-faculty-wrap');
+        var departmentWrap = document.getElementById('group-department-wrap');
+        var prodiWrap = document.getElementById('group-prodi-wrap');
+
+        function sync() {
+            var level = levelSelect.value;
+            facultyWrap.classList.toggle('hidden', level !== 'fakultas');
+            departmentWrap.classList.toggle('hidden', level !== 'departemen');
+            prodiWrap.classList.toggle('hidden', level !== 'prodi');
+        }
+
+        levelSelect.addEventListener('change', sync);
+        sync();
+    })();
+</script>
 @endsection

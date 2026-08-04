@@ -81,10 +81,12 @@ class FinalizationController extends Controller
     public function approveItem(Request $request, ThesisFinalization $finalization, string $item): RedirectResponse
     {
         $this->authorizePembimbing($request->user(), $finalization);
+        $this->validateItem($finalization, $item);
         $approval = $this->getApproval($finalization, $item, $request->user()->id);
         $approval->update(['status' => 'approved']);
 
-        $allApproved = $finalization->approvals()->where('item', $item)->where('status', 'approved')->count() >= 2;
+        $required = $this->requiredApprovals($finalization);
+        $allApproved = $finalization->approvals()->where('item', $item)->where('status', 'approved')->count() >= $required;
         if ($allApproved) {
             $finalization->update([$item.'_status' => 'approved']);
             $this->maybeUnlockMilestone($finalization);
@@ -96,6 +98,7 @@ class FinalizationController extends Controller
     public function rejectItem(Request $request, ThesisFinalization $finalization, string $item): RedirectResponse
     {
         $this->authorizePembimbing($request->user(), $finalization);
+        $this->validateItem($finalization, $item);
         $approval = $this->getApproval($finalization, $item, $request->user()->id);
         $approval->update(['status' => 'rejected']);
         $finalization->update([$item.'_status' => 'rejected']);
@@ -105,9 +108,30 @@ class FinalizationController extends Controller
     public function unlockItem(Request $request, ThesisFinalization $finalization, string $item): RedirectResponse
     {
         $this->authorizePembimbing($request->user(), $finalization);
+        $this->validateItem($finalization, $item);
         $finalization->update([$item.'_status' => 'draft']);
         $finalization->approvals()->where('item', $item)->update(['status' => 'pending']);
         return back()->with('success', "Item '{$item}' dibuka kembali.");
+    }
+
+    /**
+     * Pastikan $item termasuk daftar item yang berlaku untuk jenis program (TA/KP).
+     */
+    private function validateItem(ThesisFinalization $finalization, string $item): void
+    {
+        $ta = $finalization->mahasiswaTa;
+        $allowed = $ta && $ta->isKp() ? ['full_file'] : self::ITEMS;
+        abort_unless(in_array($item, $allowed, true), 404, "Item '{$item}' tidak dikenal.");
+    }
+
+    /**
+     * Jumlah approval yang dibutuhkan = jumlah pembimbing yang benar-benar ada
+     * (pembimbing_2 opsional, jadi tidak selalu 2).
+     */
+    private function requiredApprovals(ThesisFinalization $finalization): int
+    {
+        $ta = $finalization->mahasiswaTa;
+        return $ta ? count(array_filter([$ta->pembimbing_1_id, $ta->pembimbing_2_id])) : 1;
     }
 
     public function inputNilai(Request $request, ThesisFinalization $finalization): RedirectResponse

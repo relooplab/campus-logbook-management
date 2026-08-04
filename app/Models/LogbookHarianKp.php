@@ -18,6 +18,7 @@ class LogbookHarianKp extends Model
 
     protected $fillable = [
         'mahasiswa_ta_id',
+        'created_by',
         'tanggal',
         'kegiatan',
         'kendala',
@@ -38,5 +39,13 @@ class LogbookHarianKp extends Model
     public function mahasiswaTa(): BelongsTo
     {
         return $this->belongsTo(MahasiswaTa::class, 'mahasiswa_ta_id');
+    }
+
+    /**
+     * Penulis asli catatan harian (untuk akuntabilitas KP kelompok).
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }
