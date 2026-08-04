@@ -197,10 +197,24 @@ class LogbookController extends Controller
                 : LogbookEntry::query()->whereRaw('1 = 0');
         } elseif ($user->isDosen()) {
             // Semua entry dari TA yang dibimbing dosen ini.
+            // TA di mana dosen adalah pembimbing ATAU penguji.
             $taIds = MahasiswaTa::where('pembimbing_1_id', $user->id)
                 ->orWhere('pembimbing_2_id', $user->id)
+                ->orWhere('penguji_1_id', $user->id)
+                ->orWhere('penguji_2_id', $user->id)
                 ->pluck('id');
-            $query = LogbookEntry::where(fn ($q) => $q->whereIn('mahasiswa_ta_id', $taIds)->orWhere('dosen_id', $user->id))
+
+            // TA dari dosen lain yang punya hubungan langsung (grup/TA bersama).
+            $relatedTaIds = MahasiswaTa::where(function ($q) use ($user) {
+                $q->whereIn('pembimbing_1_id', $user->relatedDosenIds())
+                    ->orWhereIn('pembimbing_2_id', $user->relatedDosenIds())
+                    ->orWhereIn('penguji_1_id', $user->relatedDosenIds())
+                    ->orWhereIn('penguji_2_id', $user->relatedDosenIds());
+            })->pluck('id');
+
+            $query = LogbookEntry::where(fn ($q) => $q->whereIn('mahasiswa_ta_id', $taIds)
+                    ->orWhereIn('mahasiswa_ta_id', $relatedTaIds)
+                    ->orWhere('dosen_id', $user->id))
                 ->with(['mahasiswaTa.mahasiswa']);
         } else {
             $query = LogbookEntry::with(['mahasiswaTa.mahasiswa']);

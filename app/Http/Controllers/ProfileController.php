@@ -106,11 +106,34 @@ class ProfileController extends Controller
     }
 
     /**
-     * Lihat profil user lain (mahasiswa -> dosen, dosen/admin -> mahasiswa, dll).
+     * Lihat profil user lain — hanya jika ada hubungan langsung
+     * (pembimbing/penguji/mahasiswa bimbingan, TA bersama, atau grup yang sama).
      */
     public function show(Request $request, User $user): View
     {
-        // Semua user login boleh melihat profil pengguna lain.
+        $viewer = $request->user();
+
+        // Admin selalu bisa melihat profil.
+        if ($viewer->isAdmin()) {
+            return $this->renderProfile($user);
+        }
+
+        // Lihat profil sendiri.
+        if ($viewer->id === $user->id) {
+            return $this->renderProfile($user);
+        }
+
+        // Gunakan aturan "hanya hubungan langsung".
+        abort_unless($viewer->hasDirectRelation($user), 403, 'Anda tidak memiliki hubungan langsung dengan pengguna ini.');
+
+        return $this->renderProfile($user);
+    }
+
+    /**
+     * Render halaman profil dengan data pengguna.
+     */
+    private function renderProfile(User $user): View
+    {
         $user->load('mahasiswaTa');
 
         return view('profile.show', ['profile' => $user]);

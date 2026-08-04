@@ -171,7 +171,11 @@ class ChatController extends Controller
 
         if ($user->isDosen()) {
             // Dosen dengan mahasiswa bimbingannya / penguji, atau admin.
-            if ($other->isDosen() && !$other->isAdmin()) abort(403);
+            if ($other->isDosen() && !$other->isAdmin()) {
+                // Dosen boleh chat dengan dosen lain jika ada hubungan langsung
+                // (TA bersama atau grup yang sama).
+                abort_unless($user->hasDirectRelation($other), 403, 'Anda tidak memiliki hubungan langsung dengan dosen ini.');
+            }
             if ($other->isMahasiswa() && !$this->isRelatedTo($user, $other)) abort(403);
             return;
         }

@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-08-04
+
+### Security & Access Control
+
+- **Profile access restricted** — `ProfileController::show` now only allows viewing another user's profile when there is a direct relationship (supervisor/student, shared thesis, or shared group). Admin and self always allowed; otherwise `403`.
+- **Global search filtered** — `UtilityController::globalSearch` now filters results by direct relationship:
+  - Users: only those with a direct relationship to the searcher.
+  - Entries: only from theses connected to the searcher (supervisor/examiner/member/direct relation).
+  - Files: only from connected theses + the searcher's own personal workspace files.
+- **Lecturer logbook list filtered** — `LogbookController::index` now includes theses where the lecturer is an examiner (not just supervisor) and theses from lecturers with a direct relationship (shared group/shared thesis) via the new `User::relatedDosenIds()` helper.
+- **Chat between lecturers restricted** — `ChatController::authorizeChat` now allows a lecturer to chat with another lecturer only when there is a direct relationship (shared thesis or shared group). Lecturers without a relationship get `403`.
+
+### Added
+- `User::relatedDosenIds()` — returns IDs of lecturers with a direct relationship (same approved group or shared thesis).
+
+### Tests
+- All 24 tests pass (65 assertions).
+
 ## [0.2.0] - 2026-08-04
 
 ### Added

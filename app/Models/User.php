@@ -180,6 +180,54 @@ class User extends Authenticatable
     }
 
     /**
+     * ID dosen yang memiliki hubungan langsung dengan user ini.
+     * Mencakup: dosen dalam grup yang sama (approved) + dosen yang
+     * berbagi TA (pembimbing/penguji) dengan user ini.
+     */
+    public function relatedDosenIds(): array
+    {
+        if (!$this->isDosen()) {
+            return [];
+        }
+
+        $ids = [];
+
+        // Dosen dalam grup yang sama (approved).
+        $groupIds = \DB::table('group_members as mine')
+            ->where('mine.user_id', $this->id)
+            ->where('mine.status', 'approved')
+            ->pluck('mine.group_id');
+
+        if ($groupIds->isNotEmpty()) {
+            $groupMemberIds = \DB::table('group_members')
+                ->whereIn('group_id', $groupIds)
+                ->where('status', 'approved')
+                ->where('user_id', '!=', $this->id)
+                ->pluck('user_id')
+                ->all();
+            $ids = array_merge($ids, $groupMemberIds);
+        }
+
+        // Dosen yang berbagi TA (pembimbing/penguji) dengan user ini.
+        $sharedTaIds = MahasiswaTa::where(fn ($q) => $q->where('pembimbing_1_id', $this->id)
+            ->orWhere('pembimbing_2_id', $this->id)
+            ->orWhere('penguji_1_id', $this->id)
+            ->orWhere('penguji_2_id', $this->id))
+            ->pluck('id');
+
+        if ($sharedTaIds->isNotEmpty()) {
+            $taDosenIds = MahasiswaTa::whereIn('id', $sharedTaIds)
+                ->get()
+                ->flatMap(fn ($ta) => $ta->allDosenIds())
+                ->filter(fn ($id) => $id !== $this->id)
+                ->all();
+            $ids = array_merge($ids, $taDosenIds);
+        }
+
+        return array_values(array_unique(array_filter($ids)));
+    }
+
+    /**
      * URL foto profil (atau kosong jika belum ada).
      * Foto disimpan di disk 'public' agar dapat diakses via /storage.
      */

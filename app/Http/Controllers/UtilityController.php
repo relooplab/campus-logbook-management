@@ -27,25 +27,94 @@ class UtilityController extends Controller
             return response()->json(['users' => [], 'entries' => [], 'files' => []]);
         }
 
-        // Mahasiswa & dosen.
+        // Mahasiswa & dosen — hanya yang punya hubungan langsung dengan pencari.
         $users = User::where(function ($w) use ($q) {
             $w->where('name', 'like', "%{$q}%")
                 ->orWhere('identifier', 'like', "%{$q}%")
                 ->orWhere('email', 'like', "%{$q}%");
-        })->limit(8)->get(['id', 'name', 'identifier', 'roles']);
+        })
+        ->get(['id', 'name', 'identifier', 'roles'])
+        ->filter(fn ($u) => $user->isAdmin() || $user->id === $u->id || $user->hasDirectRelation($u))
+        ->take(8)
+        ->values();
 
-        // Entry logbook (topik / progres / mahasiswa).
+        // Entry logbook — hanya dari TA yang terhubung dengan pencari.
         $entries = LogbookEntry::where(function ($w) use ($q) {
             $w->where('topik', 'like', "%{$q}%")
                 ->orWhere('progres_kendala', 'like', "%{$q}%")
                 ->orWhereHas('mahasiswaTa.mahasiswa', fn ($m) => $m->where('name', 'like', "%{$q}%"));
-        })->with('mahasiswaTa.mahasiswa')->limit(8)->get();
+        })
+        ->with('mahasiswaTa.mahasiswa')
+        ->get()
+        ->filter(function ($e) use ($user) {
+            if ($user->isAdmin()) {
+                return true;
+            }
+            $ta = $e->mahasiswaTa;
+            if (!$ta) {
+                return false;
+            }
+            // Mahasiswa pemilik/anggota TA.
+            if ($ta->isMember($user)) {
+                return true;
+            }
+            // Dosen pembimbing/penguji.
+            if ($user->isDosen() && ($ta->isPembimbing($user) || $ta->isPenguji($user))) {
+                return true;
+            }
+            // Dosen lain yang punya hubungan langsung dengan dosen terkait TA.
+            if ($user->isDosen()) {
+                foreach ($ta->allDosenIds() as $dosenId) {
+                    if ($dosen = User::find($dosenId)) {
+                        if ($user->hasDirectRelation($dosen)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        })
+        ->take(8)
+        ->values();
 
-        // File workspace.
+        // File workspace — hanya dari TA yang terhubung dengan pencari.
         $files = WorkspaceFile::where(function ($w) use ($q) {
             $w->where('original_name', 'like', "%{$q}%")
                 ->orWhere('description', 'like', "%{$q}%");
-        })->with('mahasiswaTa.mahasiswa')->limit(8)->get();
+        })
+        ->with('mahasiswaTa.mahasiswa')
+        ->get()
+        ->filter(function ($f) use ($user) {
+            if ($user->isAdmin()) {
+                return true;
+            }
+            // File workspace pribadi dosen.
+            if ($f->user_id) {
+                return $f->user_id === $user->id;
+            }
+            $ta = $f->mahasiswaTa;
+            if (!$ta) {
+                return false;
+            }
+            if ($ta->isMember($user)) {
+                return true;
+            }
+            if ($user->isDosen() && ($ta->isPembimbing($user) || $ta->isPenguji($user))) {
+                return true;
+            }
+            if ($user->isDosen()) {
+                foreach ($ta->allDosenIds() as $dosenId) {
+                    if ($dosen = User::find($dosenId)) {
+                        if ($user->hasDirectRelation($dosen)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        })
+        ->take(8)
+        ->values();
 
         return response()->json([
             'users' => $users->map(fn ($u) => [
