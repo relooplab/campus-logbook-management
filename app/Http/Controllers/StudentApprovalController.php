@@ -13,18 +13,28 @@ use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
- * Daftar & persetujuan registrasi mahasiswa (mode individual).
- * Dosen menyetujui akun mahasiswa & menetapkan perannya.
+ * Persetujuan attachment dosen (alur baru).
+ * Mahasiswa aktif memilih dosen → MahasiswaTa status pending_approval.
+ * Dosen menyetujui/tolak, dan bisa mengubah peran (pembimbing/penguji).
  */
 class StudentApprovalController extends Controller
 {
     /**
-     * Daftar mahasiswa pending registrasi.
+     * Daftar permintaan attachment yang menunggu persetujuan dosen ini.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $pending = User::role('mahasiswa')
-            ->where('registration_status', 'pending')
+        $user = $request->user();
+
+        // Mahasiswa yang memilih dosen ini sebagai pembimbing/penguji, status pending_approval.
+        $pending = MahasiswaTa::where('status_ta', MahasiswaTa::STATUS_PENDING_APPROVAL)
+            ->where(function ($q) use ($user) {
+                $q->where('pembimbing_1_id', $user->id)
+                    ->orWhere('pembimbing_2_id', $user->id)
+                    ->orWhere('penguji_1_id', $user->id)
+                    ->orWhere('penguji_2_id', $user->id);
+            })
+            ->with(['mahasiswa', 'pembimbing1', 'pembimbing2', 'penguji1', 'penguji2'])
             ->orderBy('created_at')
             ->get();
 
@@ -33,9 +43,7 @@ class StudentApprovalController extends Controller
 
     /**
      * Tambah mahasiswa manual oleh dosen (mode individual) — hanya input email.
-     * Akun mahasiswa dibuat ber-status pending, nama & password diisi sementara
-     * (nama = bagian lokal email, password acak). Dosen kemudian menyetujui &
-     * menetapkan peran via halaman persetujuan.
+     * Akun dibuat status active (verifikasi email menyusul).
      */
     public function invite(Request $request): RedirectResponse
     {
@@ -52,7 +60,7 @@ class StudentApprovalController extends Controller
             'name' => $name,
             'email' => $email,
             'password' => Hash::make($password),
-            'registration_status' => 'pending',
+            'registration_status' => 'active',
             'institution_id' => Feature::isInstitution() ? $request->user()->institution_id : null,
         ]);
         $user->syncRoles(['mahasiswa']);
@@ -61,26 +69,29 @@ class StudentApprovalController extends Controller
         $this->copyUniversityToStudent($request->user(), $user);
 
         return redirect()->route('approval.index')
-            ->with('success', "Mahasiswa '{$name}' ditambahkan. Lengkapi nama & setujui di bawah.");
+            ->with('success', "Mahasiswa '{$name}' ditambahkan. Mahasiswa perlu verifikasi email & memilih dosen.");
     }
 
     /**
-     * Setujui mahasiswa & assign peran (pembimbing/penguji).
+     * Setujui permintaan attachment — MahasiswaTa jadi aktif, mahasiswa jadi verified.
+     * Dosen bisa mengubah peran (pembimbing/penguji) saat menyetujui.
      */
-    public function approve(Request $request, User $mahasiswa): RedirectResponse
+    public function approve(Request $request, MahasiswaTa $mahasiswaTa): RedirectResponse
     {
-        $validated = $request->validate([
-            'judul_ta' => ['nullable', 'string', 'max:255'],
-            'role_dosen' => ['required', 'in:pembimbing_1,pembimbing_2,penguji_1,penguji_2'],
-            'target_sesi' => ['nullable', 'integer', 'min:1'],
-            'allow_examiner' => ['nullable', 'boolean'],
-        ]);
-
-        abort_if($mahasiswa->registration_status !== 'pending', 400, 'Status mahasiswa bukan pending.');
-
         $dosen = $request->user();
 
-        // Map peran ke kolom sebenarnya (pembimbing_1 -> pembimbing_1_id).
+        // Pastikan dosen ini terkait dengan MahasiswaTa tersebut.
+        abort_unless($mahasiswaTa->isPembimbing($dosen) || $mahasiswaTa->isPenguji($dosen), 403, 'Anda tidak terkait dengan program ini.');
+        abort_unless($mahasiswaTa->status_ta === MahasiswaTa::STATUS_PENDING_APPROVAL, 400, 'Status program bukan pending approval.');
+
+        $validated = $request->validate([
+            'judul_ta' => ['nullable', 'string', 'max:255'],
+            'tempat_kp' => ['nullable', 'string', 'max:255'],
+            'role_dosen' => ['required', 'in:pembimbing_1,pembimbing_2,penguji_1,penguji_2'],
+            'target_sesi' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        // Map peran ke kolom sebenarnya.
         $roleColumn = [
             'pembimbing_1' => 'pembimbing_1_id',
             'pembimbing_2' => 'pembimbing_2_id',
@@ -88,36 +99,52 @@ class StudentApprovalController extends Controller
             'penguji_2' => 'penguji_2_id',
         ][$validated['role_dosen']];
 
-        // Buat data TA & assign peran dosen.
-        $ta = MahasiswaTa::updateOrCreate(
-            ['user_id' => $mahasiswa->id, 'jenis' => MahasiswaTa::JENIS_TA],
-            [
-                'judul_ta' => $validated['judul_ta'],
-                $roleColumn => $dosen->id,
-                'target_sesi' => $validated['target_sesi'] ?? 7,
-                'institution_id' => Feature::isInstitution() ? $dosen->institution_id : null,
-            ]
-        );
+        // Kosongkan peran dosen ini di semua kolom, lalu set ke peran baru.
+        $update = [
+            'judul_ta' => $validated['judul_ta'] ?? $mahasiswaTa->judul_ta,
+            'tempat_kp' => $validated['tempat_kp'] ?? $mahasiswaTa->tempat_kp,
+            'target_sesi' => $validated['target_sesi'] ?? $mahasiswaTa->target_sesi ?? 7,
+            'status_ta' => MahasiswaTa::STATUS_AKTIF,
+        ];
+        foreach (['pembimbing_1_id', 'pembimbing_2_id', 'penguji_1_id', 'penguji_2_id'] as $col) {
+            if ($mahasiswaTa->{$col} === $dosen->id) {
+                $update[$col] = null;
+            }
+        }
+        $update[$roleColumn] = $dosen->id;
+        $mahasiswaTa->update($update);
 
-        // Setujui akun mahasiswa.
-        $mahasiswa->update(['registration_status' => 'approved']);
+        // Mahasiswa jadi verified.
+        $mahasiswaTa->mahasiswa?->update(['registration_status' => 'verified']);
 
         // Mahasiswa yang disetujui otomatis mengikuti institusi dosen.
-        $this->copyUniversityToStudent($dosen, $mahasiswa);
-
-        // Jika mahasiswa mencentang "sebagai penguji" & disetujui dosen -> aktifkan.
-        if ($request->boolean('allow_examiner') && !$mahasiswa->hasRole('dosen')) {
-            // Peran penguji diwakili flag examinable (tanpa menambah role dosen).
-            $mahasiswa->update(['examiner_supervisor_names' => $mahasiswa->examiner_supervisor_names ?: []]);
+        if ($mahasiswaTa->mahasiswa) {
+            $this->copyUniversityToStudent($dosen, $mahasiswaTa->mahasiswa);
         }
 
         return redirect()->route('approval.index')
-            ->with('success', "Mahasiswa '{$mahasiswa->name}' disetujui.");
+            ->with('success', "Mahasiswa '{$mahasiswaTa->mahasiswa?->name}' disetujui sebagai ".str_replace('_', ' ', $validated['role_dosen']).'.');
     }
 
     /**
-     * Salin universitas (direktori) dari dosen ke mahasiswa, sehingga
-     * mahasiswa yang di-invite/disetujui tidak perlu input ulang institusi.
+     * Tolak permintaan attachment — MahasiswaTa jadi ditolak, mahasiswa bisa pilih dosen lagi.
+     */
+    public function reject(Request $request, MahasiswaTa $mahasiswaTa): RedirectResponse
+    {
+        $dosen = $request->user();
+
+        // Pastikan dosen ini terkait dengan MahasiswaTa tersebut.
+        abort_unless($mahasiswaTa->isPembimbing($dosen) || $mahasiswaTa->isPenguji($dosen), 403, 'Anda tidak terkait dengan program ini.');
+        abort_unless($mahasiswaTa->status_ta === MahasiswaTa::STATUS_PENDING_APPROVAL, 400, 'Status program bukan pending approval.');
+
+        $mahasiswaTa->update(['status_ta' => MahasiswaTa::STATUS_DITOLAK]);
+
+        return redirect()->route('approval.index')
+            ->with('success', "Permintaan '{$mahasiswaTa->mahasiswa?->name}' ditolak. Mahasiswa dapat memilih dosen lain.");
+    }
+
+    /**
+     * Salin universitas (direktori) dari dosen ke mahasiswa.
      */
     private function copyUniversityToStudent(User $dosen, User $mahasiswa): void
     {
@@ -140,16 +167,5 @@ class StudentApprovalController extends Controller
             $pivot?->pivot->study_program_id ? \App\Models\StudyProgram::find($pivot->pivot->study_program_id) : null,
             true
         );
-    }
-
-    /**
-     * Tolak registrasi mahasiswa.
-     */
-    public function reject(User $mahasiswa): RedirectResponse
-    {
-        $mahasiswa->update(['registration_status' => 'rejected']);
-
-        return redirect()->route('approval.index')
-            ->with('success', "Registrasi '{$mahasiswa->name}' ditolak.");
     }
 }

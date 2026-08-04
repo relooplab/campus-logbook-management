@@ -52,7 +52,15 @@ class MahasiswaTa extends Model
     public const STATUS_AKTIF = 'aktif';
     public const STATUS_TAMAT = 'tamat';
     public const STATUS_NONAKTIF = 'nonaktif';
-    public const STATUS_TA = [self::STATUS_AKTIF, self::STATUS_TAMAT, self::STATUS_NONAKTIF];
+    public const STATUS_PENDING_APPROVAL = 'pending_approval';
+    public const STATUS_DITOLAK = 'ditolak';
+    public const STATUS_TA = [
+        self::STATUS_AKTIF,
+        self::STATUS_TAMAT,
+        self::STATUS_NONAKTIF,
+        self::STATUS_PENDING_APPROVAL,
+        self::STATUS_DITOLAK,
+    ];
 
     protected $fillable = [
         'institution_id',

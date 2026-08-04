@@ -16,6 +16,26 @@
         </div>
     </div>
 
+    {{-- ===== Banner status mahasiswa (aktif/verified) ===== --}}
+    @if ($mahasiswaStatus === 'active' && !$ta)
+        <div class="px-4 py-3.5 rounded-card border border-status-pending/30 bg-status-pending/10 flex flex-wrap items-center gap-3">
+            <span class="material-symbols-outlined icon-md shrink-0 text-status-pending">person_add</span>
+            <div class="flex-1 min-w-0 text-sm">
+                <p class="font-semibold text-text-primary">Pilih Dosen untuk Memulai Program</p>
+                <p class="text-text-secondary">Pilih dosen pembimbing dan penguji untuk TA/KP Anda.</p>
+            </div>
+            <a href="{{ route('profile.select-dosen') }}" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Pilih Dosen</a>
+        </div>
+    @elseif ($pendingApproval)
+        <div class="px-4 py-3.5 rounded-card border border-status-pending/30 bg-status-pending/10 flex flex-wrap items-center gap-3">
+            <span class="material-symbols-outlined icon-md shrink-0 text-status-pending">schedule</span>
+            <div class="flex-1 min-w-0 text-sm">
+                <p class="font-semibold text-text-primary">Menunggu Persetujuan Dosen</p>
+                <p class="text-text-secondary">Permintaan attachment Anda sedang menunggu persetujuan dosen.</p>
+            </div>
+        </div>
+    @endif
+
     {{-- ===== Aksi Saya ===== --}}
     @if ($ta)
         <div class="card p-6">

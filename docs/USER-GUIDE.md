@@ -60,9 +60,12 @@ Berikut rincian fitur yang tersedia di aplikasi, terlepas dari peran (ketersedia
 ### 3.1 Autentikasi
 
 - **Login** — Masuk dengan email dan kata sandi.
-- **Registrasi mandiri mahasiswa** — Mahasiswa dapat mendaftar sendiri (nama, email, kata sandi). Akun berstatus **pending** hingga disetujui dosen.
-  - Tersedia opsi **"Saya juga penguji"** — jika dicentang, mahasiswa dapat mencatat sidang mahasiswa lain setelah disetujui.
-- **Lupa kata sandi** — Reset kata sandi melalui email.
+- **Verifikasi email** — Setiap akun baru harus **memverifikasi email** sebelum dapat mengakses aplikasi sepenuhnya. Setelah mendaftar, sistem mengirim email verifikasi; pengguna diarahkan ke halaman verifikasi dan dapat mengirim ulang link jika perlu.
+- **Registrasi mandiri mahasiswa** — Mahasiswa dapat mendaftar sendiri (nama, email, kata sandi). Setelah verifikasi email, akun berstatus **active** (belum terhubung dosen). Mahasiswa kemudian **memilih dosen** (pembimbing/penguji) melalui halaman **"Pilih Dosen"**; dosen yang dipilih akan menyetujui atau menolak permintaan attachment.
+  - Tersedia opsi **"Saya sebagai penguji"** — jika dicentang, mahasiswa dapat mencatat sidang mahasiswa lain setelah disetujui.
+- **Status registrasi mahasiswa** — `active` (email terverifikasi, belum punya dosen), `verified` (sudah disetujui dosen), `rejected` (ditolak, tidak bisa login).
+- **Pembersihan otomatis** — Mahasiswa berstatus `active` yang tidak memilih dosen dalam 1 bulan akan dihapus otomatis oleh sistem (terjadwal harian).
+- **Lupa kata sandi** — Reset kata sandi melalui email. Pesan yang ditampilkan seragam untuk mencegah penebakan email terdaftar.
 - **Keluar** — Tombol keluar tersedia di menu profil.
 
 ### 3.2 Dashboard
@@ -249,13 +252,18 @@ Selain workspace mahasiswa, dosen juga memiliki **workspace pribadi** melalui me
 
 ### 4.1 Alur Kerja Mahasiswa
 
-#### 4.1.1 Registrasi & Menunggu Persetujuan
+#### 4.1.1 Registrasi & Memilih Dosen
 
 1. Buka halaman **Daftar**.
 2. Isi **nama**, **email**, dan **kata sandi**.
-3. (Opsional) Centang **"Saya juga penguji"** dan isi nama pembimbing (maks 3) jika ingin mencatat sidang mahasiswa lain.
-4. Submit → akun dibuat berstatus **pending** (belum bisa login penuh).
-5. Tunggu **persetujuan dosen**. Setelah disetujui, Anda dapat login dan data TA Anda tersedia.
+3. (Opsional) Centang **"Saya sebagai penguji"** dan isi nama pembimbing (maks 3) jika ingin mencatat sidang mahasiswa lain.
+4. Submit → sistem mengirim **email verifikasi**. Buka email dan klik link verifikasi.
+5. Setelah verifikasi, Anda dapat login. Akun berstatus **active** (belum terhubung dosen).
+6. Di dashboard, klik banner **"Pilih Dosen untuk Memulai Program"** (atau menu **Pilih Dosen**).
+7. Pilih **jenis program** (TA/KP), **Pembimbing 1** (wajib), serta **Pembimbing 2**, **Penguji 1/2** (opsional) → klik **Kirim Permintaan**.
+8. Dosen yang dipilih akan **menyetujui** atau **menolak** permintaan. Setelah disetujui, program Anda **aktif** dan data TA tersedia.
+   - Jika ditolak, Anda dapat memilih dosen lain.
+   - Jika Anda tidak memilih dosen dalam 1 bulan, akun dapat dihapus otomatis oleh sistem.
 
 #### 4.1.2 Mencatat Logbook Bimbingan
 
@@ -320,17 +328,17 @@ Jika akun Anda diizinkan menjadi penguji, Anda dapat mencatat riwayat sidang/men
 
 ### 4.2 Alur Kerja Dosen
 
-#### 4.2.1 Menyetujui Registrasi Mahasiswa
+#### 4.2.1 Menyetujui Permintaan Attachment Dosen
 
-1. Buka menu **Persetujuan** (di sidebar).
-2. Lihat daftar mahasiswa yang menunggu persetujuan (status **Pending**).
+1. Buka menu **Persetujuan** (di sidebar) — halaman **"Persetujuan Attachment Dosen"**.
+2. Lihat daftar mahasiswa yang **memilih Anda** sebagai pembimbing/penguji (status **Menunggu**).
 3. Untuk menyetujui, isi:
-   - **Judul TA**
+   - **Judul TA** (atau **Tempat KP** untuk program KP)
    - **Peran Anda** untuk mahasiswa tersebut (Pembimbing 1 / Pembimbing 2 / Penguji 1 / Penguji 2)
    - **Target Sesi**
-   - (Jika mahasiswa berstatus "ingin jadi penguji") centang **Izinkan menjadi penguji**
-4. Klik **Setujui & Assign** → akun mahasiswa diaktifkan dan data TA dibuat.
-5. Alternatif, klik **Tolak** untuk menolak registrasi.
+4. Klik **Setujui & Assign** → program menjadi **aktif** dan mahasiswa berstatus **verified**.
+5. Alternatif, klik **Tolak** untuk menolak permintaan — mahasiswa dapat memilih dosen lain.
+6. Anda juga dapat **menambah mahasiswa manual** (input email) — mahasiswa perlu verifikasi email & memilih dosen.
 
 #### 4.2.2 Me-review Logbook
 
@@ -484,7 +492,7 @@ Mahasiswa mendaftar → Dosen menyetujui & assign
 A: Error ini terjadi karena token keamanan (CSRF) sesi tidak valid atau kedaluwarsa. Solusi: muat ulang halaman login, dan pastikan halaman tidak dibiarkan terbuka terlalu lama. Jika terus terjadi, hubungi administrator untuk memeriksa konfigurasi sesi.
 
 **Q: Saya mahasiswa, tetapi tidak bisa login setelah mendaftar.**
-A: Akun Anda berstatus **pending** dan menunggu persetujuan dosen. Silakan hubungi dosen Anda untuk menyetujui akun.
+A: Pastikan Anda sudah **memverifikasi email** (klik link di email yang dikirim setelah mendaftar). Jika akun berstatus **rejected**, hubungi admin. Jika berstatus **active**, Anda sudah bisa login — selanjutnya pilih dosen melalui menu **"Pilih Dosen"** di dashboard.
 
 **Q: Bagaimana cara mengubah atau mengirim draf logbook?**
 A: Buka entri draf dari halaman **Logbook**, klik **Edit** untuk mengubah, lalu **Kirim ke dosen** untuk mengirim.

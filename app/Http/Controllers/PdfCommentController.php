@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\LogbookEntry;
 use App\Models\PdfComment;
+use App\Policies\LogbookEntryPolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,7 +15,9 @@ class PdfCommentController extends Controller
         $this->authorize('view', $comment->entry);
 
         $status = $comment->resolution_status ?: ($comment->is_resolved ? PdfComment::STATUS_RESOLVED : PdfComment::STATUS_OPEN);
-        if ($request->user()->isDosen()) {
+        $isReviewer = app(LogbookEntryPolicy::class)->isReviewer($request->user(), $comment->entry);
+
+        if ($isReviewer) {
             $next = $status === PdfComment::STATUS_RESOLVED
                 ? PdfComment::STATUS_OPEN
                 : PdfComment::STATUS_RESOLVED;
@@ -45,8 +48,9 @@ class PdfCommentController extends Controller
     {
         $this->authorize('view', $comment->entry);
 
-        // Hanya pembuat atau dosen yang boleh menghapus.
-        if ($request->user()->id !== $comment->user_id && !$request->user()->isDosen()) {
+        // Hanya pembuat komentar atau dosen pembimbing/reviewer entri ini yang boleh menghapus.
+        $isReviewer = app(LogbookEntryPolicy::class)->isReviewer($request->user(), $comment->entry);
+        if ($request->user()->id !== $comment->user_id && !$isReviewer) {
             abort(403);
         }
 

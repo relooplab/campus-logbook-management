@@ -301,6 +301,10 @@ class DashboardController extends Controller
             ? $ta->seminarSubmissions()->latest()->first()
             : null;
 
+        // ---- Status mahasiswa (aktif/verified) untuk banner ----
+        $mahasiswaStatus = $user->registration_status;
+        $pendingApproval = $ta && $ta->status_ta === \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL;
+
         return view('dashboard.mahasiswa', compact(
             'programs', 'activeProgram', 'ta', 'entries', 'approved', 'target', 'progressPercent',
             'faseKeys', 'faseIndex',
@@ -309,7 +313,8 @@ class DashboardController extends Controller
             'stats', 'timeline', 'heatmap', 'regularity', 'regularityTooltip',
             'unreadAnnouncements',
             'draftCount', 'revisiCount', 'unresolvedActionItems',
-            'university', 'nilai', 'agendaTerdekat', 'seminarSubmission'
+            'university', 'nilai', 'agendaTerdekat', 'seminarSubmission',
+            'mahasiswaStatus', 'pendingApproval'
         ));
     }
 

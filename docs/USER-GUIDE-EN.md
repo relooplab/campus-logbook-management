@@ -60,9 +60,12 @@ The following describes the features available in the application, regardless of
 ### 3.1 Authentication
 
 - **Login** — Sign in with email and password.
-- **Student self-registration** — Students can register themselves (name, email, password). The account is set to **pending** status until approved by a lecturer.
+- **Email verification** — Every new account must **verify their email address** before full access. After registration, the system sends a verification email; users are directed to a verification page and can resend the link if needed.
+- **Student self-registration** — Students can register themselves (name, email, password). After email verification, the account is set to **active** (not yet linked to a lecturer). Students then **select a lecturer** (supervisor/examiner) via the **"Select Lecturer"** page; the selected lecturer approves or rejects the attachment request.
   - There is an **"I am also an examiner"** option — if checked, the student can record examination sessions of other students once approved.
-- **Forgot password** — Reset your password via email.
+- **Student registration statuses** — `active` (email verified, no lecturer), `verified` (approved by a lecturer), `rejected` (denied, cannot log in).
+- **Automatic cleanup** — Students with `active` status who do not select a lecturer within 1 month are automatically removed by the system (scheduled daily).
+- **Forgot password** — Reset your password via email. The displayed message is uniform to prevent email enumeration.
 - **Logout** — The logout button is available in the profile menu.
 
 ### 3.2 Dashboard
@@ -249,13 +252,18 @@ In addition to the student workspace, lecturers also have a **personal workspace
 
 ### 4.1 Student Workflow
 
-#### 4.1.1 Registration & Awaiting Approval
+#### 4.1.1 Registration & Selecting a Lecturer
 
 1. Open the **Register** page.
 2. Fill in **name**, **email**, and **password**.
 3. (Optional) Check **"I am also an examiner"** and fill in the supervisor names (max 3) if you want to record examination sessions of other students.
-4. Submit → the account is created as **pending** (cannot log in fully yet).
-5. Wait for **lecturer approval**. Once approved, you can log in and your thesis data becomes available.
+4. Submit → the system sends a **verification email**. Open the email and click the verification link.
+5. After verification, you can log in. Your account is **active** (not yet linked to a lecturer).
+6. On the dashboard, click the **"Select Lecturer to Start a Program"** banner (or the **Select Lecturer** menu).
+7. Choose the **program type** (TA/KP), **Supervisor 1** (required), and optionally **Supervisor 2**, **Examiner 1/2** → click **Send Request**.
+8. The selected lecturer will **approve** or **reject** the request. Once approved, your program becomes **active** and thesis data becomes available.
+   - If rejected, you can select another lecturer.
+   - If you do not select a lecturer within 1 month, your account may be automatically removed.
 
 #### 4.1.2 Recording a Supervision Logbook
 
@@ -320,17 +328,17 @@ If your account is permitted to be an examiner, you can record examination sessi
 
 ### 4.2 Lecturer Workflow
 
-#### 4.2.1 Approving Student Registrations
+#### 4.2.1 Approving Lecturer Attachment Requests
 
-1. Open the **Approvals** menu (in the sidebar).
-2. View the list of students awaiting approval (status **Pending**).
+1. Open the **Approvals** menu (in the sidebar) — the **"Lecturer Attachment Approvals"** page.
+2. View the list of students who **selected you** as supervisor/examiner (status **Pending**).
 3. To approve, fill in:
-   - **Thesis Title**
+   - **Thesis Title** (or **KP Location** for internship programs)
    - **Your role** for that student (Supervisor 1 / Supervisor 2 / Examiner 1 / Examiner 2)
    - **Target Sessions**
-   - (If the student is marked "wants to be an examiner") check **Allow to be an examiner**
-4. Click **Approve & Assign** → the student account is activated and thesis data is created.
-5. Alternatively, click **Reject** to reject the registration.
+4. Click **Approve & Assign** → the program becomes **active** and the student is marked **verified**.
+5. Alternatively, click **Reject** to reject the request — the student can select another lecturer.
+6. You can also **add a student manually** (enter email) — the student needs to verify their email and select a lecturer.
 
 #### 4.2.2 Reviewing Logbooks
 
@@ -484,7 +492,7 @@ Student registers → Lecturer approves & assigns
 A: This error occurs when the session security token (CSRF) is invalid or expired. Solution: reload the login page, and avoid leaving the page open for too long. If it persists, contact the administrator to check the session configuration.
 
 **Q: I am a student, but I cannot log in after registering.**
-A: Your account is in **pending** status and awaits lecturer approval. Please contact your lecturer to approve the account.
+A: Make sure you have **verified your email** (click the link in the email sent after registration). If your account is **rejected**, contact the admin. If your account is **active**, you can log in — next, select a lecturer via the **"Select Lecturer"** menu on the dashboard.
 
 **Q: How do I edit or submit a draft logbook?**
 A: Open the draft entry from the **Logbook** page, click **Edit** to modify it, then **Send to lecturer** to submit.

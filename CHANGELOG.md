@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-08-04
+
+### Added
+
+#### Email Verification (MustVerifyEmail)
+- `User` model now implements `Illuminate\Contracts\Auth\MustVerifyEmail`.
+- New email verification page (`/email/verify`) with resend-link functionality.
+- Verification routes: `verification.notice`, `verification.verify` (signed), `verification.send` (throttled 6/min).
+- Login redirects unverified users to the verification notice page.
+- Migration `set_email_verified_for_existing_users` marks all existing users as verified (grandfathered in).
+
+#### New Student Onboarding Flow (Select Lecturer)
+- Students self-register and are immediately **active** after email verification (no longer `pending`).
+- New **"Pilih Dosen"** page (`/profil/pilih-dosen`) — students select their preferred supervisor/examiner (Pembimbing 1/2, Penguji 1/2) and program type (TA/KP).
+- Selecting a lecturer creates a `MahasiswaTa` with status `pending_approval`; the selected lecturer is notified.
+- Lecturer approval page (`/approval`) now lists **lecturer attachment requests** (MahasiswaTa with `pending_approval` status) instead of pending user registrations.
+- Lecturers can approve (assign role, set title/KP location, target sessions) or reject attachment requests.
+- New `MahasiswaTa` statuses: `pending_approval` and `ditolak`.
+- New `User` helpers: `isActive()` (email verified, no lecturer) and `isVerified()` (has an approved lecturer).
+- Migration `set_mahasiswa_registration_status` backfills existing students: those with a lecturer → `verified`, others → `active`.
+
+#### Inactive Student Cleanup
+- New command `students:delete-inactive` — deletes `active` students (email verified, no lecturer attached) who have not become `verified` within 1 month.
+- Scheduled daily at 03:30 (Asia/Jakarta) with `withoutOverlapping()`.
+- Deletion runs in a transaction (MahasiswaTa cascade + user).
+
+#### Security Hardening
+- Rate limiting on auth endpoints: login (6/min), register (5/min), forgot-password (3/min), reset-password (5/min), verification resend (6/min).
+- Forgot-password endpoint now returns a **uniform response** regardless of whether the email exists (prevents email enumeration).
+- Login blocks `rejected` students and `pending` lecturers with clear error messages.
+- PDF comment resolve/delete restricted to the actual entry reviewer via new `LogbookEntryPolicy::isReviewer()` (narrower than `view`, which also covers cross-link group access).
+
+### Changed
+- `RegisterController`: students register as `active` (email verification follows); lecturers remain `pending` (admin approval).
+- `LoginController`: email verification check + rejected/pending account handling.
+- `StudentApprovalController`: reworked from user-registration approval to **lecturer attachment approval** (`approve`/`reject` now operate on `MahasiswaTa`).
+- `ProfileController`: added `selectDosen()` and `storeDosen()` methods.
+- `DashboardController`: student dashboard shows status banners ("Pilih Dosen" / "Menunggu Persetujuan Dosen").
+- `PdfCommentController`: uses `LogbookEntryPolicy::isReviewer()` for resolve/delete authorization.
+- `routes/web.php`: added verification routes, `profile.select-dosen`/`profile.store-dosen`, throttling middleware, and updated approval route bindings to `MahasiswaTa`.
+- `routes/console.php`: scheduled `students:delete-inactive` daily at 03:30.
+- `MahasiswaTa`: added `STATUS_PENDING_APPROVAL` and `STATUS_DITOLAK` constants.
+- Updated `README.md`, `docs/MODE-SPEC.md`, `docs/USER-GUIDE.md`, and `docs/USER-GUIDE-EN.md`.
+
+### Tests
+- Existing tests need updates to reflect the new registration/approval flow (pending → active/verified).
+
 ## [0.4.0] - 2026-08-04
 
 ### Added
@@ -183,6 +230,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `StudentApprovalTest` (invite by email, duplicate rejection, approve & assign role).
 - All 24 tests pass (65 assertions).
 
+[0.5.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.0
 [0.4.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.4.0
 [0.3.1]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.3.1
 [0.3.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.3

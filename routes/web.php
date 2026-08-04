@@ -26,6 +26,8 @@ use App\Http\Controllers\SchedulingController;
 use App\Http\Controllers\SeminarSubmissionController;
 use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\WorkspaceController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -41,17 +43,17 @@ Route::get('/', function () {
 // ------------------------------------------------------------------ auth
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login'])->name('login.attempt');
+    Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:6,1')->name('login.attempt');
 
     // Forgot / reset password.
     Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
-    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])->middleware('throttle:3,1')->name('password.email');
     Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
+    Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->middleware('throttle:5,1')->name('password.update');
 
     // Registrasi mandiri mahasiswa.
     Route::get('/register', [RegisterController::class, 'showRegisterForm'])->name('register');
-    Route::post('/register', [RegisterController::class, 'register'])->name('register');
+    Route::post('/register', [RegisterController::class, 'register'])->middleware('throttle:5,1')->name('register');
 });
 
 Route::middleware('auth')->group(function () {
@@ -59,12 +61,23 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/dashboard/switch', [DashboardController::class, 'switchDashboard'])->name('dashboard.switch');
 
-    // Persetujuan registrasi mahasiswa (dosen/admin).
+    // -------------------------------------------------- verifikasi email
+    Route::get('/email/verify', fn () => view('auth.verify-email'))->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $request->fulfill();
+        return redirect()->route('dashboard');
+    })->middleware(['signed'])->name('verification.verify');
+    Route::post('/email/verification-notification', function (Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+        return back()->with('status', 'verification-link-sent');
+    })->middleware(['throttle:6,1'])->name('verification.send');
+
+    // Persetujuan attachment dosen (mahasiswa pilih dosen → dosen setujui/tolak).
     Route::middleware('role_or_permission:dosen|admin')->group(function () {
         Route::get('/approval', [StudentApprovalController::class, 'index'])->name('approval.index');
         Route::post('/approval/invite', [StudentApprovalController::class, 'invite'])->name('approval.invite');
-        Route::post('/approval/{mahasiswa}/approve', [StudentApprovalController::class, 'approve'])->name('approval.approve');
-        Route::post('/approval/{mahasiswa}/reject', [StudentApprovalController::class, 'reject'])->name('approval.reject');
+        Route::post('/approval/{mahasiswaTa}/approve', [StudentApprovalController::class, 'approve'])->name('approval.approve');
+        Route::post('/approval/{mahasiswaTa}/reject', [StudentApprovalController::class, 'reject'])->name('approval.reject');
     });
 
     // Fase D: dosen mencatat sidang / riwayat menguji (termasuk mahasiswa orang lain).
@@ -82,6 +95,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/profil', [ProfileController::class, 'updateProfile'])->name('profile.update');
     Route::put('/profil/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::put('/profil/program/{mahasiswaTa}', [ProfileController::class, 'updateProgram'])->name('profile.program');
+    Route::get('/profil/pilih-dosen', [ProfileController::class, 'selectDosen'])->name('profile.select-dosen');
+    Route::post('/profil/pilih-dosen', [ProfileController::class, 'storeDosen'])->name('profile.store-dosen');
     Route::get('/profil/{user}', [ProfileController::class, 'show'])->name('profile.show');
 
     // ------------------------------------------------------ detail & fase TA

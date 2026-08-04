@@ -5,12 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
@@ -303,6 +304,22 @@ class User extends Authenticatable
     public function isMahasiswa(): bool
     {
         return $this->hasRole('mahasiswa');
+    }
+
+    /**
+     * Mahasiswa sudah verifikasi email (aktif) — belum tentu attach dosen.
+     */
+    public function isActive(): bool
+    {
+        return $this->isMahasiswa() && $this->registration_status === 'active';
+    }
+
+    /**
+     * Mahasiswa sudah verified — sudah punya MahasiswaTa dengan dosen (disetujui).
+     */
+    public function isVerified(): bool
+    {
+        return $this->isMahasiswa() && $this->registration_status === 'verified';
     }
 
     /**

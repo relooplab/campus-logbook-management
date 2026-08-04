@@ -139,53 +139,62 @@ Dipakai di model yang punya `institution_id` (mis. `MahasiswaTa`). Di mode insti
 
 ---
 
-## 5A. Alur Registrasi Mahasiswa (khusus mode individual)
+## 5A. Alur Registrasi Mahasiswa & Attachment Dosen
 
-Di mode individual, **mahasiswa dapat mendaftar sendiri** dengan form sederhana, lalu **dosen menyetujui** dan **menetapkan peran** (pembimbing / penguji / keduanya).
+Di mode individual, **mahasiswa dapat mendaftar sendiri** dengan form sederhana, **memverifikasi email**, lalu **memilih dosen** (pembimbing/penguji) yang akan menyetujui atau menolak permintaan attachment.
 
 ### 5A.1 Alur
 
 ```
 1. Mahasiswa membuka halaman "Daftar" (register).
-2. Form sederhana: NAMA, EMAIL (wajib pertama), PASSWORD.
-   → Akun dibuat ber-role `mahasiswa`, status PENDING (belum disetujui).
-3. Dosen melihat daftar "Registrasi Mahasiswa Pending".
-4. Dosen klik "Setujui & Assign":
-   - setujui akun mahasiswa, dan
+2. Form sederhana: NAMA, EMAIL, PASSWORD.
+   → Akun dibuat ber-role `mahasiswa`, status ACTIVE (sudah verifikasi email, belum attach dosen).
+3. Sistem mengirim email verifikasi; mahasiswa harus verifikasi sebelum login penuh.
+4. Setelah login, mahasiswa melihat banner "Pilih Dosen untuk Memulai Program" di dashboard.
+5. Mahasiswa membuka halaman "Pilih Dosen" (/profil/pilih-dosen):
+   - pilih jenis program (TA/KP),
+   - pilih Pembimbing 1 (wajib), Pembimbing 2, Penguji 1, Penguji 2 (opsional).
+   → Sistem membuat `mahasiswa_ta` dengan status `pending_approval`.
+6. Dosen yang dipilih menerima notifikasi & melihat daftar "Permintaan Menunggu" di /approval.
+7. Dosen klik "Setujui & Assign":
    - pilih peran dosen terhadap TA-nya:
        • Pembimbing 1 / Pembimbing 2
        • Penguji 1 / Penguji 2
-       • (atau kombinasi — dosen individual bisa pembimbing sekaligus penguji)
-   - isi data TA (judul, target sesi) bila perlu.
-5. Mahasiswa dapat login & memakai aplikasi; TA ter-assign ke dosen tsb.
+   - isi data TA (judul/tempat KP, target sesi) bila perlu.
+   → `mahasiswa_ta` menjadi `aktif`, mahasiswa menjadi `verified`.
+   Atau dosen klik "Tolak" → `mahasiswa_ta` menjadi `ditolak`, mahasiswa dapat memilih dosen lain.
+8. Mahasiswa dapat memakai aplikasi; TA ter-assign ke dosen tsb.
 ```
 
-### 5A.2 Skema data untuk status pending
-
-Tambahkan kolom pada `users` (atau tabel `pending_mahasiswa`):
+### 5A.2 Skema data untuk status registrasi
 
 ```php
 // users
-$table->string('registration_status')->default('approved');
-// 'pending' | 'approved' | 'rejected'
+$table->string('registration_status')->default('active');
+// 'active'   → mahasiswa sudah verifikasi email, belum attach dosen
+// 'verified' → mahasiswa sudah punya MahasiswaTa dengan dosen (disetujui)
+// 'rejected' → ditolak (tidak bisa login)
+// 'pending'  → khusus dosen: menunggu persetujuan admin
 ```
 
-- `registration_status = 'pending'` → mahasiswa tidak bisa login penuh / TA belum ada.
-- Dosen yang approve → set `approved` + buat `mahasiswa_ta` + assign peran.
+- `registration_status = 'active'` → mahasiswa bisa login, tetapi belum punya program/dosen.
+- Dosen yang approve → set `verified` + `mahasiswa_ta.status_ta = aktif`.
+- Mahasiswa yang ditolak → `rejected` (tidak bisa login).
 
 ### 5A.3 Form registrasi (individual)
 
 - Hanya membutuhkan **nama**, **email** (wajib, validasi unik), **password**.
 - Tidak perlu NIM/NIDN di awal (bisa dilengkapi nanti).
-- Setelah submit → pesan "Pendaftaran dikirim, menunggu persetujuan dosen."
+- Setelah submit → email verifikasi dikirim; mahasiswa diarahkan ke halaman verifikasi.
+- **Dosen** yang mendaftar tetap berstatus `pending` dan menunggu persetujuan admin.
 
 ### 5A.4 Opsi "sebagai penguji" saat registrasi
 
-Saat mahasiswa mendaftar, tersedia **checkbox "Saya juga penguji (mencatat sidang mahasiswa lain)"**.
+Saat mahasiswa mendaftar, tersedia **checkbox "Saya sebagai penguji"**.
 Jika **dicentang**, form menampilkan **tambahan field: nama pembimbing** (bebas, maks 3).
 
 ```
-☐ Saya juga penguji — mencatat sidang mahasiswa lain
+☐ Saya sebagai penguji
    (tampil jika dicentang)
    Pembimbing 1: [nama ...]
    Pembimbing 2: [nama ...]   (opsional)
@@ -194,20 +203,16 @@ Jika **dicentang**, form menampilkan **tambahan field: nama pembimbing** (bebas,
 
 **Tujuan**: mahasiswa yang mencentang "penguji" akan dapat mencatat **riwayat menguji** terhadap mahasiswa lain (di luar bimbingannya). Nama pembimbing yang diisi menjadi konteks sidang (siapa pembimbing mahasiswa yang diuji).
 
-**Skema data**: simpan daftar nama pembimbing ini (maks 3) di kolom baru pada `users`/`pending_mahasiswa` (mis. `examiner_supervisor_names` → JSON, atau tabel `pending_examiner_supervisors`):
+**Skema data**: simpan daftar nama pembimbing ini (maks 3) di kolom `examiner_supervisor_names` (JSON) pada `users`:
 
 ```php
 // users (mahasiswa yang juga penguji)
 $table->json('examiner_supervisor_names')->nullable(); // ['A', 'B', 'C'] max 3
 ```
 
-**Efek saat disetujui dosen**:
-- Dosen tetap menyetujui akun mahasiswa & menetapkan peran (lihat 5A.5).
-- Jika mahasiswa mencentang "penguji", dosen juga **mengaktifkan peran penguji** untuk mahasiswa tsb → mahasiswa bisa mencatat sidang & riwayat menguji.
-
 ### 5A.5 Menetapkan peran (approve)
 
-Saat dosen menyetujui, dosen memilih bagaimana dirinya terhubung ke mahasiswa tsb:
+Saat dosen menyetujui permintaan attachment, dosen memilih bagaimana dirinya terhubung ke mahasiswa tsb:
 
 | Pilihan | Efek pada `mahasiswa_ta` |
 |---|---|
@@ -218,10 +223,12 @@ Saat dosen menyetujui, dosen memilih bagaimana dirinya terhubung ke mahasiswa ts
 
 Karena di individual dosen memegang semua peran, dosen bisa menetapkan dirinya **sebagai pembimbing sekaligus penguji** (kolom berbeda di baris TA yang sama, atau dua entri sidang).
 
-Selain menetapkan peran **dosen**, saat approve dosen juga memutuskan apakah mahasiswa tsb **diizinkan jadi penguji** (tergantung centang "sebagai penguji" di 5A.4).
+### 5A.6 Pembersihan mahasiswa tidak aktif
 
-### 5A.6 Kapan berlaku
-- **Mode individual**: alur registrasi+approve ini adalah **jalur utama** menambah mahasiswa.
+- Command `students:delete-inactive` (terjadwal harian 03:30) menghapus mahasiswa berstatus `active` yang **tidak memilih dosen dalam 1 bulan** (akun + data terkait dihapus bersih dalam transaksi).
+
+### 5A.7 Kapan berlaku
+- **Mode individual**: alur registrasi+attachment ini adalah **jalur utama** menambah mahasiswa.
 - **Mode institusi**: registrasi juga bisa ada, tetapi biasanya lewat **admin/import**; approval dilakukan admin/koordinator.
 
 ---

@@ -85,6 +85,85 @@ class ProfileController extends Controller
     }
 
     /**
+     * Form pilih dosen (mahasiswa aktif yang belum attach dosen).
+     * Menampilkan daftar dosen untuk dipilih sebagai pembimbing/penguji.
+     */
+    public function selectDosen(Request $request): View
+    {
+        $user = $request->user();
+        abort_unless($user->isMahasiswa(), 403);
+
+        // Daftar dosen yang sudah disetujui admin.
+        $dosenList = \App\Models\User::role('dosen')
+            ->where('registration_status', 'approved')
+            ->orderBy('name')
+            ->get();
+
+        return view('profile.select-dosen', compact('user', 'dosenList'));
+    }
+
+    /**
+     * Simpan pilihan dosen — buat MahasiswaTa dengan status pending_approval.
+     * Mahasiswa bisa memilih dosen sebagai pembimbing/penguji.
+     */
+    public function storeDosen(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user->isMahasiswa(), 403);
+
+        $validated = $request->validate([
+            'jenis' => ['required', 'in:ta,kp'],
+            'pembimbing_1_id' => ['required', 'exists:users,id'],
+            'pembimbing_2_id' => ['nullable', 'exists:users,id'],
+            'penguji_1_id' => ['nullable', 'exists:users,id'],
+            'penguji_2_id' => ['nullable', 'exists:users,id'],
+        ]);
+
+        // Pastikan dosen yang dipilih benar-benar dosen approved.
+        $dosenIds = array_filter([
+            $validated['pembimbing_1_id'],
+            $validated['pembimbing_2_id'] ?? null,
+            $validated['penguji_1_id'] ?? null,
+            $validated['penguji_2_id'] ?? null,
+        ]);
+        $validDosen = \App\Models\User::role('dosen')
+            ->where('registration_status', 'approved')
+            ->whereIn('id', $dosenIds)
+            ->count();
+        abort_unless($validDosen === count($dosenIds), 422, 'Dosen yang dipilih tidak valid.');
+
+        // Cegah duplikat program (satu TA + satu KP per mahasiswa).
+        $exists = $user->mahasiswaPrograms()->where('jenis', $validated['jenis'])->exists();
+        abort_if($exists, 422, 'Anda sudah memiliki program '.strtoupper($validated['jenis']).'.');
+
+        $ta = \App\Models\MahasiswaTa::create([
+            'user_id' => $user->id,
+            'jenis' => $validated['jenis'],
+            'pembimbing_1_id' => $validated['pembimbing_1_id'],
+            'pembimbing_2_id' => $validated['pembimbing_2_id'] ?? null,
+            'penguji_1_id' => $validated['penguji_1_id'] ?? null,
+            'penguji_2_id' => $validated['penguji_2_id'] ?? null,
+            'target_sesi' => 7,
+            'status_ta' => \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL,
+            'fase' => $validated['jenis'] === 'kp' ? 'pelaksanaan' : 'proposal',
+        ]);
+
+        // Notifikasi ke dosen yang dipilih.
+        foreach ($dosenIds as $dosenId) {
+            if ($dosen = \App\Models\User::find($dosenId)) {
+                $this->bestEffort(fn () => $dosen->notify(new \App\Notifications\ActivityNotification(
+                    "Mahasiswa '{$user->name}' memilih Anda sebagai dosen untuk program ".strtoupper($validated['jenis']).'.',
+                    route('approval.index'),
+                    'Permintaan Attachment Dosen',
+                )));
+            }
+        }
+
+        return redirect()->route('profile.index')
+            ->with('success', 'Permintaan attachment dosen dikirim. Menunggu persetujuan dosen.');
+    }
+
+    /**
      * Ganti kata sandi.
      */
     public function updatePassword(Request $request): RedirectResponse

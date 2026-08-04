@@ -39,6 +39,7 @@ The application follows a cohesive design system optimized for thesis mentoring 
 ## Table of Contents
 
 - [Features](#features)
+  - [Authentication & Registration](#authentication--registration)
   - [Submission & Review Workflows](#submission--review-workflows)
   - [Dashboards & Monitoring](#dashboards--monitoring)
   - [Deployment Modes](#deployment-modes)
@@ -60,6 +61,14 @@ The application follows a cohesive design system optimized for thesis mentoring 
 ---
 
 ## Features
+
+### Authentication & Registration
+
+- **Email verification (MustVerifyEmail)** — All new accounts must verify their email address before full access. Existing users are grandfathered in via migration. Unverified users are redirected to a verification notice page after login.
+- **New student onboarding flow** — Students self-register (name, email, password) and are immediately **active** after email verification. They then select their preferred supervisor/examiner (pembimbing/penguji) via the **"Pilih Dosen"** page, which creates a thesis program with `pending_approval` status. The selected lecturer approves or rejects the attachment request.
+- **Registration statuses** — `active` (email verified, no lecturer attached), `verified` (has an approved lecturer), `rejected` (denied by admin/lecturer).
+- **Inactive student cleanup** — A scheduled command (`students:delete-inactive`, daily 03:30) removes `active` students who never attach a lecturer within 1 month.
+- **Rate limiting & anti-enumeration** — Login (6/min), registration (5/min), password reset (3/min), and reset confirmation (5/min) are throttled. The forgot-password endpoint returns a uniform response to prevent email enumeration.
 
 ### Submission & Review Workflows
 
@@ -90,7 +99,7 @@ The application supports **two operational modes** (see `docs/MODE-SPEC.md` for 
 
 #### Individual Mode (default)
 
-Single supervisor manages their own cohort of students. Students self-register via email; the supervisor approves and assigns roles (supervisor 1/2, examiner 1/2). Supervisors can also manually record thesis defenses for external students (student name + up to 3 external examiners).
+Single supervisor manages their own cohort of students. Students self-register via email, verify their email, and then select their preferred supervisor/examiner (pembimbing/penguji) via the **"Pilih Dosen"** page. The selected supervisor approves or rejects the attachment request. Supervisors can also manually record thesis defenses for external students (student name + up to 3 external examiners).
 
 #### Institution Mode
 
@@ -103,7 +112,7 @@ Multi-tenant deployment with centralized administration. Features institution-le
 | `institution_id` | `NULL` (personal data) | Assigned (multi-tenant) |
 | Tenant scope | Not active | Active (filtered per institution) |
 | Bulk Excel import | ❌ | ✅ |
-| Student registration | Auto-approved | Requires supervisor/admin approval |
+| Student registration | Self-register + verify email + select lecturer (lecturer approves) | Requires supervisor/admin approval |
 | Institution-wide reports | ❌ | ✅ |
 | Multi-supervisor / multi-institution | ❌ | ✅ |
 | Sidebar badge | "Individual" | "Institution" |
@@ -450,6 +459,7 @@ php artisan schedule:list
 php artisan logbook:send-reminders --inactive-days=7 --queue-days=3
 php artisan ta:weekly-digest
 php artisan files:prune-orphans
+php artisan students:delete-inactive
 ```
 
 ---

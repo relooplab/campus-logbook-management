@@ -59,12 +59,16 @@ class RegisterController extends Controller
             $supervisors = array_slice($supervisors, 0, 3);
         }
 
+        // Alur baru: mahasiswa langsung aktif (verifikasi email), belum attach dosen.
+        // Dosen tetap menunggu persetujuan admin (pending).
+        $registrationStatus = $role === 'dosen' ? 'pending' : 'active';
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'nidn' => $role === 'dosen' ? ($validated['nidn'] ?? null) : null,
-            'registration_status' => 'pending',
+            'registration_status' => $registrationStatus,
             'examiner_supervisor_names' => $supervisors ?: null,
         ]);
         $user->syncRoles([$role]);
@@ -74,15 +78,11 @@ class RegisterController extends Controller
             $this->attachUniversity($user, $validated);
         }
 
-        $approver = $role === 'dosen' ? 'admin' : 'dosen';
+        // Kirim email verifikasi (semua role).
+        $user->sendEmailVerificationNotification();
 
-        // Beri tahu dosen (mode individual) saat ada mahasiswa baru mendaftar.
-        if ($role === 'mahasiswa') {
-            $this->bestEffort(fn () => $this->notifyDosenOfNewRegistration($user));
-        }
-
-        return redirect()->route('login')
-            ->with('status', "Pendaftaran dikirim. Menunggu persetujuan {$approver}.");
+        return redirect()->route('verification.notice')
+            ->with('status', 'Registrasi berhasil. Silakan verifikasi email Anda.');
     }
 
     /**

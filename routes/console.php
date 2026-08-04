@@ -38,3 +38,9 @@ Schedule::command('files:prune-orphans')
 Schedule::command('sanctum:prune-expired')
     ->daily()
     ->timezone('Asia/Jakarta');
+
+// Hapus mahasiswa active yang tidak verified dalam 1 bulan (harian 03:30).
+Schedule::command('students:delete-inactive')
+    ->dailyAt('03:30')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();

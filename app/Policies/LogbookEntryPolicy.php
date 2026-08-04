@@ -96,6 +96,16 @@ class LogbookEntryPolicy
             && in_array($user->id, $this->pembimbingIds($entry->mahasiswaTa, $entry), true);
     }
 
+    /**
+     * Dosen yang benar pembimbing/reviewer entri ini (tanpa syarat status),
+     * dipakai untuk aksi seperti resolve/hapus komentar PDF. Lebih sempit
+     * dari 'view' (yang juga mencakup dosen cross-link grup).
+     */
+    public function isReviewer(User $user, LogbookEntry $entry): bool
+    {
+        return $user->isDosen() && in_array($user->id, $this->pembimbingIds($entry->mahasiswaTa, $entry), true);
+    }
+
     public function delete(User $user, LogbookEntry $entry): bool
     {
         return $this->owner($user, $entry);
