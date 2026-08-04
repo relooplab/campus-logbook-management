@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-08-04
+
+### Documentation
+- Updated `README.md` with v0.3 features (seminar submission, finalization, separated dashboards, hidden admin label).
+- Updated `docs/USER-GUIDE.md` (Bahasa Indonesia) with new features, role workflows, and FAQ.
+- Updated `docs/USER-GUIDE-EN.md` (English) with new features, role workflows, and FAQ.
+
 ## [0.3.0] - 2026-08-04
 
 ### Added
@@ -142,5 +149,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `StudentApprovalTest` (invite by email, duplicate rejection, approve & assign role).
 - All 24 tests pass (65 assertions).
 
+[0.3.1]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.3.1
 [0.3.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.3
 [0.2.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.2.0
