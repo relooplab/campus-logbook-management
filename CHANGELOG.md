@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `docs/USER-GUIDE.md` (Bahasa Indonesia) with new features, role workflows, and FAQ.
 - Updated `docs/USER-GUIDE-EN.md` (English) with new features, role workflows, and FAQ.
 
+### Demo Accounts
+- Added `dosen4@example.com` (NIDN 0004040404) as a second examiner for the demo TA.
+- Demo TA (`mahasiswa@example.com`) now has phase `proposal` and examiners 1/2 assigned, enabling seminar submission & finalization demos.
+- `dosen4@example.com` is linked to Universitas Nusantara and the demo lecturer group.
+
 ## [0.3.0] - 2026-08-04
 
 ### Added

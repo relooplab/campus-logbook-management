@@ -120,6 +120,29 @@ class DatabaseSeeder extends Seeder
         );
         $dosen2->syncRoles([$dosenRole]);
 
+        // Dosen demo tambahan (untuk demo penguji & grup/cross-link).
+        $dosen3 = User::firstOrCreate(
+            ['email' => 'dosen3@example.com'],
+            [
+                'name' => 'Dr. Dosen Tiga, S.Kom., M.Kom.',
+                'password' => Hash::make('password'),
+                'identifier' => '0003030303', // NIDN
+                'nidn' => '0003030303',
+            ]
+        );
+        $dosen3->syncRoles([$dosenRole]);
+
+        $dosen4 = User::firstOrCreate(
+            ['email' => 'dosen4@example.com'],
+            [
+                'name' => 'Dr. Dosen Empat, S.T., M.T.',
+                'password' => Hash::make('password'),
+                'identifier' => '0004040404', // NIDN
+                'nidn' => '0004040404',
+            ]
+        );
+        $dosen4->syncRoles([$dosenRole]);
+
         // Mahasiswa, NIM sebagai identifier.
         $mahasiswa = User::firstOrCreate(
             ['email' => 'mahasiswa@example.com'],
@@ -131,14 +154,18 @@ class DatabaseSeeder extends Seeder
         );
         $mahasiswa->syncRoles([$mahasiswaRole]);
 
-        // Data pokok TA mahasiswa.
+        // Data pokok TA mahasiswa (fase proposal + penguji untuk demo seminar submission).
         MahasiswaTa::firstOrCreate(
             ['user_id' => $mahasiswa->id, 'jenis' => MahasiswaTa::JENIS_TA],
             [
                 'judul_ta' => 'Perancangan Sistem Pengolahan Air Limbah Domestik Terpusat di Kawasan Permukiman',
                 'pembimbing_1_id' => $adminDosen->id,
                 'pembimbing_2_id' => $dosen2->id,
+                'penguji_1_id' => $dosen3->id,
+                'penguji_2_id' => $dosen4->id,
                 'target_sesi' => 7,
+                'fase' => 'proposal',
+                'status_ta' => MahasiswaTa::STATUS_AKTIF,
             ]
         );
 
@@ -210,20 +237,11 @@ class DatabaseSeeder extends Seeder
         $directory->attachUserToUniversity($adminDosen, $univ, $fakultas, $departemen, $prodi, true);
         $directory->attachUserToUniversity($dosen2, $univ, $fakultas, $departemen, $prodi, true);
 
-        // 3. Dosen demo tambahan (untuk demo grup & cross-link).
-        $dosen3 = User::firstOrCreate(
-            ['email' => 'dosen3@example.com'],
-            [
-                'name' => 'Dr. Dosen Tiga, S.Kom., M.Kom.',
-                'password' => Hash::make('password'),
-                'identifier' => '0003030303', // NIDN
-                'nidn' => '0003030303',
-            ]
-        );
-        $dosen3->syncRoles([$dosenRole]);
+        // 3. Hubungkan dosen demo tambahan ke universitas.
         $directory->attachUserToUniversity($dosen3, $univ, $fakultas, $departemen, $prodi, true);
+        $directory->attachUserToUniversity($dosen4, $univ, $fakultas, $departemen, $prodi, true);
 
-        // 4. Buat grup demo + anggota (adminDosen owner, dosen2 & dosen3 approved).
+        // 4. Buat grup demo + anggota (adminDosen owner, dosen2, dosen3 & dosen4 approved).
         $group = Group::firstOrCreate(
             ['name' => 'Dosen Teknik Informatika Universitas Nusantara'],
             [
@@ -236,7 +254,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        foreach ([$adminDosen, $dosen2, $dosen3] as $i => $member) {
+        foreach ([$adminDosen, $dosen2, $dosen3, $dosen4] as $i => $member) {
             GroupMember::firstOrCreate(
                 ['group_id' => $group->id, 'user_id' => $member->id],
                 [

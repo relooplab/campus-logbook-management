@@ -258,11 +258,14 @@ The database seeder creates the following accounts for testing:
 | Administrator Sistem | `administrator@example.com` | `password` |
 | Supervisor 2 (NIDN 0002020202) | `dosen2@example.com` | `password` |
 | Supervisor 3 (NIDN 0003030303) | `dosen3@example.com` | `password` |
+| Supervisor 4 (NIDN 0004040404) | `dosen4@example.com` | `password` |
 | Student — TA (NIM 200401001) | `mahasiswa@example.com` | `password` |
 | Student — KP (pemilik kelompok, NIM 200401002) | `mahasiswa_kp@example.com` | `password` |
 | Student — KP (anggota kelompok, NIM 200401003) | `mahasiswa_kp2@example.com` | `password` |
 
-Demo akun berikut terhubung ke **Universitas Nusantara** (Fakultas Teknik → Departemen Teknik Informatika → S1 Teknik Informatika) dan tergabung dalam grup **"Dosen Teknik Informatika Universitas Nusantara"**: `admin@example.com`, `dosen2@example.com`, `dosen3@example.com`.
+Demo akun berikut terhubung ke **Universitas Nusantara** (Fakultas Teknik → Departemen Teknik Informatika → S1 Teknik Informatika) dan tergabung dalam grup **"Dosen Teknik Informatika Universitas Nusantara"**: `admin@example.com`, `dosen2@example.com`, `dosen3@example.com`, `dosen4@example.com`.
+
+Akun demo `mahasiswa@example.com` (TA) memiliki fase **proposal** dengan pembimbing 1/2 dan penguji 1/2 untuk demo fitur seminar submission & finalisasi.
 
 ---
 
