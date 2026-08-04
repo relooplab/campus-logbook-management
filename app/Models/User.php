@@ -271,7 +271,15 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->hasRole('admin');
+        return $this->hasAnyRole(['admin', 'system_admin']);
+    }
+
+    /**
+     * Apakah user ini adalah System Admin (role tertinggi).
+     */
+    public function isSystemAdmin(): bool
+    {
+        return $this->hasRole('system_admin');
     }
 
     /**

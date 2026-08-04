@@ -23,8 +23,20 @@ class AdminController extends Controller
     {
         $query = User::query();
 
+        // Admin biasa tidak dapat melihat/memfilter user dengan role system_admin.
+        $isSystemAdmin = $request->user()->isSystemAdmin();
+        if (!$isSystemAdmin) {
+            $query->whereDoesntHave('roles', fn ($q) => $q->where('name', 'system_admin'));
+        }
+
         if ($role = $request->query('role')) {
-            $query->role($role);
+            // Admin biasa tidak dapat memfilter role system_admin.
+            if ($role === 'system_admin' && !$isSystemAdmin) {
+                $role = null;
+            }
+            if ($role) {
+                $query->role($role);
+            }
         }
 
         if ($keyword = $request->query('keyword')) {
@@ -43,7 +55,7 @@ class AdminController extends Controller
         }
 
         $users = $query->with('roles')->paginate(20)->withQueryString();
-        $roles = Role::all();
+        $roles = $isSystemAdmin ? Role::all() : Role::where('name', '!=', 'system_admin')->get();
 
         return view('admin.users', compact('users', 'roles'));
     }
@@ -59,6 +71,11 @@ class AdminController extends Controller
             'roles.*' => ['in:admin,dosen,mahasiswa'],
         ]);
 
+        // Hanya system admin yang dapat membuat user dengan role admin.
+        if (in_array('admin', $validated['roles'], true) && !$request->user()->isSystemAdmin()) {
+            return back()->with('error', 'Hanya System Admin yang dapat membuat akun admin.');
+        }
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -70,10 +87,15 @@ class AdminController extends Controller
         return back()->with('success', 'Pengguna berhasil dibuat.');
     }
 
-    public function destroyUser(User $user): RedirectResponse
+    public function destroyUser(Request $request, User $user): RedirectResponse
     {
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Tidak dapat menghapus akun sendiri.');
+        }
+
+        // Admin biasa tidak dapat menghapus user dengan role admin/system_admin.
+        if (!$request->user()->isSystemAdmin() && ($user->isAdmin() || $user->isSystemAdmin())) {
+            return back()->with('error', 'Hanya System Admin yang dapat menghapus akun admin.');
         }
 
         $user->delete();
@@ -127,9 +149,94 @@ class AdminController extends Controller
             'password' => ['required', 'string', 'min:6'],
         ]);
 
+        // Admin biasa tidak dapat reset password user dengan role admin/system_admin.
+        if (!$request->user()->isSystemAdmin() && ($user->isAdmin() || $user->isSystemAdmin())) {
+            return back()->with('error', 'Hanya System Admin yang dapat reset password akun admin.');
+        }
+
         $user->update(['password' => $validated['password']]);
 
         return back()->with('success', "Password '{$user->name}' berhasil direset.");
+    }
+
+    // ------------------------------------------------------- system admin
+
+    /**
+     * Daftar semua user dengan role admin (dikelola oleh system admin).
+     */
+    public function systemAdmins(): View
+    {
+        $admins = User::role('admin')
+            ->with('roles')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.system-admins', compact('admins'));
+    }
+
+    /**
+     * Buat akun admin baru (hanya system admin).
+     */
+    public function storeSystemAdmin(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'unique:users,email'],
+            'identifier' => ['nullable', 'string', 'max:30'],
+            'password' => ['required', 'string', 'min:6'],
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'identifier' => $validated['identifier'] ?? null,
+            'password' => $validated['password'],
+        ]);
+        $user->syncRoles(['admin']);
+
+        return back()->with('success', 'Akun admin berhasil dibuat.');
+    }
+
+    /**
+     * Hapus akun admin (hanya system admin).
+     */
+    public function destroySystemAdmin(Request $request, User $user): RedirectResponse
+    {
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'Tidak dapat menghapus akun sendiri.');
+        }
+
+        // Tidak dapat menghapus system admin lain.
+        if ($user->isSystemAdmin()) {
+            return back()->with('error', 'Tidak dapat menghapus akun System Admin.');
+        }
+
+        // Hanya user dengan role admin (bukan system_admin) yang bisa dihapus di sini.
+        if (!$user->hasRole('admin')) {
+            return back()->with('error', 'User ini bukan akun admin.');
+        }
+
+        $user->delete();
+
+        return back()->with('success', 'Akun admin dihapus.');
+    }
+
+    /**
+     * Reset password akun admin (hanya system admin).
+     */
+    public function resetSystemAdminPassword(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'password' => ['required', 'string', 'min:6'],
+        ]);
+
+        if (!$user->hasRole('admin')) {
+            return back()->with('error', 'User ini bukan akun admin.');
+        }
+
+        $user->update(['password' => $validated['password']]);
+
+        return back()->with('success', "Password admin '{$user->name}' berhasil direset.");
     }
 
     // ---------------------------------------------------------------- TA & assignment

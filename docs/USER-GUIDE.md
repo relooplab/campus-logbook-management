@@ -46,7 +46,8 @@ Indikator mode ditampilkan di bagian atas menu samping (sidebar), misalnya label
 
 | Peran | Deskripsi |
 |---|---|
-| **Admin** | Mengelola pengguna, data TA, review massal, data sidang, dan pengaturan institusi. |
+| **System Admin** | Role tertinggi — mengelola akun admin lain (buat, reset password, hapus), pengaturan paket/plan, dan memiliki akses penuh ke semua menu admin. |
+| **Admin** | Mengelola pengguna, data TA, review massal, data sidang, dan pengaturan institusi. Tidak dapat mengelola admin lain. |
 | **Dosen** | Membimbing dan menguji mahasiswa, me-review logbook, mencatat sidang, menyetujui registrasi mahasiswa. |
 | **Mahasiswa** | Mencatat logbook bimbingan, mengunggah revisi, mengelola workspace, dan memantau progres TA. |
 
@@ -74,7 +75,9 @@ Setiap peran memiliki dashboard ringkas:
 
 > **💡 Dashboard Admin & Dosen Terpisah** — Jika akun Anda memiliki peran **admin sekaligus dosen**, dashboard admin dan dosen **tidak digabung**. Anda dapat berpindah mode melalui **klik foto profil** di pojok kanan atas → pilih **"Mode Dashboard"** → **Dosen** atau **Admin**. Mode yang dipilih tersimpan selama sesi berlangsung.
 >
-> **🔒 Label "Admin" Tersembunyi** — Label peran "admin" **tidak pernah ditampilkan** di halaman profil siapa pun (profil sendiri maupun profil orang lain). Status admin tetap bersifat pribadi.
+> **🔒 Label "Admin" Tersembunyi** — Label peran "admin" dan "system_admin" **tidak pernah ditampilkan** di halaman profil siapa pun (profil sendiri maupun profil orang lain). Status administratif tetap bersifat pribadi.
+>
+> **🛡️ System Admin** — Role **System Admin** memiliki akses penuh ke semua menu admin **plus** menu khusus **"Kelola Admin"** (membuat, reset password, dan menghapus akun admin) serta pengaturan **Paket/Plan**. Role **Admin** biasa tidak dapat mengelola admin lain.
 
 ### 3.3 Logbook Bimbingan
 
@@ -403,9 +406,34 @@ Mahasiswa mendaftar → Dosen menyetujui & assign
 
 ---
 
-### 4.3 Alur Kerja Admin
+### 4.3 Alur Kerja System Admin
 
-#### 4.3.1 Mengelola Pengguna
+#### 4.3.1 Mengelola Akun Admin
+
+1. Buka menu **Kelola Admin** (hanya tampil untuk System Admin).
+2. Lihat daftar semua akun admin operasional.
+3. **Tambah admin**: isi nama, email, identifier (opsional), dan kata sandi → klik **Simpan**.
+4. **Reset password** admin: klik **Reset PW** → isi kata sandi baru.
+5. **Hapus** akun admin: klik **Hapus** (dengan konfirmasi).
+6. Proteksi: Anda **tidak dapat menghapus akun sendiri** atau akun System Admin lain.
+
+#### 4.3.2 Mengelola Paket/Plan
+
+1. Buka menu **Pengguna** → klik **Paket** pada user yang ingin diatur.
+2. Pilih paket (Gratis / Donasi).
+3. Atur override: izin export, izin import, dan batas penyimpanan (MB).
+4. Klik **Simpan** → paket user diperbarui.
+
+#### 4.3.3 Akses Penuh Menu Admin
+
+- System Admin memiliki akses ke **semua** menu admin: Pengguna, Persetujuan Dosen, Data TA, Review Massal, Sidang, dan Institusi.
+- System Admin juga dapat membuat user dengan role **admin** dari halaman **Pengguna** (checkbox "Admin" hanya muncul untuk System Admin).
+
+---
+
+### 4.4 Alur Kerja Admin
+
+#### 4.4.1 Mengelola Pengguna
 
 1. Buka menu **Pengguna**.
 2. **Cari/filter** pengguna berdasarkan nama, email, identifier, atau role.
@@ -413,7 +441,7 @@ Mahasiswa mendaftar → Dosen menyetujui & assign
 4. **Reset kata sandi** pengguna (klik **Reset PW**).
 5. **Hapus** pengguna bila diperlukan.
 
-#### 4.3.2 Mengelola Data TA
+#### 4.4.2 Mengelola Data TA
 
 1. Buka menu **Data TA**.
 2. **Buat data TA**: pilih mahasiswa (tanpa TA), isi judul, dan tentukan pembimbing 1/2, penguji 1/2, serta target sesi.
@@ -421,21 +449,21 @@ Mahasiswa mendaftar → Dosen menyetujui & assign
 4. **Aksi massal**: centang beberapa baris → pilih dosen → **Assign Pembimbing 1** secara massal.
 5. **Import mahasiswa (Excel)** dari dashboard: unggah file (nama, NIM, email, pembimbing1_nidn, pembimbing2_nidn) dan pilih pembimbing default.
 
-#### 4.3.3 Review Massal Entri
+#### 4.4.3 Review Massal Entri
 
 1. Buka menu **Review Massal**.
 2. **Filter** entri berdasarkan status, jenis, dan kata kunci.
 3. Centang entri yang dipilih.
 4. Pilih aksi massal: **Setujui**, **Tandai Revisi**, atau **Hapus**.
 
-#### 4.3.4 Mengelola Data Sidang
+#### 4.4.4 Mengelola Data Sidang
 
 1. Buka menu **Sidang**.
 2. **Tambah data sidang**: pilih mahasiswa, dosen penguji, jenis, tanggal, dan hasil.
 3. **Hapus** data sidang bila diperlukan.
 4. Catatan: Sidang Akhir dengan hasil **Lulus/Lulus + Revisi** otomatis menandai mahasiswa **tamat**.
 
-#### 4.3.5 Mengelola Profil Institusi
+#### 4.4.5 Mengelola Profil Institusi
 
 1. Buka menu **Institusi**.
 2. Isi informasi institusi: nama aplikasi, nama institusi, fakultas, prodi, alamat, kota, telepon, email, website, catatan kaki dokumen, dan logo.
@@ -443,7 +471,7 @@ Mahasiswa mendaftar → Dosen menyetujui & assign
 4. Atur **pengaturan email (SMTP)**: mailer, host, port, enkripsi, username, password, dari-alamat, dan dari-nama.
 5. **Kirim email uji** untuk memverifikasi konfigurasi SMTP.
 
-#### 4.3.6 Memantau Dashboard
+#### 4.4.6 Memantau Dashboard
 
 - Dashboard admin menampilkan statistik **mahasiswa, dosen, data TA**, dan **menunggu review**.
 - Daftar **data TA terbaru** ditampilkan untuk pemantauan cepat.
@@ -484,6 +512,15 @@ A: Buka halaman detail TA/KP → klik **Kirim Bahan Seminar/Sidang** → isi tan
 
 **Q: Bagaimana cara menyetujui finalisasi TA/KP?**
 A: Buka menu **Review Finalisasi** → periksa setiap item → klik **Setujui** atau **Tolak**. Item dianggap final jika **kedua pembimbing** menyetujui.
+
+**Q: Apa perbedaan System Admin dan Admin?**
+A: **System Admin** adalah role tertinggi yang dapat mengelola akun admin lain (buat, reset password, hapus) dan pengaturan paket/plan, serta memiliki akses penuh ke semua menu admin. **Admin** mengelola data akademik (pengguna, TA, sidang, review) tetapi tidak dapat mengelola admin lain.
+
+**Q: Bagaimana cara membuat akun admin baru?**
+A: Login sebagai **System Admin** → buka menu **Kelola Admin** → isi form **Tambah Admin** → klik **Simpan**. System Admin juga dapat membuat user dengan role admin dari halaman **Pengguna**.
+
+**Q: Mengapa saya tidak bisa membuat akun admin?**
+A: Hanya **System Admin** yang dapat membuat akun dengan role admin. Jika Anda login sebagai admin biasa, opsi role "Admin" tidak akan muncul di form tambah pengguna.
 
 ---
 

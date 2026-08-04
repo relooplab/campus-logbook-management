@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-08-04
+
+### Added
+
+#### System Admin (Super Admin) Role
+- New `system_admin` role — the highest role that manages other admin accounts and system configuration.
+- `User::isSystemAdmin()` helper and updated `User::isAdmin()` to include `system_admin` (all existing admin checks automatically apply).
+- **Manage Admins** page (`/admin/system/admins`) — System Admins can create, reset passwords, and delete operational admin accounts.
+- Plan/subscription settings moved to System Admin only (`/admin/system/users/{user}/plan`).
+- System Admin has full access to all admin menus (users, dosen approvals, thesis data, bulk review, examinations, institution).
+- Admin role cannot create, delete, or reset passwords of other admin/system_admin accounts.
+- Admin users page hides the "Admin" role checkbox and "Plan" link for non-System-Admin users.
+- "admin" and "system_admin" role labels are hidden from all profile pages.
+
+#### Demo Account
+- Added `systemadmin@example.com` (identifier `SYS001`) for System Admin demos.
+
+### Changed
+- `User` model: added `isSystemAdmin()`, updated `isAdmin()` to `hasAnyRole(['admin', 'system_admin'])`.
+- `routes/web.php`: admin group now uses `role_or_permission:admin|system_admin`; new `admin/system` group for System Admin only.
+- `AdminController`: added `systemAdmins()`, `storeSystemAdmin()`, `destroySystemAdmin()`, `resetSystemAdminPassword()`; protected `storeUser()`, `destroyUser()`, `resetPassword()`.
+- `layouts/app.blade.php`: added "Kelola Admin" sidebar menu for System Admins.
+- `admin/users.blade.php`: role display filtered, admin role option & plan link restricted to System Admins.
+- `profile/show.blade.php` & `profile/index.blade.php`: filter out `admin` and `system_admin` role labels.
+- Updated `README.md`, `docs/USER-GUIDE.md`, and `docs/USER-GUIDE-EN.md`.
+
+### Tests
+- All existing tests continue to pass.
+
 ## [0.3.1] - 2026-08-04
 
 ### Documentation
@@ -154,6 +183,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `StudentApprovalTest` (invite by email, duplicate rejection, approve & assign role).
 - All 24 tests pass (65 assertions).
 
+[0.4.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.4.0
 [0.3.1]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.3.1
 [0.3.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.3
 [0.2.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.2.0

@@ -250,6 +250,12 @@
 
             @if ($user->isAdmin())
                 <div class="px-3 pt-4 pb-1 text-[10px] uppercase tracking-widest text-text-secondary sidebar-label">Administrasi</div>
+                @if ($user->isSystemAdmin())
+                    <a href="{{ route('admin.system.admins') }}" class="{{ $navLink }} {{ $active('admin.system.admins') }}">
+                        <span class="material-symbols-outlined icon-md">admin_panel_settings</span>
+                        <span class="sidebar-label">Kelola Admin</span>
+                    </a>
+                @endif
                 <a href="{{ route('admin.users') }}" class="{{ $navLink }} {{ $active('admin.users') }}">
                     <span class="material-symbols-outlined icon-md">group</span>
                     <span class="sidebar-label">Pengguna</span>

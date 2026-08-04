@@ -222,7 +222,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/logbook/export/excel/{mahasiswaTa}', [ExportController::class, 'exportExcel'])->name('logbook.export.excel');
 
     // ---------------------------------------------------------- admin
-    Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware('role_or_permission:admin|system_admin')->group(function () {
         Route::get('/users', [AdminController::class, 'users'])->name('users');
         Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
         Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
@@ -248,8 +248,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/institusi', [AdminController::class, 'institution'])->name('institution');
         Route::post('/institusi', [AdminController::class, 'updateInstitution'])->name('institution.update');
         Route::post('/institusi/test-mail', [AdminController::class, 'testMail'])->name('institution.test-mail');
+    });
 
-        // Paket & override admin per user.
+    // -------------------------------------------------- system admin (khusus)
+    Route::prefix('admin/system')->name('admin.system.')->middleware('role:system_admin')->group(function () {
+        // Kelola admin lain.
+        Route::get('/admins', [AdminController::class, 'systemAdmins'])->name('admins');
+        Route::post('/admins', [AdminController::class, 'storeSystemAdmin'])->name('admins.store');
+        Route::delete('/admins/{user}', [AdminController::class, 'destroySystemAdmin'])->name('admins.destroy');
+        Route::post('/admins/{user}/reset-password', [AdminController::class, 'resetSystemAdminPassword'])->name('admins.reset-password');
+
+        // Paket & override per user (hanya system admin).
         Route::get('/users/{user}/plan', [AdminController::class, 'planSettings'])->name('users.plan');
         Route::post('/users/{user}/plan', [AdminController::class, 'updatePlanSettings'])->name('users.plan.update');
     });

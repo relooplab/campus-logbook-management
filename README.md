@@ -131,7 +131,8 @@ All migrations are logged to the audit channel for compliance and rollback trace
 
 ### Administration & Access Control
 
-- **Roles** — `admin` (system administrator), `dosen` (supervisor/lecturer), `mahasiswa` (student). Multi-role support enabled (e.g., admin + supervisor).
+- **Roles** — `system_admin` (super admin — manages other admins & system configuration), `admin` (operational administrator), `dosen` (supervisor/lecturer), `mahasiswa` (student). Multi-role support enabled (e.g., admin + supervisor).
+- **System Admin (Super Admin)** — Highest role with full access to all admin menus plus exclusive management of other admin accounts (create, reset password, delete) and plan/subscription settings. The `admin` role cannot manage other admins or system admins.
 - **Thesis supervision** — Each thesis has up to 2 supervisors (`pembimbing_1`, `pembimbing_2`) and up to 2 examiners (`penguji_1`, `penguji_2`). Examiners can view thesis details and student workspace but cannot approve submissions—approval rights are supervisor-only.
 - **Thesis lifecycle** — Three statuses:
   - `aktif` (active) — ongoing thesis work
@@ -210,6 +211,7 @@ Two integrated modules provide 1:1 messaging and broadcast announcements.
 
 | Role | Primary Responsibilities |
 |---|---|
+| **System Admin** | Manage other admin accounts (create, reset password, delete), plan/subscription settings, and full access to all admin menus. |
 | **Student (Mahasiswa)** | Submit logbook entries and revisions, manage workspace files, review supervisor feedback, convert feedback into action items/checklist. |
 | **Supervisor (Dosen)** | Review submissions in priority queue, approve or request revisions, annotate PDF files, track thesis phase progression, view student workspace, record examination history. |
 | **Administrator (Admin)** | User account management, thesis-supervisor assignment, bulk import/export, defense record CRUD, institution settings, system-wide search and reporting. |
@@ -254,6 +256,7 @@ The database seeder creates the following accounts for testing:
 
 | Role | Email | Password |
 |---|---|---|
+| System Admin | `systemadmin@example.com` | `password` |
 | Admin + Supervisor (NIDN 0001010101) | `admin@example.com` | `password` |
 | Administrator Sistem | `administrator@example.com` | `password` |
 | Supervisor 2 (NIDN 0002020202) | `dosen2@example.com` | `password` |

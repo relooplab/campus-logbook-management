@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $systemAdminRole = Role::findOrCreate('system_admin');
         $adminRole = Role::findOrCreate('admin');
         $dosenRole = Role::findOrCreate('dosen');
         $mahasiswaRole = Role::findOrCreate('mahasiswa');
@@ -84,6 +85,17 @@ class DatabaseSeeder extends Seeder
         if (! app()->environment(['local', 'testing'])) {
             return;
         }
+
+        // System Admin (role tertinggi — mengelola admin lain & konfigurasi sistem).
+        $systemAdmin = User::firstOrCreate(
+            ['email' => 'systemadmin@example.com'],
+            [
+                'name' => 'System Administrator',
+                'password' => Hash::make('password'),
+                'identifier' => 'SYS001',
+            ]
+        );
+        $systemAdmin->syncRoles([$systemAdminRole]);
 
         // Admin + dosen dalam satu akun (multi-role), NIDN sebagai identifier.
         $adminDosen = User::firstOrCreate(

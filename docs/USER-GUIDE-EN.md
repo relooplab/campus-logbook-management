@@ -46,7 +46,8 @@ The current mode is shown at the top of the sidebar menu, for example the **"Ind
 
 | Role | Description |
 |---|---|
-| **Admin** | Manages users, thesis data, bulk review, examination data, and institution settings. |
+| **System Admin** | Highest role — manages other admin accounts (create, reset password, delete), plan/subscription settings, and has full access to all admin menus. |
+| **Admin** | Manages users, thesis data, bulk review, examination data, and institution settings. Cannot manage other admins. |
 | **Lecturer (Dosen)** | Supervises and examines students, reviews logbooks, records examination sessions, and approves student registrations. |
 | **Student (Mahasiswa)** | Records supervision logbooks, uploads revisions, manages the workspace, and monitors thesis progress. |
 
@@ -74,7 +75,9 @@ Each role has a summary dashboard:
 
 > **💡 Separated Admin & Lecturer Dashboards** — If your account has **both admin and lecturer** roles, the admin and lecturer dashboards are **not combined**. You can switch modes by **clicking your profile picture** in the top-right corner → select **"Dashboard Mode"** → **Lecturer** or **Admin**. The selected mode is persisted for the session.
 >
-> **🔒 Hidden "Admin" Label** — The "admin" role label is **never shown** on any profile page (your own or others'). Administrative status remains private.
+> **🔒 Hidden "Admin" Label** — The "admin" and "system_admin" role labels are **never shown** on any profile page (your own or others'). Administrative status remains private.
+>
+> **🛡️ System Admin** — The **System Admin** role has full access to all admin menus **plus** a dedicated **"Manage Admins"** menu (creating, resetting passwords, and deleting admin accounts) and **Plan/Subscription** settings. A regular **Admin** cannot manage other admins.
 
 ### 3.3 Supervision Logbook
 
@@ -403,9 +406,34 @@ Student registers → Lecturer approves & assigns
 
 ---
 
-### 4.3 Admin Workflow
+### 4.3 System Admin Workflow
 
-#### 4.3.1 Managing Users
+#### 4.3.1 Managing Admin Accounts
+
+1. Open the **Manage Admins** menu (only visible to System Admins).
+2. View the list of all operational admin accounts.
+3. **Add an admin**: fill in name, email, identifier (optional), and password → click **Save**.
+4. **Reset an admin's password**: click **Reset PW** → enter a new password.
+5. **Delete** an admin account: click **Delete** (with confirmation).
+6. Protection: you **cannot delete your own account** or another System Admin account.
+
+#### 4.3.2 Managing Plans/Subscriptions
+
+1. Open the **Users** menu → click **Plan** on the user you want to configure.
+2. Select a plan (Free / Donation).
+3. Configure overrides: export permission, import permission, and storage limit (MB).
+4. Click **Save** → the user's plan is updated.
+
+#### 4.3.3 Full Admin Menu Access
+
+- The System Admin has access to **all** admin menus: Users, Dosen Approvals, Thesis Data, Bulk Review, Examinations, and Institution.
+- The System Admin can also create users with the **admin** role from the **Users** page (the "Admin" checkbox only appears for System Admins).
+
+---
+
+### 4.4 Admin Workflow
+
+#### 4.4.1 Managing Users
 
 1. Open the **Users** menu.
 2. **Search/filter** users by name, email, identifier, or role.
@@ -413,7 +441,7 @@ Student registers → Lecturer approves & assigns
 4. **Reset a user's password** (click **Reset PW**).
 5. **Delete** a user when necessary.
 
-#### 4.3.2 Managing Thesis Data
+#### 4.4.2 Managing Thesis Data
 
 1. Open the **Thesis Data** menu.
 2. **Create thesis data**: select a student (without a thesis), fill in the title, and set supervisors 1/2, examiners 1/2, and target sessions.
@@ -421,21 +449,21 @@ Student registers → Lecturer approves & assigns
 4. **Bulk action**: check several rows → select a lecturer → **Assign Supervisor 1** in bulk.
 5. **Import students (Excel)** from the dashboard: upload a file (name, NIM, email, supervisor1_nidn, supervisor2_nidn) and choose a default supervisor.
 
-#### 4.3.3 Bulk Entry Review
+#### 4.4.3 Bulk Entry Review
 
 1. Open the **Bulk Review** menu.
 2. **Filter** entries by status, type, and keyword.
 3. Check the selected entries.
 4. Choose a bulk action: **Approve**, **Mark as Revision**, or **Delete**.
 
-#### 4.3.4 Managing Examination Data
+#### 4.4.4 Managing Examination Data
 
 1. Open the **Examinations** menu.
 2. **Add examination data**: select a student, examining lecturer, type, date, and result.
 3. **Delete** examination data when necessary.
 4. Note: A Final Examination with a **Pass / Pass + Revision** result automatically marks the student as **completed**.
 
-#### 4.3.5 Managing the Institution Profile
+#### 4.4.5 Managing the Institution Profile
 
 1. Open the **Institution** menu.
 2. Fill in institution information: application name, institution name, faculty, study program, address, city, phone, email, website, document footer note, and logo.
@@ -443,7 +471,7 @@ Student registers → Lecturer approves & assigns
 4. Configure **email settings (SMTP)**: mailer, host, port, encryption, username, password, from-address, and from-name.
 5. **Send a test email** to verify the SMTP configuration.
 
-#### 4.3.6 Monitoring the Dashboard
+#### 4.4.6 Monitoring the Dashboard
 
 - The admin dashboard shows statistics for **students, lecturers, thesis data**, and **awaiting review**.
 - A list of **recent thesis data** is displayed for quick monitoring.
@@ -484,6 +512,15 @@ A: Open your TA/KP detail page → click **Submit Seminar/Examination Materials*
 
 **Q: How do I approve thesis/internship finalization?**
 A: Open the **Finalization Review** menu → review each item → click **Approve** or **Reject**. An item is considered final if **both supervisors** approve it.
+
+**Q: What is the difference between System Admin and Admin?**
+A: **System Admin** is the highest role that can manage other admin accounts (create, reset password, delete) and plan/subscription settings, and has full access to all admin menus. **Admin** manages academic data (users, thesis, examinations, review) but cannot manage other admins.
+
+**Q: How do I create a new admin account?**
+A: Log in as **System Admin** → open the **Manage Admins** menu → fill in the **Add Admin** form → click **Save**. The System Admin can also create users with the admin role from the **Users** page.
+
+**Q: Why can't I create an admin account?**
+A: Only the **System Admin** can create accounts with the admin role. If you are logged in as a regular admin, the "Admin" role option will not appear in the add-user form.
 
 ---
 
