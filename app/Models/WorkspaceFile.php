@@ -11,6 +11,7 @@ class WorkspaceFile extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'mahasiswa_ta_id',
         'uploaded_by',
         'bab',
@@ -29,6 +30,14 @@ class WorkspaceFile extends Model
     public function mahasiswaTa(): BelongsTo
     {
         return $this->belongsTo(MahasiswaTa::class, 'mahasiswa_ta_id');
+    }
+
+    /**
+     * Pemilik workspace pribadi (dosen) — nullable, hanya untuk workspace dosen.
+     */
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function uploader(): BelongsTo

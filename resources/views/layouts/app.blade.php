@@ -162,6 +162,15 @@
             @else
                 <div class="px-6 pb-2 sidebar-label"><span class="text-[10px] px-2 py-0.5 rounded-full bg-brand-light text-brand"><span class="material-symbols-outlined icon-sm align-text-bottom" style="font-size:12px">eco</span> Individual</span></div>
             @endif
+            @php $primaryUniv = $user->primaryUniversity(); @endphp
+            @if ($primaryUniv)
+                <div class="px-6 pb-2 sidebar-label">
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-bg-panel text-text-secondary truncate max-w-full inline-block" title="{{ $primaryUniv->name }}">
+                        <span class="material-symbols-outlined icon-sm align-text-bottom" style="font-size:12px">account_balance</span>
+                        {{ \Illuminate\Support\Str::limit($primaryUniv->name, 24) }}
+                    </span>
+                </div>
+            @endif
         @endauth
 
         <nav class="flex-1 px-3 space-y-1 overflow-y-auto mt-1">
@@ -220,6 +229,14 @@
                 <a href="{{ route('quick-review.index') }}" class="{{ $navLink }} {{ $active('quick-review.*') }}">
                     <span class="material-symbols-outlined icon-md">bolt</span>
                     <span class="sidebar-label">Quick Review</span>
+                </a>
+                <a href="{{ route('workspace.personal') }}" class="{{ $navLink }} {{ $active('workspace.personal') }}">
+                    <span class="material-symbols-outlined icon-md">folder</span>
+                    <span class="sidebar-label">Workspace Saya</span>
+                </a>
+                <a href="{{ route('groups.index') }}" class="{{ $navLink }} {{ $active('groups.*') }}">
+                    <span class="material-symbols-outlined icon-md">groups</span>
+                    <span class="sidebar-label">Grup Dosen</span>
                 </a>
                 <a href="{{ route('dosen-sidang.index') }}" class="{{ $navLink }} {{ $active('dosen-sidang.*') }}">
                     <span class="material-symbols-outlined icon-md">verified</span>

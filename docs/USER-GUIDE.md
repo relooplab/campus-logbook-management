@@ -167,6 +167,50 @@ Keteraturan bimbingan dihitung dari tanggal bimbingan terakhir:
 - **Fase** TA dapat diperbarui oleh dosen (dari dashboard atau halaman detail mahasiswa).
 - **Status TA**: `Aktif`, `Tamat`, `Nonaktif` — dikelola admin.
 
+### 3.17 Direktori Organisasi (Perguruan Tinggi → Fakultas → Departemen → Prodi)
+
+Aplikasi memiliki **direktori organisasi hierarkis** untuk memetakan afiliasi pengguna:
+
+```
+Perguruan Tinggi (universities)
+  └── Fakultas (faculties)
+        └── Departemen (departments)
+              └── Program Studi (study_programs)
+```
+
+- **Deduplikasi otomatis** — nama perguruan tinggi tidak muncul dua kali; fakultas/departemen/prodi unik di dalam induknya (constraint unik).
+- **Registrasi dosen** — dosen mendaftar dengan **NIDN** dan memilih/membuat perguruan tinggi (jika sudah ada, langsung dipakai; jika belum, dibuat baru).
+- **Multi-universitas** — satu dosen dapat terhubung ke **banyak perguruan tinggi**.
+- **Mahasiswa otomatis mengikuti institusi dosen** — saat dosen meng-invite atau menyetujui mahasiswa, universitas dosen otomatis disalin ke mahasiswa (mahasiswa tidak perlu input ulang).
+- **Tampilan** — universitas ditampilkan di dashboard (dosen & mahasiswa), sidebar, dan halaman profil.
+
+### 3.18 Grup & Cross-link Dosen
+
+Dosen dapat membentuk **grup** untuk kolaborasi dan cross-link dengan dosen lain di universitas yang sama.
+
+- **Level grup**: Universitas, Fakultas, Departemen, atau Program Studi.
+- **Buat grup**: dosen membuat grup dan otomatis menjadi owner.
+- **Undang kolega**: dosen mengundang dosen lain dari universitas yang sama (data tidak diinput ulang — langsung dipilih dari direktori).
+- **Approval**: dosen yang diundang harus **menyetujui** (approve) undangan sebelum menjadi anggota.
+- **Undangan pending**: dosen melihat undangan yang menunggu di halaman **Grup Dosen** dan dapat menerima/menolak.
+- **Akses "hanya hubungan langsung"**: dosen dalam grup yang sama (atau TA bersama) dapat melihat data bimbingan rekan — data hanya bisa diakses jika ada hubungan langsung.
+
+### 3.19 Workspace Dosen
+
+Selain workspace mahasiswa, dosen juga memiliki **workspace pribadi** melalui menu **Workspace Saya**:
+
+- Unggah file pribadi (PDF, DOC, DOCX, XLS, XLSX) — maks. 25 MB, hingga 5 file sekaligus.
+- Kelola file dengan label Bab dan catatan.
+- Filter & pencarian file.
+- Hanya dosen yang bersangkutan yang dapat mengakses file workspace pribadinya.
+
+### 3.20 Dashboard & UI (Institusi & Grup)
+
+- **Dashboard dosen** menampilkan kartu **"Institusi & Grup"**: perguruan tinggi (NPSN), NIDN, dan jumlah grup yang diikuti.
+- **Dashboard mahasiswa** menampilkan kartu **"Universitas"**.
+- **Sidebar** menampilkan badge universitas utama pengguna.
+- **Profil** menampilkan NIDN (dosen) dan universitas.
+
 ---
 
 ## 4. Alur Kerja Per Peran

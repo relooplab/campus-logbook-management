@@ -16,6 +16,78 @@
         </div>
     </div>
 
+    {{-- ===== Aksi Saya ===== --}}
+    @if ($ta)
+        <div class="card p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
+                    <span class="material-symbols-outlined icon-md">today</span>
+                </span>
+                <div>
+                    <h2 class="font-heading font-semibold text-text-primary">Aksi Saya</h2>
+                    <p class="text-sm text-text-secondary">Hal yang perlu Anda tindak lanjuti</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <a href="{{ route('logbook.index', ['status' => 'draft']) }}" class="flex items-center gap-3 p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
+                    <span class="icon-circle w-10 h-10 bg-status-pending/15 text-status-pending">
+                        <span class="material-symbols-outlined icon-md">draft</span>
+                    </span>
+                    <div>
+                        <div class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $draftCount }}</div>
+                        <div class="text-sm text-text-secondary">Draf belum dikirim</div>
+                    </div>
+                    @if ($draftCount > 0)
+                        <span class="ml-auto text-brand text-xs font-medium">Kirim →</span>
+                    @endif
+                </a>
+                <a href="{{ route('logbook.index', ['status' => 'revisi']) }}" class="flex items-center gap-3 p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
+                    <span class="icon-circle w-10 h-10 bg-status-danger/15 text-status-danger">
+                        <span class="material-symbols-outlined icon-md">edit_note</span>
+                    </span>
+                    <div>
+                        <div class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $revisiCount }}</div>
+                        <div class="text-sm text-text-secondary">Revisi perlu ditanggapi</div>
+                    </div>
+                    @if ($revisiCount > 0)
+                        <span class="ml-auto text-brand text-xs font-medium">Tanggapi →</span>
+                    @endif
+                </a>
+                <a href="{{ route('logbook.feedback') }}" class="flex items-center gap-3 p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
+                    <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
+                        <span class="material-symbols-outlined icon-md">checklist</span>
+                    </span>
+                    <div>
+                        <div class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $unresolvedActionItems }}</div>
+                        <div class="text-sm text-text-secondary">Action items belum selesai</div>
+                    </div>
+                    @if ($unresolvedActionItems > 0)
+                        <span class="ml-auto text-brand text-xs font-medium">Lihat →</span>
+                    @endif
+                </a>
+            </div>
+        </div>
+    @endif
+
+    {{-- ===== Universitas ===== --}}
+    @if ($university)
+        <div class="card p-6">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
+                    <span class="material-symbols-outlined icon-md">account_balance</span>
+                </span>
+                <div>
+                    <h2 class="font-heading font-semibold text-text-primary">Universitas</h2>
+                    <p class="text-sm text-text-secondary">Afiliasi program Anda</p>
+                </div>
+            </div>
+            <p class="font-medium text-text-primary">{{ $university->name }}</p>
+            @if ($university->npsn)
+                <p class="text-xs text-text-secondary mt-0.5">NPSN: {{ $university->npsn }}</p>
+            @endif
+        </div>
+    @endif
+
     {{-- ===== Tab program KP / TA ===== --}}
     @if ($programs->count() > 1)
         <div class="flex flex-wrap gap-2">

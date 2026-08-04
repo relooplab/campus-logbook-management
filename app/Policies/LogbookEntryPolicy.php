@@ -56,7 +56,24 @@ class LogbookEntryPolicy
             return true;
         }
 
-        return in_array($user->id, $this->pembimbingIds($entry->mahasiswaTa, $entry), true);
+        // Dosen pembimbing/penguji langsung.
+        if (in_array($user->id, $this->pembimbingIds($entry->mahasiswaTa, $entry), true)) {
+            return true;
+        }
+
+        // Dosen lain yang punya hubungan langsung dengan pembimbing
+        // (TA bersama atau grup yang sama) dapat melihat entri.
+        if ($user->isDosen()) {
+            foreach ($this->pembimbingIds($entry->mahasiswaTa, $entry) as $pembimbingId) {
+                if ($pembimbing = User::find($pembimbingId)) {
+                    if ($user->hasDirectRelation($pembimbing)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     public function update(User $user, LogbookEntry $entry): bool

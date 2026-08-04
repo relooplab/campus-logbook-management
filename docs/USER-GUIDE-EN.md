@@ -167,6 +167,50 @@ Supervision regularity is calculated from the last supervision date:
 - The thesis **phase** can be updated by the lecturer (from the dashboard or the student detail page).
 - **Thesis status**: `Active`, `Completed`, `Inactive` — managed by the admin.
 
+### 3.17 Organizational Directory (University → Faculty → Department → Study Program)
+
+The application has a **hierarchical organizational directory** to map user affiliations:
+
+```
+University (universities)
+  └── Faculty (faculties)
+        └── Department (departments)
+              └── Study Program (study_programs)
+```
+
+- **Automatic deduplication** — a university name never appears twice; faculty/department/study program are unique within their parent (unique constraints).
+- **Lecturer registration** — lecturers register with their **NIDN** and select/create their university (if it already exists, it is reused; if not, it is created).
+- **Multi-university** — a lecturer can be affiliated with **multiple universities**.
+- **Students automatically follow their supervisor's institution** — when a lecturer invites or approves a student, the lecturer's university is automatically copied to the student (no re-entry).
+- **Display** — the university is shown on the dashboard (lecturer & student), sidebar, and profile page.
+
+### 3.18 Lecturer Groups & Cross-linking
+
+Lecturers can form **groups** for collaboration and cross-linking with other lecturers at the same university.
+
+- **Group levels**: University, Faculty, Department, or Study Program.
+- **Create group**: a lecturer creates a group and automatically becomes the owner.
+- **Invite colleagues**: a lecturer invites other lecturers from the same university (data is not re-entered — selected directly from the directory).
+- **Approval**: the invited lecturer must **approve** the invitation before becoming a member.
+- **Pending invitations**: lecturers see pending invitations on the **Lecturer Groups** page and can accept/reject them.
+- **"Direct relation only" access**: lecturers in the same group (or sharing a thesis) can view each other's supervision data — data is only accessible when there is a direct relationship.
+
+### 3.19 Lecturer Workspace
+
+In addition to the student workspace, lecturers also have a **personal workspace** via the **My Workspace** menu:
+
+- Upload personal files (PDF, DOC, DOCX, XLS, XLSX) — max 25 MB, up to 5 files at once.
+- Manage files with chapter labels and notes.
+- Filter & search files.
+- Only the lecturer concerned can access their personal workspace files.
+
+### 3.20 Dashboard & UI (Institution & Groups)
+
+- The **lecturer dashboard** shows the **"Institution & Groups"** card: university (NPSN), NIDN, and the number of groups joined.
+- The **student dashboard** shows the **"University"** card.
+- The **sidebar** shows the user's primary university badge.
+- The **profile** shows the NIDN (lecturer) and university.
+
 ---
 
 ## 4. Role-based Workflows

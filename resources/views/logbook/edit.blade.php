@@ -9,30 +9,39 @@
     $riwayat = old("riwayat_perbaikan", $logbook->riwayat_perbaikan ?: []);
 @endphp
 <div class="max-w-3xl">
-    <h1 class="text-xl font-bold mb-4">Edit Entri</h1> @include("partials.status-badge", ["status" => $logbook->status]) <form method="POST"
-        action="{{ route("logbook.update", $logbook) }}" enctype="multipart/form-data"
-        class="bg-bg-surface rounded-xl border border-border p-6 space-y-4 mt-3"> @csrf @method("PUT") @if ($isRevisi)
-            <div> <label class="block text-sm font-medium mb-1" for="tanggal_pengiriman">Tanggal Pengiriman Revisi</label>
+    <div class="flex items-center justify-between mb-5">
+        <h1 class="font-heading font-bold text-2xl text-text-primary">Edit Entri</h1>
+        @include('partials.status-badge', ['status' => $logbook->status])
+    </div>
+    <form method="POST" action="{{ route('logbook.update', $logbook) }}" enctype="multipart/form-data"
+        class="card p-6 space-y-4">
+        @csrf
+        @method('PUT')
+        @if ($isRevisi)
+            <div>
+                <label class="block text-xs text-text-secondary mb-1" for="tanggal_pengiriman">Tanggal Pengiriman Revisi</label>
                 <input type="date" name="tanggal_pengiriman" id="tanggal_pengiriman" required
-                    value="{{ old("tanggal_pengiriman", $logbook->tanggal_pengiriman?->format("Y-m-d") ?? now()->format("Y-m-d")) }}"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
-                @error("tanggal_pengiriman")
+                    value="{{ old('tanggal_pengiriman', $logbook->tanggal_pengiriman?->format('Y-m-d') ?? now()->format('Y-m-d')) }}"
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                @error('tanggal_pengiriman')
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
         @else
-            <div> <label class="block text-sm font-medium mb-1" for="tanggal_bimbingan">Tanggal Bimbingan</label> <input
-                    type="date" name="tanggal_bimbingan" id="tanggal_bimbingan" required
-                    value="{{ old("tanggal_bimbingan", $logbook->tanggal_bimbingan?->format("Y-m-d")) }}"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
-                @error("tanggal_bimbingan")
+            <div>
+                <label class="block text-xs text-text-secondary mb-1" for="tanggal_bimbingan">Tanggal Bimbingan</label>
+                <input type="date" name="tanggal_bimbingan" id="tanggal_bimbingan" required
+                    value="{{ old('tanggal_bimbingan', $logbook->tanggal_bimbingan?->format('Y-m-d')) }}"
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                @error('tanggal_bimbingan')
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
-            <div> <label class="block text-sm font-medium mb-1" for="topik">Topik Bimbingan</label> <input
-                    type="text" name="topik" id="topik" required value="{{ old("topik", $logbook->topik) }}"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
-                @error("topik")
+            <div>
+                <label class="block text-xs text-text-secondary mb-1" for="topik">Topik Bimbingan</label>
+                <input type="text" name="topik" id="topik" required value="{{ old('topik', $logbook->topik) }}"
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                @error('topik')
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
@@ -100,17 +109,17 @@
 
         {{-- ===== Pesan untuk Dosen (revisi) / Ringkasan (logbook) ===== --}}
         <div>
-            <label class="block text-sm font-medium mb-1" for="progres_kendala">{{ $isRevisi ? 'Pesan untuk Dosen (opsional)' : 'Ringkasan Perbaikan' }}</label>
+            <label class="block text-xs text-text-secondary mb-1" for="progres_kendala">{{ $isRevisi ? 'Pesan untuk Dosen (opsional)' : 'Ringkasan Perbaikan' }}</label>
             <textarea name="progres_kendala" id="progres_kendala" rows="6" {{ $isRevisi ? 'maxlength="500"' : 'required' }}
                 placeholder="{{ $isRevisi ? 'Contoh: Mohon maaf atas keterlambatan pengumpulan revisi, saya terkendala ... / Ada satu poin yang masih saya tandai "Sebagian" karena ... / Mohon arahan untuk bagian ...' : '' }}"
-                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">{{ old("progres_kendala", $logbook->progres_kendala) }}</textarea>
+                class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">{{ old('progres_kendala', $logbook->progres_kendala) }}</textarea>
             @if ($isRevisi)
                 <div class="flex flex-wrap items-center justify-between gap-2 mt-1">
                     <p class="text-xs text-text-secondary">Gunakan untuk konteks yang tidak tertampung di tabel (kendala, alasan, pertanyaan). Pesan ini tampil di atas PDF yang diterima dosen.</p>
                     <span class="text-xs text-text-secondary" id="pesan-counter">0/500</span>
                 </div>
             @endif
-            @error("progres_kendala")
+            @error('progres_kendala')
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
         </div>
@@ -149,10 +158,9 @@
         class="px-3 py-2 rounded-md bg-status-pending/10 border border-status-pending/20 text-xs text-status-pending">
         <span class="material-symbols-outlined icon-sm align-text-bottom">warning</span> Mengganti atau menghapus file akan mengarsipkan versi lama dan tidak bisa dikembalikan. Komentar PDF
         pada file yang diganti akan otomatis ditandai selesai (resolve). </div>
-    <div class="flex flex-wrap gap-2 pt-2"> <button type="submit"
-            class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan</button>
-        <a href="{{ route("logbook.show", $logbook) }}"
-            class="px-4 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</a>
+    <div class="flex flex-wrap gap-2 pt-2">
+        <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Simpan</button>
+        <a href="{{ route('logbook.show', $logbook) }}" class="px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20">Batal</a>
     </div>
 </form>
 </div>

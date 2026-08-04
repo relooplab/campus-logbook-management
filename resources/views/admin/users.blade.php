@@ -29,7 +29,13 @@
                 <tbody>
                     @forelse ($users as $u)
                         <tr class="border-b border-border">
-                            <td class="py-3 px-4">{{ $u->name }}</td>
+                            <td class="py-3 px-4">
+                                {{ $u->name }}
+                                @php $uUniv = $u->primaryUniversity(); @endphp
+                                @if ($uUniv)
+                                    <span class="block text-[10px] text-text-secondary mt-0.5">{{ $uUniv->name }}</span>
+                                @endif
+                            </td>
                             <td class="py-3 px-4 table-col-identifier">{{ $u->identifier ?? "—" }}</td>
                             <td class="py-3 px-4 table-col-email">{{ $u->email }}</td>
                             <td class="py-3 px-4">
@@ -38,7 +44,9 @@
                                         class="inline-block px-2 py-0.5 rounded-full text-xs bg-bg-panel mr-1">{{ $role->name }}</span>
                                 @endforeach
                             </td>
-                            <td class="py-3 px-4"> <button type="button" data-reset="{{ $u->id }}"
+                            <td class="py-3 px-4">
+                                <a href="{{ route('admin.users.plan', $u) }}" class="text-brand hover:underline text-xs mr-2">Paket</a>
+                                <button type="button" data-reset="{{ $u->id }}"
                                     data-name="{{ $u->name }}"
                                     class="reset-btn text-brand hover:underline text-xs mr-2">Reset PW</button>
                                 <form method="POST" action="{{ route("admin.users.destroy", $u) }}"

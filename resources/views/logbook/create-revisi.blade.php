@@ -8,31 +8,36 @@
     $oldRiwayat = old("riwayat_perbaikan", []);
 @endphp
 <div class="max-w-3xl">
-    <h1 class="text-xl font-bold mb-4">Entri Revisi</h1>
+    <div class="flex items-center justify-between mb-5">
+        <h1 class="font-heading font-bold text-2xl text-text-primary">Entri Revisi</h1>
+        <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali</a>
+    </div>
     @if ($parents->isEmpty())
-        <div class="mb-4 px-4 py-3 rounded-md bg-status-pending/10 border border-status-pending/30 text-sm">
+        <div class="mb-4 px-4 py-3 rounded-xl bg-status-pending/10 border border-status-pending/30 text-sm">
             Anda bisa membuat entri revisi langsung tanpa harus ada logbook sebelumnya. Jika ingin menjawab feedback dari entri yang sudah ada, pilih entri asal di bawah.
         </div>
     @endif
-    <form method="POST" action="{{ route("logbook.store-revisi") }}" enctype="multipart/form-data"
-        class="bg-bg-surface rounded-xl border border-border p-6 space-y-4" id="revisi-form"> @csrf <div> <label
-                class="block text-sm font-medium mb-1" for="parent_entry_id">Feedback yang dijawab (opsional)</label>
+    <form method="POST" action="{{ route('logbook.store-revisi') }}" enctype="multipart/form-data"
+        class="card p-6 space-y-4" id="revisi-form">
+        @csrf
+        <div>
+            <label class="block text-xs text-text-secondary mb-1" for="parent_entry_id">Feedback yang dijawab (opsional)</label>
             <select name="parent_entry_id" id="parent_entry_id"
-                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
                 <option value="">Tidak ada — revisi mandiri</option>
                 @foreach ($parents as $parent)
-                    <option value="{{ $parent->id }}" @selected(old("parent_entry_id", $selectedParentId) == $parent->id)>
-                        Entri #{{ $parent->id }} · {{ $parent->revision_round ? "Revisi ke-{$parent->revision_round}" : "Logbook" }} · {{ $parent->reviewed_at?->format("d M Y") }}
+                    <option value="{{ $parent->id }}" @selected(old('parent_entry_id', $selectedParentId) == $parent->id)>
+                        Entri #{{ $parent->id }} · {{ $parent->revision_round ? "Revisi ke-{$parent->revision_round}" : 'Logbook' }} · {{ $parent->reviewed_at?->format('d M Y') }}
                     </option>
                 @endforeach
             </select>
             <p class="text-xs text-text-secondary mt-1">Kosongkan jika ingin membuat revisi tanpa menghubungkan ke entri logbook yang ada.</p>
-            @error("parent_entry_id")
+            @error('parent_entry_id')
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
         </div>
         @foreach ($parents as $parent)
-            <div data-parent-feedback="{{ $parent->id }}" class="rounded-md bg-bg-panel border border-border p-3 space-y-2 hidden">
+            <div data-parent-feedback="{{ $parent->id }}" class="rounded-xl bg-bg-panel border border-border p-3 space-y-2 hidden">
                 <p class="text-xs font-semibold text-text-secondary">Feedback entri #{{ $parent->id }}</p>
                 <p class="text-sm whitespace-pre-wrap">{{ $parent->feedback_dosen ?: "Tidak ada feedback teks." }}</p>
                 @foreach ($parent->comments->where("resolution_status", "!=", \App\Models\PdfComment::STATUS_RESOLVED) as $comment)
@@ -44,12 +49,12 @@
                 @endforeach
             </div>
         @endforeach
-        <div> <label
-                class="block text-sm font-medium mb-1" for="tanggal_pengiriman">Tanggal Pengiriman Revisi</label> <input
-                type="date" name="tanggal_pengiriman" id="tanggal_pengiriman" required
-                value="{{ old("tanggal_pengiriman", now()->format("Y-m-d")) }}"
-                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
-            @error("tanggal_pengiriman")
+        <div>
+            <label class="block text-xs text-text-secondary mb-1" for="tanggal_pengiriman">Tanggal Pengiriman Revisi</label>
+            <input type="date" name="tanggal_pengiriman" id="tanggal_pengiriman" required
+                value="{{ old('tanggal_pengiriman', now()->format('Y-m-d')) }}"
+                class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+            @error('tanggal_pengiriman')
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
         </div>
@@ -114,15 +119,15 @@
 
         {{-- ===== Pesan untuk Dosen ===== --}}
         <div>
-            <label class="block text-sm font-medium mb-1" for="progres_kendala">Pesan untuk Dosen <span class="text-text-secondary">(opsional)</span></label>
+            <label class="block text-xs text-text-secondary mb-1" for="progres_kendala">Pesan untuk Dosen <span class="text-text-secondary">(opsional)</span></label>
             <textarea name="progres_kendala" id="progres_kendala" rows="4" maxlength="500"
                 placeholder="Contoh: Mohon maaf atas keterlambatan pengumpulan revisi, saya terkendala ... / Ada satu poin yang masih saya tandai 'Sebagian' karena ... / Mohon arahan untuk bagian ..."
-                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">{{ old("progres_kendala") }}</textarea>
+                class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">{{ old('progres_kendala') }}</textarea>
             <div class="flex flex-wrap items-center justify-between gap-2 mt-1">
                 <p class="text-xs text-text-secondary">Gunakan untuk konteks yang tidak tertampung di tabel (kendala, alasan, pertanyaan). Pesan ini tampil di atas PDF yang diterima dosen.</p>
                 <span class="text-xs text-text-secondary" id="pesan-counter">0/500</span>
             </div>
-            @error("progres_kendala")
+            @error('progres_kendala')
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
         </div>
@@ -133,12 +138,10 @@
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
         </div>
-        <div class="flex flex-wrap gap-2 pt-2"> <button type="submit"
-                class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan
-                Revisi</button> <button type="submit" name="submit" value="1"
-                class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Kirim
-                ke dosen</button> <a href="{{ route("logbook.index") }}"
-                class="px-4 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</a>
+        <div class="flex flex-wrap gap-2 pt-2">
+            <button type="submit" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Simpan Revisi</button>
+            <button type="submit" name="submit" value="1" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Kirim ke dosen</button>
+            <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20">Batal</a>
         </div>
     </form>
 </div>

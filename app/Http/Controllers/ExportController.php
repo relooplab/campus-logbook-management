@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\MahasiswaTaExport;
 use App\Models\MahasiswaTa;
+use App\Support\Feature;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
@@ -16,6 +17,7 @@ class ExportController extends Controller
     public function exportPdf(MahasiswaTa $mahasiswaTa)
     {
         $this->authorizeExport($mahasiswaTa);
+        $this->authorizePlanFeature('export');
 
         $mahasiswaTa->load(['mahasiswa', 'pembimbing1', 'pembimbing2']);
 
@@ -40,6 +42,7 @@ class ExportController extends Controller
     public function exportExcel(MahasiswaTa $mahasiswaTa)
     {
         $this->authorizeExport($mahasiswaTa);
+        $this->authorizePlanFeature('export');
 
         $filename = 'bimbingan-'.$mahasiswaTa->mahasiswa->identifier.'-'.now()->format('Ymd').'.xlsx';
 
@@ -55,6 +58,7 @@ class ExportController extends Controller
         if (!$user->isDosen() && !$user->isAdmin()) {
             abort(403);
         }
+        $this->authorizePlanFeature('export');
 
         $dosen = $user->isDosen() ? $user : (\App\Models\User::role('dosen')->first() ?? $user);
 
@@ -73,6 +77,21 @@ class ExportController extends Controller
         $filename = 'rekap-dosen-'.$dosen->identifier.'-'.now()->format('Ymd').'.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Gate fitur berbasis paket (export/import). Admin selalu diizinkan.
+     */
+    private function authorizePlanFeature(string $feature): void
+    {
+        $user = auth()->user();
+        if ($user->isAdmin()) {
+            return;
+        }
+
+        if (!Feature::has($feature, $user)) {
+            abort(403, "Fitur {$feature} tersedia pada paket Donasi. Silakan upgrade atau hubungi admin.");
+        }
     }
 
     private function authorizeExport(MahasiswaTa $mahasiswaTa): void

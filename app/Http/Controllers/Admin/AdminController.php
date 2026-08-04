@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Institution;
 use App\Models\MahasiswaTa;
+use App\Models\Plan;
+use App\Models\Subscription;
 use App\Models\User;
+use App\Models\UserPlanOverride;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -286,6 +289,55 @@ class AdminController extends Controller
         $mahasiswaTa->update(['status_ta' => $validated['status_ta']]);
 
         return back()->with('success', 'Status program diperbarui.');
+    }
+
+    // ------------------------------------------------------- paket & override
+
+    /**
+     * Form pengaturan paket (free/donasi) + override admin per user.
+     */
+    public function planSettings(User $user): View
+    {
+        $plans = Plan::where('is_active', true)->orderBy('price')->get();
+        $activePlan = $user->activePlan();
+        $override = $user->planOverride;
+
+        return view('admin.plan-settings', compact('user', 'plans', 'activePlan', 'override'));
+    }
+
+    /**
+     * Simpan paket & override admin untuk user.
+     */
+    public function updatePlanSettings(Request $request, User $user): RedirectResponse
+    {
+        $validated = $request->validate([
+            'plan_id' => ['required', 'exists:plans,id'],
+            'allow_export' => ['nullable', 'boolean'],
+            'allow_import' => ['nullable', 'boolean'],
+            'storage_limit_mb' => ['nullable', 'integer', 'min:0', 'max:1048576'],
+        ]);
+
+        // Set subscription aktif (nonaktifkan yang lain).
+        Subscription::where('user_id', $user->id)->update(['status' => 'cancelled']);
+        Subscription::create([
+            'user_id' => $user->id,
+            'plan_id' => $validated['plan_id'],
+            'status' => 'active',
+            'starts_at' => now(),
+            'ends_at' => null,
+        ]);
+
+        // Override admin (nullable = ikut plan).
+        UserPlanOverride::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'allow_export' => $request->boolean('allow_export') ? true : null,
+                'allow_import' => $request->boolean('allow_import') ? true : null,
+                'storage_limit_mb' => $validated['storage_limit_mb'] ?: null,
+            ]
+        );
+
+        return back()->with('success', "Paket '{$user->name}' diperbarui.");
     }
 
     // ------------------------------------------------------- institusi

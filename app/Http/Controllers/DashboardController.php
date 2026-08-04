@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Group;
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\User;
@@ -114,7 +115,22 @@ class DashboardController extends Controller
                 ->whereIn('mahasiswa_ta_id', $taIds)->count(),
         ];
 
-        return view('dashboard.dosen', compact('tas', 'queue', 'perTa', 'healthCount', 'stats'));
+        // Ringkasan aksi untuk dosen: registrasi pending + mahasiswa perlu perhatian.
+        $pendingRegistrations = \App\Models\User::role('mahasiswa')
+            ->where('registration_status', 'pending')
+            ->count();
+        $needsAttention = $perTa->whereIn('regularity', ['yellow', 'red'])->count();
+
+        // Informasi institusi & grup untuk kartu dashboard.
+        $university = $user->primaryUniversity();
+        $groupCount = Group::whereHas('memberships', fn ($q) => $q->where('user_id', $user->id)->where('status', 'approved'))
+            ->count();
+
+        return view('dashboard.dosen', compact(
+            'tas', 'queue', 'perTa', 'healthCount', 'stats',
+            'pendingRegistrations', 'needsAttention',
+            'university', 'groupCount'
+        ));
     }
 
     /**
@@ -211,13 +227,29 @@ class DashboardController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
+        // ---- Ringkasan "Aksi Saya" untuk mahasiswa ----
+        $draftCount = $entries->where('status', LogbookEntry::STATUS_DRAFT)->count();
+        $revisiCount = $entries->where('status', LogbookEntry::STATUS_REVISI)->count();
+        $unresolvedActionItems = $ta
+            ? \App\Models\ActionItem::whereHas('entry', fn ($q) => $q->where('mahasiswa_ta_id', $ta->id))
+                ->where('is_done', false)
+                ->count()
+            : 0;
+
+        // Informasi universitas untuk kartu dashboard mahasiswa.
+        $university = $user->isMahasiswa()
+            ? ($user->primaryUniversity() ?? $ta?->pembimbing1?->primaryUniversity())
+            : $user->primaryUniversity();
+
         return view('dashboard.mahasiswa', compact(
             'programs', 'activeProgram', 'ta', 'entries', 'approved', 'target', 'progressPercent',
             'faseKeys', 'faseIndex',
             'unlockedAchievements', 'unlockedCodes', 'totalAchievements',
             'logbookHarian',
             'stats', 'timeline', 'heatmap', 'regularity', 'regularityTooltip',
-            'unreadAnnouncements'
+            'unreadAnnouncements',
+            'draftCount', 'revisiCount', 'unresolvedActionItems',
+            'university'
         ));
     }
 

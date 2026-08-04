@@ -7,11 +7,98 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="font-heading font-bold text-2xl text-text-primary">Dashboard Dosen</h1>
-            <p class="text-sm text-text-secondary mt-0.5">Ringkasan aktivitas bimbingan &amp; pengujian TA</p>
+            <p class="text-sm text-text-secondary mt-0.5">Ringkasan aktivitas bimbingan & pengujian TA</p>
         </div>
         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-            <a href="{{ route('logbook.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border text-center">Semua Entri</a>
-            <a href="{{ route('notifications.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border text-center">Notifikasi</a>
+            <a href="{{ route('approval.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90 inline-flex items-center justify-center gap-1.5">
+                <span class="material-symbols-outlined icon-sm">person_add</span> Tambah Mahasiswa
+            </a>
+            <a href="{{ route('dosen-sidang.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border inline-flex items-center justify-center gap-1.5">
+                <span class="material-symbols-outlined icon-sm">verified</span> Catat Sidang
+            </a>
+        </div>
+    </div>
+
+    {{-- ===== Institusi & Grup ===== --}}
+    <div class="card p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
+                <span class="material-symbols-outlined icon-md">account_balance</span>
+            </span>
+            <div>
+                <h2 class="font-heading font-semibold text-text-primary">Institusi & Grup</h2>
+                <p class="text-sm text-text-secondary">Afiliasi Anda di direktori organisasi</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="p-4 rounded-xl bg-bg-panel border border-border">
+                <p class="text-xs text-text-secondary mb-1">Perguruan Tinggi</p>
+                <p class="font-medium text-text-primary">{{ $university?->name ?? 'Belum diisi' }}</p>
+                @if ($university?->npsn)
+                    <p class="text-xs text-text-secondary mt-0.5">NPSN: {{ $university->npsn }}</p>
+                @endif
+            </div>
+            <div class="p-4 rounded-xl bg-bg-panel border border-border">
+                <p class="text-xs text-text-secondary mb-1">NIDN</p>
+                <p class="font-medium text-text-primary">{{ $user->nidn ?? 'Belum diisi' }}</p>
+                <p class="text-xs text-text-secondary mt-0.5">Identitas dosen</p>
+            </div>
+            <a href="{{ route('groups.index') }}" class="p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
+                <p class="text-xs text-text-secondary mb-1">Grup Dosen</p>
+                <p class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $groupCount }}</p>
+                <p class="text-xs text-brand mt-0.5">Kelola Grup →</p>
+            </a>
+        </div>
+    </div>
+
+    {{-- ===== Ringkasan Aksi Hari Ini ===== --}}
+    <div class="card p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
+                <span class="material-symbols-outlined icon-md">today</span>
+            </span>
+            <div>
+                <h2 class="font-heading font-semibold text-text-primary">Aksi Hari Ini</h2>
+                <p class="text-sm text-text-secondary">Prioritas yang perlu Anda tindak lanjuti</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <a href="{{ route('quick-review.index') }}" class="flex items-center gap-3 p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
+                <span class="icon-circle w-10 h-10 bg-status-danger/15 text-status-danger">
+                    <span class="material-symbols-outlined icon-md">fact_check</span>
+                </span>
+                <div>
+                    <div class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $stats['menunggu_review'] }}</div>
+                    <div class="text-sm text-text-secondary">Entri menunggu review</div>
+                </div>
+                @if ($stats['menunggu_review'] > 0)
+                    <span class="ml-auto text-brand text-xs font-medium">Review →</span>
+                @endif
+            </a>
+            <a href="{{ route('approval.index') }}" class="flex items-center gap-3 p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
+                <span class="icon-circle w-10 h-10 bg-status-pending/15 text-status-pending">
+                    <span class="material-symbols-outlined icon-md">person_add</span>
+                </span>
+                <div>
+                    <div class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $pendingRegistrations }}</div>
+                    <div class="text-sm text-text-secondary">Registrasi menunggu</div>
+                </div>
+                @if ($pendingRegistrations > 0)
+                    <span class="ml-auto text-brand text-xs font-medium">Setujui →</span>
+                @endif
+            </a>
+            <a href="{{ route('dashboard.dosen.mahasiswa-list') }}" class="flex items-center gap-3 p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
+                <span class="icon-circle w-10 h-10 bg-status-pending/15 text-status-pending">
+                    <span class="material-symbols-outlined icon-md">monitor_heart</span>
+                </span>
+                <div>
+                    <div class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $needsAttention }}</div>
+                    <div class="text-sm text-text-secondary">Mahasiswa perlu perhatian</div>
+                </div>
+                @if ($needsAttention > 0)
+                    <span class="ml-auto text-status-pending text-xs font-medium">Lihat →</span>
+                @endif
+            </a>
         </div>
     </div>
 

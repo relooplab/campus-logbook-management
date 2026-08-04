@@ -11,6 +11,7 @@ use App\Http\Controllers\StudentApprovalController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DosenSidangController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\GroupController;
 use App\Http\Controllers\LogbookController;
 use App\Http\Controllers\LogbookHarianController;
 use App\Http\Controllers\MahasiswaTaController;
@@ -58,6 +59,7 @@ Route::middleware('auth')->group(function () {
     // Persetujuan registrasi mahasiswa (dosen/admin).
     Route::middleware('role_or_permission:dosen|admin')->group(function () {
         Route::get('/approval', [StudentApprovalController::class, 'index'])->name('approval.index');
+        Route::post('/approval/invite', [StudentApprovalController::class, 'invite'])->name('approval.invite');
         Route::post('/approval/{mahasiswa}/approve', [StudentApprovalController::class, 'approve'])->name('approval.approve');
         Route::post('/approval/{mahasiswa}/reject', [StudentApprovalController::class, 'reject'])->name('approval.reject');
     });
@@ -128,6 +130,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/workspace/files/{file}/preview', [WorkspaceController::class, 'preview'])->name('workspace.preview');
     Route::patch('/workspace/files/{file}', [WorkspaceController::class, 'update'])->name('workspace.update');
     Route::delete('/workspace/files/{file}', [WorkspaceController::class, 'destroy'])->name('workspace.destroy');
+
+    // -------------------------------------------------- workspace pribadi (dosen)
+    Route::get('/workspace-saya', [WorkspaceController::class, 'personalIndex'])->name('workspace.personal');
+    Route::post('/workspace-saya', [WorkspaceController::class, 'personalStore'])->name('workspace.personal-store');
+
+    // -------------------------------------------------- grup & cross-link (dosen)
+    Route::middleware('role_or_permission:dosen|admin')->group(function () {
+        Route::get('/grup', [GroupController::class, 'index'])->name('groups.index');
+        Route::post('/grup', [GroupController::class, 'store'])->name('groups.store');
+        Route::post('/grup/{group}/invite', [GroupController::class, 'invite'])->name('groups.invite');
+        Route::post('/grup/{group}/approve', [GroupController::class, 'approve'])->name('groups.approve');
+        Route::post('/grup/{group}/reject', [GroupController::class, 'reject'])->name('groups.reject');
+    });
 
     // ---------------------------------------------------- chat (Fase 9)
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
@@ -210,5 +225,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/institusi', [AdminController::class, 'institution'])->name('institution');
         Route::post('/institusi', [AdminController::class, 'updateInstitution'])->name('institution.update');
         Route::post('/institusi/test-mail', [AdminController::class, 'testMail'])->name('institution.test-mail');
+
+        // Paket & override admin per user.
+        Route::get('/users/{user}/plan', [AdminController::class, 'planSettings'])->name('users.plan');
+        Route::post('/users/{user}/plan', [AdminController::class, 'updatePlanSettings'])->name('users.plan.update');
     });
 });

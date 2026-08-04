@@ -4,17 +4,17 @@
 <div class="max-w-4xl">
     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
-            <h1 class="text-xl font-bold">Logbook Harian KP</h1>
+            <h1 class="font-heading font-bold text-2xl text-text-primary">Logbook Harian KP</h1>
             <p class="text-sm text-text-secondary mt-1">
-                {{ $mahasiswaTa->mahasiswa?->name }} — {{ $mahasiswaTa->tempat_kp ?: "Tempat KP" }}
+                {{ $mahasiswaTa->mahasiswa?->name }} — {{ $mahasiswaTa->tempat_kp ?: 'Tempat KP' }}
                 @if ($mahasiswaTa->periode_mulai)
-                    ({{ $mahasiswaTa->periode_mulai->format("d M Y") }} – {{ $mahasiswaTa->periode_selesai?->format("d M Y") ?? "sekarang" }})
+                    ({{ $mahasiswaTa->periode_mulai->format('d M Y') }} – {{ $mahasiswaTa->periode_selesai?->format('d M Y') ?? 'sekarang' }})
                 @endif
             </p>
         </div>
         @if (auth()->user()->id === $mahasiswaTa->user_id)
-            <a href="{{ route("logbook-harian.create", $mahasiswaTa) }}"
-                class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">+ Tambah Catatan</a>
+            <a href="{{ route('logbook-harian.create', $mahasiswaTa) }}"
+                class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">+ Tambah Catatan</a>
         @endif
     </div>
 

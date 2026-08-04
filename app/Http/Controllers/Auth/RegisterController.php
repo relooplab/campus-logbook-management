@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Notifications\ActivityNotification;
+use App\Services\OrganizationalDirectoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -34,6 +36,14 @@ class RegisterController extends Controller
             'supervisor_1' => ['nullable', 'string', 'max:255'],
             'supervisor_2' => ['nullable', 'string', 'max:255'],
             'supervisor_3' => ['nullable', 'string', 'max:255'],
+            // Direktori organisasi (dosen).
+            'nidn' => ['nullable', 'string', 'max:20', 'unique:users,nidn'],
+            'university_name' => ['nullable', 'string', 'max:255'],
+            'university_npsn' => ['nullable', 'string', 'max:20'],
+            'faculty_name' => ['nullable', 'string', 'max:255'],
+            'department_name' => ['nullable', 'string', 'max:255'],
+            'study_program_name' => ['nullable', 'string', 'max:255'],
+            'study_program_code' => ['nullable', 'string', 'max:20'],
         ]);
 
         $role = $validated['role'] ?? 'mahasiswa';
@@ -53,14 +63,75 @@ class RegisterController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'nidn' => $role === 'dosen' ? ($validated['nidn'] ?? null) : null,
             'registration_status' => 'pending',
             'examiner_supervisor_names' => $supervisors ?: null,
         ]);
         $user->syncRoles([$role]);
 
+        // Dosen: hubungkan ke direktori organisasi (pilih/create + dedup).
+        if ($role === 'dosen' && !empty($validated['university_name'])) {
+            $this->attachUniversity($user, $validated);
+        }
+
         $approver = $role === 'dosen' ? 'admin' : 'dosen';
+
+        // Beri tahu dosen (mode individual) saat ada mahasiswa baru mendaftar.
+        if ($role === 'mahasiswa') {
+            $this->bestEffort(fn () => $this->notifyDosenOfNewRegistration($user));
+        }
 
         return redirect()->route('login')
             ->with('status', "Pendaftaran dikirim. Menunggu persetujuan {$approver}.");
+    }
+
+    /**
+     * Hubungkan dosen ke direktori organisasi (dedup via service).
+     */
+    private function attachUniversity(User $user, array $data): void
+    {
+        $service = app(OrganizationalDirectoryService::class);
+
+        $university = $service->findOrCreateUniversity(
+            $data['university_name'],
+            $data['university_npsn'] ?? null
+        );
+
+        $faculty = null;
+        $department = null;
+        $studyProgram = null;
+
+        if (!empty($data['faculty_name'])) {
+            $faculty = $service->findOrCreateFaculty($university, $data['faculty_name']);
+        }
+        if ($faculty && !empty($data['department_name'])) {
+            $department = $service->findOrCreateDepartment($faculty, $data['department_name']);
+        }
+        if ($department && !empty($data['study_program_name'])) {
+            $studyProgram = $service->findOrCreateStudyProgram(
+                $department,
+                $data['study_program_name'],
+                $data['study_program_code'] ?? null
+            );
+        }
+
+        $service->attachUserToUniversity($user, $university, $faculty, $department, $studyProgram, true);
+    }
+
+    /**
+     * Kirim notifikasi ke dosen (mode individual) bahwa ada mahasiswa baru.
+     */
+    private function notifyDosenOfNewRegistration(User $mahasiswa): void
+    {
+        $dosen = User::role('dosen')->where('registration_status', 'approved')->first();
+        if (!$dosen) {
+            return;
+        }
+
+        $dosen->notify(new ActivityNotification(
+            "Mahasiswa baru '{$mahasiswa->name}' mendaftar dan menunggu persetujuan Anda.",
+            route('approval.index'),
+            'Pendaftaran Mahasiswa Baru'
+        ));
     }
 }

@@ -8,52 +8,63 @@
     $babs = $mahasiswaTa->workspaceFiles()->whereNotNull('bab')->distinct()->pluck('bab');
 @endphp
 
-<div class="space-y-4">
+<div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="text-xl font-bold"><span class="material-symbols-outlined icon-md align-text-bottom">folder</span> Workspace — {{ $mahasiswaTa->mahasiswa?->name ?? "Mahasiswa" }}</h1> <a
-            href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">←
-            Dashboard</a>
-    </div> {{-- Filter --}} <form method="GET" action="{{ route("workspace.index", $mahasiswaTa) }}"
-        class="bg-bg-surface rounded-xl border border-border p-4 flex flex-wrap gap-3 items-end">
-        <div class="w-full sm:w-auto"> <label class="block text-xs text-text-secondary mb-1">Bab</label> <select name="bab"
-                class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+        <div>
+            <h1 class="font-heading font-bold text-2xl text-text-primary"><span class="material-symbols-outlined icon-md align-text-bottom">folder</span> Workspace</h1>
+            <p class="text-sm text-text-secondary mt-0.5">{{ $mahasiswaTa->mahasiswa?->name ?? 'Mahasiswa' }}</p>
+        </div>
+        <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Dashboard</a>
+    </div>
+    {{-- Filter --}}
+    <form method="GET" action="{{ route('workspace.index', $mahasiswaTa) }}" class="card p-4 flex flex-wrap gap-3 items-end">
+        <div class="w-full sm:w-auto">
+            <label class="block text-xs text-text-secondary mb-1">Bab</label>
+            <select name="bab" class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
                 <option value="">Semua Bab</option>
                 @foreach ($babs as $b)
-                    <option value="{{ $b }}" @selected(request("bab") === $b)>{{ $b }}</option>
+                    <option value="{{ $b }}" @selected(request('bab') === $b)>{{ $b }}</option>
                 @endforeach
-            </select> </div>
-        <div class="w-full sm:w-auto"> <label class="block text-xs text-text-secondary mb-1">Tipe</label> <select name="type"
-                class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                <option value="">Semua Tipe</option>
-                <option value="pdf" @selected(request("type") === "pdf")>PDF</option>
-                <option value="doc" @selected(request("type") === "doc")>DOCX</option>
-                <option value="xls" @selected(request("type") === "xls")>XLSX</option>
-            </select> </div>
-        <div class="w-full sm:w-auto"> <label class="block text-xs text-text-secondary mb-1">Cari</label> <input type="text" name="search"
-                value="{{ request("search") }}" placeholder="Nama file / catatan"
-                class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
-        <div class="flex gap-2 w-full sm:w-auto"> <button
-                class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Cari</button> <a
-                href="{{ route("workspace.index", $mahasiswaTa) }}"
-                class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm text-center">Reset</a>
+            </select>
         </div>
-    </form> {{-- Upload --}} @if ($canUpload)
-        <div class="bg-bg-surface rounded-xl border border-border p-5">
-            <h2 class="font-semibold mb-3">Upload File</h2>
-            <form method="POST" action="{{ route("workspace.store", $mahasiswaTa) }}" enctype="multipart/form-data"
-                id="upload-form"> @csrf <div class="grid sm:grid-cols-2 gap-3 mb-3">
-                    <div> <label class="block text-sm font-medium mb-1">Label Bab (opsional)</label> <input
-                            type="text" name="bab" placeholder="contoh: Bab 1, Bab 3 Revisi"
-                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
+        <div class="w-full sm:w-auto">
+            <label class="block text-xs text-text-secondary mb-1">Tipe</label>
+            <select name="type" class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                <option value="">Semua Tipe</option>
+                <option value="pdf" @selected(request('type') === 'pdf')>PDF</option>
+                <option value="doc" @selected(request('type') === 'doc')>DOCX</option>
+                <option value="xls" @selected(request('type') === 'xls')>XLSX</option>
+            </select>
+        </div>
+        <div class="w-full sm:w-auto">
+            <label class="block text-xs text-text-secondary mb-1">Cari</label>
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama file / catatan"
+                class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+        </div>
+        <div class="flex gap-2 w-full sm:w-auto">
+            <button type="submit" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Cari</button>
+            <a href="{{ route('workspace.index', $mahasiswaTa) }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border text-center">Reset</a>
+        </div>
+    </form>
+    {{-- Upload --}}
+    @if ($canUpload)
+        <div class="card p-6">
+            <h2 class="font-heading font-semibold text-text-primary mb-3">Upload File</h2>
+            <form method="POST" action="{{ route('workspace.store', $mahasiswaTa) }}" enctype="multipart/form-data" id="upload-form">
+                @csrf
+                <div class="grid sm:grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-xs text-text-secondary mb-1">Label Bab (opsional)</label>
+                        <input type="text" name="bab" placeholder="contoh: Bab 1, Bab 3 Revisi"
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                    </div>
                 </div>
                 <div id="drop-zone"
-                    class="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-brand/30 transition">
+                    class="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-brand/30 transition">
                     <p><span class="material-symbols-outlined" style="font-size:48px">folder_open</span></p>
-                    <p class="text-sm mt-2">Tarik & lepas file di sini, atau <span
-                            class="text-brand font-medium">klik untuk memilih</span></p>
-                    <p class="text-xs text-text-secondary mt-1">PDF, DOC, DOCX, XLS, XLSX — maks 25 MB, hingga 5 file
-                    </p> <input type="file" name="files[]" id="file-input" multiple
-                        accept=".pdf,.doc,.docx,.xls,.xlsx" class="hidden">
+                    <p class="text-sm mt-2">Tarik & lepas file di sini, atau <span class="text-brand font-medium">klik untuk memilih</span></p>
+                    <p class="text-xs text-text-secondary mt-1">PDF, DOC, DOCX, XLS, XLSX — maks 25 MB, hingga 5 file</p>
+                    <input type="file" name="files[]" id="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx" class="hidden">
                 </div>
                 <div id="file-list" class="mt-3 space-y-1"></div>
                 <div id="progress-wrap" class="hidden mt-3">
@@ -61,22 +72,27 @@
                         <div id="progress-bar" class="h-full rounded-full bg-brand" style="width:0%"></div>
                     </div>
                     <p id="progress-text" class="text-xs text-text-secondary mt-1">0%</p>
-                </div> <button type="submit" id="upload-btn" disabled
-                    class="mt-3 px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm disabled:opacity-40">Upload</button>
-                    @error("files.*")
-                        <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                </div>
+                <button type="submit" id="upload-btn" disabled
+                    class="mt-3 px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90 disabled:opacity-40">Upload</button>
+                @error('files.*')
+                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
+                @enderror
             </form>
         </div>
-        @endif {{-- Daftar file --}} @if ($allFiles->isEmpty())
-            <div class="px-4 py-8 rounded-lg bg-bg-surface border border-border text-center text-text-secondary"> Belum
-                ada file di workspace. </div>
-        @else
-            @foreach ($grouped as $bab => $files)
-                <div class="bg-bg-surface rounded-xl border border-border overflow-hidden">
-                    <div class="px-4 py-3 bg-bg-panel/50 border-b border-border font-semibold text-sm">
-                        {{ $bab }}</div>
-                    <div class="divide-y divide-border divide-border">
+        @endif
+    {{-- Daftar file --}}
+    @if ($allFiles->isEmpty())
+        <div class="px-4 py-10 rounded-xl bg-bg-panel border border-border text-center text-text-secondary">
+            <span class="material-symbols-outlined icon-lg mb-2 text-text-secondary/50">folder_off</span>
+            <p>Belum ada file di workspace.</p>
+        </div>
+    @else
+        @foreach ($grouped as $bab => $files)
+            <div class="card p-0 overflow-hidden">
+                <div class="px-4 py-3 bg-bg-panel/50 border-b border-border font-semibold text-sm text-text-primary">
+                    {{ $bab }}</div>
+                <div class="divide-y divide-border">
                         @foreach ($files as $file)
                             @php $canModify = $user->id === $mahasiswaTa->user_id; @endphp <div class="px-4 py-3 flex items-start gap-3"> <span
                                     class="text-2xl">{{ $file->icon() }}</span>

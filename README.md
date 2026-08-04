@@ -137,6 +137,16 @@ All migrations are logged to the audit channel for compliance and rollback trace
 - **User management** — Manual user CRUD, batch import via Excel, admin-initiated password resets, and multi-field profile data.
 - **User profiles** — All users can update: name, profile photo, WhatsApp, Telegram, LinkedIn. Supervisors additionally maintain: Google Scholar, ORCID, SINTA, ResearchGate links. Cross-user profile viewing enabled.
 
+### Organizational Directory & Lecturer Groups
+
+- **Hierarchical directory (4 levels)** — Perguruan Tinggi → Fakultas → Departemen → Program Studi, with automatic deduplication (a university name never appears twice).
+- **Lecturer registration with NIDN** — lecturers register with their NIDN and select/create their university (with case-insensitive dedup).
+- **Multi-university support** — a lecturer can be affiliated with multiple universities.
+- **Students automatically follow their supervisor's institution** — when a lecturer invites/approves a student, the student's university is copied from the lecturer (no re-entry).
+- **Lecturer groups & cross-linking** — lecturers create groups (university/faculty/department/program level), invite colleagues from the same university, and the invitee must approve before joining.
+- **"Direct relation only" access policy** — data is only accessible when there is a direct relationship (shared thesis, shared group, or supervisor-student).
+- **Lecturer personal workspace** — each lecturer has their own private file workspace (`/workspace-saya`).
+
 ### Real-Time Communication
 
 Two integrated modules provide 1:1 messaging and broadcast announcements.
@@ -243,9 +253,12 @@ The database seeder creates the following accounts for testing:
 | Admin + Supervisor (NIDN 0001010101) | `admin@example.com` | `password` |
 | Administrator Sistem | `administrator@example.com` | `password` |
 | Supervisor 2 (NIDN 0002020202) | `dosen2@example.com` | `password` |
+| Supervisor 3 (NIDN 0003030303) | `dosen3@example.com` | `password` |
 | Student — TA (NIM 200401001) | `mahasiswa@example.com` | `password` |
 | Student — KP (pemilik kelompok, NIM 200401002) | `mahasiswa_kp@example.com` | `password` |
 | Student — KP (anggota kelompok, NIM 200401003) | `mahasiswa_kp2@example.com` | `password` |
+
+Demo akun berikut terhubung ke **Universitas Nusantara** (Fakultas Teknik → Departemen Teknik Informatika → S1 Teknik Informatika) dan tergabung dalam grup **"Dosen Teknik Informatika Universitas Nusantara"**: `admin@example.com`, `dosen2@example.com`, `dosen3@example.com`.
 
 ---
 

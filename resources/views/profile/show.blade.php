@@ -30,7 +30,17 @@
                 <p class="text-sm text-text-secondary">{{ $profile->email }}</p>
                 @if ($profile->identifier)
                     <p class="text-xs text-text-secondary">{{ $profile->identifier }}</p>
-                    @endif
+                @endif
+                @if ($profile->nidn)
+                    <p class="text-xs text-text-secondary">NIDN: {{ $profile->nidn }}</p>
+                @endif
+                @php $profileUniv = $profile->primaryUniversity(); @endphp
+                @if ($profileUniv)
+                    <p class="text-xs text-text-secondary mt-0.5">
+                        <span class="material-symbols-outlined icon-sm align-text-bottom">account_balance</span>
+                        {{ $profileUniv->name }}
+                    </p>
+                @endif
                 <p class="text-xs text-text-secondary mt-0.5">
                     <span class="material-symbols-outlined icon-sm align-text-bottom">schedule</span>
                     Terakhir aktif: {{ $profile->lastActiveLabel() }}

@@ -77,6 +77,12 @@ class UtilityController extends Controller
         // Bulk import = fitur prodi, hanya di mode institusi.
         abort_unless(Feature::has('bulk_import'), 403, 'Fitur import massal hanya tersedia di mode institusi.');
 
+        // Import juga fitur paket Donasi (kecuali admin).
+        $user = $request->user();
+        if (!$user->isAdmin() && !Feature::has('import', $user)) {
+            abort(403, 'Fitur import tersedia pada paket Donasi. Silakan upgrade atau hubungi admin.');
+        }
+
         $request->validate([
             'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120'],
             'pembimbing_default' => ['nullable', 'exists:users,id'],

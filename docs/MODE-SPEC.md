@@ -314,3 +314,39 @@ Logika (draft):
 3. Apakah **mahasiswa pribadi** yang diadopsi tetap bisa dikelola dosen yang sama setelah pindah ke institusi? (Rekomendasi: ya, dosen tetap pembimbing).
 4. Di mode individual, apakah **dosen perlu approve mahasiswa** (seperti skema 5A) atau cukup **dosen menambah mahasiswa langsung** (tanpa register mahasiswa)? **→ KONFIRMASI: keduanya.** Mahasiswa bisa register + dosen juga bisa tambah manual (lihat 5A).
 5. Apakah **penguji di individual** berarti dosen tsb mencatat sidang mahasiswa ORANG LAIN (di luar bimbingannya), atau hanya mahasiswa bimbingannya sendiri? **→ KONFIRMASI: mahasiswa ORANG LAIN.** Dosen (atau mahasiswa yang dicentang "sebagai penguji") bisa mencatat sidang/riwayat menguji mahasiswa di luar bimbingannya (lihat 5A.4 & 5B).
+
+---
+
+## 11. Direktori Organisasi & Grup Dosen (Penambahan)
+
+### 11.1 Direktori Organisasi Hierarkis (4 level)
+
+Untuk mendukung penggunaan oleh dosen dari berbagai perguruan tinggi di Indonesia, aplikasi memiliki **direktori organisasi hierarkis**:
+
+```
+universities (perguruan tinggi)
+  └── faculties (fakultas)
+        └── departments (departemen)
+              └── study_programs (program studi)
+```
+
+- **Deduplikasi alami** via constraint unik — nama perguruan tinggi tidak muncul dua kali; fakultas/departemen/prodi unik di dalam induknya.
+- **`user_university`** (pivot) — mendukung **multi-universitas**: satu dosen bisa terhubung ke banyak perguruan tinggi. `is_primary` menandai universitas utama.
+- **`users.nidn`** — identitas dosen (unique).
+
+### 11.2 Alur Registrasi & Afiliasi
+
+- **Dosen** mendaftar dengan **NIDN** + memilih/membuat perguruan tinggi (dedup case-insensitive via `OrganizationalDirectoryService`).
+- **Mahasiswa** yang di-invite/disetujui dosen **otomatis mengikuti institusi dosen** (universitas dosen disalin ke mahasiswa, tanpa input ulang).
+
+### 11.3 Grup & Cross-link Dosen
+
+- **`groups`** — grup di level universitas/fakultas/departemen/prodi.
+- **`group_members`** — anggota grup dengan status `pending/approved/rejected` dan role `owner/member`.
+- **Alur**: dosen membuat grup → mengundang dosen lain dari universitas yang sama → yang diundang **approve** → terhubung (cross-link).
+- **Akses "hanya hubungan langsung"** — data hanya bisa diakses jika ada hubungan langsung (TA bersama, grup bersama, atau dosen-mahasiswa bimbingan). Diimplementasikan via `User::hasDirectRelation()` dan diperkuat di `LogbookEntryPolicy` & `MahasiswaTaPolicy`.
+
+### 11.4 Workspace Dosen
+
+- **`workspace_files.user_id`** (nullable) — mendukung workspace pribadi dosen (selain `mahasiswa_ta_id` untuk mahasiswa).
+- Halaman `/workspace-saya` untuk mengelola file pribadi dosen.

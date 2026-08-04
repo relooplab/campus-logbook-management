@@ -26,6 +26,7 @@ class User extends Authenticatable
         'email',
         'password',
         'identifier',
+        'nidn',
         'registration_status',
         'examiner_supervisor_names',
         'profile_photo_path',
@@ -71,6 +72,111 @@ class User extends Authenticatable
     public function institution(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Institution::class);
+    }
+
+    /**
+     * Perguruan tinggi yang diikuti user (multi-universitas via pivot).
+     */
+    public function universities()
+    {
+        return $this->belongsToMany(University::class, 'user_university')
+            ->withPivot('faculty_id', 'department_id', 'study_program_id', 'is_primary')
+            ->withTimestamps();
+    }
+
+    /**
+     * Perguruan tinggi utama (is_primary = true), atau yang pertama.
+     */
+    public function primaryUniversity(): ?University
+    {
+        return $this->universities()->wherePivot('is_primary', true)->first()
+            ?? $this->universities()->first();
+    }
+
+    /**
+     * Langganan user (subscriptions).
+     */
+    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Override paket oleh admin (per-user custom).
+     */
+    public function planOverride(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserPlanOverride::class);
+    }
+
+    /**
+     * Paket aktif user (plan dari subscription aktif terbaru).
+     */
+    public function activePlan(): ?Plan
+    {
+        $subscription = $this->subscriptions()
+            ->where('status', 'active')
+            ->where(fn ($q) => $q->whereNull('ends_at')->orWhere('ends_at', '>', now()))
+            ->latest()
+            ->first();
+
+        return $subscription?->plan;
+    }
+
+    /**
+     * Apakah user ini memiliki "hubungan langsung" dengan user lain.
+     * Berlaku untuk dosen: true jika mereka sama-sama pembimbing/penguji
+     * pada TA yang sama, ATAU berada dalam grup yang sama (approved).
+     * Membatasi akses data hanya pada hubungan langsung.
+     */
+    public function hasDirectRelation(User $other): bool
+    {
+        if ($this->id === $other->id) {
+            return true;
+        }
+
+        // Admin selalu punya akses.
+        if ($this->isAdmin() || $other->isAdmin()) {
+            return true;
+        }
+
+        // Dosen dengan dosen: cek TA bersama atau grup bersama.
+        if ($this->isDosen() && $other->isDosen()) {
+            // TA bersama (pembimbing/penguji sama).
+            $sharedTa = MahasiswaTa::where(function ($q) use ($other) {
+                $q->whereIn('pembimbing_1_id', [$this->id, $other->id])
+                    ->orWhereIn('pembimbing_2_id', [$this->id, $other->id])
+                    ->orWhereIn('penguji_1_id', [$this->id, $other->id])
+                    ->orWhereIn('penguji_2_id', [$this->id, $other->id]);
+            })->exists();
+
+            if ($sharedTa) {
+                return true;
+            }
+
+            // Grup bersama (approved).
+            $sharedGroup = \DB::table('group_members as a')
+                ->join('group_members as b', 'a.group_id', '=', 'b.group_id')
+                ->where('a.user_id', $this->id)
+                ->where('b.user_id', $other->id)
+                ->where('a.status', 'approved')
+                ->where('b.status', 'approved')
+                ->exists();
+
+            return $sharedGroup;
+        }
+
+        // Dosen dengan mahasiswa: cek TA bimbingan/pengujian.
+        if ($this->isDosen() && $other->isMahasiswa()) {
+            return MahasiswaTa::where('user_id', $other->id)
+                ->where(fn ($q) => $q->where('pembimbing_1_id', $this->id)
+                    ->orWhere('pembimbing_2_id', $this->id)
+                    ->orWhere('penguji_1_id', $this->id)
+                    ->orWhere('penguji_2_id', $this->id))
+                ->exists();
+        }
+
+        return false;
     }
 
     /**
