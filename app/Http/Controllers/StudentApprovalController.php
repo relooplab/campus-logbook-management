@@ -84,11 +84,14 @@ class StudentApprovalController extends Controller
         abort_unless($mahasiswaTa->isPembimbing($dosen) || $mahasiswaTa->isPenguji($dosen), 403, 'Anda tidak terkait dengan program ini.');
         abort_unless($mahasiswaTa->status_ta === MahasiswaTa::STATUS_PENDING_APPROVAL, 400, 'Status program bukan pending approval.');
 
+        $faseKeys = array_keys($mahasiswaTa->isKp() ? MahasiswaTa::FASES_KP : MahasiswaTa::FASES);
+
         $validated = $request->validate([
             'judul_ta' => ['nullable', 'string', 'max:255'],
             'tempat_kp' => ['nullable', 'string', 'max:255'],
             'role_dosen' => ['required', 'in:pembimbing_1,pembimbing_2,penguji_1,penguji_2'],
             'target_sesi' => ['nullable', 'integer', 'min:1'],
+            'fase' => ['nullable', 'in:'.implode(',', $faseKeys)],
         ]);
 
         // Map peran ke kolom sebenarnya.
@@ -105,6 +108,7 @@ class StudentApprovalController extends Controller
             'tempat_kp' => $validated['tempat_kp'] ?? $mahasiswaTa->tempat_kp,
             'target_sesi' => $validated['target_sesi'] ?? $mahasiswaTa->target_sesi ?? 7,
             'status_ta' => MahasiswaTa::STATUS_AKTIF,
+            'fase' => $validated['fase'] ?? $mahasiswaTa->fase,
         ];
         foreach (['pembimbing_1_id', 'pembimbing_2_id', 'penguji_1_id', 'penguji_2_id'] as $col) {
             if ($mahasiswaTa->{$col} === $dosen->id) {

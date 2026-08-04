@@ -9,7 +9,6 @@ use App\Models\Institution;
 use App\Models\LogbookHarianKp;
 use App\Models\MahasiswaTa;
 use App\Models\Plan;
-use App\Models\University;
 use App\Models\User;
 use App\Services\OrganizationalDirectoryService;
 use Illuminate\Database\Seeder;
@@ -86,85 +85,69 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
+        // Helper: buat user dengan status & email verified.
+        $makeUser = function (array $attrs, array $roles, string $status) use ($mahasiswaRole, $dosenRole, $adminRole, $systemAdminRole) {
+            $user = User::firstOrCreate(
+                ['email' => $attrs['email']],
+                array_merge($attrs, [
+                    'password' => Hash::make('password'),
+                    'registration_status' => $status,
+                    'email_verified_at' => now(),
+                ])
+            );
+            $user->syncRoles($roles);
+            return $user;
+        };
+
         // System Admin (role tertinggi — mengelola admin lain & konfigurasi sistem).
-        $systemAdmin = User::firstOrCreate(
-            ['email' => 'systemadmin@example.com'],
-            [
-                'name' => 'System Administrator',
-                'password' => Hash::make('password'),
-                'identifier' => 'SYS001',
-            ]
+        $systemAdmin = $makeUser(
+            ['email' => 'systemadmin@example.com', 'name' => 'System Administrator', 'identifier' => 'SYS001'],
+            [$systemAdminRole],
+            'approved'
         );
-        $systemAdmin->syncRoles([$systemAdminRole]);
 
         // Admin + dosen dalam satu akun (multi-role), NIDN sebagai identifier.
-        $adminDosen = User::firstOrCreate(
-            ['email' => 'admin@example.com'],
-            [
-                'name' => 'Ir. Admin Utama, M.T.',
-                'password' => Hash::make('password'),
-                'identifier' => '0001010101', // NIDN
-                'nidn' => '0001010101',
-            ]
+        $adminDosen = $makeUser(
+            ['email' => 'admin@example.com', 'name' => 'Ir. Admin Utama, M.T.', 'identifier' => '0001010101', 'nidn' => '0001010101'],
+            [$adminRole, $dosenRole],
+            'approved'
         );
-        $adminDosen->syncRoles([$adminRole, $dosenRole]);
 
         // Administrator khusus (role admin saja).
-        $administrator = User::firstOrCreate(
-            ['email' => 'administrator@example.com'],
-            [
-                'name' => 'Administrator Sistem',
-                'password' => Hash::make('password'),
-                'identifier' => 'ADM001',
-            ]
+        $administrator = $makeUser(
+            ['email' => 'administrator@example.com', 'name' => 'Administrator Sistem', 'identifier' => 'ADM001'],
+            [$adminRole],
+            'approved'
         );
-        $administrator->syncRoles([$adminRole]);
 
         // Dosen pembimbing kedua (opsional).
-        $dosen2 = User::firstOrCreate(
-            ['email' => 'dosen2@example.com'],
-            [
-                'name' => 'Dr. Dosen Dua, S.T., M.T.',
-                'password' => Hash::make('password'),
-                'identifier' => '0002020202', // NIDN
-                'nidn' => '0002020202',
-            ]
+        $dosen2 = $makeUser(
+            ['email' => 'dosen2@example.com', 'name' => 'Dr. Dosen Dua, S.T., M.T.', 'identifier' => '0002020202', 'nidn' => '0002020202'],
+            [$dosenRole],
+            'approved'
         );
-        $dosen2->syncRoles([$dosenRole]);
 
         // Dosen demo tambahan (untuk demo penguji & grup/cross-link).
-        $dosen3 = User::firstOrCreate(
-            ['email' => 'dosen3@example.com'],
-            [
-                'name' => 'Dr. Dosen Tiga, S.Kom., M.Kom.',
-                'password' => Hash::make('password'),
-                'identifier' => '0003030303', // NIDN
-                'nidn' => '0003030303',
-            ]
+        $dosen3 = $makeUser(
+            ['email' => 'dosen3@example.com', 'name' => 'Dr. Dosen Tiga, S.Kom., M.Kom.', 'identifier' => '0003030303', 'nidn' => '0003030303'],
+            [$dosenRole],
+            'approved'
         );
-        $dosen3->syncRoles([$dosenRole]);
 
-        $dosen4 = User::firstOrCreate(
-            ['email' => 'dosen4@example.com'],
-            [
-                'name' => 'Dr. Dosen Empat, S.T., M.T.',
-                'password' => Hash::make('password'),
-                'identifier' => '0004040404', // NIDN
-                'nidn' => '0004040404',
-            ]
+        $dosen4 = $makeUser(
+            ['email' => 'dosen4@example.com', 'name' => 'Dr. Dosen Empat, S.T., M.T.', 'identifier' => '0004040404', 'nidn' => '0004040404'],
+            [$dosenRole],
+            'approved'
         );
-        $dosen4->syncRoles([$dosenRole]);
 
-        // Mahasiswa, NIM sebagai identifier.
-        $mahasiswa = User::firstOrCreate(
-            ['email' => 'mahasiswa@example.com'],
-            [
-                'name' => 'Mahasiswa Contoh',
-                'password' => Hash::make('password'),
-                'identifier' => '200401001', // NIM
-            ]
+        // ===============================================================
+        // Mahasiswa TA (verified) — sudah punya program + dosen.
+        // ===============================================================
+        $mahasiswa = $makeUser(
+            ['email' => 'mahasiswa@example.com', 'name' => 'Mahasiswa Contoh', 'identifier' => '200401001', 'whatsapp' => '6281234567890'],
+            [$mahasiswaRole],
+            'verified'
         );
-        $mahasiswa->syncRoles([$mahasiswaRole]);
 
         // Data pokok TA mahasiswa (fase proposal + penguji untuk demo seminar submission).
         MahasiswaTa::firstOrCreate(
@@ -181,28 +164,20 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // ---------------------------------------------------------------
+        // ===============================================================
         // Akun demo mahasiswa KP (Kerja Praktek) kelompok.
-        // ---------------------------------------------------------------
-        $mahasiswaKp1 = User::firstOrCreate(
-            ['email' => 'mahasiswa_kp@example.com'],
-            [
-                'name' => 'Mahasiswa KP Satu',
-                'password' => Hash::make('password'),
-                'identifier' => '200401002', // NIM
-            ]
+        // ===============================================================
+        $mahasiswaKp1 = $makeUser(
+            ['email' => 'mahasiswa_kp@example.com', 'name' => 'Mahasiswa KP Satu', 'identifier' => '200401002', 'whatsapp' => '6281234567891'],
+            [$mahasiswaRole],
+            'verified'
         );
-        $mahasiswaKp1->syncRoles([$mahasiswaRole]);
 
-        $mahasiswaKp2 = User::firstOrCreate(
-            ['email' => 'mahasiswa_kp2@example.com'],
-            [
-                'name' => 'Mahasiswa KP Dua',
-                'password' => Hash::make('password'),
-                'identifier' => '200401003', // NIM
-            ]
+        $mahasiswaKp2 = $makeUser(
+            ['email' => 'mahasiswa_kp2@example.com', 'name' => 'Mahasiswa KP Dua', 'identifier' => '200401003', 'whatsapp' => '6281234567892'],
+            [$mahasiswaRole],
+            'verified'
         );
-        $mahasiswaKp2->syncRoles([$mahasiswaRole]);
 
         // Program KP kelompok (pemilik = mahasiswaKp1, anggota = mahasiswaKp2).
         $kp = MahasiswaTa::firstOrCreate(
@@ -231,12 +206,22 @@ class DatabaseSeeder extends Seeder
             [
                 'kegiatan' => 'Mengikuti briefing dan mempelajari alur kerja divisi IT di PT. Teknologi Nusantara.',
                 'kendala' => 'Perlu adaptasi dengan tools internal perusahaan.',
+                'created_by' => $mahasiswaKp1->id,
             ]
         );
 
-        // ---------------------------------------------------------------
+        // ===============================================================
+        // Mahasiswa active (belum pilih dosen) — demo alur baru.
+        // ===============================================================
+        $mahasiswaActive = $makeUser(
+            ['email' => 'mahasiswa_active@example.com', 'name' => 'Mahasiswa Aktif', 'identifier' => '200401004', 'whatsapp' => '6281234567893'],
+            [$mahasiswaRole],
+            'active'
+        );
+
+        // ===============================================================
         // Demo direktori organisasi & grup dosen.
-        // ---------------------------------------------------------------
+        // ===============================================================
         $directory = app(OrganizationalDirectoryService::class);
 
         // 1. Buat universitas demo + struktur hierarkis.

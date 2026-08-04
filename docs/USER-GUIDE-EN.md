@@ -62,7 +62,6 @@ The following describes the features available in the application, regardless of
 - **Login** — Sign in with email and password.
 - **Email verification** — Every new account must **verify their email address** before full access. After registration, the system sends a verification email; users are directed to a verification page and can resend the link if needed.
 - **Student self-registration** — Students can register themselves (name, email, password). After email verification, the account is set to **active** (not yet linked to a lecturer). Students then **select a lecturer** (supervisor/examiner) via the **"Select Lecturer"** page; the selected lecturer approves or rejects the attachment request.
-  - There is an **"I am also an examiner"** option — if checked, the student can record examination sessions of other students once approved.
 - **Student registration statuses** — `active` (email verified, no lecturer), `verified` (approved by a lecturer), `rejected` (denied, cannot log in).
 - **Automatic cleanup** — Students with `active` status who do not select a lecturer within 1 month are automatically removed by the system (scheduled daily).
 - **Forgot password** — Reset your password via email. The displayed message is uniform to prevent email enumeration.
@@ -256,12 +255,11 @@ In addition to the student workspace, lecturers also have a **personal workspace
 
 1. Open the **Register** page.
 2. Fill in **name**, **email**, and **password**.
-3. (Optional) Check **"I am also an examiner"** and fill in the supervisor names (max 3) if you want to record examination sessions of other students.
-4. Submit → the system sends a **verification email**. Open the email and click the verification link.
-5. After verification, you can log in. Your account is **active** (not yet linked to a lecturer).
-6. On the dashboard, click the **"Select Lecturer to Start a Program"** banner (or the **Select Lecturer** menu).
-7. Choose the **program type** (TA/KP), **Supervisor 1** (required), and optionally **Supervisor 2**, **Examiner 1/2** → click **Send Request**.
-8. The selected lecturer will **approve** or **reject** the request. Once approved, your program becomes **active** and thesis data becomes available.
+3. Submit → the system sends a **verification email**. Open the email and click the verification link.
+4. After verification, you can log in. Your account is **active** (not yet linked to a lecturer).
+5. On the dashboard, click the **"Select Lecturer to Start a Program"** banner (or the **Select Lecturer** menu).
+6. Choose the **program type** (TA/KP), **current phase/milestone**, **Supervisor 1** (required), and optionally **Supervisor 2**, **Examiner 1/2** → click **Send Request**.
+7. The selected lecturer will **approve** or **reject** the request. Once approved, your program becomes **active** and thesis data becomes available.
    - If rejected, you can select another lecturer.
    - If you do not select a lecturer within 1 month, your account may be automatically removed.
 

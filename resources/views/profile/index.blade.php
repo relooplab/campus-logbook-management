@@ -29,8 +29,8 @@
                         <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-                <div> <label class="block text-sm font-medium mb-1" for="identifier">NIM / NIDN</label> <input
-                        type="text" name="identifier" id="identifier"
+                <div> <label class="block text-sm font-medium mb-1" for="identifier">NIM / NIDN @if ($user->isMahasiswa())<span class="text-status-danger">*</span>@endif</label> <input
+                        type="text" name="identifier" id="identifier" @if ($user->isMahasiswa()) required @endif
                         value="{{ old("identifier", $user->identifier) }}"
                         class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                     @error("identifier")
@@ -42,8 +42,8 @@
                         <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-                <div> <label class="block text-sm font-medium mb-1" for="whatsapp">Nomor WhatsApp</label> <input
-                        type="text" name="whatsapp" id="whatsapp" value="{{ old("whatsapp", $user->whatsapp) }}"
+                <div> <label class="block text-sm font-medium mb-1" for="whatsapp">Nomor WhatsApp @if ($user->isMahasiswa())<span class="text-status-danger">*</span>@endif</label> <input
+                        type="text" name="whatsapp" id="whatsapp" @if ($user->isMahasiswa()) required @endif value="{{ old("whatsapp", $user->whatsapp) }}"
                         placeholder="6281xxxxxx"
                         class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
                 <div> <label class="block text-sm font-medium mb-1" for="telegram">Telegram</label> <input

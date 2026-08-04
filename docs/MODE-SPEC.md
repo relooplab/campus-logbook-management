@@ -188,27 +188,9 @@ $table->string('registration_status')->default('active');
 - Setelah submit → email verifikasi dikirim; mahasiswa diarahkan ke halaman verifikasi.
 - **Dosen** yang mendaftar tetap berstatus `pending` dan menunggu persetujuan admin.
 
-### 5A.4 Opsi "sebagai penguji" saat registrasi
+### 5A.4 Fase/Milestone saat memilih dosen
 
-Saat mahasiswa mendaftar, tersedia **checkbox "Saya sebagai penguji"**.
-Jika **dicentang**, form menampilkan **tambahan field: nama pembimbing** (bebas, maks 3).
-
-```
-☐ Saya sebagai penguji
-   (tampil jika dicentang)
-   Pembimbing 1: [nama ...]
-   Pembimbing 2: [nama ...]   (opsional)
-   Pembimbing 3: [nama ...]   (opsional)
-```
-
-**Tujuan**: mahasiswa yang mencentang "penguji" akan dapat mencatat **riwayat menguji** terhadap mahasiswa lain (di luar bimbingannya). Nama pembimbing yang diisi menjadi konteks sidang (siapa pembimbing mahasiswa yang diuji).
-
-**Skema data**: simpan daftar nama pembimbing ini (maks 3) di kolom `examiner_supervisor_names` (JSON) pada `users`:
-
-```php
-// users (mahasiswa yang juga penguji)
-$table->json('examiner_supervisor_names')->nullable(); // ['A', 'B', 'C'] max 3
-```
+Saat mahasiswa memilih dosen, form **"Pilih Dosen"** juga menampilkan **dropdown Fase/Milestone** yang disesuaikan dengan jenis program (TA/KP). Mahasiswa memilih fase yang sedang dijalani, dan dosen dapat menyesuaikannya saat menyetujui permintaan attachment.
 
 ### 5A.5 Menetapkan peran (approve)
 
@@ -242,7 +224,6 @@ Karena di individual dosen memegang semua peran, dosen bisa menetapkan dirinya *
 
 ### 5B.1 Siapa bisa jadi penguji di mode individual
 1. **Dosen** — mencatat sidang mahasiswa mana pun (termasuk mahasiswa orang lain), untuk riwayat menguji/portofolio.
-2. **Mahasiswa yang mencentang "sebagai penguji" saat register** (5A.4) — setelah disetujui dosen, ia bisa mencatat riwayat menguji mahasiswa lain.
 
 ### 5B.2 Konteks sidang (mahasiswa lain)
 Saat dosen mencatat sidang mahasiswa yang bukan bimbingannya, dosen perlu konteks siapa pembimbing mahasiswa tsb (mengisi manual, sesuai 5A.4): Pembimbing 1/2/3. Ini dipakai untuk laporan & identifikasi.
@@ -320,7 +301,7 @@ Logika (draft):
 2. Apakah **dosen boleh join > 1 institusi**? (Rekomendasi: satu `institution_id` saat ini; multi-institusi = tabel pivot `user_institution`, lebih kompleks).
 3. Apakah **mahasiswa pribadi** yang diadopsi tetap bisa dikelola dosen yang sama setelah pindah ke institusi? (Rekomendasi: ya, dosen tetap pembimbing).
 4. Di mode individual, apakah **dosen perlu approve mahasiswa** (seperti skema 5A) atau cukup **dosen menambah mahasiswa langsung** (tanpa register mahasiswa)? **→ KONFIRMASI: keduanya.** Mahasiswa bisa register + dosen juga bisa tambah manual (lihat 5A).
-5. Apakah **penguji di individual** berarti dosen tsb mencatat sidang mahasiswa ORANG LAIN (di luar bimbingannya), atau hanya mahasiswa bimbingannya sendiri? **→ KONFIRMASI: mahasiswa ORANG LAIN.** Dosen (atau mahasiswa yang dicentang "sebagai penguji") bisa mencatat sidang/riwayat menguji mahasiswa di luar bimbingannya (lihat 5A.4 & 5B).
+5. Apakah **penguji di individual** berarti dosen tsb mencatat sidang mahasiswa ORANG LAIN (di luar bimbingannya), atau hanya mahasiswa bimbingannya sendiri? **→ KONFIRMASI: mahasiswa ORANG LAIN.** Dosen bisa mencatat sidang/riwayat menguji mahasiswa di luar bimbingannya (lihat 5B).
 
 ---
 

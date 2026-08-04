@@ -141,9 +141,12 @@ class DashboardController extends Controller
                 ->whereIn('mahasiswa_ta_id', $taIds)->count(),
         ];
 
-        // Ringkasan aksi untuk dosen: registrasi pending + mahasiswa perlu perhatian.
-        $pendingRegistrations = \App\Models\User::role('mahasiswa')
-            ->where('registration_status', 'pending')
+        // Ringkasan aksi untuk dosen: permintaan attachment pending + mahasiswa perlu perhatian.
+        $pendingRegistrations = MahasiswaTa::where('status_ta', MahasiswaTa::STATUS_PENDING_APPROVAL)
+            ->where(fn ($q) => $q->where('pembimbing_1_id', $user->id)
+                ->orWhere('pembimbing_2_id', $user->id)
+                ->orWhere('penguji_1_id', $user->id)
+                ->orWhere('penguji_2_id', $user->id))
             ->count();
         $needsAttention = $perTa->whereIn('regularity', ['yellow', 'red'])->count();
 
@@ -304,6 +307,9 @@ class DashboardController extends Controller
         // ---- Status mahasiswa (aktif/verified) untuk banner ----
         $mahasiswaStatus = $user->registration_status;
         $pendingApproval = $ta && $ta->status_ta === \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL;
+        // $ta bisa jatuh ke program yang sudah ditolak (allPrograms() tidak difilter status
+        // saat programAktif() kosong) — tandai agar mahasiswa tetap diarahkan pilih dosen lagi.
+        $rejectedProgram = $ta && $ta->status_ta === \App\Models\MahasiswaTa::STATUS_DITOLAK;
 
         return view('dashboard.mahasiswa', compact(
             'programs', 'activeProgram', 'ta', 'entries', 'approved', 'target', 'progressPercent',
@@ -314,7 +320,7 @@ class DashboardController extends Controller
             'unreadAnnouncements',
             'draftCount', 'revisiCount', 'unresolvedActionItems',
             'university', 'nilai', 'agendaTerdekat', 'seminarSubmission',
-            'mahasiswaStatus', 'pendingApproval'
+            'mahasiswaStatus', 'pendingApproval', 'rejectedProgram'
         ));
     }
 

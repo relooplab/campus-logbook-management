@@ -7,7 +7,7 @@ use App\Models\MahasiswaTa;
 use App\Models\SeminarSubmission;
 use App\Models\Sidang;
 use App\Models\WorkspaceFile;
-use App\Notifications\ActivityNotification;
+use App\Notifications\SeminarSubmissionNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -328,16 +328,9 @@ class SeminarSubmissionController extends Controller
      */
     private function notifyDosen(MahasiswaTa $ta, SeminarSubmission $submission): void
     {
-        $url = route('seminar-submission.show', $submission);
-        $message = 'Mahasiswa mengirim bahan '.$submission->jenisLabel().'.';
-
         foreach ($ta->allDosenIds() as $dosenId) {
             if ($dosen = \App\Models\User::find($dosenId)) {
-                $this->bestEffort(fn () => $dosen->notify(new ActivityNotification(
-                    $message,
-                    $url,
-                    'Bahan Seminar/Sidang Dikirim',
-                )));
+                $this->bestEffort(fn () => $dosen->notify(new SeminarSubmissionNotification($submission)));
             }
         }
     }

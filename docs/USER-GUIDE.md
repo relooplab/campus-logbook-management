@@ -62,7 +62,6 @@ Berikut rincian fitur yang tersedia di aplikasi, terlepas dari peran (ketersedia
 - **Login** — Masuk dengan email dan kata sandi.
 - **Verifikasi email** — Setiap akun baru harus **memverifikasi email** sebelum dapat mengakses aplikasi sepenuhnya. Setelah mendaftar, sistem mengirim email verifikasi; pengguna diarahkan ke halaman verifikasi dan dapat mengirim ulang link jika perlu.
 - **Registrasi mandiri mahasiswa** — Mahasiswa dapat mendaftar sendiri (nama, email, kata sandi). Setelah verifikasi email, akun berstatus **active** (belum terhubung dosen). Mahasiswa kemudian **memilih dosen** (pembimbing/penguji) melalui halaman **"Pilih Dosen"**; dosen yang dipilih akan menyetujui atau menolak permintaan attachment.
-  - Tersedia opsi **"Saya sebagai penguji"** — jika dicentang, mahasiswa dapat mencatat sidang mahasiswa lain setelah disetujui.
 - **Status registrasi mahasiswa** — `active` (email terverifikasi, belum punya dosen), `verified` (sudah disetujui dosen), `rejected` (ditolak, tidak bisa login).
 - **Pembersihan otomatis** — Mahasiswa berstatus `active` yang tidak memilih dosen dalam 1 bulan akan dihapus otomatis oleh sistem (terjadwal harian).
 - **Lupa kata sandi** — Reset kata sandi melalui email. Pesan yang ditampilkan seragam untuk mencegah penebakan email terdaftar.
@@ -256,12 +255,11 @@ Selain workspace mahasiswa, dosen juga memiliki **workspace pribadi** melalui me
 
 1. Buka halaman **Daftar**.
 2. Isi **nama**, **email**, dan **kata sandi**.
-3. (Opsional) Centang **"Saya sebagai penguji"** dan isi nama pembimbing (maks 3) jika ingin mencatat sidang mahasiswa lain.
-4. Submit → sistem mengirim **email verifikasi**. Buka email dan klik link verifikasi.
-5. Setelah verifikasi, Anda dapat login. Akun berstatus **active** (belum terhubung dosen).
-6. Di dashboard, klik banner **"Pilih Dosen untuk Memulai Program"** (atau menu **Pilih Dosen**).
-7. Pilih **jenis program** (TA/KP), **Pembimbing 1** (wajib), serta **Pembimbing 2**, **Penguji 1/2** (opsional) → klik **Kirim Permintaan**.
-8. Dosen yang dipilih akan **menyetujui** atau **menolak** permintaan. Setelah disetujui, program Anda **aktif** dan data TA tersedia.
+3. Submit → sistem mengirim **email verifikasi**. Buka email dan klik link verifikasi.
+4. Setelah verifikasi, Anda dapat login. Akun berstatus **active** (belum terhubung dosen).
+5. Di dashboard, klik banner **"Pilih Dosen untuk Memulai Program"** (atau menu **Pilih Dosen**).
+6. Pilih **jenis program** (TA/KP), **fase/milestone saat ini**, **Pembimbing 1** (wajib), serta **Pembimbing 2**, **Penguji 1/2** (opsional) → klik **Kirim Permintaan**.
+7. Dosen yang dipilih akan **menyetujui** atau **menolak** permintaan. Setelah disetujui, program Anda **aktif** dan data TA tersedia.
    - Jika ditolak, Anda dapat memilih dosen lain.
    - Jika Anda tidak memilih dosen dalam 1 bulan, akun dapat dihapus otomatis oleh sistem.
 

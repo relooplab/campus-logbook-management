@@ -38,6 +38,12 @@ class ProfileController extends Controller
             'photo' => ['nullable', 'file', 'image', 'max:5120'], // 5 MB
         ];
 
+        // Identifier (NIM) & WhatsApp wajib untuk mahasiswa.
+        if ($user->isMahasiswa()) {
+            $rules['identifier'] = ['required', 'string', 'max:30'];
+            $rules['whatsapp'] = ['required', 'string', 'max:30'];
+        }
+
         // Field akademik khusus dosen.
         if ($user->isDosen()) {
             $rules['google_scholar'] = ['nullable', 'url', 'max:255'];
@@ -111,8 +117,12 @@ class ProfileController extends Controller
         $user = $request->user();
         abort_unless($user->isMahasiswa(), 403);
 
+        $jenis = $request->input('jenis');
+        $faseKeys = array_keys($jenis === 'kp' ? \App\Models\MahasiswaTa::FASES_KP : \App\Models\MahasiswaTa::FASES);
+
         $validated = $request->validate([
             'jenis' => ['required', 'in:ta,kp'],
+            'fase' => ['required', 'in:'.implode(',', $faseKeys)],
             'pembimbing_1_id' => ['required', 'exists:users,id'],
             'pembimbing_2_id' => ['nullable', 'exists:users,id'],
             'penguji_1_id' => ['nullable', 'exists:users,id'],
@@ -132,8 +142,12 @@ class ProfileController extends Controller
             ->count();
         abort_unless($validDosen === count($dosenIds), 422, 'Dosen yang dipilih tidak valid.');
 
-        // Cegah duplikat program (satu TA + satu KP per mahasiswa).
-        $exists = $user->mahasiswaPrograms()->where('jenis', $validated['jenis'])->exists();
+        // Cegah duplikat program (satu TA + satu KP per mahasiswa) — program yang
+        // sudah ditolak tidak dihitung, agar mahasiswa bisa memilih dosen lain.
+        $exists = $user->mahasiswaPrograms()
+            ->where('jenis', $validated['jenis'])
+            ->where('status_ta', '!=', \App\Models\MahasiswaTa::STATUS_DITOLAK)
+            ->exists();
         abort_if($exists, 422, 'Anda sudah memiliki program '.strtoupper($validated['jenis']).'.');
 
         $ta = \App\Models\MahasiswaTa::create([
@@ -145,7 +159,7 @@ class ProfileController extends Controller
             'penguji_2_id' => $validated['penguji_2_id'] ?? null,
             'target_sesi' => 7,
             'status_ta' => \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL,
-            'fase' => $validated['jenis'] === 'kp' ? 'pelaksanaan' : 'proposal',
+            'fase' => $validated['fase'],
         ]);
 
         // Notifikasi ke dosen yang dipilih.

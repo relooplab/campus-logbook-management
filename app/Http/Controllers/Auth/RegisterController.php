@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Notifications\ActivityNotification;
 use App\Services\OrganizationalDirectoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,9 +12,9 @@ use Illuminate\View\View;
 
 /**
  * Registrasi mandiri mahasiswa & dosen.
- * - Mahasiswa: akun dibuat role 'mahasiswa' status PENDING, lalu disetujui dosen.
+ * - Mahasiswa: akun dibuat role 'mahasiswa' status ACTIVE (setelah verifikasi email),
+ *   lalu memilih dosen pembimbing di profil.
  * - Dosen: akun dibuat role 'dosen' status PENDING, lalu disetujui admin.
- * Opsional (mahasiswa): centang "sebagai penguji" + isi nama pembimbing (maks 3).
  */
 class RegisterController extends Controller
 {
@@ -31,11 +30,6 @@ class RegisterController extends Controller
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
             'role' => ['required', 'in:mahasiswa,dosen'],
-            'as_examiner' => ['nullable', 'boolean'],
-            // Nama pembimbing yang diuji (maks 3), hanya jika role mahasiswa & as_examiner.
-            'supervisor_1' => ['nullable', 'string', 'max:255'],
-            'supervisor_2' => ['nullable', 'string', 'max:255'],
-            'supervisor_3' => ['nullable', 'string', 'max:255'],
             // Direktori organisasi (dosen).
             'nidn' => ['nullable', 'string', 'max:20', 'unique:users,nidn'],
             'university_name' => ['nullable', 'string', 'max:255'],
@@ -48,17 +42,6 @@ class RegisterController extends Controller
 
         $role = $validated['role'] ?? 'mahasiswa';
 
-        $supervisors = [];
-        if ($role === 'mahasiswa' && $request->boolean('as_examiner')) {
-            foreach (['supervisor_1', 'supervisor_2', 'supervisor_3'] as $f) {
-                $v = trim((string) ($validated[$f] ?? ''));
-                if ($v !== '') {
-                    $supervisors[] = $v;
-                }
-            }
-            $supervisors = array_slice($supervisors, 0, 3);
-        }
-
         // Alur baru: mahasiswa langsung aktif (verifikasi email), belum attach dosen.
         // Dosen tetap menunggu persetujuan admin (pending).
         $registrationStatus = $role === 'dosen' ? 'pending' : 'active';
@@ -69,7 +52,6 @@ class RegisterController extends Controller
             'password' => Hash::make($validated['password']),
             'nidn' => $role === 'dosen' ? ($validated['nidn'] ?? null) : null,
             'registration_status' => $registrationStatus,
-            'examiner_supervisor_names' => $supervisors ?: null,
         ]);
         $user->syncRoles([$role]);
 
@@ -116,22 +98,5 @@ class RegisterController extends Controller
         }
 
         $service->attachUserToUniversity($user, $university, $faculty, $department, $studyProgram, true);
-    }
-
-    /**
-     * Kirim notifikasi ke dosen (mode individual) bahwa ada mahasiswa baru.
-     */
-    private function notifyDosenOfNewRegistration(User $mahasiswa): void
-    {
-        $dosen = User::role('dosen')->where('registration_status', 'approved')->first();
-        if (!$dosen) {
-            return;
-        }
-
-        $dosen->notify(new ActivityNotification(
-            "Mahasiswa baru '{$mahasiswa->name}' mendaftar dan menunggu persetujuan Anda.",
-            route('approval.index'),
-            'Pendaftaran Mahasiswa Baru'
-        ));
     }
 }

@@ -107,6 +107,15 @@
                                 <input type="number" name="target_sesi" value="{{ $ta->target_sesi ?? 7 }}" min="1"
                                     class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
                             </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs text-text-secondary mb-1">Fase/Milestone</label>
+                                <select name="fase" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                                    @foreach ($ta->isKp() ? \App\Models\MahasiswaTa::FASES_KP : \App\Models\MahasiswaTa::FASES as $key => $label)
+                                        <option value="{{ $key }}" @selected($ta->fase === $key)>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="text-xs text-text-secondary mt-1">Fase yang dipilih mahasiswa — dapat disesuaikan.</p>
+                            </div>
                             <div class="sm:col-span-2 flex flex-wrap gap-2 pt-1">
                                 <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90 inline-flex items-center gap-1.5">
                                     <span class="material-symbols-outlined icon-sm">check_circle</span> Setujui & Assign

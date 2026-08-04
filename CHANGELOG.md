@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-08-04
+
+### Added
+
+#### Phase/Milestone Selection in Onboarding
+- Students now select their **current phase/milestone** (TA or KP) when choosing a lecturer via the **"Pilih Dosen"** page.
+- The phase dropdown is dynamically filtered by program type (TA/KP) via JavaScript.
+- Lecturers can adjust the phase when approving an attachment request (new "Fase/Milestone" field on the approval page).
+
+#### Dedicated Seminar Submission Notification
+- New `SeminarSubmissionNotification` class — sends a **rich email** with full schedule details (type, student, date, time, location, invitation-as) plus a database notification.
+- Replaces the generic `ActivityNotification` for seminar/examination material submissions.
+
+#### Demo Account for New Onboarding Flow
+- Added `mahasiswa_active@example.com` (NIM 200401004) — an **active** student (email verified, no lecturer attached) to demo the "Pilih Dosen" flow.
+- Seeder now sets `email_verified_at` and proper `registration_status` for all demo accounts (verified/active/approved).
+
+### Changed
+
+#### Inactive Student Cleanup (Safer)
+- `students:delete-inactive` now only deletes `active` students who **never submitted a lecturer attachment request** (`whereDoesntHave('mahasiswaPrograms')`).
+- Students with a pending or rejected program are **no longer deleted** — a slow lecturer response is not the student's fault.
+
+#### Registration Form Simplified
+- Removed the **"Saya sebagai penguji"** (I am also an examiner) checkbox and supervisor-name fields from the registration form.
+- Removed `examiner_supervisor_names` handling from `RegisterController` (the field remains in the DB for legacy data but is no longer set at registration).
+
+#### Profile Validation for Students
+- `identifier` (NIM) and `whatsapp` are now **required** for students when updating their profile.
+
+#### Rejected Program Handling
+- Students whose attachment request was rejected can now **select a new lecturer** (rejected programs are excluded from the duplicate-program check).
+- Student dashboard shows a **"Permintaan Anda sebelumnya ditolak dosen"** banner when the current program is rejected, directing them to choose another lecturer.
+
+#### Dashboard & UI
+- Lecturer dashboard "Today's Actions" now counts **pending attachment requests** (MahasiswaTa with `pending_approval` status) instead of pending user registrations.
+- Student dashboard seminar button text changed from "Isi Bahan" to **"Kirim Bahan"**.
+- Approval page shows the student-selected phase with an option to adjust it.
+
+### Fixed
+- `LogbookHarianKp` seeder now includes `created_by` for the demo KP daily logbook entry.
+
+### Documentation
+- Updated `README.md` (fixed GitHub links `hafizhul` → `relooplab`, added new demo account).
+- Updated `docs/MODE-SPEC.md`, `docs/USER-GUIDE.md`, and `docs/USER-GUIDE-EN.md` (removed "as examiner" registration option, added phase selection).
+
 ## [0.5.0] - 2026-08-04
 
 ### Added
@@ -230,6 +276,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `StudentApprovalTest` (invite by email, duplicate rejection, approve & assign role).
 - All 24 tests pass (65 assertions).
 
+[0.5.1]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.1
 [0.5.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.0
 [0.4.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.4.0
 [0.3.1]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.3.1

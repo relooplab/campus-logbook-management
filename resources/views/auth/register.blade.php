@@ -17,7 +17,7 @@
         <button type="button" data-role="dosen" id="role-dosen"
             class="role-toggle flex-1 py-2.5 font-medium bg-bg-panel text-text-secondary hover:bg-bg-hover transition-colors">Dosen</button>
     </div>
-    <p id="role-hint" class="text-xs text-text-secondary mb-4 -mt-2">Daftar sebagai mahasiswa. Akun Anda perlu disetujui dosen sebelum dapat masuk.</p>
+    <p id="role-hint" class="text-xs text-text-secondary mb-4 -mt-2">Daftar sebagai mahasiswa. Setelah verifikasi email, Anda dapat memilih dosen pembimbing.</p>
 
     <form method="POST" action="{{ route("register") }}" class="space-y-4"> @csrf <input type="hidden" name="role"
             id="role-input" value="mahasiswa">
@@ -33,21 +33,6 @@
         <div> <label class="block text-sm font-medium mb-1" for="password_confirmation">Konfirmasi Kata Sandi</label> <input
                 type="password" name="password_confirmation" id="password_confirmation" required minlength="6"
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
-
-        {{-- ===== Opsi khusus mahasiswa (penguji) ===== --}}
-        <div id="examiner-section"> <label class="flex items-center gap-2 text-sm cursor-pointer"> <input
-                    type="checkbox" name="as_examiner" id="as_examiner" value="1" class="rounded bg-bg-surface"
-                    {{ old("as_examiner") ? "checked" : "" }}> Saya sebagai penguji </label>
-            <div id="supervisor-fields" class="hidden space-y-2 border-t border-border pt-3">
-                <p class="text-xs text-text-secondary">Nama pembimbing mahasiswa yang akan Anda uji (maks 3):</p> <input
-                    type="text" name="supervisor_1" placeholder="Pembimbing 1" value="{{ old("supervisor_1") }}"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <input type="text"
-                    name="supervisor_2" placeholder="Pembimbing 2 (opsional)" value="{{ old("supervisor_2") }}"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <input type="text"
-                    name="supervisor_3" placeholder="Pembimbing 3 (opsional)" value="{{ old("supervisor_3") }}"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-            </div>
-        </div>
 
         {{-- ===== Opsi khusus dosen (NIDN + direktori organisasi) ===== --}}
         <div id="dosen-directory-section" class="hidden space-y-2 border-t border-border pt-3">
@@ -110,7 +95,6 @@
     @endsection @section("guest-scripts")
     <script>
         var roleInput = document.getElementById('role-input');
-        var examinerSection = document.getElementById('examiner-section');
         var dosenDirectorySection = document.getElementById('dosen-directory-section');
         var roleHint = document.getElementById('role-hint');
         var toggles = document.querySelectorAll('.role-toggle');
@@ -126,27 +110,16 @@
                 btn.classList.toggle('text-text-secondary', !active);
                 btn.classList.toggle('font-medium', !active);
             });
-            // Opsi "penguji" hanya untuk mahasiswa; sembunyikan untuk dosen.
-            examinerSection.classList.toggle('hidden', role === 'dosen');
             // Direktori organisasi hanya untuk dosen.
             if (dosenDirectorySection) dosenDirectorySection.classList.toggle('hidden', role !== 'dosen');
             roleHint.textContent = role === 'dosen'
                 ? 'Daftar sebagai dosen. Akun Anda perlu disetujui admin sebelum dapat masuk.'
-                : 'Daftar sebagai mahasiswa. Akun Anda perlu disetujui dosen sebelum dapat masuk.';
+                : 'Daftar sebagai mahasiswa. Setelah verifikasi email, Anda dapat memilih dosen pembimbing.';
         }
 
         toggles.forEach(function (btn) {
             btn.addEventListener('click', function () { setRole(btn.dataset.role); });
         });
-
-        // Toggle isi field supervisor (checkbox "penguji").
-        var chk = document.getElementById('as_examiner');
-        var fields = document.getElementById('supervisor-fields');
-        function toggleExaminer() {
-            fields.classList.toggle('hidden', !chk.checked);
-        }
-        chk.addEventListener('change', toggleExaminer);
-        toggleExaminer();
 
         // Pertahankan role yang dipilih saat ada error validasi (old input).
         var oldRole = {{ json_encode(old('role', 'mahasiswa')) }};

@@ -11,7 +11,7 @@
 
 ![Laravel](https://img.shields.io/badge/Laravel-11-red?logo=laravel&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-8.4-blue?logo=php&logoColor=white)
-![License](https://img.shields.io/github/license/hafizhul/thesis-logbook-management)
+![License](https://img.shields.io/github/license/relooplab/thesis-logbook-management)
 ![Docker](https://img.shields.io/badge/Docker%20Compose-Ready-blue?logo=docker&logoColor=white)
 
 A comprehensive web application for recording and monitoring undergraduate thesis mentoring sessions between students, supervisors, and examiners. Built to streamline the academic thesis process with modern tooling, real-time collaboration, and flexible deployment options.
@@ -274,6 +274,7 @@ The database seeder creates the following accounts for testing:
 | Student — TA (NIM 200401001) | `mahasiswa@example.com` | `password` |
 | Student — KP (pemilik kelompok, NIM 200401002) | `mahasiswa_kp@example.com` | `password` |
 | Student — KP (anggota kelompok, NIM 200401003) | `mahasiswa_kp2@example.com` | `password` |
+| Student — Active (belum pilih dosen, NIM 200401004) | `mahasiswa_active@example.com` | `password` |
 
 Demo akun berikut terhubung ke **Universitas Nusantara** (Fakultas Teknik → Departemen Teknik Informatika → S1 Teknik Informatika) dan tergabung dalam grup **"Dosen Teknik Informatika Universitas Nusantara"**: `admin@example.com`, `dosen2@example.com`, `dosen3@example.com`, `dosen4@example.com`.
 
@@ -502,7 +503,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for de
 
 Ways to contribute:
 
-- Report bugs or suggest features via [GitHub Issues](https://github.com/hafizhul/thesis-logbook-management/issues)
+- Report bugs or suggest features via [GitHub Issues](https://github.com/relooplab/thesis-logbook-management/issues)
 - Improve documentation
 - Submit bug fixes or new features via pull request
 
@@ -528,5 +529,5 @@ Built with [Laravel](https://laravel.com), [PDF.js](https://mozilla.github.io/pd
 
 ## Support
 
-- **Bug reports & feature requests:** [GitHub Issues](https://github.com/hafizhul/thesis-logbook-management/issues)
-- **Questions & discussion:** [GitHub Discussions](https://github.com/hafizhul/thesis-logbook-management/discussions)
+- **Bug reports & feature requests:** [GitHub Issues](https://github.com/relooplab/thesis-logbook-management/issues)
+- **Questions & discussion:** [GitHub Discussions](https://github.com/relooplab/thesis-logbook-management/discussions)
