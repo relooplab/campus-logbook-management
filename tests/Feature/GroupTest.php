@@ -27,10 +27,18 @@ class GroupTest extends AuditSmokeTest
         $university = $this->service->findOrCreateUniversity('Universitas Test');
         $this->service->attachUserToUniversity($this->dosen, $university, isPrimary: true);
 
+        // Buat hierarki lengkap (fakultas → departemen → prodi) untuk level prodi.
+        $faculty = $this->service->findOrCreateFaculty($university, 'Fakultas Teknik');
+        $department = $this->service->findOrCreateDepartment($faculty, 'Departemen Teknik Informatika');
+        $studyProgram = $this->service->findOrCreateStudyProgram($department, 'S1 Teknik Informatika');
+
         $this->actingAs($this->dosen)->post(route('groups.store'), [
             'name' => 'Dosen Teknik Informatika',
             'level' => 'prodi',
             'university_id' => $university->id,
+            'faculty_id' => $faculty->id,
+            'department_id' => $department->id,
+            'study_program_id' => $studyProgram->id,
         ])->assertRedirect(route('groups.index'));
 
         $this->assertDatabaseHas('groups', [

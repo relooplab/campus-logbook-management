@@ -60,8 +60,9 @@ class RegisterController extends Controller
             $this->attachUniversity($user, $validated);
         }
 
-        // Kirim email verifikasi (semua role).
-        $user->sendEmailVerificationNotification();
+        // Kirim email verifikasi (semua role) — bungkus agar kegagalan mail
+        // tidak menggagalkan registrasi (mis. SMTP mati / tidak terkonfigurasi).
+        $this->bestEffort(fn () => $user->sendEmailVerificationNotification());
 
         return redirect()->route('verification.notice')
             ->with('status', 'Registrasi berhasil. Silakan verifikasi email Anda.');

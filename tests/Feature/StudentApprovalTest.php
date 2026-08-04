@@ -20,7 +20,7 @@ class StudentApprovalTest extends AuditSmokeTest
 
         $this->assertDatabaseHas('users', [
             'email' => 'budiman@mail.com',
-            'registration_status' => 'pending',
+            'registration_status' => 'active',
         ]);
 
         $user = User::where('email', 'budiman@mail.com')->first();
@@ -44,29 +44,44 @@ class StudentApprovalTest extends AuditSmokeTest
 
     public function test_dosen_can_approve_invited_mahasiswa_and_assign_role(): void
     {
+        // Buat mahasiswa aktif (email verified, belum attach dosen).
         $mhs = User::create([
             'name' => 'Budiman',
             'email' => 'budiman2@mail.com',
             'password' => bcrypt('password'),
-            'registration_status' => 'pending',
+            'registration_status' => 'active',
         ]);
         $mhs->syncRoles(['mahasiswa']);
 
-        $this->actingAs($this->dosen)->post(route('approval.approve', $mhs), [
+        // Buat MahasiswaTa dengan status pending_approval (mahasiswa memilih dosen ini).
+        $ta = MahasiswaTa::create([
+            'user_id' => $mhs->id,
+            'jenis' => MahasiswaTa::JENIS_TA,
+            'pembimbing_1_id' => $this->dosen->id,
+            'target_sesi' => 7,
+            'status_ta' => MahasiswaTa::STATUS_PENDING_APPROVAL,
+            'fase' => 'proposal',
+        ]);
+
+        $this->actingAs($this->dosen)->post(route('approval.approve', $ta), [
             'judul_ta' => 'Sistem Informasi',
             'role_dosen' => 'pembimbing_1',
             'target_sesi' => 7,
         ])->assertRedirect(route('approval.index'));
 
+        // Mahasiswa jadi verified.
         $this->assertDatabaseHas('users', [
             'id' => $mhs->id,
-            'registration_status' => 'approved',
+            'registration_status' => 'verified',
         ]);
 
+        // MahasiswaTa jadi aktif.
         $this->assertDatabaseHas('mahasiswa_ta', [
+            'id' => $ta->id,
             'user_id' => $mhs->id,
             'pembimbing_1_id' => $this->dosen->id,
             'judul_ta' => 'Sistem Informasi',
+            'status_ta' => MahasiswaTa::STATUS_AKTIF,
         ]);
     }
 }

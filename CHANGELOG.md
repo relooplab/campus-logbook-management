@@ -5,6 +5,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2026-08-05
+
+### Added
+
+#### "Penyimpanan Saya" (My Storage) Page for Dosen
+- New `StorageController` and `storage/index.blade.php` page — dosen can view their storage quota usage across all supervised students' programs (TA/KP).
+- Lists all workspace files and KP daily-logbook photos that count against the dosen's quota, grouped by student.
+- Dosen can **delete** a supervised student's workspace file or KP daily-logbook photo to manage storage.
+- The student is notified via `ActivityNotification` when a file is deleted.
+- New routes: `storage.index`, `storage.destroy-workspace`, `storage.destroy-logbook-harian` (guarded by `role_or_permission:dosen|admin` and `isPembimbing` authorization).
+- New "Penyimpanan Saya" sidebar menu for dosen/admin.
+
+#### Storage Quota Enforced Against the Supervising Dosen
+- Storage quota is now **charged to the supervising dosen** (Pembimbing 1, fallback Pembimbing 2) instead of the student.
+- `StorageUsageService` expanded to count: workspace files, logbook attachments, revision notes, KP daily-logbook photos, seminar materials, finalization files, and profile photos (dosen + supervised students).
+- New `assertCanUpload()` — rejects uploads with HTTP 422 when the dosen's quota would be exceeded. Applied to logbook uploads, revisions, workspace uploads (student + personal dosen), and finalization files.
+- New `formatBytes()` helper for readable byte display.
+- `Feature::storageLimitMb()` now falls back to the **free plan** (5 GB) when the user has no plan/subscription, instead of returning 0 (unlimited).
+
+#### KP Daily-Logbook Photo Serving
+- New `logbook-harian.foto` route serves logbook-harian photos directly from the `local` disk (previously used the `public` disk URL).
+
+### Changed
+
+#### Workspace UI
+- Student workspace and dosen personal workspace now show a **quota progress bar** (used vs. limit) with color-coded status.
+- Removed the "Bab" filter from the student workspace page (kept Type filter).
+- Dosen personal workspace ("My Workspace") now uses a **drag & drop upload** with file list, remove option, and upload progress bar.
+
+#### Revisi Table UX (create-revisi)
+- New revision form now starts with **5 empty rows** (previously just 1).
+- Status defaults to the first option (e.g. "Sudah") instead of an empty "—" placeholder.
+- Pressing **Enter** in a table input adds a new row and focuses its first input.
+- "Tambah Baris" button moved below the table.
+
+#### Route & Controller Fixes
+- `GET /finalisasi/review` is now defined **before** `GET /finalisasi/{mahasiswaTa}` to fix route shadowing that made the review page unreachable.
+- `AdminController::updateInstitution` now deletes the **old institution logo** before storing a new one (prevents orphaned files).
+- `RegisterController` wraps the email verification send in `bestEffort()` so an SMTP failure no longer blocks registration.
+
+#### PruneOrphanFiles Command
+- Now scans **all** file types on the `local` disk: logbook attachments, revision notes, workspace (student + dosen), seminar materials, finalization files, KP logbook-harian photos, and institution logos.
+- Also scans the `public` disk (`profiles/`) for orphaned profile photos.
+- Deletes orphaned files older than the cutoff, logging each to the `audit` channel.
+
+### Fixed
+- Logbook attachment `size` is now stored on upload/update/revision and cleared on removal, so quota accounting reflects actual file sizes.
+- KP logbook-harian photo URLs now use the new `logbook-harian.foto` route (works after the disk/serving change).
+
+### Tests
+- `StudentApprovalTest`: updated to the new active/verified flow — invited students register as `active`, and approval operates on a `MahasiswaTa` with `pending_approval` status.
+- `GroupTest`: builds the full faculty → department → study program hierarchy for `prodi`-level group creation.
+- `OrganizationalDirectoryTest`: lecturer registration now redirects to `verification.notice` (email verification flow).
+- `AuditSmokeTest`: disables CSRF validation for POST requests.
+
 ## [0.5.1] - 2026-08-04
 
 ### Added
@@ -276,6 +331,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `StudentApprovalTest` (invite by email, duplicate rejection, approve & assign role).
 - All 24 tests pass (65 assertions).
 
+[0.5.2]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.2
 [0.5.1]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.1
 [0.5.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.0
 [0.4.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.4.0

@@ -10,6 +10,7 @@ use App\Models\Message;
 use App\Models\Sidang;
 use App\Models\User;
 use App\Models\WorkspaceFile;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -46,6 +47,9 @@ class AuditSmokeTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Nonaktifkan CSRF token di test (POST route tanpa token CSRF).
+        $this->withoutMiddleware(ValidateCsrfToken::class);
 
         foreach (['admin', 'dosen', 'mahasiswa'] as $role) {
             Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);

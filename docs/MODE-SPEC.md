@@ -338,3 +338,45 @@ universities (perguruan tinggi)
 
 - **`workspace_files.user_id`** (nullable) — mendukung workspace pribadi dosen (selain `mahasiswa_ta_id` untuk mahasiswa).
 - Halaman `/workspace-saya` untuk mengelola file pribadi dosen.
+
+---
+
+## 12. Manajemen File & Storage
+
+### 12.1 Prinsip
+
+- Semua file yang diupload user tersimpan di salah satu dari dua disk:
+  - **`local`** (privat) — hanya bisa diakses lewat controller yang memverifikasi otorisasi (mis. `LogbookController::inlinePdf()`, `WorkspaceController::download()`). Dipakai untuk seluruh dokumen/lampiran.
+  - **`public`** (dilayani langsung webserver, tanpa otorisasi) — hanya dipakai untuk konten yang memang perlu tampil langsung di UI (foto profil), dengan nama file acak (`hashName()`) agar tidak bisa ditebak/di-enumerasi.
+- Ekstensi file **selalu** ditentukan dari deteksi konten server (mis. `getimagesize()` untuk gambar, `guessExtension()` bawaan Laravel), **bukan** dari nama/klaim client — mencegah file polyglot dieksekusi sebagai skrip server.
+- Kuota penyimpanan (`StorageUsageService`) **dibebankan ke dosen pembimbing 1** (fallback pembimbing 2) untuk seluruh file terkait mahasiswa bimbingannya; dosen/admin punya kuota terpisah untuk file pribadi mereka sendiri (workspace pribadi, foto profil).
+- File yang kehilangan referensi database (mis. akun/program dihapus, cascade delete) dibersihkan otomatis oleh command terjadwal `files:prune-orphans` (mingguan, buffer 30 hari). File yang **masih** direferensikan baris DB manapun **tidak pernah** disentuh, berapa pun umurnya — job ini hanya query ulang referensi terkini tiap kali jalan, bukan berdasar usia semata.
+
+### 12.2 Inventaris File Upload
+
+| # | File | Disk & Lokasi | Pemilik Kuota | Siapa Bisa Upload | Siapa Bisa Edit/Ganti | Siapa Bisa Hapus Manual | Auto-terhapus (Orphan Job) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Lampiran logbook (draft/revisi) | `local` / `lampiran/{entry_id}/` | Dosen pembimbing 1 (fallback 2) | Mahasiswa pemilik/anggota TA-KP | Mahasiswa, hanya saat entri masih *draft/revisi* (`isEditable()`) | Mahasiswa via `removeLampiran()`, kondisi sama | ✅ Ya |
+| 2 | Catatan perbaikan (PDF auto-generate) | `local` / `catatan/{entry_id}/` | Dosen pembimbing 1 (fallback 2) | Sistem (otomatis dari `riwayat_perbaikan` saat mahasiswa submit revisi) | Regenerate otomatis tiap entri revisi diedit | Mahasiswa via `removeCatatan()`, saat editable | ✅ Ya |
+| 3 | Foto logbook harian KP | `local` / `logbook-harian/{entry_id}/` | Dosen pembimbing 1 (fallback 2) | Mahasiswa anggota kelompok KP | Hanya penulis asli (`created_by`) | Penulis asli, via `destroy()`/ganti | ✅ Ya |
+| 4 | Workspace file mahasiswa | `local` / `workspace/{ta_id}/` | Dosen pembimbing 1 (fallback 2) | Anggota kelompok TA/KP | Metadata (bab/deskripsi) oleh anggota | Anggota kelompok, via `destroy()` | ✅ Ya |
+| 5 | Workspace file pribadi dosen | `local` / `workspace/dosen/{user_id}/` | Dosen itu sendiri | Dosen/admin (untuk diri sendiri) | Metadata oleh pemilik | Pemilik, via `destroy()` | ✅ Ya |
+| 6 | Undangan seminar/sidang | `local` / `seminar-materials/{ta_id}/` | Dosen pembimbing 1 (fallback 2) | Mahasiswa anggota TA/KP | Mahasiswa, selama belum dikonversi ke sidang (`sidang_id` null) | Tidak ada hapus mandiri (hanya ganti) | ✅ Ya (file lama ter-orphan saat ganti) |
+| 7 | Materi seminar/sidang | `local` / `seminar-materials/{ta_id}/` (atau rujuk workspace) | Dosen pembimbing 1 (fallback 2) | Mahasiswa anggota TA/KP | Sama seperti #6 | Tidak ada hapus mandiri | ✅ Ya (dilindungi bila berasal dari workspace, cek `materiFromWorkspace()`) |
+| 8 | Finalisasi TA/KP (cover/pengesahan/full file) | `local` / `finalization/{ta_id}/{jenis}/` | Dosen pembimbing 1 (fallback 2) | Mahasiswa anggota TA/KP | Mahasiswa, upload ulang kapan saja (selalu replace) | Tidak ada hapus mandiri | ✅ Ya (file lama selalu ter-orphan tiap upload ulang) |
+| 9 | Foto profil | `public` / `profiles/` | Dosen (miliknya sendiri) atau dosen pembimbing mahasiswa (untuk foto mahasiswa bimbingannya) | User sendiri (mahasiswa/dosen/admin) | User sendiri (file lama dihapus otomatis saat ganti) | Tidak ada tombol hapus mandiri (hanya ganti) | ✅ Ya |
+| 10 | Logo institusi | `local` / `institution/` | Tidak dibebankan ke kuota user manapun (resource singleton institusi) | Admin | Admin (file lama dihapus otomatis saat ganti) | Tidak ada | ✅ Ya |
+
+### 12.3 Mekanisme Orphan Cleanup
+
+`files:prune-orphans` (`app/Console/Commands/PruneOrphanFiles.php`, terjadwal mingguan Minggu 03:00, buffer 30 hari):
+
+1. Kumpulkan ulang seluruh path yang **masih** direferensikan dari kolom terkait di setiap tabel (query fresh, bukan cache).
+2. Scan seluruh file fisik di folder-folder disk `local` (`lampiran`, `catatan`, `workspace`, `seminar-materials`, `finalization`, `logbook-harian`, `institution`) dan disk `public` (`profiles`).
+3. File yang pathnya **tidak** ada di daftar referensi DAN sudah berumur ≥30 hari → dihapus.
+4. File yang masih direferensikan → selalu di-skip, tidak peduli usianya.
+
+Skenario file kehilangan referensi (jadi kandidat orphan):
+
+- Baris DB diganti saat user upload ulang/replace (pola "file lama di-orphan, bukan langsung dihapus").
+- Cascade delete berantai: `User` → `MahasiswaTa` → (`LogbookEntry`, `LogbookHarianKp`, `SeminarSubmission`, `ThesisFinalization`, `WorkspaceFile`) — semua FK `cascadeOnDelete()`. Baris DB hilang seketika, file fisik baru terhapus setelah buffer 30 hari via job ini.

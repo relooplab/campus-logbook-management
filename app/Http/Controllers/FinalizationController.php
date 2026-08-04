@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\FinalizationApproval;
 use App\Models\MahasiswaTa;
 use App\Models\ThesisFinalization;
+use App\Services\StorageUsageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -37,6 +38,14 @@ class FinalizationController extends Controller
 
         $request->validate($rules);
         $finalization = $mahasiswaTa->finalization ?? $mahasiswaTa->finalization()->create([]);
+
+        // Cek kuota dosen pembimbing sebelum menyimpan file finalisasi.
+        $dosen = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2;
+        if ($dosen) {
+            $incoming = collect(['cover', 'pengesahan', 'full_file'])
+                ->sum(fn ($f) => $request->hasFile($f) ? $request->file($f)->getSize() : 0);
+            app(StorageUsageService::class)->assertCanUpload($dosen, $incoming);
+        }
 
         $data = [];
         if (!$isKp) {

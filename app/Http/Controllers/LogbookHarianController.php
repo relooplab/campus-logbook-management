@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\LogbookHarianKp;
 use App\Models\MahasiswaTa;
 use App\Notifications\ActivityNotification;
+use App\Services\StorageUsageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -42,6 +43,31 @@ class LogbookHarianController extends Controller
     }
 
     /**
+     * Sajikan foto kegiatan (disk local, lewat otorisasi) — hanya anggota
+     * kelompok KP & dosen pembimbing yang boleh melihat.
+     */
+    public function foto(Request $request, MahasiswaTa $mahasiswaTa, LogbookHarianKp $logbookHarian, int $index)
+    {
+        abort_unless($mahasiswaTa->isKp(), 404, 'Program bukan KP.');
+        abort_unless($logbookHarian->mahasiswa_ta_id === $mahasiswaTa->id, 404);
+
+        $user = $request->user();
+        if ($user->isMahasiswa() && !$mahasiswaTa->isMember($user)) {
+            abort(403);
+        }
+        if ($user->isDosen() && !$mahasiswaTa->isPembimbing($user)) {
+            abort(403, 'Anda bukan pembimbing KP ini.');
+        }
+
+        abort_unless(in_array($index, [1, 2], true), 404);
+        $path = $index === 1 ? $logbookHarian->foto_1 : $logbookHarian->foto_2;
+        abort_unless($path, 404, 'Foto tidak tersedia.');
+        abort_unless(Storage::disk('local')->exists($path), 404, 'Foto tidak ditemukan.');
+
+        return Storage::disk('local')->response($path);
+    }
+
+    /**
      * Form tambah catatan harian (khusus mahasiswa pemilik KP).
      */
     public function create(Request $request, MahasiswaTa $mahasiswaTa): View
@@ -68,6 +94,14 @@ class LogbookHarianController extends Controller
             'kegiatan' => $validated['kegiatan'],
             'kendala' => $validated['kendala'] ?? null,
         ]);
+
+        // Cek kuota dosen pembimbing sebelum upload foto.
+        $dosen = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2;
+        if ($dosen) {
+            $incoming = collect(['foto_1', 'foto_2'])
+                ->sum(fn ($f) => $request->hasFile($f) ? $request->file($f)->getSize() : 0);
+            app(StorageUsageService::class)->assertCanUpload($dosen, $incoming);
+        }
 
         // Upload foto (maks 2) ke disk public.
         if ($request->hasFile('foto_1')) {
@@ -151,9 +185,10 @@ class LogbookHarianController extends Controller
     }
 
     /**
-     * Simpan foto ke disk public: logbook-harian/{entry_id}/foto{n}.{ext}.
-     * Bug 1 (RCE): ekstensi ditentukan dari deteksi konten server (getimagesize),
-     * bukan dari nama asli client — mencegah file polyglot dieksekusi sebagai PHP.
+     * Simpan foto ke disk local (privat, disajikan lewat foto() dengan otorisasi):
+     * logbook-harian/{entry_id}/foto{n}.{ext}.
+     * Ekstensi ditentukan dari deteksi konten server (getimagesize), bukan dari
+     * nama asli client — mencegah file polyglot dieksekusi sebagai PHP.
      */
     private function storeFoto($file, int $entryId, int $index): string
     {
@@ -174,16 +209,16 @@ class LogbookHarianController extends Controller
 
         $name = 'foto'.$index.'.'.$ext;
 
-        return $file->storeAs('logbook-harian/'.$entryId, $name, 'public');
+        return $file->storeAs('logbook-harian/'.$entryId, $name, 'local');
     }
 
     /**
-     * Hapus foto dari disk public (jika ada).
+     * Hapus foto dari disk local (jika ada).
      */
     private function deleteFoto(?string $path): void
     {
         if ($path) {
-            Storage::disk('public')->delete($path);
+            Storage::disk('local')->delete($path);
         }
     }
 

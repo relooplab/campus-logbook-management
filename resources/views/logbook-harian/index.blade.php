@@ -58,14 +58,14 @@
                     @if ($entry->foto_1 || $entry->foto_2)
                         <div class="grid grid-cols-2 gap-3 mt-3">
                             @if ($entry->foto_1)
-                                <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($entry->foto_1) }}" target="_blank" rel="noopener">
-                                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($entry->foto_1) }}"
+                                <a href="{{ route('logbook-harian.foto', [$mahasiswaTa, $entry, 1]) }}" target="_blank" rel="noopener">
+                                    <img src="{{ route('logbook-harian.foto', [$mahasiswaTa, $entry, 1]) }}"
                                         alt="Foto 1" class="w-full h-36 object-cover rounded-lg border border-border">
                                 </a>
                             @endif
                             @if ($entry->foto_2)
-                                <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($entry->foto_2) }}" target="_blank" rel="noopener">
-                                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($entry->foto_2) }}"
+                                <a href="{{ route('logbook-harian.foto', [$mahasiswaTa, $entry, 2]) }}" target="_blank" rel="noopener">
+                                    <img src="{{ route('logbook-harian.foto', [$mahasiswaTa, $entry, 2]) }}"
                                         alt="Foto 2" class="w-full h-36 object-cover rounded-lg border border-border">
                                 </a>
                             @endif

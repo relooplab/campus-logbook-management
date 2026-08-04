@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateLogbookEntryRequest;
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\PdfComment;
+use App\Services\StorageUsageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -83,9 +84,16 @@ class LogbookController extends Controller
 
         // Simpan lampiran dengan path unik + nama asli.
         if ($request->hasFile('lampiran')) {
+            // Cek kuota dosen pembimbing (pembimbing 1, fallback pembimbing 2).
+            $dosen = $ta->pembimbing1 ?: $ta->pembimbing2;
+            if ($dosen) {
+                app(StorageUsageService::class)->assertCanUpload($dosen, $request->file('lampiran')->getSize());
+            }
+
             $entry->update([
                 'lampiran_path' => $this->storeUniqueFile($request->file('lampiran'), 'lampiran', $entry->id),
                 'lampiran_original_name' => $request->file('lampiran')->getClientOriginalName(),
+                'lampiran_size' => $request->file('lampiran')->getSize(),
             ]);
         }
 
@@ -149,9 +157,16 @@ class LogbookController extends Controller
             return [$parent, $entry];
         });
 
+        // Cek kuota dosen pembimbing sebelum menyimpan lampiran revisi.
+        $dosen = $ta->pembimbing1 ?: $ta->pembimbing2;
+        if ($dosen && $request->hasFile('lampiran')) {
+            app(StorageUsageService::class)->assertCanUpload($dosen, $request->file('lampiran')->getSize());
+        }
+
         $entry->update([
             'lampiran_path' => $this->storeUniqueFile($request->file('lampiran'), 'lampiran', $entry->id),
             'lampiran_original_name' => $request->file('lampiran')->getClientOriginalName(),
+            'lampiran_size' => $request->file('lampiran')->getSize(),
             'riwayat_perbaikan' => $data['riwayat_perbaikan'],
         ]);
 
@@ -323,6 +338,7 @@ class LogbookController extends Controller
             $logbook->update([
                 'lampiran_path' => $newPath,
                 'lampiran_original_name' => $request->file('lampiran')->getClientOriginalName(),
+                'lampiran_size' => $request->file('lampiran')->getSize(),
             ]);
 
             // File lama DI-ORPHAN (tidak dihapus). Auto-resolve komentar pada
@@ -366,7 +382,7 @@ class LogbookController extends Controller
         }
 
         $oldPath = $logbook->lampiran_path;
-        $logbook->update(['lampiran_path' => null, 'lampiran_original_name' => null]);
+        $logbook->update(['lampiran_path' => null, 'lampiran_original_name' => null, 'lampiran_size' => null]);
         $resolvedCount = $this->resolveCommentsForType($logbook, PdfComment::FILE_TYPE_DRAFT);
         $this->logAttachmentChange($logbook, 'lampiran_path', $oldPath, null, $resolvedCount);
 
@@ -385,7 +401,7 @@ class LogbookController extends Controller
         }
 
         $oldPath = $logbook->catatan_perbaikan_path;
-        $logbook->update(['catatan_perbaikan_path' => null, 'catatan_original_name' => null]);
+        $logbook->update(['catatan_perbaikan_path' => null, 'catatan_original_name' => null, 'catatan_perbaikan_size' => null]);
         $resolvedCount = $this->resolveCommentsForType($logbook, PdfComment::FILE_TYPE_CATATAN);
         $this->logAttachmentChange($logbook, 'catatan_perbaikan_path', $oldPath, null, $resolvedCount);
 
@@ -422,12 +438,14 @@ class LogbookController extends Controller
                 'pesan' => $logbook->progres_kendala,
             ]);
 
+            $output = $pdf->output();
             $path = 'catatan/'.$logbook->id.'/'.(string) \Illuminate\Support\Str::uuid().'.pdf';
-            Storage::disk('local')->put($path, $pdf->output());
+            Storage::disk('local')->put($path, $output);
 
             $logbook->update([
                 'catatan_perbaikan_path' => $path,
                 'catatan_original_name' => 'catatan-perbaikan-'.$logbook->id.'.pdf',
+                'catatan_perbaikan_size' => strlen($output),
             ]);
         } catch (\Throwable $e) {
             report($e);

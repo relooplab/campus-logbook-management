@@ -7,6 +7,7 @@ use App\Http\Requests\StoreWorkspaceFileRequest;
 use App\Models\MahasiswaTa;
 use App\Models\User;
 use App\Models\WorkspaceFile;
+use App\Services\StorageUsageService;
 use App\Support\Feature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,10 +45,14 @@ class WorkspaceController extends Controller
         // Group by bab (null -> "Lainnya").
         $grouped = $files->groupBy(fn ($f) => $f->bab ?: 'Lainnya');
 
-        // Statistik penyimpanan.
+        // Statistik penyimpanan (kuota dibebankan ke dosen pembimbing).
+        $usageService = app(StorageUsageService::class);
+        $dosen = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2;
         $totalBytes = $files->sum('size');
+        $quotaBytes = $dosen ? Feature::storageLimitMb($dosen) * 1048576 : 0;
+        $usedBytes = $dosen ? $usageService->totalBytes($dosen) : $totalBytes;
 
-        return view('workspace.index', compact('mahasiswaTa', 'grouped', 'totalBytes'));
+        return view('workspace.index', compact('mahasiswaTa', 'grouped', 'totalBytes', 'quotaBytes', 'usedBytes'));
     }
 
     /**
@@ -115,6 +120,13 @@ class WorkspaceController extends Controller
 
         $bab = $request->input('bab');
 
+        // Cek kuota dosen pembimbing (pembimbing 1, fallback pembimbing 2).
+        $dosen = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2;
+        if ($dosen) {
+            $incoming = collect($request->file('files'))->sum(fn ($f) => $f->getSize());
+            app(StorageUsageService::class)->assertCanUpload($dosen, $incoming);
+        }
+
         foreach ($request->file('files') as $file) {
             $stored = $file->store('workspace/'.$mahasiswaTa->id, 'local');
 
@@ -158,8 +170,10 @@ class WorkspaceController extends Controller
         $grouped = $files->groupBy(fn ($f) => $f->bab ?: 'Lainnya');
 
         $totalBytes = $files->sum('size');
+        $quotaBytes = Feature::storageLimitMb($user) * 1048576;
+        $usedBytes = app(StorageUsageService::class)->totalBytes($user);
 
-        return view('workspace.personal', compact('grouped', 'totalBytes', 'user'));
+        return view('workspace.personal', compact('grouped', 'totalBytes', 'quotaBytes', 'usedBytes', 'user'));
     }
 
     /**
@@ -177,6 +191,10 @@ class WorkspaceController extends Controller
         ]);
 
         $bab = $request->input('bab');
+
+        // Cek kuota dosen itu sendiri.
+        $incoming = collect($request->file('files'))->sum(fn ($f) => $f->getSize());
+        app(StorageUsageService::class)->assertCanUpload($user, $incoming);
 
         foreach ($request->file('files') as $file) {
             $stored = $file->store('workspace/dosen/'.$user->id, 'local');

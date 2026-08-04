@@ -484,12 +484,16 @@ class AdminController extends Controller
             'mail_from_name' => ['nullable', 'string', 'max:255'],
         ]);
 
-        // Logo (opsional).
+        $institution = Institution::active();
+
+        // Logo (opsional). Hapus logo lama agar tidak menumpuk di disk.
         if ($request->hasFile('logo')) {
+            if ($institution->logo_path) {
+                \Illuminate\Support\Facades\Storage::disk('local')->delete($institution->logo_path);
+            }
             $validated['logo_path'] = $request->file('logo')->store('institution', 'local');
         }
 
-        $institution = Institution::active();
         $institution->update($validated);
         Institution::flush();
         $institution->applyToConfig();

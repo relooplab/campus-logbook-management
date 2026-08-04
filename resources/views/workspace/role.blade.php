@@ -38,21 +38,32 @@
                 <span class="text-xs text-text-secondary">{{ number_format($personalTotalBytes / 1048576, 1) }} MB terpakai</span>
             </div>
 
-            {{-- Upload --}}
-            <form method="POST" action="{{ route('workspace.personal-store') }}" enctype="multipart/form-data" class="mb-4">
+            {{-- Upload (drag & drop, sama seperti mahasiswa) --}}
+            <form method="POST" action="{{ route('workspace.personal-store') }}" enctype="multipart/form-data" id="personal-upload-form" class="mb-4">
                 @csrf
                 <div class="grid sm:grid-cols-2 gap-3 mb-3">
                     <div>
                         <label class="block text-xs text-text-secondary mb-1">Label Bab (opsional)</label>
-                        <input type="text" name="bab" placeholder="contoh: Materi, Jurnal, Arsip"
+                        <input type="text" name="bab" id="personal-bab" placeholder="contoh: Materi, Jurnal, Arsip"
                             class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
                     </div>
                 </div>
-                <div class="flex flex-wrap gap-2">
-                    <input type="file" name="files[]" multiple accept=".pdf,.doc,.docx,.xls,.xlsx" class="text-sm">
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Upload</button>
+                <div id="personal-drop-zone"
+                    class="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-brand/30 transition">
+                    <p><span class="material-symbols-outlined" style="font-size:48px">folder_open</span></p>
+                    <p class="text-sm mt-2">Tarik & lepas file di sini, atau <span class="text-brand font-medium">klik untuk memilih</span></p>
+                    <p class="text-xs text-text-secondary mt-1">PDF, DOC, DOCX, XLS, XLSX — maks 25 MB, hingga 5 file</p>
+                    <input type="file" name="files[]" id="personal-file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx" class="hidden">
                 </div>
-                <p class="text-xs text-text-secondary mt-1">PDF, DOC, DOCX, XLS, XLSX — maks 25 MB, hingga 5 file</p>
+                <div id="personal-file-list" class="mt-3 space-y-1"></div>
+                <div id="personal-progress-wrap" class="hidden mt-3">
+                    <div class="h-2 rounded-full bg-bg-panel overflow-hidden">
+                        <div id="personal-progress-bar" class="h-full rounded-full bg-brand" style="width:0%"></div>
+                    </div>
+                    <p id="personal-progress-text" class="text-xs text-text-secondary mt-1">0%</p>
+                </div>
+                <button type="submit" id="personal-upload-btn" disabled
+                    class="mt-3 px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90 disabled:opacity-40">Upload</button>
                 @error('files.*')
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -150,4 +161,96 @@
         @endif
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    // ---------- drag & drop upload (workspace pribadi dosen) ----------
+    (function () {
+        var zone = document.getElementById('personal-drop-zone');
+        var input = document.getElementById('personal-file-input');
+        var list = document.getElementById('personal-file-list');
+        var btn = document.getElementById('personal-upload-btn');
+        var form = document.getElementById('personal-upload-form');
+        var babInput = document.getElementById('personal-bab');
+        var selectedFiles = [];
+
+        if (!zone || !input || !list || !btn || !form) return;
+
+        function render() {
+            list.innerHTML = '';
+            selectedFiles.forEach(function (f, i) {
+                var div = document.createElement('div');
+                div.className = 'flex items-center justify-between text-sm px-2 py-1 rounded bg-bg-panel';
+                div.innerHTML = '<span class="truncate mr-2">' + f.name + ' (' + (f.size/1048576).toFixed(1) + ' MB)</span>' + '<button type="button" data-i="' + i + '" class="text-status-danger text-xs">hapus</button>';
+                list.appendChild(div);
+            });
+            btn.disabled = selectedFiles.length === 0;
+        }
+
+        zone.addEventListener('click', function () { input.click(); });
+        input.addEventListener('change', function () {
+            selectedFiles = Array.from(input.files);
+            render();
+        });
+        ['dragover','dragenter'].forEach(function (ev) {
+            zone.addEventListener(ev, function (e) {
+                e.preventDefault();
+                zone.classList.add('border-brand/30');
+            });
+        });
+        ['dragleave','drop'].forEach(function (ev) {
+            zone.addEventListener(ev, function (e) {
+                e.preventDefault();
+                zone.classList.remove('border-brand/30');
+            });
+        });
+        zone.addEventListener('drop', function (e) {
+            selectedFiles = Array.from(e.dataTransfer.files);
+            render();
+        });
+        list.addEventListener('click', function (e) {
+            if (e.target.tagName === 'BUTTON') {
+                var i = parseInt(e.target.dataset.i, 10);
+                selectedFiles.splice(i, 1);
+                render();
+            }
+        });
+
+        form.addEventListener('submit', function (e) {
+            if (selectedFiles.length === 0) {
+                e.preventDefault();
+                return;
+            }
+            e.preventDefault();
+            var fd = new FormData();
+            fd.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+            if (babInput) fd.append('bab', babInput.value);
+            selectedFiles.forEach(function (f) { fd.append('files[]', f); });
+            var xhr = new XMLHttpRequest();
+            document.getElementById('personal-progress-wrap').classList.remove('hidden');
+            xhr.upload.onprogress = function (ev) {
+                if (ev.lengthComputable) {
+                    var pct = Math.round(ev.loaded / ev.total * 100);
+                    document.getElementById('personal-progress-bar').style.width = pct + '%';
+                    document.getElementById('personal-progress-text').textContent = pct + '%';
+                }
+            };
+            xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    window.location.reload();
+                } else {
+                    alert('Upload gagal. Periksa ukuran/format file atau kuota Anda.');
+                    document.getElementById('personal-progress-wrap').classList.add('hidden');
+                }
+            };
+            xhr.onerror = function () {
+                alert('Upload gagal.');
+                document.getElementById('personal-progress-wrap').classList.add('hidden');
+            };
+            xhr.open('POST', form.action);
+            xhr.send(fd);
+        });
+    })();
+</script>
 @endsection

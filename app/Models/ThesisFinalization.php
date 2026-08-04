@@ -24,7 +24,7 @@ class ThesisFinalization extends Model
 
     public function approvals(): HasMany
     {
-        return $this->hasMany(FinalizationApproval::class);
+        return $this->hasMany(FinalizationApproval::class, 'finalization_id');
     }
 
     public function isItemApproved(string $item): bool

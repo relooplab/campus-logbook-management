@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\StudentApprovalController;
+use App\Http\Controllers\StorageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DosenSidangController;
 use App\Http\Controllers\ExportController;
@@ -113,6 +114,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/kp/{mahasiswaTa}/logbook-harian', [LogbookHarianController::class, 'index'])->name('logbook-harian.index');
     Route::get('/kp/{mahasiswaTa}/logbook-harian/create', [LogbookHarianController::class, 'create'])->name('logbook-harian.create');
     Route::post('/kp/{mahasiswaTa}/logbook-harian', [LogbookHarianController::class, 'store'])->name('logbook-harian.store');
+    Route::get('/kp/{mahasiswaTa}/logbook-harian/{logbookHarian}/foto/{index}', [LogbookHarianController::class, 'foto'])->name('logbook-harian.foto');
     Route::get('/kp/{mahasiswaTa}/logbook-harian/{logbookHarian}/edit', [LogbookHarianController::class, 'edit'])->name('logbook-harian.edit');
     Route::put('/kp/{mahasiswaTa}/logbook-harian/{logbookHarian}', [LogbookHarianController::class, 'update'])->name('logbook-harian.update');
     Route::delete('/kp/{mahasiswaTa}/logbook-harian/{logbookHarian}', [LogbookHarianController::class, 'destroy'])->name('logbook-harian.destroy');
@@ -154,6 +156,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/workspace-saya', fn () => redirect()->route('workspace.role'))->name('workspace.personal');
     Route::post('/workspace-saya', [WorkspaceController::class, 'personalStore'])->name('workspace.personal-store');
 
+    // -------------------------------------------------- penyimpanan saya (dosen)
+    Route::middleware('role_or_permission:dosen|admin')->group(function () {
+        Route::get('/penyimpanan-saya', [StorageController::class, 'index'])->name('storage.index');
+        Route::delete('/penyimpanan-saya/workspace/{file}', [StorageController::class, 'destroyWorkspace'])->name('storage.destroy-workspace');
+        Route::delete('/penyimpanan-saya/logbook-harian/{entry}/{foto}', [StorageController::class, 'destroyLogbookHarian'])->name('storage.destroy-logbook-harian');
+    });
+
     // -------------------------------------------------- pemberian bahan seminar/sidang
     Route::get('/seminar-submission/{mahasiswaTa}/create', [SeminarSubmissionController::class, 'create'])->name('seminar-submission.create');
     Route::post('/seminar-submission/{mahasiswaTa}', [SeminarSubmissionController::class, 'store'])->name('seminar-submission.store');
@@ -166,9 +175,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/seminar-submission/{submission}/convert-to-sidang', [SeminarSubmissionController::class, 'convertToSidang'])->name('seminar-submission.convert-to-sidang');
 
     // -------------------------------------------------- finalisasi TA/KP
+    // NOTE: /finalisasi/review HARUS didefinisikan sebelum /finalisasi/{mahasiswaTa}
+    // agar tidak tertangkap oleh route dynamic (shadowing).
+    Route::get('/finalisasi/review', [FinalizationController::class, 'review'])->name('finalization.review');
     Route::get('/finalisasi/{mahasiswaTa}', [FinalizationController::class, 'index'])->name('finalization.index');
     Route::post('/finalisasi/{mahasiswaTa}', [FinalizationController::class, 'store'])->name('finalization.store');
-    Route::get('/finalisasi/review', [FinalizationController::class, 'review'])->name('finalization.review');
     Route::post('/finalisasi/{finalization}/approve/{item}', [FinalizationController::class, 'approveItem'])->name('finalization.approve');
     Route::post('/finalisasi/{finalization}/reject/{item}', [FinalizationController::class, 'rejectItem'])->name('finalization.reject');
     Route::post('/finalisasi/{finalization}/unlock/{item}', [FinalizationController::class, 'unlockItem'])->name('finalization.unlock');

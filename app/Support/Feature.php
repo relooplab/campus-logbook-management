@@ -86,7 +86,7 @@ class Feature
     }
 
     /**
-     * Batas penyimpanan (MB) untuk user: override admin > plan.
+     * Batas penyimpanan (MB) untuk user: override admin > plan aktif > plan free (default).
      */
     public static function storageLimitMb(?User $user): int
     {
@@ -102,6 +102,12 @@ class Feature
         $plan = $user->activePlan();
         if ($plan) {
             return $plan->storageLimitMb();
+        }
+
+        // Default: paket free (5 GB) jika user belum punya plan/subscription.
+        $freePlan = Plan::where('name', 'free')->where('is_active', true)->first();
+        if ($freePlan) {
+            return $freePlan->storageLimitMb();
         }
 
         return 0;

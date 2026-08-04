@@ -8,6 +8,7 @@ use App\Models\SeminarSubmission;
 use App\Models\Sidang;
 use App\Models\WorkspaceFile;
 use App\Notifications\SeminarSubmissionNotification;
+use App\Services\StorageUsageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -88,6 +89,14 @@ class SeminarSubmissionController extends Controller
 
         $jenis = $this->jenisFromFase($mahasiswaTa);
         $defaultCatatan = $institution->seminar_hardcopy_note;
+
+        // Cek kuota dosen pembimbing sebelum menyimpan undangan + materi baru.
+        $dosen = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2;
+        if ($dosen) {
+            $incoming = $request->file('undangan')->getSize()
+                + ($request->file('materi_upload') ? $request->file('materi_upload')->getSize() : 0);
+            app(StorageUsageService::class)->assertCanUpload($dosen, $incoming);
+        }
 
         // Materi: upload baru ATAU dari workspace (salah satu, tidak boleh keduanya kosong).
         $materiPath = null;
@@ -199,6 +208,16 @@ class SeminarSubmissionController extends Controller
             'undangan_sebagai' => $data['undangan_sebagai'],
             'catatan_keterangan' => $data['catatan_keterangan'] ?? null,
         ];
+
+        // Cek kuota dosen pembimbing sebelum mengganti file (undangan/materi).
+        $dosen = $submission->mahasiswaTa->pembimbing1 ?: $submission->mahasiswaTa->pembimbing2;
+        if ($dosen) {
+            $incoming = ($request->file('undangan') ? $request->file('undangan')->getSize() : 0)
+                + ($request->file('materi_upload') ? $request->file('materi_upload')->getSize() : 0);
+            if ($incoming > 0) {
+                app(StorageUsageService::class)->assertCanUpload($dosen, $incoming);
+            }
+        }
 
         // Ganti undangan bila ada file baru.
         if ($request->file('undangan')) {

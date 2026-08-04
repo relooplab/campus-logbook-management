@@ -61,11 +61,8 @@
 
         {{-- ===== Catatan Perbaikan (tabel terstruktur) ===== --}}
         <div>
-            <div class="flex items-center justify-between mb-2">
-                <label class="block text-sm font-medium">Catatan Perbaikan</label>
-                <button type="button" id="tambah-baris" class="px-3 py-1.5 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-xs font-semibold">+ Tambah Baris</button>
-            </div>
-            <p class="text-xs text-text-secondary mb-2">Isi tabel perbaikan sesuai komentar dosen. PDF catatan perbaikan dibuat otomatis oleh sistem.</p>
+            <label class="block text-sm font-medium mb-1">Catatan Perbaikan</label>
+            <p class="text-xs text-text-secondary mb-2">Isi tabel perbaikan sesuai komentar dosen. PDF catatan perbaikan dibuat otomatis oleh sistem. Tekan <b>Enter</b> untuk menambah baris.</p>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm border border-border" id="tabel-perbaikan">
                     <thead>
@@ -85,32 +82,35 @@
                                 <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[{{ $i }}][perbaikan]" value="{{ $row['perbaikan'] ?? '' }}" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
                                 <td class="py-1.5 px-1">
                                     <select name="riwayat_perbaikan[{{ $i }}][status]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm">
-                                        <option value="">—</option>
                                         @foreach ($statusOptions as $s)
-                                            <option value="{{ $s }}" @selected(($row['status'] ?? '') === $s)>{{ $s }}</option>
+                                            <option value="{{ $s }}" @selected(($row['status'] ?? '') === $s || (($row['status'] ?? '') === '' && $loop->first))>{{ $s }}</option>
                                         @endforeach
                                     </select>
                                 </td>
                                 <td class="py-1.5 px-1 text-center"><button type="button" class="hapus-baris text-status-danger hover:underline text-xs">Hapus</button></td>
                             </tr>
                         @empty
-                            <tr class="border-b border-border">
-                                <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[0][halaman]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
-                                <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[0][komentar_dosen]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
-                                <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[0][perbaikan]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
-                                <td class="py-1.5 px-1">
-                                    <select name="riwayat_perbaikan[0][status]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm">
-                                        <option value="">—</option>
-                                        @foreach ($statusOptions as $s)
-                                            <option value="{{ $s }}">{{ $s }}</option>
-                                        @endforeach
-                                    </select>
-                                </td>
-                                <td class="py-1.5 px-1 text-center"><button type="button" class="hapus-baris text-status-danger hover:underline text-xs">Hapus</button></td>
-                            </tr>
+                            @for ($r = 0; $r < 5; $r++)
+                                <tr class="border-b border-border">
+                                    <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[{{ $r }}][halaman]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
+                                    <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[{{ $r }}][komentar_dosen]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
+                                    <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[{{ $r }}][perbaikan]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
+                                    <td class="py-1.5 px-1">
+                                        <select name="riwayat_perbaikan[{{ $r }}][status]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm">
+                                            @foreach ($statusOptions as $s)
+                                                <option value="{{ $s }}" @selected($loop->first)>{{ $s }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td class="py-1.5 px-1 text-center"><button type="button" class="hapus-baris text-status-danger hover:underline text-xs">Hapus</button></td>
+                                </tr>
+                            @endfor
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+            <div class="mt-2">
+                <button type="button" id="tambah-baris" class="px-3 py-1.5 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-xs font-semibold">+ Tambah Baris</button>
             </div>
             @error("riwayat_perbaikan")
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
@@ -175,14 +175,19 @@
         data = data || {};
         var tr = document.createElement('tr');
         tr.className = 'border-b border-border';
+        // Default status = "Sudah" (statusOptions[0]).
+        var defaultStatus = statusOptions.length ? statusOptions[0] : '';
         tr.innerHTML =
             '<td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[0][halaman]" value="' + (data.halaman || '') + '" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>' +
             '<td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[0][komentar_dosen]" value="' + (data.komentar_dosen || '') + '" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>' +
             '<td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[0][perbaikan]" value="' + (data.perbaikan || '') + '" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>' +
-            '<td class="py-1.5 px-1"><select name="riwayat_perbaikan[0][status]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"><option value="">—</option>' + statusOptions.map(function (s) { return '<option value="' + s + '"' + (data.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></td>' +
+            '<td class="py-1.5 px-1"><select name="riwayat_perbaikan[0][status]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm">' + statusOptions.map(function (s) { return '<option value="' + s + '"' + ((data.status === s) || (!data.status && s === defaultStatus) ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></td>' +
             '<td class="py-1.5 px-1 text-center"><button type="button" class="hapus-baris text-status-danger hover:underline text-xs">Hapus</button></td>';
         tbody.appendChild(tr);
         reindex();
+        // Fokus ke input pertama baris baru.
+        var firstInput = tr.querySelector('input');
+        if (firstInput) firstInput.focus();
     }
 
     if (tambahBtn) tambahBtn.addEventListener('click', function () { addRow(); });
@@ -194,6 +199,14 @@
                 tr.remove();
                 reindex();
             }
+        }
+    });
+
+    // Tekan Enter pada input di tabel untuk menambah baris baru.
+    if (tbody) tbody.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+            e.preventDefault();
+            addRow();
         }
     });
 

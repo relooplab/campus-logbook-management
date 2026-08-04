@@ -217,8 +217,9 @@
                         <span class="sidebar-label">Profil Perusahaan</span>
                     </a>
                 @endif
-                @if ($user->mahasiswaTa)
-                    <a href="{{ route('workspace.index', $user->mahasiswaTa) }}" class="{{ $navLink }} {{ $active('workspace.*') }}">
+                @if ($user->mahasiswaTa || $kp)
+                    @php $workspaceTa = $user->mahasiswaTa ?: $kp; @endphp
+                    <a href="{{ route('workspace.index', $workspaceTa) }}" class="{{ $navLink }} {{ $active('workspace.*') }}">
                         <span class="material-symbols-outlined icon-md">workspaces</span>
                         <span class="sidebar-label">Workspace</span>
                     </a>
@@ -235,6 +236,10 @@
                 <a href="{{ route('workspace.role') }}" class="{{ $navLink }} {{ $active('workspace.role') }}">
                     <span class="material-symbols-outlined icon-md">folder</span>
                     <span class="sidebar-label">Workspace</span>
+                </a>
+                <a href="{{ route('storage.index') }}" class="{{ $navLink }} {{ $active('storage.*') }}">
+                    <span class="material-symbols-outlined icon-md">database</span>
+                    <span class="sidebar-label">Penyimpanan Saya</span>
                 </a>
                 <a href="{{ route('groups.index') }}" class="{{ $navLink }} {{ $active('groups.*') }}">
                     <span class="material-symbols-outlined icon-md">groups</span>

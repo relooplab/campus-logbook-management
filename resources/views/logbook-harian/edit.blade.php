@@ -47,7 +47,7 @@
                 <div>
                     <label class="block text-xs text-text-secondary mb-1" for="foto_1">Foto 1</label>
                     @if ($logbookHarian->foto_1)
-                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($logbookHarian->foto_1) }}"
+                        <img src="{{ route('logbook-harian.foto', [$mahasiswaTa, $logbookHarian, 1]) }}"
                             alt="Foto 1" class="w-full h-32 object-cover rounded-xl mb-2">
                     @endif
                     <input type="file" name="foto_1" id="foto_1" accept="image/*" class="w-full text-sm">
@@ -58,7 +58,7 @@
                 <div>
                     <label class="block text-xs text-text-secondary mb-1" for="foto_2">Foto 2</label>
                     @if ($logbookHarian->foto_2)
-                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($logbookHarian->foto_2) }}"
+                        <img src="{{ route('logbook-harian.foto', [$mahasiswaTa, $logbookHarian, 2]) }}"
                             alt="Foto 2" class="w-full h-32 object-cover rounded-xl mb-2">
                     @endif
                     <input type="file" name="foto_2" id="foto_2" accept="image/*" class="w-full text-sm">

@@ -93,57 +93,6 @@
         </form>
     </div>
 
-    @if ($user->isMahasiswa() && $programs->count() > 0)
-        <div class="bg-bg-surface rounded-xl border border-border p-6 space-y-4">
-            <div>
-                <h2 class="font-semibold">Data Program ({{ $programs->count() }})</h2>
-                <p class="text-sm text-text-secondary mt-1">Judul TA / tempat KP wajib diisi dan dapat diubah di sini.</p>
-            </div>
-            @foreach ($programs as $program)
-                <div class="rounded-xl border border-border bg-bg-panel p-4">
-                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                        <div class="flex items-center gap-2">
-                            <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium {{ $program->isKp() ? 'bg-brand/10 text-brand' : 'bg-bg-panel text-text-secondary border border-border' }}">{{ $program->jenisLabel() }}</span>
-                            @if ($program->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF)
-                                <span class="inline-block px-2 py-0.5 rounded-full text-xs bg-status-success/10 text-status-success">Aktif</span>
-                            @endif
-                        </div>
-                        @if ($program->pembimbing1)
-                            <span class="text-xs text-text-secondary">Pembimbing: {{ $program->pembimbing1->name }}{{ $program->pembimbing2 ? ' & ' . $program->pembimbing2->name : '' }}</span>
-                        @endif
-                    </div>
-                    <form method="POST" action="{{ route('profile.program', $program) }}" class="space-y-3">
-                        @csrf @method('PUT')
-                        @if ($program->isKp())
-                            <div>
-                                <label class="block text-sm font-medium mb-1" for="tempat_kp_{{ $program->id }}">Tempat Kerja Praktek</label>
-                                <input type="text" name="tempat_kp" id="tempat_kp_{{ $program->id }}" required maxlength="255"
-                                    value="{{ old('tempat_kp', $program->tempat_kp) }}"
-                                    placeholder="Nama perusahaan / instansi tempat KP"
-                                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
-                                @error('tempat_kp')
-                                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        @else
-                            <div>
-                                <label class="block text-sm font-medium mb-1" for="judul_ta_{{ $program->id }}">Judul Tugas Akhir</label>
-                                <input type="text" name="judul_ta" id="judul_ta_{{ $program->id }}" required maxlength="255"
-                                    value="{{ old('judul_ta', $program->judul_ta) }}"
-                                    placeholder="Judul Tugas Akhir Anda"
-                                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
-                                @error('judul_ta')
-                                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        @endif
-                        <button class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Simpan</button>
-                    </form>
-                </div>
-            @endforeach
-        </div>
-    @endif
-
     {{-- Ganti kata sandi --}} <div class="bg-bg-surface rounded-xl border border-border p-6 space-y-4">
         <h2 class="font-semibold">Ganti Kata Sandi</h2>
         <form method="POST" action="{{ route("profile.password") }}" class="space-y-4"> @csrf @method("PUT") <div>
