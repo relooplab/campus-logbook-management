@@ -1,3 +1,16 @@
+# [0.6.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.5.3...v0.6.0) (2026-08-05)
+
+
+### Bug Fixes
+
+* remove demo account credentials from login page ([08bb3ec](https://github.com/relooplab/thesis-logbook-management/commit/08bb3ecb47e9d8123674c44a38721fd53579f812))
+
+
+### Features
+
+* institution directory subscriptions, admin scopes, and storage top-ups (v0.5.4) ([231b3d0](https://github.com/relooplab/thesis-logbook-management/commit/231b3d0c337029cefc461ee332f081d434a73ad6))
+* single affiliation rule, per-context institution resolution, and sub-admin hierarchy ([6f610ec](https://github.com/relooplab/thesis-logbook-management/commit/6f610ec085f57c2eccafbb83f3aac0f9b16b0db4))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
