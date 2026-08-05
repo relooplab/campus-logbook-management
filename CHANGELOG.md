@@ -1,3 +1,10 @@
+# [0.8.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.7.0...v0.8.0) (2026-08-05)
+
+
+### Features
+
+* separate admin and dosen roles, remove dual-role dashboard switch ([c13730d](https://github.com/relooplab/thesis-logbook-management/commit/c13730dbf28ecd46a1b0508e563ccbb80e3fae48))
+
 # [0.7.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.6.0...v0.7.0) (2026-08-05)
 
 
