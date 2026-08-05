@@ -1,3 +1,10 @@
+# [0.9.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.8.0...v0.9.0) (2026-08-05)
+
+
+### Features
+
+* proactive storage quota notifications at 80% and 95% thresholds ([6c4c377](https://github.com/relooplab/thesis-logbook-management/commit/6c4c3779636a4d252787b2a932649c2d356e90f9))
+
 # [0.8.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.7.0...v0.8.0) (2026-08-05)
 
 
