@@ -51,9 +51,17 @@ class ProfileController extends Controller
             $rules['sinta'] = ['nullable', 'string', 'max:40'];
             $rules['researchgate'] = ['nullable', 'url', 'max:255'];
             $rules['jadwal_bimbingan_url'] = ['nullable', 'url', 'max:255'];
+            $rules['bimbingan_via_whatsapp'] = ['nullable', 'boolean'];
+            $rules['bimbingan_via_telegram'] = ['nullable', 'boolean'];
         }
 
         $validated = $request->validate($rules);
+
+        // Konversi nilai checkbox opt-in jalur bimbingan (khusus dosen).
+        if ($user->isDosen()) {
+            $validated['bimbingan_via_whatsapp'] = $request->boolean('bimbingan_via_whatsapp');
+            $validated['bimbingan_via_telegram'] = $request->boolean('bimbingan_via_telegram');
+        }
 
         // Upload foto profil (disk 'public' agar dapat diakses via /storage).
         if ($request->hasFile('photo')) {

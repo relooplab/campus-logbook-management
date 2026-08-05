@@ -61,7 +61,11 @@ class AuditSmokeTest extends TestCase
         $this->dosen = User::firstOrCreate(['email' => 'audit-dosen@test.com'], ['name' => 'Audit Dosen', 'password' => bcrypt('password')]);
         if (!$this->dosen->hasRole('dosen')) $this->dosen->assignRole('dosen');
         // Pastikan link jadwal bimbingan selalu tersedia agar card hyperlink ter-render di audit test.
-        $this->dosen->forceFill(['jadwal_bimbingan_url' => 'https://cal.com/audit-dosen'])->save();
+        $this->dosen->forceFill([
+            'jadwal_bimbingan_url' => 'https://cal.com/audit-dosen',
+            'bimbingan_via_whatsapp' => true,
+            'whatsapp' => '6281234567890',
+        ])->save();
 
         $this->dosen2 = User::firstOrCreate(['email' => 'audit-dosen2@test.com'], ['name' => 'Audit Dosen 2', 'password' => bcrypt('password')]);
         if (!$this->dosen2->hasRole('dosen')) $this->dosen2->assignRole('dosen');

@@ -54,9 +54,17 @@
             @if ($profile->whatsapp)
                 <a href="{{ $profile->whatsappUrl() }}" target="_blank" rel="noopener"
                     class="px-3 py-2 rounded-md bg-bg-panel hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">chat</span> WhatsApp:
-                    {{ $profile->whatsapp }}</a>
+                    {{ $profile->whatsapp }}
+                    @if ($profile->bimbingan_via_whatsapp)
+                        <span class="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-brand/10 text-brand"><span class="material-symbols-outlined icon-xs align-text-bottom">calendar_month</span> Bimbingan</span>
+                    @endif
+                </a>
                 @endif @if ($profile->telegram)
-                    <span class="px-3 py-2 rounded-md bg-bg-panel"><span class="material-symbols-outlined icon-sm align-text-bottom">send</span> Telegram: {{ $profile->telegram }}</span>
+                    <span class="px-3 py-2 rounded-md bg-bg-panel"><span class="material-symbols-outlined icon-sm align-text-bottom">send</span> Telegram: {{ $profile->telegram }}
+                        @if ($profile->bimbingan_via_telegram)
+                            <span class="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-brand/10 text-brand"><span class="material-symbols-outlined icon-xs align-text-bottom">calendar_month</span> Bimbingan</span>
+                        @endif
+                    </span>
                     @endif @if ($profile->linkedin)
                         <a href="{{ $profile->linkedin }}" target="_blank" rel="noopener"
                             class="px-3 py-2 rounded-md bg-bg-panel hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">link</span>

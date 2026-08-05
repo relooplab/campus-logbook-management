@@ -38,6 +38,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'sinta',
         'researchgate',
         'jadwal_bimbingan_url',
+        'bimbingan_via_whatsapp',
+        'bimbingan_via_telegram',
         'last_active_at',
     ];
 
@@ -283,6 +285,58 @@ class User extends Authenticatable implements MustVerifyEmail
         if ($num === '') return null;
 
         return 'https://wa.me/'.$num;
+    }
+
+    /**
+     * Normalisasi username Telegram ke tautan.
+     */
+    public function telegramUrl(): ?string
+    {
+        if (!$this->telegram) return null;
+        $username = ltrim(trim($this->telegram), '@');
+        if ($username === '') return null;
+
+        return 'https://t.me/'.$username;
+    }
+
+    /**
+     * Jalur kontak bimbingan yang aktif untuk dosen ini.
+     * Hanya mengembalikan jalur yang di-opt-in DAN datanya terisi.
+     *
+     * @return array<int, array{key: string, label: string, url: string, icon: string}>
+     */
+    public function bimbinganChannels(): array
+    {
+        $channels = [];
+
+        if ($this->jadwal_bimbingan_url) {
+            $channels[] = [
+                'key' => 'external',
+                'label' => 'Buka Jadwalkan Bimbingan',
+                'url' => $this->jadwal_bimbingan_url,
+                'icon' => 'calendar_month',
+            ];
+        }
+
+        if ($this->bimbingan_via_whatsapp && $this->whatsappUrl()) {
+            $channels[] = [
+                'key' => 'whatsapp',
+                'label' => 'Hubungi WhatsApp',
+                'url' => $this->whatsappUrl(),
+                'icon' => 'chat',
+            ];
+        }
+
+        if ($this->bimbingan_via_telegram && $this->telegramUrl()) {
+            $channels[] = [
+                'key' => 'telegram',
+                'label' => 'Hubungi Telegram',
+                'url' => $this->telegramUrl(),
+                'icon' => 'send',
+            ];
+        }
+
+        return $channels;
     }
 
     /**
