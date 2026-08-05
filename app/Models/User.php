@@ -109,6 +109,23 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Top-up storage individual (additive di atas base plan/direktori).
+     */
+    public function storageAddons(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserStorageAddon::class);
+    }
+
+    /**
+     * Pembatasan cakupan admin (prodi/departemen/fakultas).
+     * Kosong = institusi penuh.
+     */
+    public function adminScopes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AdminScope::class);
+    }
+
+    /**
      * Paket aktif user (plan dari subscription aktif terbaru).
      */
     public function activePlan(): ?Plan

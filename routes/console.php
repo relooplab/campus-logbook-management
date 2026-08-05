@@ -20,6 +20,12 @@ Schedule::command('ta:notify-inactive')
     ->timezone('Asia/Jakarta')
     ->withoutOverlapping();
 
+// Notifikasi langganan direktori yang akan berakhir (H-7 & H-1) atau baru berakhir.
+Schedule::command('directory:notify-expiring-subscriptions')
+    ->dailyAt('08:00')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();
+
 // Weekly digest (setiap Senin 07:00).
 Schedule::command('ta:weekly-digest')
     ->weeklyOn(1, '07:00')

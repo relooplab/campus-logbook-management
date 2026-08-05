@@ -313,5 +313,10 @@ Route::middleware('auth')->group(function () {
         // sendiri dari halaman ini dengan salah klik di matrix-nya sendiri.
         Route::get('/permissions', [AdminController::class, 'permissions'])->name('permissions');
         Route::post('/permissions', [AdminController::class, 'updatePermissions'])->name('permissions.update');
+
+        // Langganan direktori (institusi) — assign plan ke node direktori.
+        Route::get('/directory-subscriptions', [AdminController::class, 'directorySubscriptions'])->name('directory-subscriptions');
+        Route::post('/directory-subscriptions', [AdminController::class, 'storeDirectorySubscription'])->name('directory-subscriptions.store');
+        Route::post('/directory-subscriptions/{subscription}/cancel', [AdminController::class, 'cancelDirectorySubscription'])->name('directory-subscriptions.cancel');
     });
 });

@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.4] - 2026-08-05
+
+### Added
+
+#### Institution Subscription + Admin-Scope (Prodi/Fakultas) + Storage Top-up
+- New `directory_subscriptions` table — plans can be assigned to directory nodes (university/faculty/department/study_program), with hierarchical coverage (a subscription at a parent node automatically covers all descendants).
+- New `user_storage_addons` table — individual storage top-ups that are **always additive** on top of any base quota (institution or individual plan).
+- New `admin_scopes` table — restricts an admin account to specific study programs/departments/faculties. No rows = full institution (existing behavior unchanged).
+- `Feature::storageLimitMb()` now resolves: **override admin > directory subscriptions (institution) > individual plan > free plan**, plus **always adds** storage addons.
+- `Feature::directoryStorageLimitMb()` — sums quotas from all active directory subscriptions across different branches (deduplicated when multiple affiliations resolve to the same subscription).
+- `Feature::directorySubscriptionActive()` — checks if a directory node (or any ancestor) is covered by an active subscription.
+- `Feature::validateDirectorySubscriptionNoOverlap()` — rejects assigning a subscription to a node whose ancestor OR descendant already has an active subscription.
+- `Feature::institutionHasActiveDirectorySubscription()` — checks if an institution has at least one active directory subscription (gate for admin creation).
+- New **"Langganan Direktori"** page (`/admin/system/directory-subscriptions`) for System Admins — assign plans to directory nodes with no-overlap validation, and cancel subscriptions.
+- Admin creation in institution mode now requires: (1) an active directory subscription for the institution, and (2) each admin_scope (if any) must be covered by an active subscription.
+- New sidebar menu "Langganan Direktori" for System Admins.
+
+#### Institution Isolation (Security Patch)
+- `AdminController::users()` now filters by `institution_id` for regular admins in institution mode — admins can no longer see users from other institutions.
+- `AdminController::storeUser()` automatically sets `institution_id` to the acting admin's institution (system_admin can choose explicitly).
+- `AdminController::destroyUser()`, `resetPassword()`, `approveDosen()`, `rejectDosen()` now reject cross-institution operations.
+- `AdminController::tas()`, `sidangs()`, `entries()`, `bulkAction()` now filter data to the acting admin's institution.
+- `AdminController::storeTa()` and `storeSidang()` automatically set `institution_id` for regular admins.
+- New `canManageUser()` and `canManageTa()` helpers centralize cross-institution authorization.
+
+#### Admin-Scope Data Filtering (Fase D)
+- Admins with active `admin_scopes` are now restricted to users/TA/sidangs/entries whose affiliations match one of their scopes (OR).
+- Admins without `admin_scopes` retain full-institution access (existing behavior unchanged).
+- `canManageUser()` also checks admin_scopes — a scoped admin cannot delete/reset users outside their scope.
+
+#### Subscription Expiry Notifications
+- New `directory:notify-expiring-subscriptions` command — notifies all `system_admin` users when a directory subscription is expiring (H-7 and H-1) or has just expired (within the last day).
+- New `SubscriptionExpiringNotification` class — sends database + email notifications with the node name (prodi/fakultas), expiry date, and a link to the subscription management panel.
+- Scheduled daily at 08:00 Asia/Jakarta (consistent with other reminders).
+- `DirectorySubscription` model: added `scopeName()` and `scopeLabel()` helpers to resolve human-readable node names.
+
+### Changed
+- `Feature::storageLimitMb()` precedence: override admin (unchanged, absolute) > directory subscriptions (institution) > individual plan > free plan, + storage addons always added.
+- `AdminController::systemAdmins()` now loads `institution` and `adminScopes` relations, and passes `$institutions` to the view.
+- `admin/system-admins.blade.php` now shows institution and scope count per admin, and the create form includes institution select + dynamic scope rows (institution mode only).
+- `User` model: added `storageAddons()` and `adminScopes()` relations.
+
+### Tests
+- New `AdminInstitutionIsolationTest` (12 tests) — verifies cross-institution isolation for users, delete, reset-password, dosen approvals, and system_admin platform-level access.
+- New `DirectorySubscriptionStorageTest` (14 tests) — verifies storage quota resolution: override > directory > individual plan, addons always additive, multi-branch summation, dedup, no-overlap validation, and individual-mode fallback.
+- New `AdminCreationGateTest` (7 tests) — verifies admin creation is blocked without active subscription, allowed with subscription, scope coverage validation, and individual mode unaffected.
+- New `AdminScopeFilterTest` (7 tests) — verifies admin without scopes = full institution, admin with scopes = restricted to scope.
+- All 65 tests pass (164 assertions).
+
 ## [0.5.3] - 2026-08-05
 
 ### Added
@@ -376,6 +425,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `StudentApprovalTest` (invite by email, duplicate rejection, approve & assign role).
 - All 24 tests pass (65 assertions).
 
+[0.5.4]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.4
 [0.5.3]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.3
 [0.5.2]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.2
 [0.5.1]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.1
