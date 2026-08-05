@@ -22,9 +22,4 @@
         <p class="block text-center text-sm text-text-secondary">Belum punya akun? <a href="{{ route("register") }}"
                 class="text-brand hover:underline">Daftar</a></p>
     </form>
-    <div class="mt-4 text-xs text-text-secondary border-t border-border pt-3 space-y-1">
-        <p><strong>Admin/Dosen:</strong> admin@example.com / password</p>
-        <p><strong>Dosen 2:</strong> dosen2@example.com / password</p>
-        <p><strong>Mahasiswa:</strong> mahasiswa@example.com / password</p>
-    </div>
 @endsection

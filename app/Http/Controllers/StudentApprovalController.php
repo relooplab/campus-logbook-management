@@ -149,6 +149,10 @@ class StudentApprovalController extends Controller
 
     /**
      * Salin universitas (direktori) dari dosen ke mahasiswa.
+     *
+     * Mahasiswa HANYA boleh punya 1 afiliasi — jadi semua afiliasi lama
+     * dihapus terlebih dahulu ($replaceAll = true), lalu di-set ke afiliasi
+     * dosen. Dosen sendiri tetap boleh multi-afiliasi.
      */
     private function copyUniversityToStudent(User $dosen, User $mahasiswa): void
     {
@@ -169,7 +173,8 @@ class StudentApprovalController extends Controller
             $pivot?->pivot->faculty_id ? \App\Models\Faculty::find($pivot->pivot->faculty_id) : null,
             $pivot?->pivot->department_id ? \App\Models\Department::find($pivot->pivot->department_id) : null,
             $pivot?->pivot->study_program_id ? \App\Models\StudyProgram::find($pivot->pivot->study_program_id) : null,
-            true
+            true,
+            true // $replaceAll — mahasiswa hanya 1 afiliasi
         );
     }
 }

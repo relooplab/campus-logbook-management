@@ -23,6 +23,12 @@
                                 @if ($u->id === auth()->id())
                                     <span class="inline-block px-2 py-0.5 rounded-full text-[10px] bg-brand/10 text-brand ml-1">Anda</span>
                                 @endif
+                                @if ($u->institution)
+                                    <span class="block text-[10px] text-text-secondary mt-0.5">{{ $u->institution->institution_name }}</span>
+                                @endif
+                                @if ($u->adminScopes->isNotEmpty())
+                                    <span class="block text-[10px] text-brand mt-0.5">{{ $u->adminScopes->count() }} scope</span>
+                                @endif
                             </td>
                             <td class="py-3 px-4 table-col-identifier">{{ $u->identifier ?? "—" }}</td>
                             <td class="py-3 px-4 table-col-email">{{ $u->email }}</td>
@@ -64,6 +70,36 @@
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <input
                     type="password" name="password" required placeholder="Kata sandi"
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+
+                @if (\App\Support\Feature::isInstitution())
+                    <div>
+                        <label class="block text-sm mb-1">Institusi</label>
+                        <select name="institution_id" required class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            <option value="">— Pilih institusi —</option>
+                            @foreach ($institutions as $inst)
+                                <option value="{{ $inst->id }}">{{ $inst->institution_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm mb-1">Scope Admin (opsional)</label>
+                        <p class="text-xs text-text-secondary mb-2">Kosongkan = institusi penuh. Pilih prodi/departemen/fakultas untuk membatasi cakupan.</p>
+                        <div id="scope-list" class="space-y-2">
+                            <div class="flex gap-2">
+                                <select name="scopes[0][scope_type]" class="scope-type w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                                    <option value="study_program">Prodi</option>
+                                    <option value="department">Departemen</option>
+                                    <option value="faculty">Fakultas</option>
+                                </select>
+                                <input type="number" name="scopes[0][scope_id]" placeholder="ID node" class="w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                                <button type="button" class="remove-scope px-2 py-2 rounded-md bg-status-danger/10 text-status-danger text-xs">Hapus</button>
+                            </div>
+                        </div>
+                        <button type="button" id="add-scope" class="mt-2 text-xs text-brand hover:underline">+ Tambah scope</button>
+                    </div>
+                @endif
+
                 <button
                     class="w-full px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Simpan</button>
             </form>
@@ -102,6 +138,30 @@
         modal.addEventListener('click', function(e) {
             if (e.target === modal) modal.classList.add('hidden');
         });
+
+        // Scope admin dynamic rows.
+        var scopeList = document.getElementById('scope-list');
+        var addScopeBtn = document.getElementById('add-scope');
+        if (scopeList && addScopeBtn) {
+            var scopeIndex = 1;
+            addScopeBtn.addEventListener('click', function() {
+                var row = document.createElement('div');
+                row.className = 'flex gap-2';
+                row.innerHTML = '<select name="scopes[' + scopeIndex + '][scope_type]" class="scope-type w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">' +
+                    '<option value="study_program">Prodi</option>' +
+                    '<option value="department">Departemen</option>' +
+                    '<option value="faculty">Fakultas</option></select>' +
+                    '<input type="number" name="scopes[' + scopeIndex + '][scope_id]" placeholder="ID node" class="w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">' +
+                    '<button type="button" class="remove-scope px-2 py-2 rounded-md bg-status-danger/10 text-status-danger text-xs">Hapus</button>';
+                scopeList.appendChild(row);
+                scopeIndex++;
+            });
+            scopeList.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-scope')) {
+                    e.target.closest('.flex').remove();
+                }
+            });
+        }
     })();
 </script>
 @endsection

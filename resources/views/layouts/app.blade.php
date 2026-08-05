@@ -268,6 +268,10 @@
                         <span class="material-symbols-outlined icon-md">lock</span>
                         <span class="sidebar-label">Kelola Hak Akses</span>
                     </a>
+                    <a href="{{ route('admin.system.directory-subscriptions') }}" class="{{ $navLink }} {{ $active('admin.system.directory-subscriptions') }}">
+                        <span class="material-symbols-outlined icon-md">subscriptions</span>
+                        <span class="sidebar-label">Langganan Direktori</span>
+                    </a>
                 @endif
                 @can('admin.users')
                     <a href="{{ route('admin.users') }}" class="{{ $navLink }} {{ $active('admin.users') }}">

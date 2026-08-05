@@ -21,7 +21,7 @@ class UpdateLogbookEntryRequest extends FormRequest
     {
         $isRevisi = $this->route('logbook')?->jenis === 'revisi';
 
-        $inst = Institution::active();
+        $inst = Institution::current();
         $maxKb = $inst->maxUploadSizeMb() * 1024;
         $mimes = implode(',', $inst->allowedFileTypes());
 
@@ -46,7 +46,7 @@ class UpdateLogbookEntryRequest extends FormRequest
 
     public function messages(): array
     {
-        $inst = Institution::active();
+        $inst = Institution::current();
         $maxMb = $inst->maxUploadSizeMb();
         $types = strtoupper(implode(', ', $inst->allowedFileTypes()));
 
