@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class AdminController extends Controller
@@ -445,6 +446,66 @@ class AdminController extends Controller
         );
 
         return back()->with('success', "Paket '{$user->name}' diperbarui.");
+    }
+
+    // ------------------------------------------------------- permissions (system admin)
+
+    /**
+     * Halaman kelola hak akses: matrix permission per role + pengaturan paket.
+     */
+    public function permissions(): View
+    {
+        $roles = Role::orderBy('name')->get();
+        $permissions = Permission::orderBy('name')->get();
+        $plans = Plan::orderBy('price')->get();
+
+        return view('admin.system.permissions', compact('roles', 'permissions', 'plans'));
+    }
+
+    /**
+     * Simpan matrix permission per role (global).
+     */
+    public function updatePermissions(Request $request): RedirectResponse
+    {
+        $roles = Role::all();
+
+        foreach ($roles as $role) {
+            $granted = $request->input("permissions.{$role->id}", []);
+            $role->syncPermissions($granted);
+        }
+
+        return back()->with('success', 'Hak akses role berhasil diperbarui.');
+    }
+
+    /**
+     * Simpan pengaturan fitur paket (storage, export, import).
+     */
+    public function updatePlanFeatures(Request $request): RedirectResponse
+    {
+        $plans = Plan::all();
+
+        foreach ($plans as $plan) {
+            $validated = $request->validate([
+                "plans.{$plan->id}.label" => ['required', 'string', 'max:255'],
+                "plans.{$plan->id}.price" => ['required', 'numeric', 'min:0'],
+                "plans.{$plan->id}.storage_mb" => ['required', 'integer', 'min:0'],
+                "plans.{$plan->id}.export" => ['nullable', 'boolean'],
+                "plans.{$plan->id}.import" => ['nullable', 'boolean'],
+            ]);
+
+            $data = $validated["plans.{$plan->id}"];
+            $plan->update([
+                'label' => $data['label'],
+                'price' => $data['price'],
+                'features' => [
+                    'storage_mb' => (int) $data['storage_mb'],
+                    'export' => (bool) ($data['export'] ?? false),
+                    'import' => (bool) ($data['import'] ?? false),
+                ],
+            ]);
+        }
+
+        return back()->with('success', 'Pengaturan paket berhasil diperbarui.');
     }
 
     // ------------------------------------------------------- institusi

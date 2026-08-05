@@ -258,35 +258,51 @@
             @if ($showAdminMenu)
                 <div class="px-3 pt-4 pb-1 text-[10px] uppercase tracking-widest text-text-secondary sidebar-label">Administrasi</div>
                 @if ($user->isSystemAdmin())
-                    <a href="{{ route('admin.system.admins') }}" class="{{ $navLink }} {{ $active('admin.system.admins') }}">
-                        <span class="material-symbols-outlined icon-md">admin_panel_settings</span>
-                        <span class="sidebar-label">Kelola Admin</span>
+                    @can('system.admins')
+                        <a href="{{ route('admin.system.admins') }}" class="{{ $navLink }} {{ $active('admin.system.admins') }}">
+                            <span class="material-symbols-outlined icon-md">admin_panel_settings</span>
+                            <span class="sidebar-label">Kelola Admin</span>
+                        </a>
+                    @endcan
+                    <a href="{{ route('admin.system.permissions') }}" class="{{ $navLink }} {{ $active('admin.system.permissions') }}">
+                        <span class="material-symbols-outlined icon-md">lock</span>
+                        <span class="sidebar-label">Kelola Hak Akses</span>
                     </a>
                 @endif
-                <a href="{{ route('admin.users') }}" class="{{ $navLink }} {{ $active('admin.users') }}">
-                    <span class="material-symbols-outlined icon-md">group</span>
-                    <span class="sidebar-label">Pengguna</span>
-                </a>
-                <a href="{{ route('admin.approve-dosen') }}" class="{{ $navLink }} {{ $active('admin.approve-dosen') }}">
-                    <span class="material-symbols-outlined icon-md">approval</span>
-                    <span class="sidebar-label">Persetujuan Dosen</span>
-                </a>
-                <a href="{{ route('admin.tas') }}" class="{{ $navLink }} {{ $active('admin.tas') }}">
-                    <span class="material-symbols-outlined icon-md">archive</span>
-                    <span class="sidebar-label">Data TA</span>
-                </a>
-                <a href="{{ route('admin.entries') }}" class="{{ $navLink }} {{ $active('admin.entries') }}">
-                    <span class="material-symbols-outlined icon-md">fact_check</span>
-                    <span class="sidebar-label">Review Massal</span>
-                </a>
-                <a href="{{ route('admin.sidangs') }}" class="{{ $navLink }} {{ $active('admin.sidangs') }}">
-                    <span class="material-symbols-outlined icon-md">gavel</span>
-                    <span class="sidebar-label">Sidang</span>
-                </a>
-                <a href="{{ route('admin.institution') }}" class="{{ $navLink }} {{ $active('admin.institution') }}">
-                    <span class="material-symbols-outlined icon-md">apartment</span>
-                    <span class="sidebar-label">Institusi</span>
-                </a>
+                @can('admin.users')
+                    <a href="{{ route('admin.users') }}" class="{{ $navLink }} {{ $active('admin.users') }}">
+                        <span class="material-symbols-outlined icon-md">group</span>
+                        <span class="sidebar-label">Pengguna</span>
+                    </a>
+                    <a href="{{ route('admin.approve-dosen') }}" class="{{ $navLink }} {{ $active('admin.approve-dosen') }}">
+                        <span class="material-symbols-outlined icon-md">approval</span>
+                        <span class="sidebar-label">Persetujuan Dosen</span>
+                    </a>
+                @endcan
+                @can('admin.tas')
+                    <a href="{{ route('admin.tas') }}" class="{{ $navLink }} {{ $active('admin.tas') }}">
+                        <span class="material-symbols-outlined icon-md">archive</span>
+                        <span class="sidebar-label">Data TA</span>
+                    </a>
+                @endcan
+                @can('admin.bulk-review')
+                    <a href="{{ route('admin.entries') }}" class="{{ $navLink }} {{ $active('admin.entries') }}">
+                        <span class="material-symbols-outlined icon-md">fact_check</span>
+                        <span class="sidebar-label">Review Massal</span>
+                    </a>
+                @endcan
+                @can('admin.sidangs')
+                    <a href="{{ route('admin.sidangs') }}" class="{{ $navLink }} {{ $active('admin.sidangs') }}">
+                        <span class="material-symbols-outlined icon-md">gavel</span>
+                        <span class="sidebar-label">Sidang</span>
+                    </a>
+                @endcan
+                @can('admin.institution')
+                    <a href="{{ route('admin.institution') }}" class="{{ $navLink }} {{ $active('admin.institution') }}">
+                        <span class="material-symbols-outlined icon-md">apartment</span>
+                        <span class="sidebar-label">Institusi</span>
+                    </a>
+                @endcan
             @endif
         </nav>
 

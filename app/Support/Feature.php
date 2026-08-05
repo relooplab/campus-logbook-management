@@ -51,6 +51,38 @@ class Feature
             return true;
         }
 
+        // Permission-based granularity: jika fitur punya permission terkait,
+        // cek apakah user punya permission tersebut (langsung atau via role).
+        if ($user) {
+            $permissionMap = [
+                'logbook.create' => 'logbook.create',
+                'logbook.review' => 'logbook.review',
+                'workspace.upload' => 'workspace.upload',
+                'workspace.delete' => 'workspace.delete',
+                'workspace.manage-others' => 'workspace.manage-others',
+                'seminar.submit' => 'seminar.submit',
+                'seminar.review' => 'seminar.review',
+                'finalization.submit' => 'finalization.submit',
+                'finalization.approve' => 'finalization.approve',
+                'sidang.record' => 'sidang.record',
+                'announcement.create' => 'announcement.create',
+                'chat.send' => 'chat.send',
+                'storage.manage' => 'storage.manage',
+                'groups.create' => 'groups.create',
+                'groups.invite' => 'groups.invite',
+                'approval.manage' => 'approval.manage',
+                'admin.users' => 'admin.users',
+                'admin.tas' => 'admin.tas',
+                'admin.sidangs' => 'admin.sidangs',
+                'admin.institution' => 'admin.institution',
+                'admin.bulk-review' => 'admin.bulk-review',
+            ];
+
+            if (isset($permissionMap[$feature])) {
+                return $user->hasPermissionTo($permissionMap[$feature]);
+            }
+        }
+
         return true;
     }
 

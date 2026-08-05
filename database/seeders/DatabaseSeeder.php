@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\OrganizationalDirectoryService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
@@ -23,6 +24,9 @@ class DatabaseSeeder extends Seeder
         $adminRole = Role::findOrCreate('admin');
         $dosenRole = Role::findOrCreate('dosen');
         $mahasiswaRole = Role::findOrCreate('mahasiswa');
+
+        // Sync permissions ke role (pastikan konsisten setiap seed).
+        $this->syncPermissions();
 
         // Profil institusi default (single-row).
         Institution::firstOrCreate(
@@ -260,5 +264,63 @@ class DatabaseSeeder extends Seeder
                 ]
             );
         }
+    }
+
+    /**
+     * Sinkronkan permission ke role (konsisten dengan migration permissions).
+     */
+    private function syncPermissions(): void
+    {
+        $permissions = [
+            'logbook.create', 'logbook.review',
+            'workspace.upload', 'workspace.delete', 'workspace.manage-others',
+            'export.pdf', 'export.excel', 'import.excel',
+            'seminar.submit', 'seminar.review',
+            'finalization.submit', 'finalization.approve',
+            'sidang.record',
+            'announcement.create', 'chat.send',
+            'admin.users', 'admin.tas', 'admin.sidangs', 'admin.institution', 'admin.bulk-review',
+            'storage.manage',
+            'groups.create', 'groups.invite',
+            'approval.manage',
+            'system.admins', 'system.plans',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::findOrCreate($permission, 'web');
+        }
+
+        $systemAdmin = Role::findOrCreate('system_admin');
+        $admin = Role::findOrCreate('admin');
+        $dosen = Role::findOrCreate('dosen');
+        $mahasiswa = Role::findOrCreate('mahasiswa');
+
+        $systemAdmin->syncPermissions($permissions);
+
+        $admin->syncPermissions(array_values(array_filter(
+            $permissions,
+            fn ($p) => !str_starts_with($p, 'system.')
+        )));
+
+        $dosen->syncPermissions([
+            'logbook.review',
+            'workspace.upload', 'workspace.delete', 'workspace.manage-others',
+            'export.pdf', 'export.excel',
+            'seminar.review',
+            'finalization.approve',
+            'sidang.record',
+            'announcement.create', 'chat.send',
+            'storage.manage',
+            'groups.create', 'groups.invite',
+            'approval.manage',
+        ]);
+
+        $mahasiswa->syncPermissions([
+            'logbook.create',
+            'workspace.upload', 'workspace.delete',
+            'seminar.submit',
+            'finalization.submit',
+            'chat.send',
+        ]);
     }
 }

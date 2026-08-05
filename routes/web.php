@@ -250,44 +250,68 @@ Route::middleware('auth')->group(function () {
     Route::get('/logbook/export/excel/{mahasiswaTa}', [ExportController::class, 'exportExcel'])->name('logbook.export.excel');
 
     // ---------------------------------------------------------- admin
+    // Role gerbang di level prefix (admin|system_admin); permission granular
+    // per grup menentukan sub-fitur mana yang benar-benar bisa diakses —
+    // diatur lewat "Kelola Hak Akses" (system_admin).
     Route::prefix('admin')->name('admin.')->middleware('role_or_permission:admin|system_admin')->group(function () {
-        Route::get('/users', [AdminController::class, 'users'])->name('users');
-        Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
-        Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
-        Route::post('/users/{user}/reset-password', [AdminController::class, 'resetPassword'])->name('users.reset-password');
+        Route::middleware('permission:admin.users')->group(function () {
+            Route::get('/users', [AdminController::class, 'users'])->name('users');
+            Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
+            Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
+            Route::post('/users/{user}/reset-password', [AdminController::class, 'resetPassword'])->name('users.reset-password');
 
-        // Persetujuan registrasi dosen oleh admin.
-        Route::get('/approve-dosen', [AdminController::class, 'dosenApprovals'])->name('approve-dosen');
-        Route::post('/approve-dosen/{dosen}/approve', [AdminController::class, 'approveDosen'])->name('approve-dosen.approve');
-        Route::post('/approve-dosen/{dosen}/reject', [AdminController::class, 'rejectDosen'])->name('approve-dosen.reject');
+            // Persetujuan registrasi dosen oleh admin.
+            Route::get('/approve-dosen', [AdminController::class, 'dosenApprovals'])->name('approve-dosen');
+            Route::post('/approve-dosen/{dosen}/approve', [AdminController::class, 'approveDosen'])->name('approve-dosen.approve');
+            Route::post('/approve-dosen/{dosen}/reject', [AdminController::class, 'rejectDosen'])->name('approve-dosen.reject');
+        });
 
-        Route::get('/tas', [AdminController::class, 'tas'])->name('tas');
-        Route::post('/tas', [AdminController::class, 'storeTa'])->name('tas.store');
-        Route::put('/tas/{mahasiswaTa}', [AdminController::class, 'updateTa'])->name('tas.update');
+        Route::middleware('permission:admin.tas')->group(function () {
+            Route::get('/tas', [AdminController::class, 'tas'])->name('tas');
+            Route::post('/tas', [AdminController::class, 'storeTa'])->name('tas.store');
+            Route::put('/tas/{mahasiswaTa}', [AdminController::class, 'updateTa'])->name('tas.update');
+        });
 
-        Route::get('/entries', [AdminController::class, 'entries'])->name('entries');
-        Route::post('/bulk', [AdminController::class, 'bulkAction'])->name('bulk');
+        Route::middleware('permission:admin.bulk-review')->group(function () {
+            Route::get('/entries', [AdminController::class, 'entries'])->name('entries');
+            Route::post('/bulk', [AdminController::class, 'bulkAction'])->name('bulk');
+        });
 
-        Route::get('/sidangs', [AdminController::class, 'sidangs'])->name('sidangs');
-        Route::post('/sidangs', [AdminController::class, 'storeSidang'])->name('sidangs.store');
-        Route::delete('/sidangs/{sidang}', [AdminController::class, 'destroySidang'])->name('sidangs.destroy');
-        Route::post('/tas/{mahasiswaTa}/status', [AdminController::class, 'updateStatusTa'])->name('tas.status');
+        Route::middleware('permission:admin.sidangs')->group(function () {
+            Route::get('/sidangs', [AdminController::class, 'sidangs'])->name('sidangs');
+            Route::post('/sidangs', [AdminController::class, 'storeSidang'])->name('sidangs.store');
+            Route::delete('/sidangs/{sidang}', [AdminController::class, 'destroySidang'])->name('sidangs.destroy');
+            Route::post('/tas/{mahasiswaTa}/status', [AdminController::class, 'updateStatusTa'])->name('tas.status');
+        });
 
-        Route::get('/institusi', [AdminController::class, 'institution'])->name('institution');
-        Route::post('/institusi', [AdminController::class, 'updateInstitution'])->name('institution.update');
-        Route::post('/institusi/test-mail', [AdminController::class, 'testMail'])->name('institution.test-mail');
+        Route::middleware('permission:admin.institution')->group(function () {
+            Route::get('/institusi', [AdminController::class, 'institution'])->name('institution');
+            Route::post('/institusi', [AdminController::class, 'updateInstitution'])->name('institution.update');
+            Route::post('/institusi/test-mail', [AdminController::class, 'testMail'])->name('institution.test-mail');
+        });
     });
 
     // -------------------------------------------------- system admin (khusus)
     Route::prefix('admin/system')->name('admin.system.')->middleware('role:system_admin')->group(function () {
         // Kelola admin lain.
-        Route::get('/admins', [AdminController::class, 'systemAdmins'])->name('admins');
-        Route::post('/admins', [AdminController::class, 'storeSystemAdmin'])->name('admins.store');
-        Route::delete('/admins/{user}', [AdminController::class, 'destroySystemAdmin'])->name('admins.destroy');
-        Route::post('/admins/{user}/reset-password', [AdminController::class, 'resetSystemAdminPassword'])->name('admins.reset-password');
+        Route::middleware('permission:system.admins')->group(function () {
+            Route::get('/admins', [AdminController::class, 'systemAdmins'])->name('admins');
+            Route::post('/admins', [AdminController::class, 'storeSystemAdmin'])->name('admins.store');
+            Route::delete('/admins/{user}', [AdminController::class, 'destroySystemAdmin'])->name('admins.destroy');
+            Route::post('/admins/{user}/reset-password', [AdminController::class, 'resetSystemAdminPassword'])->name('admins.reset-password');
+        });
 
         // Paket & override per user (hanya system admin).
-        Route::get('/users/{user}/plan', [AdminController::class, 'planSettings'])->name('users.plan');
-        Route::post('/users/{user}/plan', [AdminController::class, 'updatePlanSettings'])->name('users.plan.update');
+        Route::middleware('permission:system.plans')->group(function () {
+            Route::get('/users/{user}/plan', [AdminController::class, 'planSettings'])->name('users.plan');
+            Route::post('/users/{user}/plan', [AdminController::class, 'updatePlanSettings'])->name('users.plan.update');
+            Route::post('/plans', [AdminController::class, 'updatePlanFeatures'])->name('plans.update');
+        });
+
+        // Kelola hak akses: sengaja hanya digerbangi role:system_admin (bukan
+        // permission tambahan) supaya system_admin tidak bisa mengunci diri
+        // sendiri dari halaman ini dengan salah klik di matrix-nya sendiri.
+        Route::get('/permissions', [AdminController::class, 'permissions'])->name('permissions');
+        Route::post('/permissions', [AdminController::class, 'updatePermissions'])->name('permissions.update');
     });
 });

@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.3] - 2026-08-05
+
+### Added
+
+#### Role-Based Permission Management ("Kelola Hak Akses")
+- New **"Kelola Hak Akses"** page (`/admin/system/permissions`) for System Admins — a permission matrix per role with checkboxes, plus plan feature settings (label, price, storage limit, export/import toggles).
+- New `AdminController::permissions()`, `updatePermissions()`, and `updatePlanFeatures()` methods.
+- New routes: `admin.system.permissions`, `admin.system.permissions.update`, `admin.system.plans.update`.
+- New sidebar menu "Kelola Hak Akses" for System Admins.
+- The permissions page is deliberately gated only by `role:system_admin` (not a permission) so a System Admin cannot accidentally lock themselves out of the page.
+
+#### Spatie Permission System (26 Permissions)
+- New migration `2026_08_05_000000_create_permissions_and_assign_roles.php` creates **26 permissions** across 12 groups:
+  - Logbook: `logbook.create`, `logbook.review`
+  - Workspace: `workspace.upload`, `workspace.delete`, `workspace.manage-others`
+  - Export/Import: `export.pdf`, `export.excel`, `import.excel`
+  - Seminar: `seminar.submit`, `seminar.review`
+  - Finalization: `finalization.submit`, `finalization.approve`
+  - Sidang: `sidang.record`
+  - Communication: `announcement.create`, `chat.send`
+  - Admin: `admin.users`, `admin.tas`, `admin.sidangs`, `admin.institution`, `admin.bulk-review`
+  - Storage: `storage.manage`
+  - Groups: `groups.create`, `groups.invite`
+  - Approval: `approval.manage`
+  - System: `system.admins`, `system.plans`
+- Role → permission assignments:
+  - **system_admin**: all 26 permissions
+  - **admin**: all except `system.*` (24 permissions)
+  - **dosen**: 15 permissions (review, workspace, export, seminar.review, finalization.approve, sidang, announcement, chat, storage, groups, approval)
+  - **mahasiswa**: 6 permissions (logbook.create, workspace.upload/delete, seminar.submit, finalization.submit, chat.send)
+
+#### Granular Permission Middleware on Admin Routes
+- Admin routes are now grouped by permission: `admin.users` (users + dosen approvals), `admin.tas`, `admin.bulk-review`, `admin.sidangs`, `admin.institution`.
+- System Admin routes grouped by permission: `system.admins`, `system.plans`.
+- `Feature::has()` now checks the mapped permission via `$user->hasPermissionTo()` when a feature has a corresponding permission.
+- Sidebar admin menu items (Pengguna, Persetujuan Dosen, Data TA, Review Massal, Sidang, Institusi, Kelola Admin) are now gated with `@can()`.
+- Admin dashboard "Data TA Terbaru → Kelola" link gated with `@can('admin.tas')`.
+
+### Changed
+- `DatabaseSeeder` now calls `syncPermissions()` on every seed to keep role-permission assignments consistent with the migration.
+- `User` model: removed `examiner_supervisor_names` from `$fillable` and `$casts`.
+
+### Removed
+- Migration `2026_08_05_000100_drop_examiner_supervisor_names.php` drops the unused `examiner_supervisor_names` column from `users` (feature removed in v0.5.1).
+
 ## [0.5.2] - 2026-08-05
 
 ### Added
@@ -331,6 +376,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `StudentApprovalTest` (invite by email, duplicate rejection, approve & assign role).
 - All 24 tests pass (65 assertions).
 
+[0.5.3]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.3
 [0.5.2]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.2
 [0.5.1]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.1
 [0.5.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.0

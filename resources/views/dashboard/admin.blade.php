@@ -78,7 +78,9 @@
     <div class="card p-6">
         <div class="flex items-center justify-between mb-4">
             <h2 class="font-heading font-semibold text-text-primary">Data TA Terbaru</h2>
-            <a href="{{ route('admin.tas') }}" class="text-sm text-brand hover:underline">Kelola →</a>
+            @can('admin.tas')
+                <a href="{{ route('admin.tas') }}" class="text-sm text-brand hover:underline">Kelola →</a>
+            @endcan
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">

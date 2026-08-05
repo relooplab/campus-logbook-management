@@ -29,7 +29,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'identifier',
         'nidn',
         'registration_status',
-        'examiner_supervisor_names',
         'profile_photo_path',
         'whatsapp',
         'telegram',
@@ -62,7 +61,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'examiner_supervisor_names' => 'array',
             'last_active_at' => 'datetime',
         ];
     }
