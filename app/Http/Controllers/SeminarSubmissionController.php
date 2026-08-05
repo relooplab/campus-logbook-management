@@ -40,7 +40,7 @@ class SeminarSubmissionController extends Controller
 
         $jenis = $this->jenisFromFase($mahasiswaTa);
         $jenisLabel = (new SeminarSubmission(['jenis' => $jenis]))->jenisLabel();
-        $institution = Institution::active();
+        $institution = Institution::current();
         $defaultCatatan = $institution->seminar_hardcopy_note;
         $maxMb = $institution->maxUploadSizeMb();
         $allowedTypes = $institution->allowedFileTypes();
@@ -66,7 +66,7 @@ class SeminarSubmissionController extends Controller
         abort_unless($mahasiswaTa->isMember($request->user()), 403);
         $this->authorize('viewWorkspace', $mahasiswaTa);
 
-        $institution = Institution::active();
+        $institution = Institution::current();
         $maxMb = $institution->maxUploadSizeMb();
         $allowedTypes = $institution->allowedFileTypes();
         $mimes = implode(',', array_map(fn ($t) => $t === 'pdf' ? 'pdf' : $t, $allowedTypes));
@@ -165,7 +165,7 @@ class SeminarSubmissionController extends Controller
         // Submission yang sudah dikonversi ke riwayat sidang tidak bisa diedit lagi.
         abort_unless($submission->sidang_id === null, 403, 'Submission sudah dikonversi ke riwayat sidang dan tidak dapat diubah.');
 
-        $institution = Institution::active();
+        $institution = Institution::current();
         $maxMb = $institution->maxUploadSizeMb();
         $allowedTypes = $institution->allowedFileTypes();
         $fileAccept = $institution->fileAccept();
@@ -185,7 +185,7 @@ class SeminarSubmissionController extends Controller
         // Submission yang sudah dikonversi ke riwayat sidang tidak bisa diubah.
         abort_unless($submission->sidang_id === null, 403, 'Submission sudah dikonversi ke riwayat sidang dan tidak dapat diubah.');
 
-        $institution = Institution::active();
+        $institution = Institution::current();
         $maxMb = $institution->maxUploadSizeMb();
         $allowedTypes = $institution->allowedFileTypes();
         $mimes = implode(',', array_map(fn ($t) => $t === 'pdf' ? 'pdf' : $t, $allowedTypes));

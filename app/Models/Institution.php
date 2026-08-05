@@ -37,6 +37,8 @@ class Institution extends Model
 
     /**
      * Ambil profil institusi aktif (single-row), di-cache.
+     * Ini adalah fallback global — dipakai pre-auth, console command,
+     * dan queue worker tanpa konteks user.
      */
     public static function active(): self
     {
@@ -47,6 +49,37 @@ class Institution extends Model
                 'email' => 'no-reply@example.com',
             ]);
         });
+    }
+
+    /**
+     * Ambil institusi berdasarkan ID, di-cache per-ID.
+     * Fallback ke active() jika ID null atau tidak ditemukan.
+     */
+    public static function forInstitutionId(?int $id): self
+    {
+        if (!$id) {
+            return self::active();
+        }
+
+        return Cache::remember("institution.by-id.{$id}", now()->addDay(), function () use ($id) {
+            return static::find($id) ?? self::active();
+        });
+    }
+
+    /**
+     * Ambil institusi yang relevan untuk user tertentu.
+     */
+    public static function forUser(?User $user): self
+    {
+        return self::forInstitutionId($user?->institution_id);
+    }
+
+    /**
+     * Ambil institusi yang relevan untuk user yang sedang login.
+     */
+    public static function current(): self
+    {
+        return self::forUser(auth()->user());
     }
 
     /**
@@ -88,9 +121,12 @@ class Institution extends Model
         }
     }
 
-    public static function flush(): void
+    public static function flush(?int $institutionId = null): void
     {
         Cache::forget('institution.active');
+        if ($institutionId) {
+            Cache::forget("institution.by-id.{$institutionId}");
+        }
     }
 
     /**

@@ -4,7 +4,7 @@
 
 @section('content')
 @php
-    $inst = \App\Models\Institution::active();
+    $inst = \App\Models\Institution::current();
     $maxMb = $inst->maxUploadSizeMb();
     $accept = $inst->fileAccept();
     $typesLabel = strtoupper(implode(', ', $inst->allowedFileTypes()));

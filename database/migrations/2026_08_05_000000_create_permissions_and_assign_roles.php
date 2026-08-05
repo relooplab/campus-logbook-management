@@ -40,6 +40,7 @@ return new class extends Migration
         'admin.sidangs',
         'admin.institution',
         'admin.bulk-review',
+        'admin.create-admin',
         // Storage
         'storage.manage',
         // Grup

@@ -17,7 +17,7 @@
     </style>
 </head>
 <body>
-    @php $inst = \App\Models\Institution::active(); @endphp
+    @php $inst = \App\Models\Institution::forUser($mahasiswaTa->pembimbing1); @endphp
     <h1>{{ strtoupper($inst->institution_name) }}</h1>
     @if ($inst->faculty)<h2>{{ $inst->faculty }}{{ $inst->study_program ? ' — '.$inst->study_program : '' }}</h2>@endif
     <h2 style="margin-top:4px">REKAPITULASI BIMBINGAN {{ $mahasiswaTa->isKp() ? 'KERJA PRAKTEK' : 'TUGAS AKHIR' }}</h2>

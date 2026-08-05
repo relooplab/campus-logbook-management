@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\Institution;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -25,6 +26,9 @@ class ActivityNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
+        // Resolve config mail/branding sesuai institusi penerima (queue worker).
+        Institution::forUser($notifiable)->applyToConfig();
+
         return (new MailMessage)
             ->subject($this->subject)
             ->greeting('Halo '.$notifiable->name)

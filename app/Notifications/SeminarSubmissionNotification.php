@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\Institution;
 use App\Models\SeminarSubmission;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -27,6 +28,9 @@ class SeminarSubmissionNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
+        // Resolve config mail/branding sesuai institusi penerima (queue worker).
+        Institution::forUser($notifiable)->applyToConfig();
+
         $submission = $this->submission;
         $ta = $submission->mahasiswaTa;
         $mahasiswa = $ta?->mahasiswa;

@@ -123,6 +123,10 @@ class OrganizationalDirectoryService
      * Hubungkan user ke universitas (multi-universitas). Jika sudah ada,
      * perbarui fakultas/departemen/prodi. `is_primary=true` jika belum ada
      * universitas primer lain.
+     *
+     * @param bool $replaceAll Jika true, hapus SEMUA afiliasi user terlebih
+     *                         dahulu sebelum attach yang baru. Dipakai untuk
+     *                         mahasiswa yang hanya boleh punya 1 afiliasi.
      */
     public function attachUserToUniversity(
         User $user,
@@ -130,8 +134,13 @@ class OrganizationalDirectoryService
         ?Faculty $faculty = null,
         ?Department $department = null,
         ?StudyProgram $studyProgram = null,
-        bool $isPrimary = false
+        bool $isPrimary = false,
+        bool $replaceAll = false
     ): void {
+        if ($replaceAll) {
+            $user->universities()->detach();
+        }
+
         $exists = $user->universities()->where('university_id', $university->id)->exists();
 
         if ($exists) {

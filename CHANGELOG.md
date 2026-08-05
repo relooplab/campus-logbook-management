@@ -41,6 +41,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Scheduled daily at 08:00 Asia/Jakarta (consistent with other reminders).
 - `DirectorySubscription` model: added `scopeName()` and `scopeLabel()` helpers to resolve human-readable node names.
 
+#### Single Affiliation Rule for Students
+- **Mahasiswa (students) are now restricted to exactly ONE university affiliation** — when a dosen invites or approves a student, all existing affiliations are **replaced** with the dosen's affiliation (previously they were added, allowing multi-affiliation).
+- **Dosen (lecturers) may still have multiple affiliations** (unchanged).
+- `OrganizationalDirectoryService::attachUserToUniversity()` now accepts a `$replaceAll` parameter — when `true`, all existing affiliations are detached before attaching the new one.
+- `StudentApprovalController::copyUniversityToStudent()` now passes `$replaceAll = true` to enforce the single-affiliation rule for students.
+- This ensures the scenario "dosen A from prodi X, student from prodi Y" cannot occur in the normal flow — the student always follows the dosen's affiliation.
+
+#### Per-Context Institution Resolution (fixing `Institution::active()` singleton)
+- `Institution` model now provides `forInstitutionId($id)`, `forUser($user)`, and `current()` — all resolve the institution that is **relevant to the current context** instead of the global first-row singleton.
+- `active()` is unchanged and remains the global fallback for pre-auth, console commands, and queue workers without user context.
+- `flush()` now accepts an optional `$institutionId` to flush only the specific institution's cache key.
+- `AdminController::institution()`, `updateInstitution()`, `testMail()` now use `Institution::current()` — an admin from institution B can no longer overwrite institution A's settings.
+- The 3 logbook FormRequests (`StoreLogbookEntryRequest`, `UpdateLogbookEntryRequest`, `StoreRevisiRequest`) and `SeminarSubmissionController` (4 points) now use `Institution::current()` so upload size/type limits follow the acting user's institution.
+- 5 notification classes (`ActivityNotification`, `ReminderNotification`, `SeminarSubmissionNotification`, `WeeklyDigestNotification`, `InactivityReminderNotification`) now call `Institution::forUser($notifiable)->applyToConfig()` at the start of `toMail()` — queue workers resolve the correct mail/branding config for the recipient.
+- `rekap-bimbingan.blade.php` and `catatan-perbaikan.blade.php` now use `Institution::forUser($mahasiswaTa->pembimbing1)` so document headers reflect the supervising dosen's institution.
+- `logbook/create.blade.php`, `logbook/edit.blade.php`, `logbook/create-revisi.blade.php` now use `Institution::current()` so the displayed upload limit matches backend validation.
+- `guest.blade.php` and `AppServiceProvider::boot()` are intentionally **unchanged** — they remain the global fallback.
+
+#### Security Fixes (Code Review)
+- **CRITICAL — `AdminController::bulkAction()` wrong-table filter**: The institution filter was querying `MahasiswaTa` for all actions, but `approve`/`revisi`/`delete` operate on `LogbookEntry` IDs (separate auto-increment tables). This allowed a regular admin to approve/reject/delete entries from other institutions by sending entry IDs directly. Now the filter correctly routes through `whereHas('mahasiswaTa', ...)` for LogbookEntry actions, and `MahasiswaTa` only for `assign_dosen`.
+- **MEDIUM — `ProfileController::show()` cross-institution info disclosure**: `isAdmin()` (which includes regular `admin` role) returned `true` without checking `institution_id`, allowing admin A to view full profiles of users from institution B. Now regular admins in institution mode are blocked (403) from viewing users outside their institution; `system_admin` remains platform-level.
+- **LOW/MEDIUM — `AdminController::sidangs()` dosenList not filtered**: The penguji dropdown showed all dosen across institutions to scoped admins. Now `dosenList` and `mahasiswaList` are filtered by the acting admin's institution (same pattern as `tas()`).
+- **LOW — `AdminController::storeSidang()` missing penguji role validation**: `penguji_id` was only validated with `exists:users,id`, allowing non-dosen users to be assigned as penguji. Now uses `$this->roleRule('dosen')` like `storeTa()`/`updateTa()`.
+
+#### Admin Hierarchy (Sub-Admin Creation)
+- New `admin.create-admin` permission — controls which admins can create sub-admins.
+- New `AdminController::storeSubAdmin()` — allows a scoped admin (with `admin_scopes`) to create admin accounts **below their scope** (e.g., a faculty admin can create department/prodi admins).
+- Validation rules:
+  - Only active in institution mode.
+  - Creator must have at least 1 active `admin_scope`.
+  - Each new admin's scope must be a **descendant** of at least one of the creator's scopes (cannot be wider or outside).
+  - Target node must still be covered by an active `directory_subscriptions`.
+  - Creator must have the `admin.create-admin` permission.
+- New route `POST /admin/sub-admins` (guarded by `permission:admin.users`).
+- New "Tambah Admin (Sub-Admin)" form on the users page for scoped admins.
+- Fixed bug in `Feature::institutionHasActiveDirectorySubscription()` — the `break` statement was preventing the walk-up to higher ancestors (e.g., prodi not subscribed but faculty/university is).
+
 ### Changed
 - `Feature::storageLimitMb()` precedence: override admin (unchanged, absolute) > directory subscriptions (institution) > individual plan > free plan, + storage addons always added.
 - `AdminController::systemAdmins()` now loads `institution` and `adminScopes` relations, and passes `$institutions` to the view.
@@ -52,7 +89,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `DirectorySubscriptionStorageTest` (14 tests) — verifies storage quota resolution: override > directory > individual plan, addons always additive, multi-branch summation, dedup, no-overlap validation, and individual-mode fallback.
 - New `AdminCreationGateTest` (7 tests) — verifies admin creation is blocked without active subscription, allowed with subscription, scope coverage validation, and individual mode unaffected.
 - New `AdminScopeFilterTest` (7 tests) — verifies admin without scopes = full institution, admin with scopes = restricted to scope.
-- All 65 tests pass (164 assertions).
+- New `OrganizationalDirectoryTest` additions (2 tests) — verifies students are restricted to a single affiliation (replaced on dosen invite/approve) and dosen can retain multiple affiliations.
+- New `InstitutionResolutionTest` (8 tests) — verifies per-context institution resolution: admin B cannot overwrite institution A settings, upload limits follow the acting user's institution, queued notifications use the recipient's institution config, rekap documents show the pembimbing_1 institution, fallback when id not found, and single-institution deployment unchanged.
+- New `SubAdminHierarchyTest` (7 tests) — verifies scoped admins can create sub-admins below their scope, cannot create outside/wider scopes, full-institution admins cannot create sub-admins, system_admin still works, and the `admin.create-admin` permission is enforced.
+- All 84 tests pass (218 assertions).
 
 ## [0.5.3] - 2026-08-05
 

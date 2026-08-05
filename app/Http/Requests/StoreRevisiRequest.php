@@ -22,7 +22,7 @@ class StoreRevisiRequest extends FormRequest
      */
     public function rules(): array
     {
-        $inst = Institution::active();
+        $inst = Institution::current();
         $maxKb = $inst->maxUploadSizeMb() * 1024;
         $mimes = implode(',', $inst->allowedFileTypes());
 
@@ -50,7 +50,7 @@ class StoreRevisiRequest extends FormRequest
 
     public function messages(): array
     {
-        $inst = Institution::active();
+        $inst = Institution::current();
         $maxMb = $inst->maxUploadSizeMb();
         $types = strtoupper(implode(', ', $inst->allowedFileTypes()));
 

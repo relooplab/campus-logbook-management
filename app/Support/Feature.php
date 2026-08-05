@@ -283,7 +283,8 @@ class Feature
                 if ($sub) {
                     return true;
                 }
-                break; // sudah ketemu di rantai ini, tidak perlu naik lebih tinggi
+                // JANGAN break di sini — lanjut ke leluhur yang lebih tinggi
+                // (mis. prodi tidak berlangganan, tapi fakultas/univ mungkin aktif).
             }
         }
 

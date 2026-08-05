@@ -91,6 +91,39 @@
                 </div> <button
                     class="w-full px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Simpan</button>
             </form>
+
+            @if (\App\Support\Feature::isInstitution() && auth()->user()->hasRole('admin') && !auth()->user()->isSystemAdmin() && auth()->user()->adminScopes->isNotEmpty())
+                <div class="border-t border-border mt-4 pt-4">
+                    <h2 class="font-semibold mb-1">Tambah Admin (Sub-Admin)</h2>
+                    <p class="text-xs text-text-secondary mb-3">Buat admin di bawah cakupan scope Anda (fakultas/prodi).</p>
+                    <form method="POST" action="{{ route("admin.sub-admins.store") }}" class="space-y-3"> @csrf <input
+                            type="text" name="name" required placeholder="Nama lengkap"
+                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <input
+                            type="email" name="email" required placeholder="Email"
+                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <input
+                            type="text" name="identifier" placeholder="Identifier (opsional)"
+                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <input
+                            type="password" name="password" required placeholder="Kata sandi"
+                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <div>
+                            <label class="block text-sm mb-1">Scope Admin</label>
+                            <div id="sub-scope-list" class="space-y-2">
+                                <div class="flex gap-2">
+                                    <select name="scopes[0][scope_type]" class="sub-scope-type w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                                        <option value="study_program">Prodi</option>
+                                        <option value="department">Departemen</option>
+                                        <option value="faculty">Fakultas</option>
+                                    </select>
+                                    <input type="number" name="scopes[0][scope_id]" placeholder="ID node" class="w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                                    <button type="button" class="remove-sub-scope px-2 py-2 rounded-md bg-status-danger/10 text-status-danger text-xs">Hapus</button>
+                                </div>
+                            </div>
+                            <button type="button" id="add-sub-scope" class="mt-2 text-xs text-brand hover:underline">+ Tambah scope</button>
+                        </div>
+                        <button class="w-full px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Simpan Admin</button>
+                    </form>
+                </div>
+            @endif
         </div>
     </div>
 </div> {{-- Modal reset password --}}
@@ -126,6 +159,30 @@
         modal.addEventListener('click', function(e) {
             if (e.target === modal) modal.classList.add('hidden');
         });
+
+        // Sub-admin scope dynamic rows.
+        var subScopeList = document.getElementById('sub-scope-list');
+        var addSubScopeBtn = document.getElementById('add-sub-scope');
+        if (subScopeList && addSubScopeBtn) {
+            var subScopeIndex = 1;
+            addSubScopeBtn.addEventListener('click', function() {
+                var row = document.createElement('div');
+                row.className = 'flex gap-2';
+                row.innerHTML = '<select name="scopes[' + subScopeIndex + '][scope_type]" class="sub-scope-type w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">' +
+                    '<option value="study_program">Prodi</option>' +
+                    '<option value="department">Departemen</option>' +
+                    '<option value="faculty">Fakultas</option></select>' +
+                    '<input type="number" name="scopes[' + subScopeIndex + '][scope_id]" placeholder="ID node" class="w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">' +
+                    '<button type="button" class="remove-sub-scope px-2 py-2 rounded-md bg-status-danger/10 text-status-danger text-xs">Hapus</button>';
+                subScopeList.appendChild(row);
+                subScopeIndex++;
+            });
+            subScopeList.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-sub-scope')) {
+                    e.target.closest('.flex').remove();
+                }
+            });
+        }
     })();
 </script>
 @endsection

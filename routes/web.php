@@ -260,6 +260,9 @@ Route::middleware('auth')->group(function () {
             Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
             Route::post('/users/{user}/reset-password', [AdminController::class, 'resetPassword'])->name('users.reset-password');
 
+            // Admin hierarki: admin (dengan admin_scopes) bisa buat admin di bawahnya.
+            Route::post('/sub-admins', [AdminController::class, 'storeSubAdmin'])->name('sub-admins.store');
+
             // Persetujuan registrasi dosen oleh admin.
             Route::get('/approve-dosen', [AdminController::class, 'dosenApprovals'])->name('approve-dosen');
             Route::post('/approve-dosen/{dosen}/approve', [AdminController::class, 'approveDosen'])->name('approve-dosen.approve');

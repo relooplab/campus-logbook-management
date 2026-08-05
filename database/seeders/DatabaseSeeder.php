@@ -279,7 +279,7 @@ class DatabaseSeeder extends Seeder
             'finalization.submit', 'finalization.approve',
             'sidang.record',
             'announcement.create', 'chat.send',
-            'admin.users', 'admin.tas', 'admin.sidangs', 'admin.institution', 'admin.bulk-review',
+            'admin.users', 'admin.tas', 'admin.sidangs', 'admin.institution', 'admin.bulk-review', 'admin.create-admin',
             'storage.manage',
             'groups.create', 'groups.invite',
             'approval.manage',
