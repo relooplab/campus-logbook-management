@@ -241,6 +241,10 @@
                     <span class="material-symbols-outlined icon-md">database</span>
                     <span class="sidebar-label">Penyimpanan Saya</span>
                 </a>
+                <a href="{{ route('workspace-institusi.index') }}" class="{{ $navLink }} {{ $active('workspace-institusi.*') }}">
+                    <span class="material-symbols-outlined icon-md">folder_shared</span>
+                    <span class="sidebar-label">Workspace Institusi</span>
+                </a>
                 <a href="{{ route('groups.index') }}" class="{{ $navLink }} {{ $active('groups.*') }}">
                     <span class="material-symbols-outlined icon-md">groups</span>
                     <span class="sidebar-label">Grup Dosen</span>

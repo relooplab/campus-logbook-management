@@ -91,6 +91,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New "Tambah Admin (Sub-Admin)" form on the users page for scoped admins.
 - Fixed bug in `Feature::institutionHasActiveDirectorySubscription()` — the `break` statement was preventing the walk-up to higher ancestors (e.g., prodi not subscribed but faculty/university is).
 
+#### Institution Workspace (Berbagi File per Level Direktori)
+- New `institution_workspaces`, `institution_workspace_files`, and `institution_workspace_allowed_users` tables.
+- Workspaces can be created at university/faculty/department/study_program level, tied to active `directory_subscriptions`.
+- **Access rules:**
+  - **Dosen**: only access workspace at their own prodi (default `hierarchical` mode = all dosen in same prodi), or via custom grant.
+  - **Admin**: all admins at the same node (same scope_type + scope_id) can access, upload, delete, and manage access — regardless of who created the workspace.
+  - **Admin at different level**: cannot access unless custom-granted.
+- **Fingerprint**: files record `uploaded_by` (uploader) and `deleted_by` + `deleted_at` (soft delete).
+- New `InstitutionWorkspaceController` with: dashboard grouping per level, workspace detail, create, upload, soft-delete, download/preview, and access management.
+- New routes under `/workspace-institusi`.
+- New sidebar menu "Workspace Institusi" for dosen.
+- New views: `workspace-institusi/index.blade.php` (dashboard grouping), `workspace-institusi/show.blade.php` (detail + files + manage access).
+- New `InstitutionWorkspaceTest` (9 tests) — verifies dosen same-prodi access, other-prodi denial, custom grant, admin same-node manage, admin different-level denial, uploader fingerprint, and dosen cannot upload.
+
 ### Changed
 - `Feature::storageLimitMb()` precedence: override admin (unchanged, absolute) > directory subscriptions (institution) > individual plan > free plan, + storage addons always added.
 - `AdminController::systemAdmins()` now loads `institution` and `adminScopes` relations, and passes `$institutions` to the view.

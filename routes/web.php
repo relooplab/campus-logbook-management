@@ -27,6 +27,7 @@ use App\Http\Controllers\SchedulingController;
 use App\Http\Controllers\SeminarSubmissionController;
 use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\WorkspaceController;
+use App\Http\Controllers\InstitutionWorkspaceController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -155,6 +156,18 @@ Route::middleware('auth')->group(function () {
     // -------------------------------------------------- workspace pribadi (dosen) — redirect ke /workspace
     Route::get('/workspace-saya', fn () => redirect()->route('workspace.role'))->name('workspace.personal');
     Route::post('/workspace-saya', [WorkspaceController::class, 'personalStore'])->name('workspace.personal-store');
+
+    // -------------------------------------------------- workspace institusi (berbagi di level direktori)
+    Route::prefix('workspace-institusi')->name('workspace-institusi.')->middleware('auth')->group(function () {
+        Route::get('/', [InstitutionWorkspaceController::class, 'index'])->name('index');
+        Route::get('/{workspace}', [InstitutionWorkspaceController::class, 'show'])->name('show');
+        Route::post('/', [InstitutionWorkspaceController::class, 'store'])->name('store');
+        Route::post('/{workspace}/files', [InstitutionWorkspaceController::class, 'upload'])->name('upload');
+        Route::delete('/{workspace}/files/{file}', [InstitutionWorkspaceController::class, 'destroyFile'])->name('files.destroy');
+        Route::get('/{workspace}/files/{file}/download', [InstitutionWorkspaceController::class, 'download'])->name('files.download');
+        Route::get('/{workspace}/files/{file}/preview', [InstitutionWorkspaceController::class, 'preview'])->name('files.preview');
+        Route::put('/{workspace}/access', [InstitutionWorkspaceController::class, 'updateAccess'])->name('access.update');
+    });
 
     // -------------------------------------------------- penyimpanan saya (dosen)
     Route::middleware('role_or_permission:dosen|admin')->group(function () {
