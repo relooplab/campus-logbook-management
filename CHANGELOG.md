@@ -1,3 +1,10 @@
+# [0.7.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.6.0...v0.7.0) (2026-08-05)
+
+
+### Features
+
+* institution workspace for sharing files per directory level ([76f35b4](https://github.com/relooplab/thesis-logbook-management/commit/76f35b42d29c82a56061537a524040a5470f57f0))
+
 # [0.6.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.5.3...v0.6.0) (2026-08-05)
 
 
