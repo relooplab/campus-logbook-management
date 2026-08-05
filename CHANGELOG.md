@@ -112,6 +112,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New views: `workspace-institusi/index.blade.php` (dashboard grouping), `workspace-institusi/show.blade.php` (detail + files + manage access).
 - New `InstitutionWorkspaceTest` (9 tests) — verifies dosen same-prodi access, other-prodi denial, custom grant, admin same-node manage, admin different-level denial, uploader fingerprint, and dosen cannot upload.
 
+#### Separate Admin & Dosen Roles (No Dual-Role)
+- **Admin and dosen accounts are now strictly separated** — a single account cannot have both `admin` and `dosen` roles.
+- `storeUser()` now rejects creating a user with both `admin` and `dosen` roles.
+- `admin/users.blade.php` role checkboxes are now mutually exclusive (JS).
+- **Demo seeder reworked:**
+  - `admin@example.com` → **admin-only** (removed dosen role).
+  - New `dosen1@example.com` (NIDN 0001010101) as the main dosen account.
+  - All TA/KP/group references updated from the old dual-role account to `dosen1`.
+- **Dashboard mode switch removed entirely:**
+  - Removed `DashboardController::switchDashboard()`.
+  - Removed `dashboard.switch` route.
+  - Removed the mode-switch UI from the profile dropdown.
+  - Simplified `DashboardController::__invoke()` (no dual-role check).
+  - Simplified sidebar menu logic.
+- **New demo `directory_subscriptions` seeds:**
+  - Subscription at prodi S1 Teknik Informatika.
+  - Subscription at Faculty Teknik (covers descendants).
+  - **Cross-branch case**: second university/faculty/prodi (Universitas Nusantara 2 → Fakultas Ekonomi → S1 Manajemen) with its own subscription. `dosen1` is affiliated to both branches so storage quota summation is visible.
+
 ### Changed
 - `Feature::storageLimitMb()` precedence: override admin (unchanged, absolute) > directory subscriptions (institution) > individual plan > free plan, + storage addons always added.
 - `AdminController::systemAdmins()` now loads `institution` and `adminScopes` relations, and passes `$institutions` to the view.

@@ -160,6 +160,23 @@
             if (e.target === modal) modal.classList.add('hidden');
         });
 
+        // Anti dual-role: admin & dosen saling eksklusif.
+        var roleCheckboxes = document.querySelectorAll('input[name="roles[]"]');
+        roleCheckboxes.forEach(function(cb) {
+            cb.addEventListener('change', function() {
+                if (cb.checked && cb.value === 'admin') {
+                    roleCheckboxes.forEach(function(other) {
+                        if (other.value === 'dosen') other.checked = false;
+                    });
+                }
+                if (cb.checked && cb.value === 'dosen') {
+                    roleCheckboxes.forEach(function(other) {
+                        if (other.value === 'admin') other.checked = false;
+                    });
+                }
+            });
+        });
+
         // Sub-admin scope dynamic rows.
         var subScopeList = document.getElementById('sub-scope-list');
         var addSubScopeBtn = document.getElementById('add-sub-scope');

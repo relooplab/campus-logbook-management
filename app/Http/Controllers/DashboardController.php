@@ -22,13 +22,6 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        // User dengan role admin + dosen: gunakan mode dashboard dari session.
-        if ($user->isAdmin() && $user->isDosen()) {
-            return session('dashboard_mode', 'admin') === 'dosen'
-                ? $this->dosenDashboard($user)
-                : $this->adminDashboard($user);
-        }
-
         if ($user->isAdmin()) {
             return $this->adminDashboard($user);
         }
@@ -38,23 +31,6 @@ class DashboardController extends Controller
         }
 
         return $this->mahasiswaDashboard($user);
-    }
-
-    /**
-     * Ganti mode dashboard (khusus user dengan role admin + dosen).
-     */
-    public function switchDashboard(Request $request): RedirectResponse
-    {
-        $user = $request->user();
-
-        abort_unless($user->isAdmin() && $user->isDosen(), 403);
-
-        $mode = $request->query('mode', 'admin');
-        $mode = in_array($mode, ['admin', 'dosen'], true) ? $mode : 'admin';
-
-        session(['dashboard_mode' => $mode]);
-
-        return redirect()->route('dashboard');
     }
 
     private function adminDashboard(User $user): View

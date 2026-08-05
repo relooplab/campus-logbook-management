@@ -99,7 +99,9 @@ class DatabaseSeeder extends Seeder
                     'email_verified_at' => now(),
                 ])
             );
-            $user->syncRoles($roles);
+            // Konversi role (model/string) ke nama untuk syncRoles.
+            $roleNames = array_map(fn ($r) => $r instanceof \Spatie\Permission\Models\Role ? $r->name : $r, $roles);
+            $user->syncRoles($roleNames);
             return $user;
         };
 
@@ -110,17 +112,24 @@ class DatabaseSeeder extends Seeder
             'approved'
         );
 
-        // Admin + dosen dalam satu akun (multi-role), NIDN sebagai identifier.
-        $adminDosen = $makeUser(
-            ['email' => 'admin@example.com', 'name' => 'Ir. Admin Utama, M.T.', 'identifier' => '0001010101', 'nidn' => '0001010101'],
-            [$adminRole, $dosenRole],
+        // Admin utama (role admin SAJA — tidak dosen).
+        $adminUser = $makeUser(
+            ['email' => 'admin@example.com', 'name' => 'Ir. Admin Utama, M.T.', 'identifier' => 'ADM001'],
+            [$adminRole],
             'approved'
         );
 
         // Administrator khusus (role admin saja).
         $administrator = $makeUser(
-            ['email' => 'administrator@example.com', 'name' => 'Administrator Sistem', 'identifier' => 'ADM001'],
+            ['email' => 'administrator@example.com', 'name' => 'Administrator Sistem', 'identifier' => 'ADM002'],
             [$adminRole],
+            'approved'
+        );
+
+        // Dosen utama (role dosen SAJA — terpisah dari admin).
+        $dosen1 = $makeUser(
+            ['email' => 'dosen1@example.com', 'name' => 'Dr. Dosen Satu, S.T., M.T.', 'identifier' => '0001010101', 'nidn' => '0001010101'],
+            [$dosenRole],
             'approved'
         );
 
@@ -158,7 +167,7 @@ class DatabaseSeeder extends Seeder
             ['user_id' => $mahasiswa->id, 'jenis' => MahasiswaTa::JENIS_TA],
             [
                 'judul_ta' => 'Perancangan Sistem Pengolahan Air Limbah Domestik Terpusat di Kawasan Permukiman',
-                'pembimbing_1_id' => $adminDosen->id,
+                'pembimbing_1_id' => $dosen1->id,
                 'pembimbing_2_id' => $dosen2->id,
                 'penguji_1_id' => $dosen3->id,
                 'penguji_2_id' => $dosen4->id,
@@ -188,7 +197,7 @@ class DatabaseSeeder extends Seeder
             ['user_id' => $mahasiswaKp1->id, 'jenis' => MahasiswaTa::JENIS_KP],
             [
                 'tempat_kp' => 'PT. Teknologi Nusantara',
-                'pembimbing_1_id' => $adminDosen->id,
+                'pembimbing_1_id' => $dosen1->id,
                 'pembimbing_2_id' => $dosen2->id,
                 'pembimbing_lapangan' => 'Bapak Rudi, S.T.',
                 'target_sesi' => 7,
@@ -235,14 +244,14 @@ class DatabaseSeeder extends Seeder
         $prodi = $directory->findOrCreateStudyProgram($departemen, 'S1 Teknik Informatika', '55201');
 
         // 2. Hubungkan dosen yang sudah ada ke universitas.
-        $directory->attachUserToUniversity($adminDosen, $univ, $fakultas, $departemen, $prodi, true);
+        $directory->attachUserToUniversity($dosen1, $univ, $fakultas, $departemen, $prodi, true);
         $directory->attachUserToUniversity($dosen2, $univ, $fakultas, $departemen, $prodi, true);
 
         // 3. Hubungkan dosen demo tambahan ke universitas.
         $directory->attachUserToUniversity($dosen3, $univ, $fakultas, $departemen, $prodi, true);
         $directory->attachUserToUniversity($dosen4, $univ, $fakultas, $departemen, $prodi, true);
 
-        // 4. Buat grup demo + anggota (adminDosen owner, dosen2, dosen3 & dosen4 approved).
+        // 4. Buat grup demo + anggota (dosen1 owner, dosen2, dosen3 & dosen4 approved).
         $group = Group::firstOrCreate(
             ['name' => 'Dosen Teknik Informatika Universitas Nusantara'],
             [
@@ -251,11 +260,11 @@ class DatabaseSeeder extends Seeder
                 'faculty_id' => $fakultas->id,
                 'department_id' => $departemen->id,
                 'study_program_id' => $prodi->id,
-                'created_by' => $adminDosen->id,
+                'created_by' => $dosen1->id,
             ]
         );
 
-        foreach ([$adminDosen, $dosen2, $dosen3, $dosen4] as $i => $member) {
+        foreach ([$dosen1, $dosen2, $dosen3, $dosen4] as $i => $member) {
             GroupMember::firstOrCreate(
                 ['group_id' => $group->id, 'user_id' => $member->id],
                 [
@@ -263,6 +272,63 @@ class DatabaseSeeder extends Seeder
                     'role' => $i === 0 ? 'owner' : 'member',
                 ]
             );
+        }
+
+        // ===============================================================
+        // Demo langganan direktori (directory_subscriptions) — termasuk
+        // kasus lintas-cabang agar penjumlahan kuota terlihat.
+        // ===============================================================
+        $donasiPlan = Plan::where('name', 'donasi')->first();
+
+        // 5a. Langganan di prodi S1 Teknik Informatika (soft cover).
+        if ($donasiPlan && ! \App\Models\DirectorySubscription::where('scope_type', 'study_program')
+            ->where('scope_id', $prodi->id)->exists()) {
+            \App\Models\DirectorySubscription::create([
+                'scope_type' => 'study_program',
+                'scope_id' => $prodi->id,
+                'plan_id' => $donasiPlan->id,
+                'status' => 'active',
+                'starts_at' => now(),
+                'ends_at' => null,
+                'assigned_by' => $systemAdmin->id,
+            ]);
+        }
+
+        // 5b. Cabang kedua (lintas-cabang): universitas/fakultas/prodi lain.
+        $univ2 = $directory->findOrCreateUniversity('Universitas Nusantara 2', '001002');
+        $fakultas2 = $directory->findOrCreateFaculty($univ2, 'Fakultas Ekonomi');
+        $departemen2 = $directory->findOrCreateDepartment($fakultas2, 'Departemen Manajemen');
+        $prodi2 = $directory->findOrCreateStudyProgram($departemen2, 'S1 Manajemen', '61201');
+
+        // Hubungkan dosen1 ke cabang kedua (multi-afiliasi) — agar kuota dijumlah.
+        $directory->attachUserToUniversity($dosen1, $univ2, $fakultas2, $departemen2, $prodi2, false);
+
+        // Langganan di prodi cabang kedua.
+        if ($donasiPlan && ! \App\Models\DirectorySubscription::where('scope_type', 'study_program')
+            ->where('scope_id', $prodi2->id)->exists()) {
+            \App\Models\DirectorySubscription::create([
+                'scope_type' => 'study_program',
+                'scope_id' => $prodi2->id,
+                'plan_id' => $donasiPlan->id,
+                'status' => 'active',
+                'starts_at' => now(),
+                'ends_at' => null,
+                'assigned_by' => $systemAdmin->id,
+            ]);
+        }
+
+        // 5c. Langganan di level fakultas (cover turunan) — Fakultas Teknik.
+        if ($donasiPlan && ! \App\Models\DirectorySubscription::where('scope_type', 'faculty')
+            ->where('scope_id', $fakultas->id)->exists()) {
+            \App\Models\DirectorySubscription::create([
+                'scope_type' => 'faculty',
+                'scope_id' => $fakultas->id,
+                'plan_id' => $donasiPlan->id,
+                'status' => 'active',
+                'starts_at' => now(),
+                'ends_at' => null,
+                'assigned_by' => $systemAdmin->id,
+            ]);
         }
     }
 

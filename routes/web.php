@@ -61,7 +61,6 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
-    Route::get('/dashboard/switch', [DashboardController::class, 'switchDashboard'])->name('dashboard.switch');
 
     // -------------------------------------------------- verifikasi email
     Route::get('/email/verify', fn () => view('auth.verify-email'))->name('verification.notice');

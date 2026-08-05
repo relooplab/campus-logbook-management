@@ -87,6 +87,11 @@ class AdminController extends Controller
             return back()->with('error', 'Hanya System Admin yang dapat membuat akun admin.');
         }
 
+        // Anti dual-role: admin dan dosen tidak boleh dalam satu akun.
+        if (in_array('admin', $validated['roles'], true) && in_array('dosen', $validated['roles'], true)) {
+            return back()->with('error', 'Akun admin dan dosen harus dipisah. Pilih salah satu role.');
+        }
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
