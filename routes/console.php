@@ -26,6 +26,12 @@ Schedule::command('directory:notify-expiring-subscriptions')
     ->timezone('Asia/Jakarta')
     ->withoutOverlapping();
 
+// Notifikasi proaktif kuota penyimpanan mendekati limit (80% & 95%).
+Schedule::command('storage:notify-near-limit')
+    ->dailyAt('08:00')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();
+
 // Weekly digest (setiap Senin 07:00).
 Schedule::command('ta:weekly-digest')
     ->weeklyOn(1, '07:00')

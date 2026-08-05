@@ -119,6 +119,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New views: `workspace-institusi/index.blade.php` (dashboard grouping), `workspace-institusi/show.blade.php` (detail + files + manage access).
 - New `InstitutionWorkspaceTest` (9 tests) — verifies dosen same-prodi access, other-prodi denial, custom grant, admin same-node manage, admin different-level denial, uploader fingerprint, and dosen cannot upload.
 
+#### Proactive Storage Quota Notifications
+- New `storage:notify-near-limit` command — notifies dosen when storage usage crosses **80%** (warning) or **95%** (critical) of their quota.
+- New `StorageQuotaWarningNotification` class — sends database + email notifications with usage percentage, used MB, limit MB, and a link to "Penyimpanan Saya".
+- New `storage_quota_notifications` table for anti-spam — each dosen is notified **once per threshold** (80% then 95%), not every day.
+- Scheduled daily at 08:00 Asia/Jakarta.
+- Uses `StorageUsageService::totalBytes()` + `Feature::storageLimitMb()`.
+
 #### Separate Admin & Dosen Roles (No Dual-Role)
 - **Admin and dosen accounts are now strictly separated** — a single account cannot have both `admin` and `dosen` roles.
 - `storeUser()` now rejects creating a user with both `admin` and `dosen` roles.
