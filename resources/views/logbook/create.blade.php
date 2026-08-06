@@ -8,6 +8,9 @@
     $maxMb = $inst->maxUploadSizeMb();
     $accept = $inst->fileAccept();
     $typesLabel = strtoupper(implode(', ', $inst->allowedFileTypes()));
+    $allowedTypes = $inst->allowedFileTypes();
+    $userId = auth()->id();
+    $programId = $ta->id ?? 0;
 @endphp
 <div class="max-w-2xl">
     <div class="flex items-center justify-between mb-5">
@@ -56,11 +59,22 @@
             @error('progres_kendala')
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
-            <p id="autosave-msg" class="text-xs text-text-secondary mt-1"></p>
+            <div id="autosave-container" class="flex items-center gap-2 mt-1">
+                <p id="autosave-msg" class="text-xs text-text-secondary"></p>
+                <button type="button" id="autosave-restore" class="hidden text-xs text-brand hover:underline">Pulihkan</button>
+                <button type="button" id="autosave-discard" class="hidden text-xs text-status-danger hover:underline">Buang draft</button>
+            </div>
         </div>
         <div>
             <label class="block text-xs text-text-secondary mb-1" for="lampiran">Lampiran ({{ $typesLabel }}, opsional, maks {{ $maxMb }} MB)</label>
             <input type="file" name="lampiran" id="lampiran" accept="{{ $accept }}" class="w-full text-sm">
+            <div id="file-info" class="hidden mt-2 p-3 rounded-xl bg-bg-panel border border-border text-xs space-y-1">
+                <p><span class="text-text-secondary">Nama:</span> <span id="file-name" class="font-medium text-text-primary"></span></p>
+                <p><span class="text-text-secondary">Ukuran:</span> <span id="file-size" class="font-medium text-text-primary"></span></p>
+                <p><span class="text-text-secondary">Tipe:</span> <span id="file-type" class="font-medium text-text-primary"></span></p>
+                <p id="file-valid" class="text-status-success font-medium"></p>
+                <p id="file-invalid" class="text-status-danger font-medium hidden"></p>
+            </div>
             @error('lampiran')
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
@@ -81,30 +95,114 @@
 </script>
 <script>
     // Auto-save draft ke localStorage (tiap 5 detik) + restore.
+    // Key per-user & per-program agar draft TA/KP atau akun berbeda tidak tertukar.
     (function () {
-        var KEY = 'lbta-logbook-draft';
+        var KEY = 'lbta-draft-{{ $userId }}-{{ $programId }}-logbook';
         var topik = document.getElementById('topik');
         var progres = document.getElementById('progres_kendala');
         var tanggal = document.getElementById('tanggal_bimbingan');
         var msg = document.getElementById('autosave-msg');
+        var restoreBtn = document.getElementById('autosave-restore');
+        var discardBtn = document.getElementById('autosave-discard');
+
         function save() {
             localStorage.setItem(KEY, JSON.stringify({ topik: topik.value, progres: progres.value, tanggal: tanggal.value, ts: Date.now() }));
             msg.textContent = 'Draf tersimpan otomatis ' + new Date().toLocaleTimeString();
+            restoreBtn.classList.add('hidden');
+            discardBtn.classList.add('hidden');
         }
-        // Restore draf (hanya jika ada dan tidak sedang mengisi ulang).
+
+        function restoreDraft(saved) {
+            if (saved.topik) topik.value = saved.topik;
+            if (saved.progres) progres.value = saved.progres;
+            if (saved.tanggal) tanggal.value = saved.tanggal;
+            msg.textContent = 'Draf dipulihkan dari penyimpanan otomatis.';
+            restoreBtn.classList.add('hidden');
+            discardBtn.classList.add('hidden');
+        }
+
+        function discardDraft() {
+            localStorage.removeItem(KEY);
+            topik.value = '';
+            progres.value = '';
+            tanggal.value = '{{ now()->format('Y-m-d') }}';
+            msg.textContent = 'Draft dibuang.';
+            restoreBtn.classList.add('hidden');
+            discardBtn.classList.add('hidden');
+        }
+
+        // Cek draft tersimpan.
         try {
             var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
             if (saved && saved.progres && !progres.value) {
-                if (saved.topik) topik.value = saved.topik;
-                if (saved.progres) progres.value = saved.progres;
-                if (saved.tanggal) tanggal.value = saved.tanggal;
-                msg.textContent = 'Draf dipulihkan dari penyimpanan otomatis.';
+                msg.textContent = 'Draft tersimpan ditemukan (' + new Date(saved.ts).toLocaleTimeString() + ').';
+                restoreBtn.classList.remove('hidden');
+                discardBtn.classList.remove('hidden');
             }
         } catch (e) {}
+
+        restoreBtn.addEventListener('click', function () {
+            try {
+                var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+                if (saved) restoreDraft(saved);
+            } catch (e) {}
+        });
+        discardBtn.addEventListener('click', discardDraft);
+
         setInterval(save, 5000);
         // Hapus draf saat berhasil submit.
         document.getElementById('logbook-form').addEventListener('submit', function () {
             localStorage.removeItem(KEY);
+        });
+    })();
+</script>
+<script>
+    // ---- Upload feedback: nama, ukuran, tipe, validasi sebelum submit ----
+    (function () {
+        var fileInput = document.getElementById('lampiran');
+        var infoBox = document.getElementById('file-info');
+        var nameEl = document.getElementById('file-name');
+        var sizeEl = document.getElementById('file-size');
+        var typeEl = document.getElementById('file-type');
+        var validEl = document.getElementById('file-valid');
+        var invalidEl = document.getElementById('file-invalid');
+        var maxMb = {{ $maxMb }};
+        var allowedTypes = @json($allowedTypes);
+
+        function formatBytes(bytes) {
+            if (bytes <= 0) return '0 B';
+            var units = ['B', 'KB', 'MB', 'GB'];
+            var i = Math.floor(Math.log(bytes) / Math.log(1024));
+            return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + units[i];
+        }
+
+        fileInput.addEventListener('change', function () {
+            var file = fileInput.files[0];
+            if (!file) {
+                infoBox.classList.add('hidden');
+                return;
+            }
+            infoBox.classList.remove('hidden');
+            nameEl.textContent = file.name;
+            sizeEl.textContent = formatBytes(file.size);
+            typeEl.textContent = file.type || 'Tidak diketahui';
+
+            var ext = (file.name.split('.').pop() || '').toLowerCase();
+            var sizeOk = file.size <= maxMb * 1024 * 1024;
+            var typeOk = allowedTypes.includes(ext);
+
+            if (sizeOk && typeOk) {
+                validEl.textContent = '✓ File valid. Siap diunggah.';
+                validEl.classList.remove('hidden');
+                invalidEl.classList.add('hidden');
+            } else {
+                validEl.classList.add('hidden');
+                invalidEl.classList.remove('hidden');
+                var reasons = [];
+                if (!sizeOk) reasons.push('Ukuran melebihi batas ' + maxMb + ' MB');
+                if (!typeOk) reasons.push('Format .' + ext + ' tidak diizinkan (hanya: ' + allowedTypes.join(', ') + ')');
+                invalidEl.textContent = '✗ ' + reasons.join('. ') + '.';
+            }
         });
     })();
 </script>

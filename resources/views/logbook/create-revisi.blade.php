@@ -133,8 +133,18 @@
         </div>
 
         {{-- ===== Berkas ===== --}}
-        <div> <label class="block text-sm font-medium mb-1" for="lampiran">File Perbaikan/Draft ({{ $typesLabel }}, wajib, maks {{ $maxMb }} MB)</label> <input type="file" name="lampiran" id="lampiran" accept="{{ $accept }}" required
-                class="w-full text-sm"> @error("lampiran")
+        <div>
+            <label class="block text-sm font-medium mb-1" for="lampiran">File Perbaikan/Draft ({{ $typesLabel }}, wajib, maks {{ $maxMb }} MB)</label>
+            <input type="file" name="lampiran" id="lampiran" accept="{{ $accept }}" required
+                class="w-full text-sm">
+            <div id="revisi-file-info" class="hidden mt-2 p-3 rounded-xl bg-bg-panel border border-border text-xs space-y-1">
+                <p><span class="text-text-secondary">Nama:</span> <span id="revisi-file-name" class="font-medium text-text-primary"></span></p>
+                <p><span class="text-text-secondary">Ukuran:</span> <span id="revisi-file-size" class="font-medium text-text-primary"></span></p>
+                <p><span class="text-text-secondary">Tipe:</span> <span id="revisi-file-type" class="font-medium text-text-primary"></span></p>
+                <p id="revisi-file-valid" class="text-status-success font-medium"></p>
+                <p id="revisi-file-invalid" class="text-status-danger font-medium hidden"></p>
+            </div>
+            @error("lampiran")
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
         </div>
@@ -228,14 +238,78 @@
         syncParentFeedback();
     }
 
-    // Auto-save draft ke localStorage (tiap 5 detik) + restore.
+    // ---- Upload feedback: nama, ukuran, tipe, validasi sebelum submit ----
     (function () {
-        var KEY = 'lbta-revisi-draft';
+        var fileInput = document.getElementById('lampiran');
+        var infoBox = document.getElementById('revisi-file-info');
+        var nameEl = document.getElementById('revisi-file-name');
+        var sizeEl = document.getElementById('revisi-file-size');
+        var typeEl = document.getElementById('revisi-file-type');
+        var validEl = document.getElementById('revisi-file-valid');
+        var invalidEl = document.getElementById('revisi-file-invalid');
+        var maxMb = {{ $maxMb }};
+        var allowedTypes = @json($inst->allowedFileTypes());
+
+        function formatBytes(bytes) {
+            if (bytes <= 0) return '0 B';
+            var units = ['B', 'KB', 'MB', 'GB'];
+            var i = Math.floor(Math.log(bytes) / Math.log(1024));
+            return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + units[i];
+        }
+
+        fileInput.addEventListener('change', function () {
+            var file = fileInput.files[0];
+            if (!file) {
+                infoBox.classList.add('hidden');
+                return;
+            }
+            infoBox.classList.remove('hidden');
+            nameEl.textContent = file.name;
+            sizeEl.textContent = formatBytes(file.size);
+            typeEl.textContent = file.type || 'Tidak diketahui';
+
+            var ext = (file.name.split('.').pop() || '').toLowerCase();
+            var sizeOk = file.size <= maxMb * 1024 * 1024;
+            var typeOk = allowedTypes.includes(ext);
+
+            if (sizeOk && typeOk) {
+                validEl.textContent = '✓ File valid. Siap diunggah.';
+                validEl.classList.remove('hidden');
+                invalidEl.classList.add('hidden');
+            } else {
+                validEl.classList.add('hidden');
+                invalidEl.classList.remove('hidden');
+                var reasons = [];
+                if (!sizeOk) reasons.push('Ukuran melebihi batas ' + maxMb + ' MB');
+                if (!typeOk) reasons.push('Format .' + ext + ' tidak diizinkan (hanya: ' + allowedTypes.join(', ') + ')');
+                invalidEl.textContent = '✗ ' + reasons.join('. ') + '.';
+            }
+        });
+    })();
+
+    // Auto-save draft ke localStorage (tiap 5 detik) + restore.
+    // Key per-user & per-program agar draft TA/KP atau akun berbeda tidak tertukar.
+    (function () {
+        var KEY = 'lbta-draft-{{ auth()->id() }}-{{ $ta->id ?? 0 }}-revisi';
         var form = document.getElementById('revisi-form');
         var msg = document.createElement('p');
         msg.className = 'text-xs text-text-secondary mt-1';
         msg.id = 'revisi-autosave-msg';
         form.appendChild(msg);
+
+        var restoreBtn = document.createElement('button');
+        restoreBtn.type = 'button';
+        restoreBtn.id = 'revisi-autosave-restore';
+        restoreBtn.className = 'hidden text-xs text-brand hover:underline';
+        restoreBtn.textContent = 'Pulihkan';
+        form.appendChild(restoreBtn);
+
+        var discardBtn = document.createElement('button');
+        discardBtn.type = 'button';
+        discardBtn.id = 'revisi-autosave-discard';
+        discardBtn.className = 'hidden text-xs text-status-danger hover:underline';
+        discardBtn.textContent = 'Buang draft';
+        form.appendChild(discardBtn);
 
         function collect() {
             var data = {
@@ -259,23 +333,53 @@
         function save() {
             localStorage.setItem(KEY, JSON.stringify(collect()));
             msg.textContent = 'Draf tersimpan otomatis ' + new Date().toLocaleTimeString();
+            restoreBtn.classList.add('hidden');
+            discardBtn.classList.add('hidden');
         }
 
-        // Restore draft (hanya jika ada dan belum mengisi ulang).
+        function restoreDraft(saved) {
+            if (saved.tanggal_pengiriman) document.getElementById('tanggal_pengiriman').value = saved.tanggal_pengiriman;
+            if (saved.parent_entry_id) document.getElementById('parent_entry_id').value = saved.parent_entry_id;
+            document.getElementById('progres_kendala').value = saved.progres_kendala;
+            // Restore riwayat rows.
+            if (saved.riwayat && saved.riwayat.length) {
+                tbody.innerHTML = '';
+                saved.riwayat.forEach(function (r) { addRow(r); });
+            }
+            msg.textContent = 'Draf dipulihkan dari penyimpanan otomatis.';
+            restoreBtn.classList.add('hidden');
+            discardBtn.classList.add('hidden');
+        }
+
+        function discardDraft() {
+            localStorage.removeItem(KEY);
+            document.getElementById('tanggal_pengiriman').value = '';
+            document.getElementById('parent_entry_id').value = '';
+            document.getElementById('progres_kendala').value = '';
+            tbody.innerHTML = '';
+            addRow();
+            msg.textContent = 'Draft dibuang.';
+            restoreBtn.classList.add('hidden');
+            discardBtn.classList.add('hidden');
+        }
+
+        // Cek draft tersimpan.
         try {
             var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
             if (saved && saved.progres_kendala && !document.getElementById('progres_kendala').value) {
-                if (saved.tanggal_pengiriman) document.getElementById('tanggal_pengiriman').value = saved.tanggal_pengiriman;
-                if (saved.parent_entry_id) document.getElementById('parent_entry_id').value = saved.parent_entry_id;
-                document.getElementById('progres_kendala').value = saved.progres_kendala;
-                // Restore riwayat rows.
-                if (saved.riwayat && saved.riwayat.length) {
-                    tbody.innerHTML = '';
-                    saved.riwayat.forEach(function (r) { addRow(r); });
-                }
-                msg.textContent = 'Draf dipulihkan dari penyimpanan otomatis.';
+                msg.textContent = 'Draft tersimpan ditemukan (' + new Date(saved.ts || Date.now()).toLocaleTimeString() + ').';
+                restoreBtn.classList.remove('hidden');
+                discardBtn.classList.remove('hidden');
             }
         } catch (e) {}
+
+        restoreBtn.addEventListener('click', function () {
+            try {
+                var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+                if (saved) restoreDraft(saved);
+            } catch (e) {}
+        });
+        discardBtn.addEventListener('click', discardDraft);
 
         setInterval(save, 5000);
         // Hapus draft saat berhasil submit.
