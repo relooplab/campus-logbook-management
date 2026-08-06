@@ -1,3 +1,13 @@
+# [0.16.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.15.0...v0.16.0) (2026-08-06)
+
+
+### Features
+
+* implement custom program naming and phase labeling for TA/KP ([6f375d6](https://github.com/relooplab/thesis-logbook-management/commit/6f375d6b40563e2f4e704e77557e310b0f319fdd))
+* **logbook:** validasi file upload dan autosave draft per-user dengan tombol pulihkan/buang ([ac50a0c](https://github.com/relooplab/thesis-logbook-management/commit/ac50a0c4ea1c11f370a2781a2242d24989ea286b))
+* **profile:** add profile completeness check before selecting advisor ([d15e11a](https://github.com/relooplab/thesis-logbook-management/commit/d15e11af7ea424e6dd022cf91a588d83c1de2e4b))
+* **register:** enhance role selection UI and improve role handling logic ([55ca692](https://github.com/relooplab/thesis-logbook-management/commit/55ca6923a8cd81fa83bb3a8b789f5699cc41a10d))
+
 # [0.15.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.14.0...v0.15.0) (2026-08-06)
 
 
