@@ -12,9 +12,8 @@ use Illuminate\View\View;
 
 /**
  * Registrasi mandiri mahasiswa & dosen.
- * - Mahasiswa: akun dibuat role 'mahasiswa' status ACTIVE (setelah verifikasi email),
- *   lalu memilih dosen pembimbing di profil.
- * - Dosen: akun dibuat role 'dosen' status PENDING, lalu disetujui admin.
+ * - Mahasiswa: akun dibuat role 'mahasiswa' status ACTIVE (langsung aktif, tanpa verifikasi email).
+ * - Dosen: akun dibuat role 'dosen' status ACTIVE (langsung aktif, tanpa persetujuan admin).
  */
 class RegisterController extends Controller
 {
@@ -42,9 +41,8 @@ class RegisterController extends Controller
 
         $role = $validated['role'] ?? 'mahasiswa';
 
-        // Alur baru: mahasiswa langsung aktif (verifikasi email), belum attach dosen.
-        // Dosen tetap menunggu persetujuan admin (pending).
-        $registrationStatus = $role === 'dosen' ? 'pending' : 'active';
+        // Semua role langsung aktif (tanpa verifikasi email / persetujuan admin).
+        $registrationStatus = 'active';
 
         $user = User::create([
             'name' => $validated['name'],
@@ -52,6 +50,7 @@ class RegisterController extends Controller
             'password' => Hash::make($validated['password']),
             'nidn' => $role === 'dosen' ? ($validated['nidn'] ?? null) : null,
             'registration_status' => $registrationStatus,
+            'email_verified_at' => now(),
         ]);
         $user->syncRoles([$role]);
 
@@ -60,12 +59,11 @@ class RegisterController extends Controller
             $this->attachUniversity($user, $validated);
         }
 
-        // Kirim email verifikasi (semua role) — bungkus agar kegagalan mail
-        // tidak menggagalkan registrasi (mis. SMTP mati / tidak terkonfigurasi).
-        $this->bestEffort(fn () => $user->sendEmailVerificationNotification());
+        // Login otomatis setelah registrasi.
+        auth()->login($user);
 
-        return redirect()->route('verification.notice')
-            ->with('status', 'Registrasi berhasil. Silakan verifikasi email Anda.');
+        return redirect()->route('dashboard')
+            ->with('success', 'Registrasi berhasil. Selamat datang!');
     }
 
     /**

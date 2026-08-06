@@ -38,7 +38,18 @@ class ProgramContext
             }
         }
 
-        return $user->programAktif ?: $programs->first();
+        // Prioritas: program aktif → program pending_approval → program pertama.
+        $active = $user->programAktif;
+        if ($active) {
+            return $active;
+        }
+
+        $pending = $programs->firstWhere('status_ta', \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL);
+        if ($pending) {
+            return $pending;
+        }
+
+        return $programs->first();
     }
 
     /**

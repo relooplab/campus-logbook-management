@@ -23,34 +23,7 @@ class LoginController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $user = $request->user();
-
-            // Dosen yang belum disetujui admin (pending) belum boleh login.
-            if ($user->isDosen() && $user->registration_status === 'pending') {
-                Auth::logout();
-                $request->session()->invalidate();
-
-                return back()
-                    ->withErrors(['email' => 'Akun dosen masih menunggu persetujuan admin.'])
-                    ->onlyInput('email');
-            }
-
-            // Mahasiswa yang ditolak tidak boleh login.
-            if ($user->isMahasiswa() && $user->registration_status === 'rejected') {
-                Auth::logout();
-                $request->session()->invalidate();
-
-                return back()
-                    ->withErrors(['email' => 'Akun Anda ditolak. Hubungi admin.'])
-                    ->onlyInput('email');
-            }
-
             $request->session()->regenerate();
-
-            // Jika email belum diverifikasi, arahkan ke halaman verifikasi.
-            if (!$user->hasVerifiedEmail()) {
-                return redirect()->route('verification.notice');
-            }
 
             return redirect()->intended(route('dashboard'));
         }

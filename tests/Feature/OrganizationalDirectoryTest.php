@@ -59,7 +59,7 @@ class OrganizationalDirectoryTest extends AuditSmokeTest
             'study_program_code' => '55201',
         ]);
 
-        $response->assertRedirect(route('verification.notice'));
+        $response->assertRedirect(route('dashboard'));
 
         $user = User::where('email', 'dosen-baru@test.com')->first();
         $this->assertNotNull($user);
