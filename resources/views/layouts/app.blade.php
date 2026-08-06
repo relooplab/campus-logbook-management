@@ -187,6 +187,23 @@
             </a>
 
             @if ($user->isMahasiswa())
+                @php
+                    $programs = \App\Support\ProgramContext::programs($user);
+                    $currentProgram = \App\Support\ProgramContext::resolve($user, request());
+                @endphp
+                @if ($programs->count() > 1)
+                    <div class="px-3 pt-2 pb-1 sidebar-label">
+                        <div class="flex gap-1">
+                            @foreach ($programs as $p)
+                                <a href="{{ route('dashboard', ['program' => $p->jenis]) }}"
+                                    class="flex-1 text-center px-2 py-1 rounded-lg text-[10px] font-medium border transition-colors
+                                    {{ $currentProgram && $currentProgram->id === $p->id ? 'bg-brand-fill text-white border-brand-fill' : 'bg-bg-surface text-text-secondary border-border hover:bg-bg-hover' }}">
+                                    {{ $p->jenisLabel() }}
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
                 <a href="{{ route('logbook.index') }}" class="{{ $navLink }} {{ $active('logbook.index') }}">
                     <span class="material-symbols-outlined icon-md">menu_book</span>
                     <span class="sidebar-label">Logbook</span>

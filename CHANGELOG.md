@@ -1,3 +1,11 @@
+# [0.13.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.12.0...v0.13.0) (2026-08-06)
+
+
+### Features
+
+* **action-items:** tampilkan checklist action items di detail logbook & halaman feedback
+* **program-context:** program selector TA/KP konsisten di dashboard, logbook, workspace, dan sidebar
+
 # [0.12.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.11.0...v0.12.0) (2026-08-06)
 
 
