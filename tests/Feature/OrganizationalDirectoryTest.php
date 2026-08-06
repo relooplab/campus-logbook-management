@@ -56,7 +56,6 @@ class OrganizationalDirectoryTest extends AuditSmokeTest
             'faculty_name' => 'Fakultas Teknik',
             'department_name' => 'Departemen Teknik Elektro',
             'study_program_name' => 'S1 Teknik Elektro',
-            'study_program_code' => '55201',
         ]);
 
         $response->assertRedirect(route('verification.notice'));
