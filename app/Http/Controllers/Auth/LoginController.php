@@ -23,6 +23,18 @@ class LoginController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $user = $request->user();
+
+            // Akun yang benar-benar ditolak/dinonaktifkan tidak boleh login.
+            if ($user->registration_status === 'rejected') {
+                Auth::logout();
+                $request->session()->invalidate();
+
+                return back()
+                    ->withErrors(['email' => 'Akun Anda ditolak. Hubungi admin.'])
+                    ->onlyInput('email');
+            }
+
             $request->session()->regenerate();
 
             return redirect()->intended(route('dashboard'));

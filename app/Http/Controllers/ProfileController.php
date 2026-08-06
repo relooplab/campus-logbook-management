@@ -107,9 +107,9 @@ class ProfileController extends Controller
         $user = $request->user();
         abort_unless($user->isMahasiswa(), 403);
 
-        // Daftar dosen yang sudah disetujui admin.
+        // Daftar dosen yang aktif (registration_status = active).
         $dosenList = \App\Models\User::role('dosen')
-            ->where('registration_status', 'approved')
+            ->where('registration_status', 'active')
             ->orderBy('name')
             ->get();
 
@@ -137,7 +137,7 @@ class ProfileController extends Controller
             'penguji_2_id' => ['nullable', 'exists:users,id'],
         ]);
 
-        // Pastikan dosen yang dipilih benar-benar dosen approved.
+        // Pastikan dosen yang dipilih benar-benar dosen aktif.
         $dosenIds = array_filter([
             $validated['pembimbing_1_id'],
             $validated['pembimbing_2_id'] ?? null,
@@ -145,7 +145,7 @@ class ProfileController extends Controller
             $validated['penguji_2_id'] ?? null,
         ]);
         $validDosen = \App\Models\User::role('dosen')
-            ->where('registration_status', 'approved')
+            ->where('registration_status', 'active')
             ->whereIn('id', $dosenIds)
             ->count();
         abort_unless($validDosen === count($dosenIds), 422, 'Dosen yang dipilih tidak valid.');

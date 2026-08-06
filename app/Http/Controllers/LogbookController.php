@@ -25,7 +25,7 @@ class LogbookController extends Controller
     public function create(Request $request): View
     {
         $ta = ProgramContext::resolve($request->user(), $request);
-        abort_unless($ta, 403, 'Anda belum memiliki program (TA/KP). Pilih dosen terlebih dahulu.');
+        abort_unless($ta, 403, 'Anda belum memiliki program aktif (TA/KP).');
 
         // Auto-fill: sesi berikutnya & topik sebelumnya.
         $lastEntry = $ta->entries()
@@ -42,7 +42,7 @@ class LogbookController extends Controller
     public function createRevisi(Request $request): View
     {
         $ta = ProgramContext::resolve($request->user(), $request);
-        abort_unless($ta, 403, 'Anda belum memiliki program (TA/KP). Pilih dosen terlebih dahulu.');
+        abort_unless($ta, 403, 'Anda belum memiliki program aktif (TA/KP).');
 
         // Mahasiswa dapat membuat entri revisi tanpa harus ada logbook dulu.
         // Daftar parent (entri berstatus revisi) tetap tersedia untuk dipilih.
@@ -66,8 +66,7 @@ class LogbookController extends Controller
         $data = $request->validated();
 
         // Tombol "Kirim ke Pembimbing" langsung mengirim (bukan draf).
-        // Jika program masih pending_approval, paksa draft (belum bisa submit ke dosen).
-        $submit = $ta->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF && $request->boolean('submit');
+        $submit = $request->boolean('submit');
         $sesiKe = $ta->entries()
             ->where('jenis', LogbookEntry::JENIS_LOGBOOK)
             ->count() + 1;
@@ -120,8 +119,7 @@ class LogbookController extends Controller
         abort_unless($ta, 403);
 
         $data = $request->validated();
-        // Jika program masih pending_approval, paksa draft (belum bisa submit ke dosen).
-        $submit = $ta->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF && $request->boolean('submit');
+        $submit = $request->boolean('submit');
 
         [$parent, $entry] = DB::transaction(function () use ($ta, $data, $submit) {
             // Mahasiswa dapat membuat entri revisi tanpa harus ada logbook dulu.
@@ -269,7 +267,7 @@ class LogbookController extends Controller
         abort_unless($user->isMahasiswa(), 403);
 
         $ta = ProgramContext::resolve($user, $request);
-        abort_unless($ta, 403, 'Anda belum memiliki program (TA/KP). Pilih dosen terlebih dahulu.');
+        abort_unless($ta, 403, 'Anda belum memiliki program aktif (TA/KP).');
 
         $feedbacks = $ta->entries()
             ->whereNotNull('feedback_dosen')
@@ -495,6 +493,9 @@ class LogbookController extends Controller
     {
         $this->authorize('submit', $logbook);
 
+        // Hanya program aktif yang bisa submit.
+        abort_unless($logbook->mahasiswaTa?->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif. Tunggu dosen menyetujui program Anda.');
+
         $logbook->update([
             'status' => LogbookEntry::STATUS_SUBMITTED,
             'submitted_at' => now(),
@@ -513,6 +514,9 @@ class LogbookController extends Controller
     public function approve(LogbookEntry $logbook): RedirectResponse
     {
         $this->authorize('review', $logbook);
+
+        // Hanya program aktif yang bisa di-review.
+        abort_unless($logbook->mahasiswaTa?->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif.');
 
         $logbook->update([
             'status' => LogbookEntry::STATUS_APPROVED,
@@ -538,6 +542,9 @@ class LogbookController extends Controller
     public function requestRevisi(Request $request, LogbookEntry $logbook): RedirectResponse
     {
         $this->authorize('review', $logbook);
+
+        // Hanya program aktif yang bisa di-review.
+        abort_unless($logbook->mahasiswaTa?->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif.');
 
         $validated = $request->validate([
             'feedback_dosen' => ['required', 'string', 'min:20'],

@@ -142,40 +142,6 @@ class AdminInstitutionIsolationTest extends AuditSmokeTest
         $this->assertDatabaseMissing('users', ['id' => $this->dosenA->id]);
     }
 
-    public function test_admin_a_cannot_approve_dosen_from_institution_b(): void
-    {
-        // Dosen B status pending.
-        $this->dosenB->update(['registration_status' => 'pending']);
-
-        $response = $this->actingAs($this->adminA)
-            ->post(route('admin.approve-dosen.approve', $this->dosenB));
-
-        $response->assertRedirect();
-        $response->assertSessionHas('error', 'Tidak dapat mengelola user dari institusi lain.');
-
-        $this->assertDatabaseHas('users', [
-            'id' => $this->dosenB->id,
-            'registration_status' => 'pending',
-        ]);
-    }
-
-    public function test_admin_a_cannot_reject_dosen_from_institution_b(): void
-    {
-        // Dosen B status pending.
-        $this->dosenB->update(['registration_status' => 'pending']);
-
-        $response = $this->actingAs($this->adminA)
-            ->post(route('admin.approve-dosen.reject', $this->dosenB));
-
-        $response->assertRedirect();
-        $response->assertSessionHas('error', 'Tidak dapat mengelola user dari institusi lain.');
-
-        $this->assertDatabaseHas('users', [
-            'id' => $this->dosenB->id,
-            'registration_status' => 'pending',
-        ]);
-    }
-
     public function test_admin_a_store_user_gets_own_institution_id(): void
     {
         $response = $this->actingAs($this->adminA)->post(route('admin.users.store'), [
@@ -230,14 +196,4 @@ class AdminInstitutionIsolationTest extends AuditSmokeTest
         $this->assertDatabaseMissing('users', ['id' => $this->dosenB->id]);
     }
 
-    public function test_admin_a_cannot_see_dosen_approvals_from_institution_b(): void
-    {
-        // Dosen B status pending.
-        $this->dosenB->update(['registration_status' => 'pending']);
-
-        $response = $this->actingAs($this->adminA)->get(route('admin.approve-dosen'));
-
-        $response->assertOk();
-        $response->assertDontSee('Dosen B');
-    }
 }

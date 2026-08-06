@@ -17,6 +17,7 @@ class FinalizationController extends Controller
     public function index(Request $request, MahasiswaTa $mahasiswaTa): View
     {
         abort_unless($mahasiswaTa->isMember($request->user()), 403);
+        abort_unless($mahasiswaTa->status_ta === MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif.');
         $finalization = $mahasiswaTa->finalization ?? $mahasiswaTa->finalization()->create([]);
         return view('finalization.index', compact('mahasiswaTa', 'finalization'));
     }
@@ -24,6 +25,7 @@ class FinalizationController extends Controller
     public function store(Request $request, MahasiswaTa $mahasiswaTa): RedirectResponse
     {
         abort_unless($mahasiswaTa->isMember($request->user()), 403);
+        abort_unless($mahasiswaTa->status_ta === MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif.');
         $isKp = $mahasiswaTa->isKp();
         $items = $isKp ? ['full_file'] : self::ITEMS;
 

@@ -296,10 +296,6 @@
                         <span class="material-symbols-outlined icon-md">group</span>
                         <span class="sidebar-label">Pengguna</span>
                     </a>
-                    <a href="{{ route('admin.approve-dosen') }}" class="{{ $navLink }} {{ $active('admin.approve-dosen') }}">
-                        <span class="material-symbols-outlined icon-md">approval</span>
-                        <span class="sidebar-label">Persetujuan Dosen</span>
-                    </a>
                 @endcan
                 @can('admin.tas')
                     <a href="{{ route('admin.tas') }}" class="{{ $navLink }} {{ $active('admin.tas') }}">

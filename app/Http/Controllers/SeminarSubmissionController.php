@@ -36,6 +36,7 @@ class SeminarSubmissionController extends Controller
     public function create(Request $request, MahasiswaTa $mahasiswaTa): View
     {
         abort_unless($mahasiswaTa->isMember($request->user()), 403);
+        abort_unless($mahasiswaTa->status_ta === MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif.');
         $this->authorize('viewWorkspace', $mahasiswaTa);
 
         $jenis = $this->jenisFromFase($mahasiswaTa);
@@ -64,6 +65,7 @@ class SeminarSubmissionController extends Controller
     public function store(Request $request, MahasiswaTa $mahasiswaTa): RedirectResponse
     {
         abort_unless($mahasiswaTa->isMember($request->user()), 403);
+        abort_unless($mahasiswaTa->status_ta === MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif.');
         $this->authorize('viewWorkspace', $mahasiswaTa);
 
         $institution = Institution::current();

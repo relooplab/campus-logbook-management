@@ -55,6 +55,9 @@ class QuickReviewController extends Controller
     {
         $this->authorize('review', $logbook);
 
+        // Hanya program aktif yang bisa di-review.
+        abort_unless($logbook->mahasiswaTa?->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif.');
+
         $logbook->update([
             'status' => LogbookEntry::STATUS_APPROVED,
             'reviewed_at' => now(),
@@ -77,6 +80,9 @@ class QuickReviewController extends Controller
     public function revisiNext(Request $request, LogbookEntry $logbook): RedirectResponse
     {
         $this->authorize('review', $logbook);
+
+        // Hanya program aktif yang bisa di-review.
+        abort_unless($logbook->mahasiswaTa?->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif.');
 
         $validated = $request->validate([
             'feedback_dosen' => ['required', 'string', 'min:20'],

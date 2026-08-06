@@ -45,8 +45,9 @@ class LogbookEntryPolicy
             return false;
         }
 
+        // Hanya program aktif yang bisa membuat logbook.
         return $ta
-            ? $ta->isMember($user)
+            ? $ta->isMember($user) && $ta->status_ta === MahasiswaTa::STATUS_AKTIF
             : $user->programAktif()->exists();
     }
 
@@ -78,12 +79,16 @@ class LogbookEntryPolicy
 
     public function update(User $user, LogbookEntry $entry): bool
     {
-        return $this->owner($user, $entry) && $entry->isEditable();
+        return $this->owner($user, $entry)
+            && $entry->isEditable()
+            && $entry->mahasiswaTa?->status_ta === MahasiswaTa::STATUS_AKTIF;
     }
 
     public function submit(User $user, LogbookEntry $entry): bool
     {
-        return $this->owner($user, $entry) && $entry->isEditable();
+        return $this->owner($user, $entry)
+            && $entry->isEditable()
+            && $entry->mahasiswaTa?->status_ta === MahasiswaTa::STATUS_AKTIF;
     }
 
     /**

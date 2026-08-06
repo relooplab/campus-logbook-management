@@ -173,57 +173,7 @@ class AdminController extends Controller
         return back()->with('success', 'Pengguna dihapus.');
     }
 
-    // ------------------------------------------------------- persetujuan dosen
-
-    /**
-     * Daftar dosen yang mendaftar mandiri & menunggu persetujuan admin.
-     */
-    public function dosenApprovals(Request $request): View
-    {
-        $pending = User::role('dosen')
-            ->where('registration_status', 'pending')
-            ->when(!$request->user()->isSystemAdmin() && $request->user()->institution_id,
-                function ($q) use ($request) {
-                    $q->where('institution_id', $request->user()->institution_id);
-
-                    // Fase D: admin dengan admin_scopes aktif dibatasi ke scope-nya.
-                    $this->applyAdminScopeFilter($q, $request->user());
-                })
-            ->orderBy('created_at')
-            ->get();
-
-        return view('admin.dosen-approvals', compact('pending'));
-    }
-
-    /**
-     * Setujui akun dosen (dari registrasi mandiri).
-     */
-    public function approveDosen(Request $request, User $dosen): RedirectResponse
-    {
-        abort_if($dosen->registration_status !== 'pending', 400, 'Status dosen bukan pending.');
-
-        if (!$this->canManageUser($request, $dosen)) {
-            return back()->with('error', 'Tidak dapat mengelola user dari institusi lain.');
-        }
-
-        $dosen->update(['registration_status' => 'approved']);
-
-        return back()->with('success', "Dosen '{$dosen->name}' disetujui.");
-    }
-
-    /**
-     * Tolak registrasi dosen.
-     */
-    public function rejectDosen(Request $request, User $dosen): RedirectResponse
-    {
-        if (!$this->canManageUser($request, $dosen)) {
-            return back()->with('error', 'Tidak dapat mengelola user dari institusi lain.');
-        }
-
-        $dosen->update(['registration_status' => 'rejected']);
-
-        return back()->with('success', "Registrasi '{$dosen->name}' ditolak.");
-    }
+    // ------------------------------------------------------- reset password
 
     /**
      * Reset password user oleh admin.

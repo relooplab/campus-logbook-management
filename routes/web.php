@@ -264,10 +264,6 @@ Route::middleware('auth')->group(function () {
             // Admin hierarki: admin (dengan admin_scopes) bisa buat admin di bawahnya.
             Route::post('/sub-admins', [AdminController::class, 'storeSubAdmin'])->name('sub-admins.store');
 
-            // Persetujuan registrasi dosen oleh admin.
-            Route::get('/approve-dosen', [AdminController::class, 'dosenApprovals'])->name('approve-dosen');
-            Route::post('/approve-dosen/{dosen}/approve', [AdminController::class, 'approveDosen'])->name('approve-dosen.approve');
-            Route::post('/approve-dosen/{dosen}/reject', [AdminController::class, 'rejectDosen'])->name('approve-dosen.reject');
         });
 
         Route::middleware('permission:admin.tas')->group(function () {
