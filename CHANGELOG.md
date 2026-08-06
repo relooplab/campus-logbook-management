@@ -1,3 +1,15 @@
+# [0.14.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.13.0...v0.14.0) (2026-08-06)
+
+
+### Bug Fixes
+
+* **register:** perbaiki tab dosen tidak dapat diklik di halaman registrasi ([92992dc](https://github.com/relooplab/thesis-logbook-management/commit/92992dcd930b835cb82f54d1789bcb2ced40fb6e))
+
+
+### Features
+
+* **auth:** registrasi langsung aktif tanpa verifikasi email dan persetujuan admin ([a800703](https://github.com/relooplab/thesis-logbook-management/commit/a80070362d4d07f2094afee2fd15be44c9a08cc3))
+
 # [0.13.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.12.0...v0.13.0) (2026-08-06)
 
 
