@@ -1,6 +1,7 @@
 {
     "private": true,
     "type": "module",
+    "license": "BUSL-1.1",
     "scripts": {
         "build": "VITE_WORKER_VERSION=$(date +%s) vite build",
         "dev": "vite"

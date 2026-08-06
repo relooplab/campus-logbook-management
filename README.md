@@ -517,7 +517,13 @@ If you discover a security vulnerability, please **do not** open a public issue.
 
 ## License
 
-This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
+This project is licensed under the **Business Source License 1.1 (BSL 1.1)** — see [LICENSE](LICENSE) for details.
+
+**Additional Use Grant:** Individual, personal, non-institutional use (e.g. a single supervisor, mentor, or student) and non-production use (development, testing, staging, evaluation, academic research) are permitted. **Institutional Production Use** — deployment as an official institutional thesis management system, whether hosted by the institution or a third party on its behalf — requires a separate commercial license from the Licensor.
+
+**Change License:** Apache License, Version 2.0 (effective five years from publication).
+
+For alternative licensing arrangements, contact: **dev@reloop.id**
 
 ---
 

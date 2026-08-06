@@ -9,7 +9,7 @@
         "logbook",
         "mentoring"
     ],
-    "license": "MIT",
+    "license": "BUSL-1.1",
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
