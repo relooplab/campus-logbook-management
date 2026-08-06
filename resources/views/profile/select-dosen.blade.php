@@ -19,8 +19,8 @@
             <div>
                 <label class="block text-xs text-text-secondary mb-1">Jenis Program</label>
                 <select name="jenis" id="program-jenis" required class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm">
-                    <option value="ta">Tugas Akhir (TA)</option>
-                    <option value="kp">Kerja Praktek (KP)</option>
+                    <option value="ta">{{ $jenisLabelTa }}</option>
+                    <option value="kp">{{ $jenisLabelKp }}</option>
                 </select>
             </div>
 
@@ -28,10 +28,10 @@
                 <label class="block text-xs text-text-secondary mb-1">Fase/Milestone Saat Ini <span class="text-status-danger">*</span></label>
                 <select name="fase" id="program-fase" required class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm">
                     <option value="">— Pilih fase —</option>
-                    @foreach (\App\Models\MahasiswaTa::FASES as $key => $label)
+                    @foreach ($faseLabelsTa as $key => $label)
                         <option value="{{ $key }}" data-jenis="ta">{{ $label }}</option>
                     @endforeach
-                    @foreach (\App\Models\MahasiswaTa::FASES_KP as $key => $label)
+                    @foreach ($faseLabelsKp as $key => $label)
                         <option value="{{ $key }}" data-jenis="kp">{{ $label }}</option>
                     @endforeach
                 </select>

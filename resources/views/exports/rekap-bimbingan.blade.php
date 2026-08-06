@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>Rekap Bimbingan {{ $mahasiswaTa->isKp() ? 'KP' : 'TA' }}</title>
+    <title>Rekap Bimbingan {{ $mahasiswaTa->jenisLabel() }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #111; }
         h1 { font-size: 16px; text-align: center; margin: 0 0 2px; }
@@ -20,7 +20,7 @@
     @php $inst = \App\Models\Institution::forUser($mahasiswaTa->pembimbing1); @endphp
     <h1>{{ strtoupper($inst->institution_name) }}</h1>
     @if ($inst->faculty)<h2>{{ $inst->faculty }}{{ $inst->study_program ? ' — '.$inst->study_program : '' }}</h2>@endif
-    <h2 style="margin-top:4px">REKAPITULASI BIMBINGAN {{ $mahasiswaTa->isKp() ? 'KERJA PRAKTEK' : 'TUGAS AKHIR' }}</h2>
+    <h2 style="margin-top:4px">REKAPITULASI BIMBINGAN {{ strtoupper($mahasiswaTa->jenisLabel()) }}</h2>
 
     <div class="header">
         <table>

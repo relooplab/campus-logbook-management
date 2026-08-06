@@ -1,8 +1,7 @@
 @php
-    $labels = \App\Models\MahasiswaTa::FASES;
-    // Dukungan milestone KP: jika faseKeys berisi kunci FASES_KP (mis. 'pelaksanaan'),
-    // gunakan label fase KP agar tidak error "Undefined array key".
-    if (array_intersect($faseKeys ?? [], array_keys(\App\Models\MahasiswaTa::FASES_KP))) {
+    // Label fase: prioritas dari controller ($faseLabels), fallback ke konstanta.
+    $labels = $faseLabels ?? \App\Models\MahasiswaTa::FASES;
+    if (empty($labels) && array_intersect($faseKeys ?? [], array_keys(\App\Models\MahasiswaTa::FASES_KP))) {
         $labels = \App\Models\MahasiswaTa::FASES_KP;
     }
 @endphp
@@ -22,7 +21,7 @@
                         class="h-8 w-8 rounded-full bg-bg-panel text-text-secondary flex items-center justify-center">○</span>
                 @endif <span
                     class="mt-1 text-[11px] leading-tight {{ $state === "active" ? "font-semibold text-brand" : ($state === "done" ? "text-brand" : "text-text-secondary") }}">
-                    {{ $labels[$key] }} </span>
+                    {{ $labels[$key] ?? $key }} </span>
             </div>
             @if ($i < count($faseKeys) - 1)
                 <div class="w-6 h-0.5 mb-5 {{ $i < $faseIndex ? "bg-brand" : "bg-bg-panel" }}"></div>

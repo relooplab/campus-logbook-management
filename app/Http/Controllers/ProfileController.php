@@ -113,7 +113,37 @@ class ProfileController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('profile.select-dosen', compact('user', 'dosenList'));
+        // Label fase kustom berdasarkan afiliasi mahasiswa (prodi/departemen).
+        $affiliation = $user->universities()
+            ->orderByDesc('user_university.is_primary')
+            ->first();
+        $namingService = app(\App\Services\ProgramNamingService::class);
+        $faseLabelsTa = $namingService->faseLabelsFor(
+            $user->institution_id,
+            \App\Models\MahasiswaTa::JENIS_TA,
+            $affiliation?->pivot->study_program_id,
+            $affiliation?->pivot->department_id
+        );
+        $faseLabelsKp = $namingService->faseLabelsFor(
+            $user->institution_id,
+            \App\Models\MahasiswaTa::JENIS_KP,
+            $affiliation?->pivot->study_program_id,
+            $affiliation?->pivot->department_id
+        );
+        $jenisLabelTa = $namingService->jenisLabelFor(
+            $user->institution_id,
+            \App\Models\MahasiswaTa::JENIS_TA,
+            $affiliation?->pivot->study_program_id,
+            $affiliation?->pivot->department_id
+        );
+        $jenisLabelKp = $namingService->jenisLabelFor(
+            $user->institution_id,
+            \App\Models\MahasiswaTa::JENIS_KP,
+            $affiliation?->pivot->study_program_id,
+            $affiliation?->pivot->department_id
+        );
+
+        return view('profile.select-dosen', compact('user', 'dosenList', 'faseLabelsTa', 'faseLabelsKp', 'jenisLabelTa', 'jenisLabelKp'));
     }
 
     /**
