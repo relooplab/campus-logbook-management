@@ -242,8 +242,55 @@ class StorageUsageService
     /**
      * Cek apakah user (dosen) masih punya sisa kuota untuk upload sebesar $incomingBytes.
      * limit = 0 artinya unlimited (tidak dibatasi).
+     *
+     * Untuk user institusi: cek shared pool institusi (total semua user institusi).
+     * Untuk user personal: cek kuota individual.
      */
     public function assertCanUpload(User $dosen, int $incomingBytes): void
+    {
+        // User institusi: cek shared pool institusi.
+        if ($dosen->institution_id) {
+            $poolMb = Feature::institutionStorageLimitMb($dosen->institution_id);
+            if ($poolMb <= 0) {
+                // Institusi tidak punya langganan — fallback ke kuota individual.
+                $this->assertIndividualCanUpload($dosen, $incomingBytes);
+                return;
+            }
+
+            $poolBytes = $poolMb * 1048576;
+            $poolUsed = Feature::institutionStorageUsedMb($dosen->institution_id) * 1048576;
+
+            if ($poolUsed + $incomingBytes > $poolBytes) {
+                $remaining = max(0, $poolBytes - $poolUsed);
+                abort(422, 'Kuota penyimpanan institusi tidak mencukupi. Terpakai '.$this->formatBytes($poolUsed)
+                    .' dari '.$this->formatBytes($poolBytes)
+                    .' (sisa '.$this->formatBytes($remaining).').');
+            }
+
+            // Juga cek batas per-user (jika diatur).
+            $perUserMb = $dosen->institution_storage_limit_mb;
+            if ($perUserMb !== null && $perUserMb > 0) {
+                $perUserBytes = $perUserMb * 1048576;
+                $used = $this->totalBytes($dosen);
+                if ($used + $incomingBytes > $perUserBytes) {
+                    $remaining = max(0, $perUserBytes - $used);
+                    abort(422, 'Kuota penyimpanan per-user tidak mencukupi. Terpakai '.$this->formatBytes($used)
+                        .' dari '.$this->formatBytes($perUserBytes)
+                        .' (sisa '.$this->formatBytes($remaining).').');
+                }
+            }
+
+            return;
+        }
+
+        // User personal: cek kuota individual.
+        $this->assertIndividualCanUpload($dosen, $incomingBytes);
+    }
+
+    /**
+     * Cek kuota individual (plan + addon) untuk user personal.
+     */
+    private function assertIndividualCanUpload(User $dosen, int $incomingBytes): void
     {
         $limitMb = Feature::storageLimitMb($dosen);
         if ($limitMb <= 0) {

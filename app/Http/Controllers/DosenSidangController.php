@@ -62,7 +62,7 @@ class DosenSidangController extends Controller
         }
 
         Sidang::create([
-            'institution_id' => Feature::isInstitution() ? $user->institution_id : null,
+            'institution_id' => $user->institution_id,
             'mahasiswa_ta_id' => ($validated['mahasiswa_ta_id'] ?? null) ?: null,
             'mahasiswa_name' => ($validated['mahasiswa_name'] ?? null) ?: null,
             'penguji_id' => $user->id,

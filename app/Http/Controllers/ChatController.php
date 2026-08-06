@@ -162,8 +162,8 @@ class ChatController extends Controller
     private function authorizeChat(User $user, User $other): void
     {
         if ($user->isAdmin()) {
-            // Admin bisa chat dengan semua user di scope tenant-nya (mode institusi).
-            if (Feature::isInstitution() && $other->institution_id && $other->institution_id !== $user->institution_id) {
+            // Admin bisa chat dengan semua user di scope tenant-nya.
+            if ($other->institution_id && $other->institution_id !== $user->institution_id) {
                 abort(403);
             }
             return;

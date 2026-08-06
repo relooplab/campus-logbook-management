@@ -70,11 +70,14 @@ return [
     |--------------------------------------------------------------------------
     | Application Mode
     |--------------------------------------------------------------------------
-    | 'individual' (default) — satu dosen, data pribadi (institution_id NULL).
-    | 'institution'         — multitenancy via institution_id + Global Scope.
+    | 'saas' (default) — deployment unified. User personal (institution_id NULL)
+    |   dan user institusi (institution_id terisi) hidup bersamaan.
+    |   Gate fitur dilakukan per-user, bukan berdasarkan mode global.
+    |   Nilai lain ('individual'/'institution') dipertahankan untuk kompatibilitas
+    |   namun tidak lagi dipakai untuk meng-gate fitur.
     */
 
-    'mode' => env('APP_MODE', 'individual'),
+    'mode' => env('APP_MODE', 'saas'),
 
     /*
     |--------------------------------------------------------------------------

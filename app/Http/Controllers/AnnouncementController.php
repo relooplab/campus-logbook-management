@@ -86,7 +86,7 @@ class AnnouncementController extends Controller
 
         $announcement = Announcement::create([
             'sender_id' => $user->id,
-            'institution_id' => Feature::isInstitution() ? $user->institution_id : null,
+            'institution_id' => $user->institution_id,
             'title' => $validated['title'],
             'body' => $validated['body'],
         ]);

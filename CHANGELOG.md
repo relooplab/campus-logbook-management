@@ -1,3 +1,10 @@
+# [0.12.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.11.0...v0.12.0) (2026-08-06)
+
+
+### Features
+
+* **saas:** unified deployment — hapus APP_MODE gating, per-user institution_id gating, shared pool kuota institusi, alur adopsi data personal ke institusi
+
 # [0.11.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.10.0...v0.11.0) (2026-08-06)
 
 

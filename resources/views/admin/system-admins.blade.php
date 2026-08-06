@@ -71,34 +71,32 @@
                     type="password" name="password" required placeholder="Kata sandi"
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
 
-                @if (\App\Support\Feature::isInstitution())
-                    <div>
-                        <label class="block text-sm mb-1">Institusi</label>
-                        <select name="institution_id" required class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                            <option value="">— Pilih institusi —</option>
-                            @foreach ($institutions as $inst)
-                                <option value="{{ $inst->id }}">{{ $inst->institution_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                <div>
+                    <label class="block text-sm mb-1">Institusi</label>
+                    <select name="institution_id" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <option value="">— Personal (tanpa institusi) —</option>
+                        @foreach ($institutions as $inst)
+                            <option value="{{ $inst->id }}">{{ $inst->institution_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
-                    <div>
-                        <label class="block text-sm mb-1">Scope Admin (opsional)</label>
-                        <p class="text-xs text-text-secondary mb-2">Kosongkan = institusi penuh. Pilih prodi/departemen/fakultas untuk membatasi cakupan.</p>
-                        <div id="scope-list" class="space-y-2">
-                            <div class="flex gap-2">
-                                <select name="scopes[0][scope_type]" class="scope-type w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                                    <option value="study_program">Prodi</option>
-                                    <option value="department">Departemen</option>
-                                    <option value="faculty">Fakultas</option>
-                                </select>
-                                <input type="number" name="scopes[0][scope_id]" placeholder="ID node" class="w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                                <button type="button" class="remove-scope px-2 py-2 rounded-md bg-status-danger/10 text-status-danger text-xs">Hapus</button>
-                            </div>
+                <div>
+                    <label class="block text-sm mb-1">Scope Admin (opsional)</label>
+                    <p class="text-xs text-text-secondary mb-2">Kosongkan = institusi penuh. Pilih prodi/departemen/fakultas untuk membatasi cakupan.</p>
+                    <div id="scope-list" class="space-y-2">
+                        <div class="flex gap-2">
+                            <select name="scopes[0][scope_type]" class="scope-type w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                                <option value="study_program">Prodi</option>
+                                <option value="department">Departemen</option>
+                                <option value="faculty">Fakultas</option>
+                            </select>
+                            <input type="number" name="scopes[0][scope_id]" placeholder="ID node" class="w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            <button type="button" class="remove-scope px-2 py-2 rounded-md bg-status-danger/10 text-status-danger text-xs">Hapus</button>
                         </div>
-                        <button type="button" id="add-scope" class="mt-2 text-xs text-brand hover:underline">+ Tambah scope</button>
                     </div>
-                @endif
+                    <button type="button" id="add-scope" class="mt-2 text-xs text-brand hover:underline">+ Tambah scope</button>
+                </div>
 
                 <button
                     class="w-full px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Simpan</button>

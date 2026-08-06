@@ -19,7 +19,6 @@ class InstitutionWorkspaceController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
-        abort_unless(Feature::isInstitution(), 403, 'Fitur ini hanya tersedia di mode institusi.');
 
         // Semua workspace yang bisa diakses user.
         $workspaces = InstitutionWorkspace::with('files', 'allowedUsers', 'creator')
@@ -52,7 +51,6 @@ class InstitutionWorkspaceController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $user = $request->user();
-        abort_unless(Feature::isInstitution(), 403, 'Fitur ini hanya tersedia di mode institusi.');
         abort_unless($user->isAdmin(), 403, 'Hanya admin yang dapat membuat workspace institusi.');
 
         $validated = $request->validate([

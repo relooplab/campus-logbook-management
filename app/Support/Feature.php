@@ -16,7 +16,7 @@ class Feature
 {
     public static function mode(): string
     {
-        return config('app.mode', 'individual');
+        return config('app.mode', 'saas');
     }
 
     public static function isInstitution(): bool
@@ -30,25 +30,16 @@ class Feature
     }
 
     /**
-     * Fitur prodi (multi-dosen & manajemen institusi) hanya aktif di mode institusi.
+     * Fitur prodi (multi-dosen & manajemen institusi) tersedia untuk SEMUA user.
+     * Gate dilakukan per-user berdasarkan institution_id, bukan APP_MODE global.
+     *
      * Fitur "inti" (logbook, revisi, sidang, penguji, workspace, registrasi mahasiswa)
-     * tersedia di KEDUA mode.
+     * tersedia untuk semua.
      *
      * Fitur berbasis paket (export/import) dicek berdasarkan plan user + override admin.
      */
     public static function has(string $feature, ?User $user = null): bool
     {
-        $institutionOnly = [
-            'bulk_import',
-            'laporan_institusi',
-            'multi_dosen',
-            'institution_admin',
-        ];
-
-        if (in_array($feature, $institutionOnly, true)) {
-            return self::isInstitution();
-        }
-
         // Fitur berbasis paket: export & import.
         // SEMENTARA: semua user bisa (paket belum diterapkan). TODO: aktifkan
         // gate saat paket berbayar diterapkan -> return self::userHasFeature($user, $feature);
@@ -128,6 +119,9 @@ class Feature
      * 2. Base: total langganan direktori (institusi) menang atas plan individual,
      *    TIDAK dijumlah dengan plan individual.
      * 3. Top-up individual — SELALU additive di atas base manapun.
+     *
+     * Untuk user institusi: batas = min(shared pool institusi, batas per-user).
+     * Untuk user personal: batas = plan individual + addon.
      */
     public static function storageLimitMb(?User $user): int
     {
@@ -141,29 +135,50 @@ class Feature
             return (int) $override->storage_limit_mb;
         }
 
-        // 2. Base: langganan direktori (institusi) menang atas plan individual.
-        $directoryBase = self::directoryStorageLimitMb($user);
-        if ($directoryBase > 0) {
-            $base = $directoryBase;
-        } else {
-            $plan = $user->activePlan();
-            $base = $plan
-                ? $plan->storageLimitMb()
-                : (Plan::where('name', 'free')->where('is_active', true)->first()?->storageLimitMb() ?? 0);
+        // 2. User institusi: shared pool institusi (min dengan batas per-user).
+        if ($user->institution_id) {
+            $poolMb = self::institutionStorageLimitMb($user->institution_id);
+            if ($poolMb <= 0) {
+                // Institusi tidak punya langganan aktif — fallback ke plan individual.
+                return self::individualStorageLimitMb($user);
+            }
+
+            // Batas per-user (nullable = unlimited dalam pool).
+            $perUserMb = $user->institution_storage_limit_mb;
+            if ($perUserMb !== null && $perUserMb > 0) {
+                return min($poolMb, (int) $perUserMb) + self::storageAddonMb($user);
+            }
+
+            return $poolMb + self::storageAddonMb($user);
         }
 
-        // 3. Top-up individual — SELALU additive di atas base manapun.
-        return $base + self::storageAddonMb($user);
+        // 3. User personal: plan individual + addon.
+        return self::individualStorageLimitMb($user) + self::storageAddonMb($user);
+    }
+
+    /**
+     * Batas storage individual (plan user, fallback free plan).
+     */
+    private static function individualStorageLimitMb(?User $user): int
+    {
+        if (!$user) {
+            return 0;
+        }
+
+        $plan = $user->activePlan();
+        return $plan
+            ? $plan->storageLimitMb()
+            : (Plan::where('name', 'free')->where('is_active', true)->first()?->storageLimitMb() ?? 0);
     }
 
     /**
      * Total kuota dari SEMUA langganan direktori yang berlaku untuk dosen ini,
      * dijumlah lintas cabang berbeda (dedup kalau resolve ke node yang sama).
-     * HANYA jalan di mode institusi.
+     * Berlaku untuk user institusi (institution_id terisi).
      */
     public static function directoryStorageLimitMb(?User $user): int
     {
-        if (!self::isInstitution() || !$user) {
+        if (!$user) {
             return 0;
         }
 
@@ -220,16 +235,86 @@ class Feature
     }
 
     /**
+     * Total pemakaian storage (MB) seluruh user di institusi ini.
+     * Dipakai untuk cek shared pool institusi.
+     */
+    public static function institutionStorageUsedMb(int $institutionId): int
+    {
+        $userIds = User::where('institution_id', $institutionId)->pluck('id');
+        if ($userIds->isEmpty()) {
+            return 0;
+        }
+
+        $usageService = app(\App\Services\StorageUsageService::class);
+        $totalBytes = 0;
+
+        foreach ($userIds as $uid) {
+            $user = User::find($uid);
+            if ($user) {
+                $totalBytes += $usageService->totalBytes($user);
+            }
+        }
+
+        return (int) floor($totalBytes / 1048576);
+    }
+
+    /**
+     * Total kuota shared pool institusi (MB) — jumlah semua directory_subscriptions
+     * aktif yang ter-cover oleh user-user di institusi ini.
+     */
+    public static function institutionStorageLimitMb(int $institutionId): int
+    {
+        // Ambil semua user di institusi ini yang punya afiliasi universitas.
+        $userIds = User::where('institution_id', $institutionId)
+            ->whereHas('universities')
+            ->pluck('id');
+
+        if ($userIds->isEmpty()) {
+            return 0;
+        }
+
+        // Ambil semua afiliasi user di institusi ini.
+        $affiliations = \DB::table('user_university')
+            ->whereIn('user_id', $userIds)
+            ->get();
+
+        $resolvedSubscriptionIds = [];
+        $total = 0;
+
+        foreach ($affiliations as $aff) {
+            $chain = [
+                ['type' => DirectorySubscription::SCOPE_STUDY_PROGRAM, 'id' => $aff->study_program_id],
+                ['type' => DirectorySubscription::SCOPE_DEPARTMENT, 'id' => $aff->department_id],
+                ['type' => DirectorySubscription::SCOPE_FACULTY, 'id' => $aff->faculty_id],
+                ['type' => DirectorySubscription::SCOPE_UNIVERSITY, 'id' => $aff->university_id],
+            ];
+
+            foreach ($chain as $node) {
+                if (!$node['id']) {
+                    continue;
+                }
+
+                $sub = DirectorySubscription::activeFor($node['type'], (int) $node['id']);
+                if ($sub) {
+                    if (!in_array($sub->id, $resolvedSubscriptionIds, true)) {
+                        $resolvedSubscriptionIds[] = $sub->id;
+                        $total += $sub->plan->storageLimitMb();
+                    }
+                    break;
+                }
+            }
+        }
+
+        return $total;
+    }
+
+    /**
      * Cek apakah node direktori tertentu (atau leluhurnya) sudah tercover
      * langganan aktif. Dipakai untuk validasi assign (no-overlap) DAN untuk
      * gate pembuatan akun admin.
      */
     public static function directorySubscriptionActive(string $scopeType, int $scopeId): bool
     {
-        if (!self::isInstitution()) {
-            return false;
-        }
-
         // Walk up dari node ini ke leluhurnya, true kalau salah satu ketemu aktif.
         foreach (self::directoryChain($scopeType, $scopeId) as $node) {
             if (DirectorySubscription::activeFor($node['type'], $node['id'])) {
@@ -246,12 +331,8 @@ class Feature
      */
     public static function institutionHasActiveDirectorySubscription(int $institutionId): bool
     {
-        if (!self::isInstitution()) {
-            return false;
-        }
-
         // Ambil semua user di institusi ini yang punya afiliasi universitas.
-        $userIds = \App\Models\User::where('institution_id', $institutionId)
+        $userIds = User::where('institution_id', $institutionId)
             ->whereHas('universities')
             ->pluck('id');
 
@@ -263,8 +344,6 @@ class Feature
         $affiliations = \DB::table('user_university')
             ->whereIn('user_id', $userIds)
             ->get();
-
-        $resolvedSubscriptionIds = [];
 
         foreach ($affiliations as $aff) {
             $chain = [
@@ -362,10 +441,6 @@ class Feature
      */
     public static function validateDirectorySubscriptionNoOverlap(string $scopeType, int $scopeId): ?string
     {
-        if (!self::isInstitution()) {
-            return null;
-        }
-
         // 1. Ke atas (leluhur): node ini atau leluhurnya sudah tercover?
         $chain = self::directoryChain($scopeType, $scopeId);
         // Skip node itu sendiri (kita sedang assign ke node ini).

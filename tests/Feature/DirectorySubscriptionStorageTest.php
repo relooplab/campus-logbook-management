@@ -19,6 +19,11 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 /**
  * Fase B — Verifikasi resolusi kuota storage:
  * override > direktori > plan individual, + addon selalu additive.
+ *
+ * Setelah refactor SaaS unified, gate fitur dilakukan per-user (institution_id),
+ * bukan berdasarkan APP_MODE global. User institusi (institution_id terisi)
+ * memakai shared pool institusi; user personal (institution_id null) memakai
+ * plan individual.
  */
 class DirectorySubscriptionStorageTest extends AuditSmokeTest
 {
@@ -31,6 +36,7 @@ class DirectorySubscriptionStorageTest extends AuditSmokeTest
     private StudyProgram $prodi;
     private Plan $planInstitusi;
     private Plan $planFree;
+    private Institution $institution;
 
     protected function setUp(): void
     {
@@ -38,11 +44,8 @@ class DirectorySubscriptionStorageTest extends AuditSmokeTest
 
         $this->service = app(OrganizationalDirectoryService::class);
 
-        // Paksa mode institusi.
-        config(['app.mode' => 'institution']);
-
         // Buat institusi + direktori.
-        $institution = Institution::create([
+        $this->institution = Institution::create([
             'app_name' => 'Storage Test',
             'institution_name' => 'Universitas Storage Test',
             'email' => 'storage@test.com',
@@ -74,14 +77,9 @@ class DirectorySubscriptionStorageTest extends AuditSmokeTest
             ]
         );
 
-        // Dosen terafiliasi ke prodi.
+        // Dosen terafiliasi ke prodi + masuk institusi.
         $this->service->attachUserToUniversity($this->dosen, $this->univ, $this->faculty, $this->dept, $this->prodi, true);
-    }
-
-    protected function tearDown(): void
-    {
-        config(['app.mode' => 'individual']);
-        parent::tearDown();
+        $this->dosen->update(['institution_id' => $this->institution->id]);
     }
 
     public function test_override_admin_menang_mutlak(): void
@@ -143,8 +141,8 @@ class DirectorySubscriptionStorageTest extends AuditSmokeTest
 
     public function test_tanpa_institusi_plan_individual_plus_addon_dijumlah(): void
     {
-        // Mode individual (tanpa direktori).
-        config(['app.mode' => 'individual']);
+        // User personal (institution_id null).
+        $this->dosen->update(['institution_id' => null]);
 
         // Plan individual aktif (donasi 10 GB).
         \App\Models\Subscription::create([
@@ -340,10 +338,8 @@ class DirectorySubscriptionStorageTest extends AuditSmokeTest
         ));
     }
 
-    public function test_directory_subscription_active_false_di_mode_individual(): void
+    public function test_directory_subscription_active_berlaku_untuk_semua_user(): void
     {
-        config(['app.mode' => 'individual']);
-
         // Langganan aktif di prodi.
         DirectorySubscription::create([
             'scope_type' => DirectorySubscription::SCOPE_STUDY_PROGRAM,
@@ -354,8 +350,9 @@ class DirectorySubscriptionStorageTest extends AuditSmokeTest
             'ends_at' => null,
         ]);
 
-        // Mode individual -> selalu false.
-        $this->assertFalse(Feature::directorySubscriptionActive(
+        // Setelah refactor SaaS unified, directorySubscriptionActive selalu
+        // mengecek langganan aktif tanpa gate mode.
+        $this->assertTrue(Feature::directorySubscriptionActive(
             DirectorySubscription::SCOPE_STUDY_PROGRAM,
             $this->prodi->id
         ));

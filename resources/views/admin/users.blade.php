@@ -47,6 +47,15 @@
                             <td class="py-3 px-4">
                                 @if (auth()->user()->isSystemAdmin())
                                     <a href="{{ route('admin.system.users.plan', $u) }}" class="text-brand hover:underline text-xs mr-2">Paket</a>
+                                    <form method="POST" action="{{ route('admin.users.institution', $u) }}" class="inline-flex items-center gap-1 mr-2">
+                                        @csrf
+                                        <select name="institution_id" onchange="this.form.submit()" class="text-xs rounded border border-border bg-bg-surface px-1 py-0.5">
+                                            <option value="">Personal</option>
+                                            @foreach ($institutions ?? [] as $inst)
+                                                <option value="{{ $inst->id }}" @selected($u->institution_id === $inst->id)>{{ $inst->institution_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </form>
                                 @endif
                                 @if (auth()->user()->isSystemAdmin() || (!$u->isAdmin() && !$u->isSystemAdmin()))
                                     <button type="button" data-reset="{{ $u->id }}"
@@ -92,7 +101,7 @@
                     class="w-full px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Simpan</button>
             </form>
 
-            @if (\App\Support\Feature::isInstitution() && auth()->user()->hasRole('admin') && !auth()->user()->isSystemAdmin() && auth()->user()->adminScopes->isNotEmpty())
+            @if (auth()->user()->hasRole('admin') && !auth()->user()->isSystemAdmin() && auth()->user()->adminScopes->isNotEmpty())
                 <div class="border-t border-border mt-4 pt-4">
                     <h2 class="font-semibold mb-1">Tambah Admin (Sub-Admin)</h2>
                     <p class="text-xs text-text-secondary mb-3">Buat admin di bawah cakupan scope Anda (fakultas/prodi).</p>

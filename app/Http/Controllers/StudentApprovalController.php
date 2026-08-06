@@ -61,7 +61,7 @@ class StudentApprovalController extends Controller
             'email' => $email,
             'password' => Hash::make($password),
             'registration_status' => 'active',
-            'institution_id' => Feature::isInstitution() ? $request->user()->institution_id : null,
+            'institution_id' => $request->user()->institution_id,
         ]);
         $user->syncRoles(['mahasiswa']);
 

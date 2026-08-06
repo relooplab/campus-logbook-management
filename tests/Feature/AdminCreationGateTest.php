@@ -212,12 +212,12 @@ class AdminCreationGateTest extends AuditSmokeTest
         ]);
     }
 
-    public function test_admin_creation_in_individual_mode_with_institution_id_ignored(): void
+    public function test_admin_creation_with_institution_id_requires_subscription(): void
     {
-        // Mode individual.
-        config(['app.mode' => 'individual']);
+        // Setelah refactor SaaS unified, institution_id selalu diterima
+        // (tidak lagi di-gate oleh APP_MODE), tapi tetap wajib punya langganan aktif.
 
-        // institution_id boleh dikirim tapi diabaikan (nullable).
+        // institution_id tanpa langganan aktif -> ditolak.
         $response = $this->actingAs($this->systemAdmin)->post(route('admin.system.admins.store'), [
             'name' => 'Admin Individual 2',
             'email' => 'admin-individual2@test.com',
@@ -226,11 +226,8 @@ class AdminCreationGateTest extends AuditSmokeTest
         ]);
 
         $response->assertRedirect();
-        $response->assertSessionHas('success');
+        $response->assertSessionHas('error', 'Aktifkan langganan institusi dulu sebelum membuat akun admin.');
 
-        $this->assertDatabaseHas('users', [
-            'email' => 'admin-individual2@test.com',
-            'institution_id' => $this->institution->id,
-        ]);
+        $this->assertDatabaseMissing('users', ['email' => 'admin-individual2@test.com']);
     }
 }

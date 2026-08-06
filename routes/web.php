@@ -271,6 +271,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
             Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
             Route::post('/users/{user}/reset-password', [AdminController::class, 'resetPassword'])->name('users.reset-password');
+            Route::post('/users/{user}/institution', [AdminController::class, 'updateUserInstitution'])->name('users.institution');
 
             // Admin hierarki: admin (dengan admin_scopes) bisa buat admin di bawahnya.
             Route::post('/sub-admins', [AdminController::class, 'storeSubAdmin'])->name('sub-admins.store');

@@ -218,8 +218,7 @@ class ProfileController extends Controller
         // hanya boleh melihat user di institusinya sendiri (system_admin tetap
         // platform-level, bisa lihat semua).
         if ($viewer->isAdmin()) {
-            if (\App\Support\Feature::isInstitution()
-                && !$viewer->isSystemAdmin()
+            if (!$viewer->isSystemAdmin()
                 && $viewer->institution_id !== null
                 && $user->institution_id !== $viewer->institution_id) {
                 abort(403, 'Anda tidak memiliki hubungan langsung dengan pengguna ini.');

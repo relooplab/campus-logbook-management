@@ -23,6 +23,51 @@ class NotifyNearStorageLimit extends Command
         $dosens = User::role('dosen')->get();
 
         foreach ($dosens as $dosen) {
+            // User institusi: cek shared pool institusi.
+            if ($dosen->institution_id) {
+                $poolMb = Feature::institutionStorageLimitMb($dosen->institution_id);
+                if ($poolMb <= 0) {
+                    continue; // institusi tidak punya langganan
+                }
+
+                $poolUsedMb = Feature::institutionStorageUsedMb($dosen->institution_id);
+                $percent = (int) floor($poolUsedMb / $poolMb * 100);
+
+                // Cari threshold tertinggi yang dilewati.
+                $crossed = null;
+                foreach ($thresholds as $t) {
+                    if ($percent >= $t) {
+                        $crossed = $t;
+                    }
+                }
+
+                if (!$crossed) {
+                    continue;
+                }
+
+                // Anti-spam: kirim hanya jika belum pernah di threshold ini.
+                $alreadyNotified = DB::table('storage_quota_notifications')
+                    ->where('user_id', $dosen->id)
+                    ->where('threshold', $crossed)
+                    ->exists();
+
+                if ($alreadyNotified) {
+                    continue;
+                }
+
+                $dosen->notify(new StorageQuotaWarningNotification($crossed, $poolUsedMb, $poolMb));
+
+                DB::table('storage_quota_notifications')->updateOrInsert(
+                    ['user_id' => $dosen->id, 'threshold' => $crossed],
+                    ['notified_at' => now(), 'updated_at' => now()]
+                );
+
+                $sent++;
+                $this->line("Notifikasi {$crossed}% ke {$dosen->email} (pool institusi: {$poolUsedMb} MB / {$poolMb} MB)");
+                continue;
+            }
+
+            // User personal: cek kuota individual.
             $limitMb = Feature::storageLimitMb($dosen);
             if ($limitMb <= 0) {
                 continue; // unlimited

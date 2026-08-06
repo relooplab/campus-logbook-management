@@ -29,8 +29,8 @@ class SchedulingController extends Controller
                     ->orWhere('bimbingan_via_telegram', true);
             });
 
-        // Mode institusi: batasi ke institusi yang sama dengan user.
-        if (Feature::isInstitution() && $user->institution_id) {
+        // Batasi ke institusi yang sama dengan user (jika user anggota institusi).
+        if ($user->institution_id) {
             $query->where('institution_id', $user->institution_id);
         }
 
