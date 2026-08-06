@@ -56,12 +56,6 @@
                 @enderror
             </div>
             <div>
-                <label class="block text-sm font-medium mb-1" for="university_npsn">NPSN (opsional)</label>
-                <input type="text" name="university_npsn" id="university_npsn" value="{{ old("university_npsn") }}"
-                    placeholder="Nomor Pokok Sekolah Nasional"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-            </div>
-            <div>
                 <label class="block text-sm font-medium mb-1" for="faculty_name">Fakultas</label>
                 <input type="text" name="faculty_name" id="faculty_name" value="{{ old("faculty_name") }}"
                     placeholder="Contoh: Fakultas Teknik"
@@ -77,12 +71,6 @@
                 <label class="block text-sm font-medium mb-1" for="study_program_name">Program Studi</label>
                 <input type="text" name="study_program_name" id="study_program_name" value="{{ old("study_program_name") }}"
                     placeholder="Contoh: S1 Teknik Informatika"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1" for="study_program_code">Kode Prodi (opsional)</label>
-                <input type="text" name="study_program_code" id="study_program_code" value="{{ old("study_program_code") }}"
-                    placeholder="Contoh: 55201"
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
             </div>
         </div>
@@ -131,7 +119,8 @@
             });
 
             // Pertahankan role yang dipilih saat ada error validasi (old input).
-            var oldRole = {{ json_encode(old('role', 'mahasiswa')) }};
+            // Gunakan @json (bukan {{ }}) agar tidak di-escape jadi " di dalam <script>.
+            var oldRole = @json(old('role', 'mahasiswa'));
             setRole(oldRole === 'dosen' ? 'dosen' : 'mahasiswa');
         });
     </script>

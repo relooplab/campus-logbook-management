@@ -32,11 +32,9 @@ class RegisterController extends Controller
             // Direktori organisasi (dosen).
             'nidn' => ['nullable', 'string', 'max:20', 'unique:users,nidn'],
             'university_name' => ['nullable', 'string', 'max:255'],
-            'university_npsn' => ['nullable', 'string', 'max:20'],
             'faculty_name' => ['nullable', 'string', 'max:255'],
             'department_name' => ['nullable', 'string', 'max:255'],
             'study_program_name' => ['nullable', 'string', 'max:255'],
-            'study_program_code' => ['nullable', 'string', 'max:20'],
         ]);
 
         $role = $validated['role'] ?? 'mahasiswa';
@@ -73,10 +71,7 @@ class RegisterController extends Controller
     {
         $service = app(OrganizationalDirectoryService::class);
 
-        $university = $service->findOrCreateUniversity(
-            $data['university_name'],
-            $data['university_npsn'] ?? null
-        );
+        $university = $service->findOrCreateUniversity($data['university_name']);
 
         $faculty = null;
         $department = null;
@@ -89,11 +84,7 @@ class RegisterController extends Controller
             $department = $service->findOrCreateDepartment($faculty, $data['department_name']);
         }
         if ($department && !empty($data['study_program_name'])) {
-            $studyProgram = $service->findOrCreateStudyProgram(
-                $department,
-                $data['study_program_name'],
-                $data['study_program_code'] ?? null
-            );
+            $studyProgram = $service->findOrCreateStudyProgram($department, $data['study_program_name']);
         }
 
         $service->attachUserToUniversity($user, $university, $faculty, $department, $studyProgram, true);
