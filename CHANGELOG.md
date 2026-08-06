@@ -1,3 +1,10 @@
+# [0.10.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.9.0...v0.10.0) (2026-08-06)
+
+
+### Features
+
+* **scheduling:** tambah jalur kontak bimbingan multi-kanal ([1bd56e4](https://github.com/relooplab/thesis-logbook-management/commit/1bd56e425d7f9e01dc8e5aba7e1c4f319db39f40))
+
 # [0.9.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.8.0...v0.9.0) (2026-08-05)
 
 
