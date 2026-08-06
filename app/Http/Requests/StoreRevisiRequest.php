@@ -32,7 +32,7 @@ class StoreRevisiRequest extends FormRequest
                 'integer',
                 Rule::exists('logbook_entries', 'id')->where(function ($query) {
                     $query->where('mahasiswa_ta_id', $this->user()?->mahasiswaTa?->id)
-                        ->where('status', 'revisi');
+                        ->whereIn('status', ['revisi', 'revision_in_progress']);
                 }),
             ],
             'addressed_comment_ids' => ['nullable', 'array'],

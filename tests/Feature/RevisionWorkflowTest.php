@@ -41,7 +41,7 @@ class RevisionWorkflowTest extends AuditSmokeTest
             'dosen_id' => $this->dosen->id,
             'topik' => $this->entrySubmitted->topik,
             'jenis' => LogbookEntry::JENIS_REVISI,
-            'status' => LogbookEntry::STATUS_DRAFT,
+            'status' => LogbookEntry::STATUS_REVISION_IN_PROGRESS,
         ]);
     }
 

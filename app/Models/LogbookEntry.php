@@ -21,6 +21,7 @@ class LogbookEntry extends Model
     public const STATUS_SUBMITTED = 'submitted';
     public const STATUS_APPROVED = 'approved';
     public const STATUS_REVISI = 'revisi';
+    public const STATUS_REVISION_IN_PROGRESS = 'revision_in_progress';
 
     /** Status perbaikan pada tabel riwayat perbaikan. */
     public const PERBAIKAN_SUDAH = 'Sudah';
@@ -36,7 +37,32 @@ class LogbookEntry extends Model
         self::STATUS_SUBMITTED,
         self::STATUS_APPROVED,
         self::STATUS_REVISI,
+        self::STATUS_REVISION_IN_PROGRESS,
     ];
+
+    /**
+     * Label status operasional (bahasa yang jelas & tidak ambigu).
+     */
+    public const STATUS_LABELS = [
+        self::STATUS_DRAFT => 'Draf',
+        self::STATUS_SUBMITTED => 'Menunggu review',
+        self::STATUS_APPROVED => 'Disetujui',
+        self::STATUS_REVISI => 'Perlu revisi',
+        self::STATUS_REVISION_IN_PROGRESS => 'Revisi sedang dikerjakan',
+    ];
+
+    /**
+     * Label status tampilan. Entri yang sudah punya revisi anak (terkunci)
+     * ditampilkan "Terkunci" — semua perbaikan lewat jalur revisi baru.
+     */
+    public function statusLabel(): string
+    {
+        if ($this->isLockedByActiveRevision()) {
+            return 'Terkunci';
+        }
+
+        return self::STATUS_LABELS[$this->status] ?? ucfirst(str_replace('_', ' ', $this->status));
+    }
 
     protected $fillable = [
         'mahasiswa_ta_id',

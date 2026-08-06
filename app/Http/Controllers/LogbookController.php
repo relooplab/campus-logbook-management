@@ -45,9 +45,10 @@ class LogbookController extends Controller
         abort_unless($ta, 403, 'Anda belum memiliki program aktif (TA/KP).');
 
         // Mahasiswa dapat membuat entri revisi tanpa harus ada logbook dulu.
-        // Daftar parent (entri berstatus revisi) tetap tersedia untuk dipilih.
+        // Daftar parent (entri berstatus revisi / revisi sedang dikerjakan)
+        // tetap tersedia untuk dipilih.
         $parents = $ta->entries()
-            ->where('status', LogbookEntry::STATUS_REVISI)
+            ->whereIn('status', [LogbookEntry::STATUS_REVISI, LogbookEntry::STATUS_REVISION_IN_PROGRESS])
             ->whereDoesntHave('revisionChildren')
             ->with('comments.user')
             ->latest('reviewed_at')
@@ -138,12 +139,12 @@ class LogbookController extends Controller
             if (!empty($data['parent_entry_id'])) {
                 $parent = $ta->entries()
                     ->whereKey($data['parent_entry_id'])
-                    ->where('status', LogbookEntry::STATUS_REVISI)
+                    ->whereIn('status', [LogbookEntry::STATUS_REVISI, LogbookEntry::STATUS_REVISION_IN_PROGRESS])
                     ->lockForUpdate()
                     ->firstOrFail();
 
                 if ($parent->revisionChildren()
-                    ->whereIn('status', [LogbookEntry::STATUS_DRAFT, LogbookEntry::STATUS_SUBMITTED, LogbookEntry::STATUS_REVISI])
+                    ->whereIn('status', [LogbookEntry::STATUS_DRAFT, LogbookEntry::STATUS_SUBMITTED, LogbookEntry::STATUS_REVISI, LogbookEntry::STATUS_REVISION_IN_PROGRESS])
                     ->exists()) {
                     throw ValidationException::withMessages([
                         'parent_entry_id' => 'Entri induk sudah memiliki revisi aktif. Pilih entri induk lain.',
@@ -161,9 +162,14 @@ class LogbookController extends Controller
                 'topik' => $parent?->topik,
                 'progres_kendala' => $data['progres_kendala'],
                 'tanggal_pengiriman' => $data['tanggal_pengiriman'],
-                'status' => $submit ? LogbookEntry::STATUS_SUBMITTED : LogbookEntry::STATUS_DRAFT,
+                'status' => $submit ? LogbookEntry::STATUS_SUBMITTED : LogbookEntry::STATUS_REVISION_IN_PROGRESS,
                 'submitted_at' => $submit ? now() : null,
             ]);
+
+            // Parent yang sedang dikerjakan revisinya ditandai "Revisi sedang dikerjakan".
+            if ($parent && !$submit) {
+                $parent->update(['status' => LogbookEntry::STATUS_REVISION_IN_PROGRESS]);
+            }
 
             return [$parent, $entry];
         });
@@ -281,7 +287,12 @@ class LogbookController extends Controller
 
         $feedbacks = $ta->entries()
             ->whereNotNull('feedback_dosen')
-            ->with('dosen', 'actionItems')
+            ->with([
+                'dosen',
+                'actionItems',
+                'comments.user',
+                'revisionChildren' => fn ($q) => $q->with('dosen')->latest(),
+            ])
             ->latest('reviewed_at')
             ->get()
             ->filter(function ($e) {
@@ -510,6 +521,11 @@ class LogbookController extends Controller
             'status' => LogbookEntry::STATUS_SUBMITTED,
             'submitted_at' => now(),
         ]);
+
+        // Jika ini revisi yang dikirim, parent kembali ke "Menunggu review".
+        if ($logbook->jenis === LogbookEntry::JENIS_REVISI && $logbook->parentEntry) {
+            $logbook->parentEntry->update(['status' => LogbookEntry::STATUS_SUBMITTED]);
+        }
 
         $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Ada entri baru menunggu review.'));
         $logbook->notifyDosen(
