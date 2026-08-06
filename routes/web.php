@@ -243,6 +243,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logbook/{logbook}/pdf/comments', [LogbookController::class, 'storeComment'])->name('logbook.pdf.store-comment');
 
     Route::post('/pdf-comments/{comment}/resolve', [PdfCommentController::class, 'resolve'])->name('pdf-comments.resolve');
+    Route::post('/pdf-comments/{comment}/reply', [PdfCommentController::class, 'reply'])->name('pdf-comments.reply');
     Route::delete('/pdf-comments/{comment}', [PdfCommentController::class, 'destroy'])->name('pdf-comments.destroy');
 
     // ---------------------------------------------------------- export

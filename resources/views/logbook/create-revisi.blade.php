@@ -6,6 +6,15 @@
     $typesLabel = strtoupper(implode(", ", $inst->allowedFileTypes()));
     $statusOptions = \App\Models\LogbookEntry::PERBAIKAN_STATUSES;
     $oldRiwayat = old("riwayat_perbaikan", []);
+    $initialRows = $oldRiwayat;
+    if (!$initialRows && $parentComments->isNotEmpty()) {
+        $initialRows = $parentComments->map(fn ($c) => [
+            'halaman' => 'Hal. '.$c->page_number,
+            'komentar_dosen' => $c->comment,
+            'perbaikan' => $c->reply,
+            'status' => $statusOptions[0] ?? null,
+        ])->toArray();
+    }
 @endphp
 <div class="max-w-3xl">
     <div class="flex items-center justify-between mb-5">
@@ -357,6 +366,23 @@
     // ===== Feedback parent toggle =====
     var parentSelect = document.getElementById('parent_entry_id');
     var parentCards = document.querySelectorAll('[data-parent-feedback]');
+    function fillTableFromComments(comments) {
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (!comments || !comments.length) {
+            for (var k = 0; k < 5; k++) addRow();
+            return;
+        }
+        comments.forEach(function (c) {
+            addRow({
+                halaman: c.page_number ? 'Hal. ' + c.page_number : '',
+                komentar_dosen: c.comment || '',
+                perbaikan: c.reply || '',
+                status: statusOptions.length ? statusOptions[0] : ''
+            });
+        });
+    }
+    var initialParentSyncDone = false;
     function syncParentFeedback() {
         if (!parentSelect) return;
         parentCards.forEach(function (card) {
@@ -365,11 +391,18 @@
             card.querySelectorAll('input[name="addressed_comment_ids[]"]').forEach(function (input) {
                 input.disabled = !active;
             });
+            if (active && initialParentSyncDone) {
+                try {
+                    var comments = JSON.parse(card.dataset.comments || '[]');
+                    fillTableFromComments(comments);
+                } catch (e) {}
+            }
         });
     }
     if (parentSelect) {
         parentSelect.addEventListener('change', syncParentFeedback);
         syncParentFeedback();
+        initialParentSyncDone = true;
     }
 
     // ===== Review ringkasan =====
@@ -394,12 +427,26 @@
 
     // ===== Auto-save draft ke localStorage =====
     (function () {
-        var KEY = 'lbta-revisi-draft';
+        var KEY = 'lbta-draft-{{ auth()->id() }}-{{ $ta->id ?? 0 }}-revisi';
         var form = document.getElementById('revisi-form');
         var msg = document.createElement('p');
         msg.className = 'text-xs text-text-secondary mt-1';
         msg.id = 'revisi-autosave-msg';
         form.appendChild(msg);
+
+        var restoreBtn = document.createElement('button');
+        restoreBtn.type = 'button';
+        restoreBtn.id = 'revisi-autosave-restore';
+        restoreBtn.className = 'hidden text-xs text-brand hover:underline';
+        restoreBtn.textContent = 'Pulihkan';
+        form.appendChild(restoreBtn);
+
+        var discardBtn = document.createElement('button');
+        discardBtn.type = 'button';
+        discardBtn.id = 'revisi-autosave-discard';
+        discardBtn.className = 'hidden text-xs text-status-danger hover:underline';
+        discardBtn.textContent = 'Buang draft';
+        form.appendChild(discardBtn);
 
         function collect() {
             var data = {
@@ -423,9 +470,37 @@
         function save() {
             localStorage.setItem(KEY, JSON.stringify(collect()));
             msg.textContent = 'Draf tersimpan otomatis ' + new Date().toLocaleTimeString();
+            restoreBtn.classList.add('hidden');
+            discardBtn.classList.add('hidden');
         }
 
-        // Restore draft (hanya jika ada dan belum mengisi ulang).
+        function restoreDraft(saved) {
+            if (saved.tanggal_pengiriman) document.getElementById('tanggal_pengiriman').value = saved.tanggal_pengiriman;
+            if (saved.parent_entry_id) document.getElementById('parent_entry_id').value = saved.parent_entry_id;
+            document.getElementById('progres_kendala').value = saved.progres_kendala;
+            // Restore riwayat rows.
+            if (saved.riwayat && saved.riwayat.length) {
+                tbody.innerHTML = '';
+                saved.riwayat.forEach(function (r) { addRow(r); });
+            }
+            msg.textContent = 'Draf dipulihkan dari penyimpanan otomatis.';
+            restoreBtn.classList.add('hidden');
+            discardBtn.classList.add('hidden');
+        }
+
+        function discardDraft() {
+            localStorage.removeItem(KEY);
+            document.getElementById('tanggal_pengiriman').value = '';
+            document.getElementById('parent_entry_id').value = '';
+            document.getElementById('progres_kendala').value = '';
+            tbody.innerHTML = '';
+            addRow();
+            msg.textContent = 'Draft dibuang.';
+            restoreBtn.classList.add('hidden');
+            discardBtn.classList.add('hidden');
+        }
+
+        // Cek draft tersimpan.
         try {
             var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
             if (saved && saved.progres_kendala && !document.getElementById('progres_kendala').value) {
@@ -440,6 +515,14 @@
                 syncParentFeedback();
             }
         } catch (e) {}
+
+        restoreBtn.addEventListener('click', function () {
+            try {
+                var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+                if (saved) restoreDraft(saved);
+            } catch (e) {}
+        });
+        discardBtn.addEventListener('click', discardDraft);
 
         setInterval(save, 5000);
         form.addEventListener('submit', function () {

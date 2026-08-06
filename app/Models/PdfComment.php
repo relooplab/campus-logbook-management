@@ -29,6 +29,7 @@ class PdfComment extends Model
         'x2',
         'y2',
         'comment',
+        'reply',
         'is_resolved',
         'resolution_status',
         'payload',

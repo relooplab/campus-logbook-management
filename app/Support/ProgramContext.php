@@ -38,7 +38,8 @@ class ProgramContext
             }
         }
 
-        // Prioritas: program aktif → program pertama.
+        // Prioritas: program aktif → program pertama (bisa termasuk ditolak,
+        // agar dashboard bisa menampilkan alasan penolakan).
         return $user->programAktif ?: $programs->first();
     }
 
