@@ -125,6 +125,15 @@
 
                         <form method="POST" action="{{ route('approval.reject', $ta) }}" class="mt-2" onsubmit="return confirm('Tolak permintaan {{ $m?->name }}?')">
                             @csrf
+                            <div class="mb-2">
+                                <label for="alasan_ditolak-{{ $ta->id }}" class="block text-xs text-text-secondary mb-1">Alasan Penolakan <span class="text-status-danger">*</span></label>
+                                <textarea name="alasan_ditolak" id="alasan_ditolak-{{ $ta->id }}" required maxlength="255" rows="2"
+                                    placeholder="Wajib diisi — alasan ini akan ditampilkan ke mahasiswa"
+                                    class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40"></textarea>
+                                @error('alasan_ditolak')
+                                    <p class="text-xs text-status-danger mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
                             <button type="submit" class="px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20 inline-flex items-center gap-1.5">
                                 <span class="material-symbols-outlined icon-sm">close</span> Tolak
                             </button>

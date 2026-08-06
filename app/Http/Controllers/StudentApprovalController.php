@@ -132,6 +132,7 @@ class StudentApprovalController extends Controller
 
     /**
      * Tolak permintaan attachment — MahasiswaTa jadi ditolak, mahasiswa bisa pilih dosen lagi.
+     * Alasan penolakan wajib diisi agar mahasiswa tahu kenapa permintaannya ditolak.
      */
     public function reject(Request $request, MahasiswaTa $mahasiswaTa): RedirectResponse
     {
@@ -141,7 +142,14 @@ class StudentApprovalController extends Controller
         abort_unless($mahasiswaTa->isPembimbing($dosen) || $mahasiswaTa->isPenguji($dosen), 403, 'Anda tidak terkait dengan program ini.');
         abort_unless($mahasiswaTa->status_ta === MahasiswaTa::STATUS_PENDING_APPROVAL, 400, 'Status program bukan pending approval.');
 
-        $mahasiswaTa->update(['status_ta' => MahasiswaTa::STATUS_DITOLAK]);
+        $validated = $request->validate([
+            'alasan_ditolak' => ['required', 'string', 'max:255'],
+        ]);
+
+        $mahasiswaTa->update([
+            'status_ta' => MahasiswaTa::STATUS_DITOLAK,
+            'alasan_ditolak' => $validated['alasan_ditolak'],
+        ]);
 
         return redirect()->route('approval.index')
             ->with('success', "Permintaan '{$mahasiswaTa->mahasiswa?->name}' ditolak. Mahasiswa dapat memilih dosen lain.");
