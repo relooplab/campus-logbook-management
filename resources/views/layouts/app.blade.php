@@ -452,6 +452,19 @@
                     <span class="material-symbols-outlined icon-md mt-0.5">info</span><span>{{ session('warning') }}</span>
                 </div>
             @endif
+            @if (session('import_errors'))
+                <div class="mb-5 px-4 py-3 rounded-xl bg-status-pending/10 text-status-pending border border-status-pending/20">
+                    <div class="flex items-start gap-2.5 font-medium">
+                        <span class="material-symbols-outlined icon-md mt-0.5">info</span>
+                        <span>Sebagian baris dilewati saat import:</span>
+                    </div>
+                    <ul class="mt-2 ml-8 list-disc space-y-1 text-sm">
+                        @foreach (session('import_errors') as $importError)
+                            <li>{{ $importError }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             @yield('content')
         </main>

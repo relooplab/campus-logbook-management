@@ -74,7 +74,7 @@ class SeminarSubmissionController extends Controller
         $mimes = implode(',', array_map(fn ($t) => $t === 'pdf' ? 'pdf' : $t, $allowedTypes));
 
         $data = $request->validate([
-            'tanggal' => ['required', 'date'],
+            'tanggal' => ['required', 'date', 'after_or_equal:today'],
             'waktu' => ['required', 'date_format:H:i'],
             'lokasi' => ['nullable', 'string', 'max:255'],
             'undangan' => ['required', 'file', 'mimes:'.$mimes, 'max:'.($maxMb * 1024)],
@@ -94,47 +94,52 @@ class SeminarSubmissionController extends Controller
 
         // Cek kuota dosen pembimbing sebelum menyimpan undangan + materi baru.
         $dosen = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2;
+
+        $createSubmission = function () use ($request, $mahasiswaTa, $jenis, $data, $defaultCatatan) {
+            // Materi: upload baru ATAU dari workspace (salah satu, tidak boleh keduanya kosong).
+            $materiPath = null;
+            $materiOriginal = null;
+            $materiWorkspaceId = null;
+
+            if ($request->filled('materi_workspace_id') && $request->file('materi_upload') === null) {
+                $file = WorkspaceFile::find($request->input('materi_workspace_id'));
+                if ($file && $file->mahasiswa_ta_id === $mahasiswaTa->id) {
+                    $materiPath = $file->path;
+                    $materiOriginal = $file->original_name;
+                    $materiWorkspaceId = $file->id;
+                }
+            } elseif ($request->file('materi_upload')) {
+                $materiPath = $request->file('materi_upload')->store('seminar-materials/'.$mahasiswaTa->id, 'local');
+                $materiOriginal = $request->file('materi_upload')->getClientOriginalName();
+            }
+
+            $undanganPath = $request->file('undangan')->store('seminar-materials/'.$mahasiswaTa->id, 'local');
+
+            return SeminarSubmission::create([
+                'mahasiswa_ta_id' => $mahasiswaTa->id,
+                'jenis' => $jenis,
+                'tanggal' => $data['tanggal'],
+                'waktu' => $data['waktu'],
+                'lokasi' => $data['lokasi'] ?? null,
+                'undangan_path' => $undanganPath,
+                'undangan_original_name' => $request->file('undangan')->getClientOriginalName(),
+                'undangan_sebagai' => $data['undangan_sebagai'],
+                'materi_path' => $materiPath,
+                'materi_original_name' => $materiOriginal,
+                'materi_workspace_file_id' => $materiWorkspaceId,
+                'catatan_hardcopy' => $defaultCatatan,
+                'catatan_keterangan' => $data['catatan_keterangan'] ?? null,
+                'status' => SeminarSubmission::STATUS_SUBMITTED,
+            ]);
+        };
+
         if ($dosen) {
             $incoming = $request->file('undangan')->getSize()
                 + ($request->file('materi_upload') ? $request->file('materi_upload')->getSize() : 0);
-            app(StorageUsageService::class)->assertCanUpload($dosen, $incoming);
+            $submission = app(StorageUsageService::class)->withUploadLock($dosen, $incoming, $createSubmission);
+        } else {
+            $submission = $createSubmission();
         }
-
-        // Materi: upload baru ATAU dari workspace (salah satu, tidak boleh keduanya kosong).
-        $materiPath = null;
-        $materiOriginal = null;
-        $materiWorkspaceId = null;
-
-        if ($request->filled('materi_workspace_id') && $request->file('materi_upload') === null) {
-            $file = WorkspaceFile::find($request->input('materi_workspace_id'));
-            if ($file && $file->mahasiswa_ta_id === $mahasiswaTa->id) {
-                $materiPath = $file->path;
-                $materiOriginal = $file->original_name;
-                $materiWorkspaceId = $file->id;
-            }
-        } elseif ($request->file('materi_upload')) {
-            $materiPath = $request->file('materi_upload')->store('seminar-materials/'.$mahasiswaTa->id, 'local');
-            $materiOriginal = $request->file('materi_upload')->getClientOriginalName();
-        }
-
-        $undanganPath = $request->file('undangan')->store('seminar-materials/'.$mahasiswaTa->id, 'local');
-
-        $submission = SeminarSubmission::create([
-            'mahasiswa_ta_id' => $mahasiswaTa->id,
-            'jenis' => $jenis,
-            'tanggal' => $data['tanggal'],
-            'waktu' => $data['waktu'],
-            'lokasi' => $data['lokasi'] ?? null,
-            'undangan_path' => $undanganPath,
-            'undangan_original_name' => $request->file('undangan')->getClientOriginalName(),
-            'undangan_sebagai' => $data['undangan_sebagai'],
-            'materi_path' => $materiPath,
-            'materi_original_name' => $materiOriginal,
-            'materi_workspace_file_id' => $materiWorkspaceId,
-            'catatan_hardcopy' => $defaultCatatan,
-            'catatan_keterangan' => $data['catatan_keterangan'] ?? null,
-            'status' => SeminarSubmission::STATUS_SUBMITTED,
-        ]);
 
         // Notifikasi ke dosen terkait.
         $this->notifyDosen($mahasiswaTa, $submission);
@@ -193,7 +198,7 @@ class SeminarSubmissionController extends Controller
         $mimes = implode(',', array_map(fn ($t) => $t === 'pdf' ? 'pdf' : $t, $allowedTypes));
 
         $data = $request->validate([
-            'tanggal' => ['required', 'date'],
+            'tanggal' => ['required', 'date', 'after_or_equal:today'],
             'waktu' => ['required', 'date_format:H:i'],
             'lokasi' => ['nullable', 'string', 'max:255'],
             'undangan' => ['nullable', 'file', 'mimes:'.$mimes, 'max:'.($maxMb * 1024)],
@@ -213,38 +218,42 @@ class SeminarSubmissionController extends Controller
 
         // Cek kuota dosen pembimbing sebelum mengganti file (undangan/materi).
         $dosen = $submission->mahasiswaTa->pembimbing1 ?: $submission->mahasiswaTa->pembimbing2;
-        if ($dosen) {
-            $incoming = ($request->file('undangan') ? $request->file('undangan')->getSize() : 0)
-                + ($request->file('materi_upload') ? $request->file('materi_upload')->getSize() : 0);
-            if ($incoming > 0) {
-                app(StorageUsageService::class)->assertCanUpload($dosen, $incoming);
+
+        $applyUpdate = function () use ($request, $submission, $payload) {
+            // Ganti undangan bila ada file baru.
+            if ($request->file('undangan')) {
+                Storage::disk('local')->delete($submission->undangan_path);
+                $payload['undangan_path'] = $request->file('undangan')->store('seminar-materials/'.$submission->mahasiswa_ta_id, 'local');
+                $payload['undangan_original_name'] = $request->file('undangan')->getClientOriginalName();
             }
-        }
 
-        // Ganti undangan bila ada file baru.
-        if ($request->file('undangan')) {
-            Storage::disk('local')->delete($submission->undangan_path);
-            $payload['undangan_path'] = $request->file('undangan')->store('seminar-materials/'.$submission->mahasiswa_ta_id, 'local');
-            $payload['undangan_original_name'] = $request->file('undangan')->getClientOriginalName();
-        }
-
-        // Ganti materi bila ada pilihan baru.
-        if ($request->filled('materi_workspace_id') && $request->file('materi_upload') === null) {
-            $file = WorkspaceFile::find($request->input('materi_workspace_id'));
-            if ($file && $file->mahasiswa_ta_id === $submission->mahasiswa_ta_id) {
+            // Ganti materi bila ada pilihan baru.
+            if ($request->filled('materi_workspace_id') && $request->file('materi_upload') === null) {
+                $file = WorkspaceFile::find($request->input('materi_workspace_id'));
+                if ($file && $file->mahasiswa_ta_id === $submission->mahasiswa_ta_id) {
+                    $this->deleteMateriFile($submission);
+                    $payload['materi_path'] = $file->path;
+                    $payload['materi_original_name'] = $file->original_name;
+                    $payload['materi_workspace_file_id'] = $file->id;
+                }
+            } elseif ($request->file('materi_upload')) {
                 $this->deleteMateriFile($submission);
-                $payload['materi_path'] = $file->path;
-                $payload['materi_original_name'] = $file->original_name;
-                $payload['materi_workspace_file_id'] = $file->id;
+                $payload['materi_path'] = $request->file('materi_upload')->store('seminar-materials/'.$submission->mahasiswa_ta_id, 'local');
+                $payload['materi_original_name'] = $request->file('materi_upload')->getClientOriginalName();
+                $payload['materi_workspace_file_id'] = null;
             }
-        } elseif ($request->file('materi_upload')) {
-            $this->deleteMateriFile($submission);
-            $payload['materi_path'] = $request->file('materi_upload')->store('seminar-materials/'.$submission->mahasiswa_ta_id, 'local');
-            $payload['materi_original_name'] = $request->file('materi_upload')->getClientOriginalName();
-            $payload['materi_workspace_file_id'] = null;
-        }
 
-        $submission->update($payload);
+            $submission->update($payload);
+        };
+
+        $incoming = ($request->file('undangan') ? $request->file('undangan')->getSize() : 0)
+            + ($request->file('materi_upload') ? $request->file('materi_upload')->getSize() : 0);
+
+        if ($dosen && $incoming > 0) {
+            app(StorageUsageService::class)->withUploadLock($dosen, $incoming, $applyUpdate);
+        } else {
+            $applyUpdate();
+        }
 
         return redirect()->route('seminar-submission.show', $submission)
             ->with('success', 'Bahan seminar/sidang berhasil diperbarui.');

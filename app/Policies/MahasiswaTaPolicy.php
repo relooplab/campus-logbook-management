@@ -14,7 +14,9 @@ class MahasiswaTaPolicy
     public function viewWorkspace(User $user, MahasiswaTa $mahasiswaTa): bool
     {
         if ($user->isAdmin()) {
-            return true;
+            return $user->isSystemAdmin()
+                || $user->institution_id === null
+                || $mahasiswaTa->institution_id === $user->institution_id;
         }
 
         if ($mahasiswaTa->isMember($user)) {

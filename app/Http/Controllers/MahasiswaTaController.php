@@ -33,7 +33,11 @@ class MahasiswaTaController extends Controller
         abort_unless($mahasiswaTa->jenis === $expectedJenis, 404, 'Program tidak ditemukan.');
 
         if ($user->isAdmin()) {
-            // admin boleh lihat semua
+            abort_unless(
+                $user->isSystemAdmin() || $user->institution_id === null || $mahasiswaTa->institution_id === $user->institution_id,
+                403,
+                'Mahasiswa ini bukan bagian dari institusi Anda.'
+            );
         } elseif ($user->isDosen() && !$mahasiswaTa->isPembimbing($user) && !$mahasiswaTa->isPenguji($user)) {
             abort(403, 'Anda bukan pembimbing atau penguji mahasiswa ini.');
         } elseif ($user->isMahasiswa() && !$mahasiswaTa->isMember($user)) {

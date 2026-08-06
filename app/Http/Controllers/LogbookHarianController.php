@@ -97,18 +97,21 @@ class LogbookHarianController extends Controller
 
         // Cek kuota dosen pembimbing sebelum upload foto.
         $dosen = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2;
+        $storeFotos = function () use ($request, $entry) {
+            if ($request->hasFile('foto_1')) {
+                $entry->update(['foto_1' => $this->storeFoto($request->file('foto_1'), $entry->id, 1)]);
+            }
+            if ($request->hasFile('foto_2')) {
+                $entry->update(['foto_2' => $this->storeFoto($request->file('foto_2'), $entry->id, 2)]);
+            }
+        };
+
         if ($dosen) {
             $incoming = collect(['foto_1', 'foto_2'])
                 ->sum(fn ($f) => $request->hasFile($f) ? $request->file($f)->getSize() : 0);
-            app(StorageUsageService::class)->assertCanUpload($dosen, $incoming);
-        }
-
-        // Upload foto (maks 2) ke disk public.
-        if ($request->hasFile('foto_1')) {
-            $entry->update(['foto_1' => $this->storeFoto($request->file('foto_1'), $entry->id, 1)]);
-        }
-        if ($request->hasFile('foto_2')) {
-            $entry->update(['foto_2' => $this->storeFoto($request->file('foto_2'), $entry->id, 2)]);
+            app(StorageUsageService::class)->withUploadLock($dosen, $incoming, $storeFotos);
+        } else {
+            $storeFotos();
         }
 
         // Notifikasi ke dosen pembimbing (P1 & P2).

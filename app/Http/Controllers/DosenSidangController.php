@@ -78,7 +78,11 @@ class DosenSidangController extends Controller
 
     public function destroy(Request $request, Sidang $sidang): RedirectResponse
     {
-        abort_unless($sidang->penguji_id === $request->user()->id || $request->user()->isAdmin(), 403);
+        $user = $request->user();
+        $isOwner = $sidang->penguji_id === $user->id;
+        $isAllowedAdmin = $user->isAdmin()
+            && ($user->isSystemAdmin() || !$user->institution_id || $sidang->institution_id === $user->institution_id);
+        abort_unless($isOwner || $isAllowedAdmin, 403);
 
         $sidang->delete();
 

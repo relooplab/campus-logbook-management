@@ -153,7 +153,14 @@ class LogbookEntry extends Model
      */
     public function isEditable(): bool
     {
-        return $this->status === self::STATUS_DRAFT && !$this->isLockedByActiveRevision();
+        if ($this->isLockedByActiveRevision()) {
+            return false;
+        }
+
+        // Draft biasa, atau draft revisi anak yang belum pernah di-submit
+        // (status revision_in_progress dengan submitted_at masih kosong).
+        return $this->status === self::STATUS_DRAFT
+            || ($this->status === self::STATUS_REVISION_IN_PROGRESS && $this->submitted_at === null);
     }
 
     /**

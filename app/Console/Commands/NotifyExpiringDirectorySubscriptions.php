@@ -6,6 +6,7 @@ use App\Models\DirectorySubscription;
 use App\Models\User;
 use App\Notifications\SubscriptionExpiringNotification;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class NotifyExpiringDirectorySubscriptions extends Command
 {
@@ -50,19 +51,50 @@ class NotifyExpiringDirectorySubscriptions extends Command
                 continue;
             }
 
+            $notifType = 'h'.$daysLeft;
+
+            // Anti-spam: kirim hanya jika belum pernah dikirim untuk milestone ini.
+            $alreadyNotified = DB::table('directory_subscription_notifications')
+                ->where('directory_subscription_id', $sub->id)
+                ->where('notif_type', $notifType)
+                ->exists();
+
+            if ($alreadyNotified) {
+                continue;
+            }
+
             foreach ($systemAdmins as $admin) {
                 $admin->notify(new SubscriptionExpiringNotification($sub, 'expiring'));
                 $sent++;
             }
 
+            DB::table('directory_subscription_notifications')->updateOrInsert(
+                ['directory_subscription_id' => $sub->id, 'notif_type' => $notifType],
+                ['notified_at' => now(), 'updated_at' => now()]
+            );
+
             $this->line("Notifikasi H-{$daysLeft}: {$sub->scopeLabel()} \"{$sub->scopeName()}\" berakhir {$sub->ends_at->format('d M Y')}");
         }
 
         foreach ($expired as $sub) {
+            $alreadyNotified = DB::table('directory_subscription_notifications')
+                ->where('directory_subscription_id', $sub->id)
+                ->where('notif_type', 'expired')
+                ->exists();
+
+            if ($alreadyNotified) {
+                continue;
+            }
+
             foreach ($systemAdmins as $admin) {
                 $admin->notify(new SubscriptionExpiringNotification($sub, 'expired'));
                 $sent++;
             }
+
+            DB::table('directory_subscription_notifications')->updateOrInsert(
+                ['directory_subscription_id' => $sub->id, 'notif_type' => 'expired'],
+                ['notified_at' => now(), 'updated_at' => now()]
+            );
 
             $this->line("Notifikasi expired: {$sub->scopeLabel()} \"{$sub->scopeName()}\" berakhir {$sub->ends_at->format('d M Y')}");
         }

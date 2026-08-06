@@ -163,7 +163,14 @@ class UtilityController extends Controller
 
         $targetSesi = (int) $request->input('target_sesi', 7);
 
-        Excel::import(new MahasiswaImport($defaultPembimbing, $targetSesi), $request->file('file'));
+        $import = new MahasiswaImport($defaultPembimbing, $targetSesi);
+        Excel::import($import, $request->file('file'));
+
+        if (!empty($import->errors)) {
+            return back()
+                ->with('success', 'Import mahasiswa selesai (sebagian baris dilewati).')
+                ->with('import_errors', $import->errors);
+        }
 
         return back()->with('success', 'Import mahasiswa selesai.');
     }
