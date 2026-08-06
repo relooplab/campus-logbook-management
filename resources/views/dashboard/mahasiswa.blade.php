@@ -23,7 +23,11 @@
             <div class="flex-1 min-w-0 text-sm">
                 <p class="font-semibold text-text-primary">Pilih Dosen untuk Memulai Program</p>
                 @if ($rejectedProgram)
-                    <p class="text-text-secondary">Permintaan Anda sebelumnya ditolak dosen. Silakan pilih dosen lain.</p>
+                    <p class="text-text-secondary">Permintaan Anda sebelumnya ditolak dosen
+                        @if ($ta->alasan_ditolak)
+                            dengan alasan: <span class="font-medium text-text-primary">"{{ $ta->alasan_ditolak }}"</span>
+                        @endif
+                        . Silakan pilih dosen lain.</p>
                 @else
                     <p class="text-text-secondary">Pilih dosen pembimbing dan penguji untuk TA/KP Anda.</p>
                 @endif

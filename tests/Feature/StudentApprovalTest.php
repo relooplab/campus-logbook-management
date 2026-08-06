@@ -84,4 +84,92 @@ class StudentApprovalTest extends AuditSmokeTest
             'status_ta' => MahasiswaTa::STATUS_AKTIF,
         ]);
     }
+
+    public function test_reject_tanpa_alasan_gagal(): void
+    {
+        $mhs = User::create([
+            'name' => 'Budiman',
+            'email' => 'budiman-reject@mail.com',
+            'password' => bcrypt('password'),
+            'registration_status' => 'active',
+        ]);
+        $mhs->syncRoles(['mahasiswa']);
+
+        $ta = MahasiswaTa::create([
+            'user_id' => $mhs->id,
+            'jenis' => MahasiswaTa::JENIS_TA,
+            'pembimbing_1_id' => $this->dosen->id,
+            'target_sesi' => 7,
+            'status_ta' => MahasiswaTa::STATUS_PENDING_APPROVAL,
+            'fase' => 'proposal',
+        ]);
+
+        $this->actingAs($this->dosen)
+            ->post(route('approval.reject', $ta), [])
+            ->assertSessionHasErrors('alasan_ditolak');
+
+        // Status tetap pending — tidak berubah jadi ditolak.
+        $this->assertDatabaseHas('mahasiswa_ta', [
+            'id' => $ta->id,
+            'status_ta' => MahasiswaTa::STATUS_PENDING_APPROVAL,
+        ]);
+    }
+
+    public function test_reject_dengan_alasan_berhasil_dan_tersimpan(): void
+    {
+        $mhs = User::create([
+            'name' => 'Budiman',
+            'email' => 'budiman-reject2@mail.com',
+            'password' => bcrypt('password'),
+            'registration_status' => 'active',
+        ]);
+        $mhs->syncRoles(['mahasiswa']);
+
+        $ta = MahasiswaTa::create([
+            'user_id' => $mhs->id,
+            'jenis' => MahasiswaTa::JENIS_TA,
+            'pembimbing_1_id' => $this->dosen->id,
+            'target_sesi' => 7,
+            'status_ta' => MahasiswaTa::STATUS_PENDING_APPROVAL,
+            'fase' => 'proposal',
+        ]);
+
+        $this->actingAs($this->dosen)
+            ->post(route('approval.reject', $ta), [
+                'alasan_ditolak' => 'Kuota bimbingan sudah penuh',
+            ])
+            ->assertRedirect(route('approval.index'));
+
+        $this->assertDatabaseHas('mahasiswa_ta', [
+            'id' => $ta->id,
+            'status_ta' => MahasiswaTa::STATUS_DITOLAK,
+            'alasan_ditolak' => 'Kuota bimbingan sudah penuh',
+        ]);
+    }
+
+    public function test_dashboard_mahasiswa_menampilkan_alasan_penolakan(): void
+    {
+        $mhs = User::create([
+            'name' => 'Budiman',
+            'email' => 'budiman-reject3@mail.com',
+            'password' => bcrypt('password'),
+            'registration_status' => 'active',
+        ]);
+        $mhs->syncRoles(['mahasiswa']);
+
+        $ta = MahasiswaTa::create([
+            'user_id' => $mhs->id,
+            'jenis' => MahasiswaTa::JENIS_TA,
+            'pembimbing_1_id' => $this->dosen->id,
+            'target_sesi' => 7,
+            'status_ta' => MahasiswaTa::STATUS_DITOLAK,
+            'fase' => 'proposal',
+            'alasan_ditolak' => 'Bukan bidang saya',
+        ]);
+
+        $response = $this->actingAs($mhs)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Bukan bidang saya');
+    }
 }

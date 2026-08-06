@@ -81,6 +81,7 @@ class MahasiswaTa extends Model
         'periode_selesai',
         'fase',
         'status_ta',
+        'alasan_ditolak',
     ];
 
     protected function casts(): array
