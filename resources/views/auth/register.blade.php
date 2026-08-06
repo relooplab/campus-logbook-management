@@ -11,11 +11,11 @@
     @endif
 
     {{-- ===== Pemilih peran (Mahasiswa / Dosen) ===== --}}
-    <div class="flex rounded-lg border border-border overflow-hidden mb-4 text-sm">
+    <div id="role-tabs" class="flex rounded-lg border border-border overflow-hidden mb-4 text-sm">
         <button type="button" data-role="mahasiswa" id="role-mahasiswa"
-            class="role-toggle flex-1 py-2.5 font-semibold bg-brand-fill text-white transition-colors">Mahasiswa</button>
+            class="role-toggle flex-1 py-2.5 font-semibold bg-brand-fill text-white transition-colors cursor-pointer">Mahasiswa</button>
         <button type="button" data-role="dosen" id="role-dosen"
-            class="role-toggle flex-1 py-2.5 font-medium bg-bg-panel text-text-secondary hover:bg-bg-hover transition-colors">Dosen</button>
+            class="role-toggle flex-1 py-2.5 font-medium bg-bg-panel text-text-secondary hover:bg-bg-hover transition-colors cursor-pointer">Dosen</button>
     </div>
     <p id="role-hint" class="text-xs text-text-secondary mb-4 -mt-2">Daftar sebagai mahasiswa. Setelah verifikasi email, Anda dapat memilih dosen pembimbing.</p>
 
@@ -92,37 +92,47 @@
         <a href="{{ route("login") }}" class="block text-center text-sm text-brand hover:underline">Sudah punya akun?
             Masuk</a>
     </form>
-    @endsection @section("guest-scripts")
+    @endsection
+    @section("guest-scripts")
     <script>
-        var roleInput = document.getElementById('role-input');
-        var dosenDirectorySection = document.getElementById('dosen-directory-section');
-        var roleHint = document.getElementById('role-hint');
-        var toggles = document.querySelectorAll('.role-toggle');
+        document.addEventListener('DOMContentLoaded', function () {
+            var roleInput = document.getElementById('role-input');
+            var dosenDirectorySection = document.getElementById('dosen-directory-section');
+            var roleHint = document.getElementById('role-hint');
+            var roleTabs = document.getElementById('role-tabs');
 
-        function setRole(role) {
-            roleInput.value = role;
-            toggles.forEach(function (btn) {
-                var active = btn.dataset.role === role;
-                btn.classList.toggle('bg-brand-fill', active);
-                btn.classList.toggle('text-white', active);
-                btn.classList.toggle('font-semibold', active);
-                btn.classList.toggle('bg-bg-panel', !active);
-                btn.classList.toggle('text-text-secondary', !active);
-                btn.classList.toggle('font-medium', !active);
+            if (!roleInput || !roleTabs) return;
+
+            function setRole(role) {
+                roleInput.value = role;
+                var toggles = roleTabs.querySelectorAll('.role-toggle');
+                Array.prototype.forEach.call(toggles, function (btn) {
+                    var active = btn.dataset.role === role;
+                    btn.classList.toggle('bg-brand-fill', active);
+                    btn.classList.toggle('text-white', active);
+                    btn.classList.toggle('font-semibold', active);
+                    btn.classList.toggle('bg-bg-panel', !active);
+                    btn.classList.toggle('text-text-secondary', !active);
+                    btn.classList.toggle('font-medium', !active);
+                });
+                // Direktori organisasi hanya untuk dosen.
+                if (dosenDirectorySection) dosenDirectorySection.classList.toggle('hidden', role !== 'dosen');
+                if (roleHint) {
+                    roleHint.textContent = role === 'dosen'
+                        ? 'Daftar sebagai dosen. Akun Anda perlu disetujui admin sebelum dapat masuk.'
+                        : 'Daftar sebagai mahasiswa. Setelah verifikasi email, Anda dapat memilih dosen pembimbing.';
+                }
+            }
+
+            // Event delegation: lebih robust, listener tetap aktif meski elemen berubah.
+            roleTabs.addEventListener('click', function (e) {
+                var btn = e.target.closest('.role-toggle');
+                if (btn) setRole(btn.dataset.role);
             });
-            // Direktori organisasi hanya untuk dosen.
-            if (dosenDirectorySection) dosenDirectorySection.classList.toggle('hidden', role !== 'dosen');
-            roleHint.textContent = role === 'dosen'
-                ? 'Daftar sebagai dosen. Akun Anda perlu disetujui admin sebelum dapat masuk.'
-                : 'Daftar sebagai mahasiswa. Setelah verifikasi email, Anda dapat memilih dosen pembimbing.';
-        }
 
-        toggles.forEach(function (btn) {
-            btn.addEventListener('click', function () { setRole(btn.dataset.role); });
+            // Pertahankan role yang dipilih saat ada error validasi (old input).
+            var oldRole = {{ json_encode(old('role', 'mahasiswa')) }};
+            setRole(oldRole === 'dosen' ? 'dosen' : 'mahasiswa');
         });
-
-        // Pertahankan role yang dipilih saat ada error validasi (old input).
-        var oldRole = {{ json_encode(old('role', 'mahasiswa')) }};
-        setRole(oldRole === 'dosen' ? 'dosen' : 'mahasiswa');
     </script>
-@endsection
+    @endsection
