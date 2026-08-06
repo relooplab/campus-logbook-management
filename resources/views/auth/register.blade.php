@@ -11,7 +11,7 @@
     @endif
 
     {{-- ===== Pemilih peran (Mahasiswa / Dosen) ===== --}}
-    <div class="flex rounded-lg border border-border overflow-hidden mb-4 text-sm">
+    <div id="role-tabs" class="flex rounded-lg border border-border overflow-hidden mb-4 text-sm">
         <button type="button" data-role="mahasiswa" id="role-mahasiswa"
             class="role-toggle flex-1 py-2.5 font-semibold bg-brand-fill text-white transition-colors cursor-pointer">Mahasiswa</button>
         <button type="button" data-role="dosen" id="role-dosen"
@@ -93,18 +93,20 @@
             Masuk</a>
     </form>
     @endsection
-
     @section("guest-scripts")
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var roleInput = document.getElementById('role-input');
             var dosenDirectorySection = document.getElementById('dosen-directory-section');
             var roleHint = document.getElementById('role-hint');
-            var toggles = document.querySelectorAll('.role-toggle');
+            var roleTabs = document.getElementById('role-tabs');
+
+            if (!roleInput || !roleTabs) return;
 
             function setRole(role) {
                 roleInput.value = role;
-                toggles.forEach(function (btn) {
+                var toggles = roleTabs.querySelectorAll('.role-toggle');
+                Array.prototype.forEach.call(toggles, function (btn) {
                     var active = btn.dataset.role === role;
                     btn.classList.toggle('bg-brand-fill', active);
                     btn.classList.toggle('text-white', active);
@@ -115,13 +117,17 @@
                 });
                 // Direktori organisasi hanya untuk dosen.
                 if (dosenDirectorySection) dosenDirectorySection.classList.toggle('hidden', role !== 'dosen');
-            roleHint.textContent = role === 'dosen'
-                ? 'Daftar sebagai dosen. Akun Anda langsung aktif.'
-                : 'Daftar sebagai mahasiswa. Anda dapat langsung memilih dosen pembimbing.';
+                if (roleHint) {
+                    roleHint.textContent = role === 'dosen'
+                        ? 'Daftar sebagai dosen. Akun Anda perlu disetujui admin sebelum dapat masuk.'
+                        : 'Daftar sebagai mahasiswa. Setelah verifikasi email, Anda dapat memilih dosen pembimbing.';
+                }
             }
 
-            toggles.forEach(function (btn) {
-                btn.addEventListener('click', function () { setRole(btn.dataset.role); });
+            // Event delegation: lebih robust, listener tetap aktif meski elemen berubah.
+            roleTabs.addEventListener('click', function (e) {
+                var btn = e.target.closest('.role-toggle');
+                if (btn) setRole(btn.dataset.role);
             });
 
             // Pertahankan role yang dipilih saat ada error validasi (old input).
