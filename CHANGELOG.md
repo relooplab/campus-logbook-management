@@ -1,3 +1,15 @@
+# [0.15.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.14.0...v0.15.0) (2026-08-06)
+
+
+### Bug Fixes
+
+* **auth:** robust role toggle on register page with DOMContentLoaded and event delegation ([564d77d](https://github.com/relooplab/thesis-logbook-management/commit/564d77ddc4dc0fff165510fb2be8ec57c2eb48b8))
+
+
+### Features
+
+* **program:** batasi aksi logbook, finalisasi, dan seminar hanya untuk program aktif ([105472e](https://github.com/relooplab/thesis-logbook-management/commit/105472ee100b57ee25fe348db1945e7601491bf9))
+
 # [0.14.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.13.0...v0.14.0) (2026-08-06)
 
 
