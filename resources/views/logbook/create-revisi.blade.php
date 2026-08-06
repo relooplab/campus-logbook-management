@@ -6,6 +6,15 @@
     $typesLabel = strtoupper(implode(", ", $inst->allowedFileTypes()));
     $statusOptions = \App\Models\LogbookEntry::PERBAIKAN_STATUSES;
     $oldRiwayat = old("riwayat_perbaikan", []);
+    $initialRows = $oldRiwayat;
+    if (!$initialRows && $parentComments->isNotEmpty()) {
+        $initialRows = $parentComments->map(fn ($c) => [
+            'halaman' => 'Hal. '.$c->page_number,
+            'komentar_dosen' => $c->comment,
+            'perbaikan' => $c->reply,
+            'status' => $statusOptions[0] ?? null,
+        ])->toArray();
+    }
 @endphp
 <div class="max-w-3xl">
     <div class="flex items-center justify-between mb-5">
@@ -37,7 +46,18 @@
             @enderror
         </div>
         @foreach ($parents as $parent)
-            <div data-parent-feedback="{{ $parent->id }}" class="rounded-xl bg-bg-panel border border-border p-3 space-y-2 hidden">
+            @php
+                $parentCommentData = $parent->comments
+                    ->where('resolution_status', '!=', \App\Models\PdfComment::STATUS_RESOLVED)
+                    ->values()
+                    ->map(fn ($c) => [
+                        'id' => $c->id,
+                        'page_number' => $c->page_number,
+                        'comment' => $c->comment,
+                        'reply' => $c->reply,
+                    ]);
+            @endphp
+            <div data-parent-feedback="{{ $parent->id }}" data-comments="@json($parentCommentData)" class="rounded-xl bg-bg-panel border border-border p-3 space-y-2 hidden">
                 <p class="text-xs font-semibold text-text-secondary">Feedback entri #{{ $parent->id }}</p>
                 <p class="text-sm whitespace-pre-wrap">{{ $parent->feedback_dosen ?: "Tidak ada feedback teks." }}</p>
                 @foreach ($parent->comments->where("resolution_status", "!=", \App\Models\PdfComment::STATUS_RESOLVED) as $comment)
@@ -75,7 +95,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($oldRiwayat as $i => $row)
+                        @forelse ($initialRows as $i => $row)
                             <tr class="border-b border-border">
                                 <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[{{ $i }}][halaman]" value="{{ $row['halaman'] ?? '' }}" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
                                 <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[{{ $i }}][komentar_dosen]" value="{{ $row['komentar_dosen'] ?? '' }}" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
@@ -210,9 +230,26 @@
         }
     });
 
-    // Feedback parent toggle.
+    // Feedback parent toggle + auto-fill tabel dari komentar PDF.
     var parentSelect = document.getElementById('parent_entry_id');
     var parentCards = document.querySelectorAll('[data-parent-feedback]');
+    function fillTableFromComments(comments) {
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (!comments || !comments.length) {
+            for (var k = 0; k < 5; k++) addRow();
+            return;
+        }
+        comments.forEach(function (c) {
+            addRow({
+                halaman: c.page_number ? 'Hal. ' + c.page_number : '',
+                komentar_dosen: c.comment || '',
+                perbaikan: c.reply || '',
+                status: statusOptions.length ? statusOptions[0] : ''
+            });
+        });
+    }
+    var initialParentSyncDone = false;
     function syncParentFeedback() {
         if (!parentSelect) return;
         parentCards.forEach(function (card) {
@@ -221,11 +258,18 @@
             card.querySelectorAll('input[name="addressed_comment_ids[]"]').forEach(function (input) {
                 input.disabled = !active;
             });
+            if (active && initialParentSyncDone) {
+                try {
+                    var comments = JSON.parse(card.dataset.comments || '[]');
+                    fillTableFromComments(comments);
+                } catch (e) {}
+            }
         });
     }
     if (parentSelect) {
         parentSelect.addEventListener('change', syncParentFeedback);
         syncParentFeedback();
+        initialParentSyncDone = true;
     }
 
     // Auto-save draft ke localStorage (tiap 5 detik) + restore.

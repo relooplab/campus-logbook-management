@@ -18,7 +18,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.mjs?v=' + WORKER
  */
 
 const DATA = window.PDF_VIEWER_DATA || {};
-const { draftUrl, catatanUrl, hasCatatan, entryId, csrf, commentsUrl, storeUrl, resolveUrl, deleteUrl, burnUrl, buildFeedbackUrl, canReview } = DATA;
+const { draftUrl, catatanUrl, hasCatatan, entryId, csrf, commentsUrl, storeUrl, resolveUrl, replyUrl, deleteUrl, burnUrl, buildFeedbackUrl, canReview, canReply } = DATA;
 
 const TYPE_LABEL = { draft: 'File Perbaikan/Draft', catatan: 'Catatan Perbaikan' };
 
@@ -45,6 +45,7 @@ function toAnnotation(item) {
     page,
     x1, y1, x2, y2,
     comment: body.value || '',
+    reply: item.reply || '',
     resolved: resolutionStatus === 'resolved',
     resolutionStatus,
     user: item.user?.name || '',
@@ -253,6 +254,27 @@ function PdfViewerApp() {
       alert('Gagal mengubah status anotasi.');
     }
   }
+  async function saveReply(id, reply) {
+    if (!replyUrl) return;
+    try {
+      const res = await fetch(replyUrl.replace('{id}', id), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, Accept: 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ reply }),
+      });
+      if (!res.ok) {
+        alert('Gagal menyimpan balasan. Status: ' + res.status);
+        return;
+      }
+      const d = await res.json();
+      setAnnotations((a) => a.map((x) => (x.id === id ? { ...x, reply: d.reply } : x)));
+      setSelected((s) => (s && s.id === id ? { ...s, reply: d.reply } : s));
+    } catch (e) {
+      alert('Gagal menyimpan balasan.');
+    }
+  }
+
   async function removeAnnotation(id) {
     const res = await fetch(deleteUrl.replace('{id}', id), {
       method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf, Accept: 'application/json' }, credentials: 'same-origin',
@@ -442,6 +464,26 @@ function PdfViewerApp() {
             <h3 className="font-semibold mb-2">Anotasi #{selected.id}</h3>
             <p className="text-sm mb-1">{selected.user}</p>
             <p className="text-sm mb-3">{selected.comment}</p>
+            {selected.reply && (
+              <div className="mb-3 rounded-md bg-bg-panel dark:bg-bg-panel p-3">
+                <p className="text-xs font-semibold text-text-secondary mb-1">Balasan Mahasiswa</p>
+                <p className="text-sm whitespace-pre-wrap">{selected.reply}</p>
+              </div>
+            )}
+            {canReply && (
+              <div className="mb-3">
+                <textarea rows="3" defaultValue={selected.reply}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      saveReply(selected.id, e.target.value.trim());
+                    }
+                  }}
+                  className="w-full rounded-md border border-border bg-bg-surface dark:bg-bg-surface px-3 py-2 text-sm"
+                  placeholder="Tulis balasan / penjelasan perbaikan… (Enter untuk simpan)" />
+                <p className="text-xs text-text-secondary mt-1">Tekan Enter untuk menyimpan, Shift+Enter untuk baris baru.</p>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <button onClick={() => toggleResolve(selected.id)}
                 className="px-3 py-2 rounded-md bg-sand text-white text-sm">

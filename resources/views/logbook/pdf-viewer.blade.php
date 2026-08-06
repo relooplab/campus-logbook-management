@@ -28,7 +28,9 @@
         commentsUrl: @json(route("logbook.pdf.comments", $logbook)),
         storeUrl: @json(route("logbook.pdf.store-comment", $logbook)),
         resolveUrl: @json(url("/pdf-comments/{id}/resolve")),
+        replyUrl: @json(url("/pdf-comments/{id}/reply")),
         deleteUrl: @json(url("/pdf-comments/{id}")),
+        canReply: @json($logbook->mahasiswaTa?->user_id === auth()->user()->id),
         burnUrl: @json(route("logbook.pdf.burn", ["logbook" => $logbook, "type" => "__TYPE__"])),
         buildFeedbackUrl: @if (auth()->user()->can('review', $logbook))
             @json(route("quick-review.build-feedback", $logbook))

@@ -44,6 +44,27 @@ class PdfCommentController extends Controller
         ]);
     }
 
+    public function reply(Request $request, PdfComment $comment): JsonResponse
+    {
+        $this->authorize('view', $comment->entry);
+
+        // Hanya mahasiswa pemilik TA yang boleh membalas komentar dosen.
+        if ($comment->entry->mahasiswaTa?->user_id !== $request->user()->id) {
+            abort(403, 'Hanya mahasiswa pemilik TA yang dapat membalas komentar.');
+        }
+
+        $validated = $request->validate([
+            'reply' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $comment->update(['reply' => $validated['reply']]);
+
+        return response()->json([
+            'ok' => true,
+            'reply' => $comment->reply,
+        ]);
+    }
+
     public function destroy(Request $request, PdfComment $comment): JsonResponse
     {
         $this->authorize('view', $comment->entry);
