@@ -17,7 +17,7 @@
         <button type="button" data-role="dosen" id="role-dosen"
             class="role-toggle flex-1 py-2.5 font-medium bg-bg-panel text-text-secondary hover:bg-bg-hover transition-colors cursor-pointer">Dosen</button>
     </div>
-    <p id="role-hint" class="text-xs text-text-secondary mb-4 -mt-2">Daftar sebagai mahasiswa. Setelah verifikasi email, Anda dapat memilih dosen pembimbing.</p>
+    <p id="role-hint" class="text-xs text-text-secondary mb-4 -mt-2">Daftar sebagai mahasiswa. Anda dapat langsung memilih dosen pembimbing.</p>
 
     <form method="POST" action="{{ route("register") }}" class="space-y-4"> @csrf <input type="hidden" name="role"
             id="role-input" value="mahasiswa">

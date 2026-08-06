@@ -111,6 +111,31 @@
                 <div class="flex items-center gap-1.5 mb-1 text-xs font-semibold text-status-pending uppercase tracking-wide"><span class="material-symbols-outlined icon-sm">forum</span> Feedback Dosen</div>
                 <div class="text-sm">{{ $logbook->feedback_dosen }}</div>
             </div>
+
+            @if ($owner)
+                <div class="px-4 py-3 rounded-xl bg-bg-panel border border-border">
+                    <div class="flex items-center gap-1.5 mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wide">
+                        <span class="material-symbols-outlined icon-sm">checklist</span> Action Items
+                    </div>
+                    <div id="action-items-list" class="space-y-2">
+                        @forelse ($logbook->actionItems as $item)
+                            <div class="flex items-center gap-2 action-item-row" data-item-id="{{ $item->id }}">
+                                <input type="checkbox" class="action-item-toggle rounded bg-bg-surface" @checked($item->is_done)>
+                                <span class="flex-1 text-sm {{ $item->is_done ? 'line-through text-text-secondary' : '' }}">{{ $item->text }}</span>
+                                <button type="button" class="action-item-delete text-status-danger hover:underline text-xs">Hapus</button>
+                            </div>
+                        @empty
+                            <p class="text-sm text-text-secondary">Belum ada action item.</p>
+                        @endforelse
+                    </div>
+                    <form id="action-item-add-form" class="flex gap-2 mt-3">
+                        @csrf
+                        <input type="text" name="text" placeholder="Tambah action item..." maxlength="500"
+                            class="flex-1 rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Tambah</button>
+                    </form>
+                </div>
+            @endif
         @endif
 
         <div class="flex flex-wrap gap-2 text-sm">
@@ -180,6 +205,88 @@
 
 @section('scripts')
 <script>
+    // ---- Action items (mahasiswa pemilik) ----
+    var actionList = document.getElementById('action-items-list');
+    var actionAddForm = document.getElementById('action-item-add-form');
+    var logbookId = {{ $logbook->id }};
+
+    function actionItemRow(item) {
+        var row = document.createElement('div');
+        row.className = 'flex items-center gap-2 action-item-row';
+        row.dataset.itemId = item.id;
+        var checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'action-item-toggle rounded bg-bg-surface';
+        checkbox.checked = !!item.is_done;
+        var text = document.createElement('span');
+        text.className = 'flex-1 text-sm' + (item.is_done ? ' line-through text-text-secondary' : '');
+        text.textContent = item.text;
+        var del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'action-item-delete text-status-danger hover:underline text-xs';
+        del.textContent = 'Hapus';
+        row.appendChild(checkbox);
+        row.appendChild(text);
+        row.appendChild(del);
+        return row;
+    }
+
+    if (actionList) {
+        // Toggle
+        actionList.addEventListener('change', function (e) {
+            if (e.target.classList.contains('action-item-toggle')) {
+                var row = e.target.closest('.action-item-row');
+                var id = row.dataset.itemId;
+                fetch('/logbook/' + logbookId + '/action-items/' + id + '/toggle', {
+                    method: 'POST',
+                    headers: {'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json'},
+                }).then(r => r.json()).then(data => {
+                    e.target.checked = data.is_done;
+                    var textEl = row.querySelector('span');
+                    textEl.classList.toggle('line-through', data.is_done);
+                    textEl.classList.toggle('text-text-secondary', data.is_done);
+                });
+            }
+        });
+
+        // Delete
+        actionList.addEventListener('click', function (e) {
+            if (e.target.classList.contains('action-item-delete')) {
+                var row = e.target.closest('.action-item-row');
+                var id = row.dataset.itemId;
+                if (!confirm('Hapus action item ini?')) return;
+                fetch('/logbook/' + logbookId + '/action-items/' + id, {
+                    method: 'DELETE',
+                    headers: {'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json'},
+                }).then(r => r.json()).then(() => {
+                    row.remove();
+                    if (!actionList.querySelector('.action-item-row')) {
+                        actionList.innerHTML = '<p class="text-sm text-text-secondary">Belum ada action item.</p>';
+                    }
+                });
+            }
+        });
+    }
+
+    if (actionAddForm) {
+        actionAddForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var input = actionAddForm.querySelector('input[name="text"]');
+            var val = input.value.trim();
+            if (!val) return;
+            fetch('/logbook/' + logbookId + '/action-items', {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Content-Type': 'application/json', 'Accept': 'application/json'},
+                body: JSON.stringify({text: val}),
+            }).then(r => r.json()).then(item => {
+                input.value = '';
+                var empty = actionList.querySelector('p');
+                if (empty) empty.remove();
+                actionList.appendChild(actionItemRow(item));
+            });
+        });
+    }
+
     var approveForm = document.getElementById('review-approve-form');
     if (approveForm) {
         approveForm.addEventListener('submit', function (event) {

@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\WorkspaceFile;
 use App\Services\StorageUsageService;
 use App\Support\Feature;
+use App\Support\ProgramContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -65,9 +66,9 @@ class WorkspaceController extends Controller
     {
         $user = $request->user();
 
-        // Mahasiswa: redirect ke workspace TA/KP aktif.
+        // Mahasiswa: redirect ke workspace TA/KP aktif (bisa dipilih via ?program=ta|kp).
         if ($user->isMahasiswa()) {
-            $ta = $user->programAktif ?: $user->allPrograms()->first();
+            $ta = ProgramContext::resolve($user, $request);
             if ($ta) {
                 return redirect()->route('workspace.index', $ta);
             }

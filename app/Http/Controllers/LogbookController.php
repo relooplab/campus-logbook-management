@@ -9,6 +9,7 @@ use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\PdfComment;
 use App\Services\StorageUsageService;
+use App\Support\ProgramContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,8 +24,8 @@ class LogbookController extends Controller
 
     public function create(Request $request): View
     {
-        $ta = $request->user()->programAktif;
-        abort_unless($ta, 403, 'Anda belum memiliki program aktif (TA/KP).');
+        $ta = ProgramContext::resolve($request->user(), $request);
+        abort_unless($ta, 403, 'Anda belum memiliki program (TA/KP). Pilih dosen terlebih dahulu.');
 
         // Auto-fill: sesi berikutnya & topik sebelumnya.
         $lastEntry = $ta->entries()
@@ -40,8 +41,8 @@ class LogbookController extends Controller
 
     public function createRevisi(Request $request): View
     {
-        $ta = $request->user()->programAktif;
-        abort_unless($ta, 403, 'Anda belum memiliki program aktif (TA/KP).');
+        $ta = ProgramContext::resolve($request->user(), $request);
+        abort_unless($ta, 403, 'Anda belum memiliki program (TA/KP). Pilih dosen terlebih dahulu.');
 
         // Mahasiswa dapat membuat entri revisi tanpa harus ada logbook dulu.
         // Daftar parent (entri berstatus revisi) tetap tersedia untuk dipilih.
@@ -59,13 +60,14 @@ class LogbookController extends Controller
 
     public function store(StoreLogbookEntryRequest $request): RedirectResponse
     {
-        $ta = $request->user()->programAktif;
+        $ta = ProgramContext::resolve($request->user(), $request);
         abort_unless($ta, 403);
 
         $data = $request->validated();
 
         // Tombol "Kirim ke Pembimbing" langsung mengirim (bukan draf).
-        $submit = $request->boolean('submit');
+        // Jika program masih pending_approval, paksa draft (belum bisa submit ke dosen).
+        $submit = $ta->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF && $request->boolean('submit');
         $sesiKe = $ta->entries()
             ->where('jenis', LogbookEntry::JENIS_LOGBOOK)
             ->count() + 1;
@@ -114,11 +116,12 @@ class LogbookController extends Controller
 
     public function storeRevisi(StoreRevisiRequest $request): RedirectResponse
     {
-        $ta = $request->user()->programAktif;
+        $ta = ProgramContext::resolve($request->user(), $request);
         abort_unless($ta, 403);
 
         $data = $request->validated();
-        $submit = $request->boolean('submit');
+        // Jika program masih pending_approval, paksa draft (belum bisa submit ke dosen).
+        $submit = $ta->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF && $request->boolean('submit');
 
         [$parent, $entry] = DB::transaction(function () use ($ta, $data, $submit) {
             // Mahasiswa dapat membuat entri revisi tanpa harus ada logbook dulu.
@@ -206,7 +209,7 @@ class LogbookController extends Controller
         $filters = $request->only(['status', 'jenis', 'date_from', 'date_to', 'keyword']);
 
         if ($user->isMahasiswa()) {
-            $ta = $user->programAktif;
+            $ta = ProgramContext::resolve($user, $request);
             $query = $ta
                 ? $ta->entries()->with('comments')
                 : LogbookEntry::query()->whereRaw('1 = 0');
@@ -265,12 +268,12 @@ class LogbookController extends Controller
         $user = $request->user();
         abort_unless($user->isMahasiswa(), 403);
 
-        $ta = $user->programAktif;
-        abort_unless($ta, 403, 'Anda belum memiliki program aktif (TA/KP).');
+        $ta = ProgramContext::resolve($user, $request);
+        abort_unless($ta, 403, 'Anda belum memiliki program (TA/KP). Pilih dosen terlebih dahulu.');
 
         $feedbacks = $ta->entries()
             ->whereNotNull('feedback_dosen')
-            ->with('dosen')
+            ->with('dosen', 'actionItems')
             ->latest('reviewed_at')
             ->get()
             ->filter(function ($e) {
@@ -307,6 +310,7 @@ class LogbookController extends Controller
         $logbook->load([
             'mahasiswaTa.mahasiswa', 'mahasiswaTa.pembimbing1', 'mahasiswaTa.pembimbing2', 'dosen', 'comments.user',
             'parentEntry.comments.user', 'parentEntry.parentEntry', 'revisionChildren',
+            'actionItems',
         ]);
 
         $draftPdf = $logbook->lampiran_path ? Storage::disk('local')->path($logbook->lampiran_path) : null;

@@ -25,6 +25,7 @@
                         <th class="py-3 px-4">Tanggal</th>
                         <th class="py-3 px-4">Topik</th>
                         <th class="py-3 px-4">Feedback</th>
+                        <th class="py-3 px-4">Action Items</th>
                         <th class="py-3 px-4">Note</th>
                     </tr>
                 </thead>
@@ -43,6 +44,25 @@
                                 @endif
                             </td>
                             <td class="py-3 px-4 whitespace-pre-wrap max-w-md">{{ $entry->feedback_dosen }}</td>
+                            <td class="py-3 px-4 min-w-[200px]">
+                                <div class="action-items-list space-y-1.5" data-entry-id="{{ $entry->id }}">
+                                    @forelse ($entry->actionItems as $item)
+                                        <div class="flex items-center gap-2 action-item-row" data-item-id="{{ $item->id }}">
+                                            <input type="checkbox" class="action-item-toggle rounded bg-bg-surface" @checked($item->is_done)>
+                                            <span class="flex-1 text-xs {{ $item->is_done ? 'line-through text-text-secondary' : '' }}">{{ $item->text }}</span>
+                                            <button type="button" class="action-item-delete text-status-danger hover:underline text-[10px]">Hapus</button>
+                                        </div>
+                                    @empty
+                                        <p class="text-xs text-text-secondary">Belum ada action item.</p>
+                                    @endforelse
+                                </div>
+                                <form class="action-item-add-form flex gap-1.5 mt-2">
+                                    @csrf
+                                    <input type="text" name="text" placeholder="Tambah..." maxlength="500"
+                                        class="flex-1 rounded-lg border border-border bg-bg-surface px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-brand/40">
+                                    <button type="submit" class="px-2 py-1 rounded-lg bg-brand text-white text-xs font-medium hover:opacity-90">+</button>
+                                </form>
+                            </td>
                             <td class="py-3 px-4">
                                 <form method="POST" action="{{ route('logbook.feedback-note', $entry) }}" class="space-y-1">
                                     @csrf
@@ -60,4 +80,91 @@
         </div>
     @endif
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    // ---- Action items di halaman feedback ----
+    function actionItemRow(item) {
+        var row = document.createElement('div');
+        row.className = 'flex items-center gap-2 action-item-row';
+        row.dataset.itemId = item.id;
+        var checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'action-item-toggle rounded bg-bg-surface';
+        checkbox.checked = !!item.is_done;
+        var text = document.createElement('span');
+        text.className = 'flex-1 text-xs' + (item.is_done ? ' line-through text-text-secondary' : '');
+        text.textContent = item.text;
+        var del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'action-item-delete text-status-danger hover:underline text-[10px]';
+        del.textContent = 'Hapus';
+        row.appendChild(checkbox);
+        row.appendChild(text);
+        row.appendChild(del);
+        return row;
+    }
+
+    document.querySelectorAll('.action-items-list').forEach(function (list) {
+        var entryId = list.dataset.entryId;
+
+        // Toggle
+        list.addEventListener('change', function (e) {
+            if (e.target.classList.contains('action-item-toggle')) {
+                var row = e.target.closest('.action-item-row');
+                var id = row.dataset.itemId;
+                fetch('/logbook/' + entryId + '/action-items/' + id + '/toggle', {
+                    method: 'POST',
+                    headers: {'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json'},
+                }).then(r => r.json()).then(data => {
+                    e.target.checked = data.is_done;
+                    var textEl = row.querySelector('span');
+                    textEl.classList.toggle('line-through', data.is_done);
+                    textEl.classList.toggle('text-text-secondary', data.is_done);
+                });
+            }
+        });
+
+        // Delete
+        list.addEventListener('click', function (e) {
+            if (e.target.classList.contains('action-item-delete')) {
+                var row = e.target.closest('.action-item-row');
+                var id = row.dataset.itemId;
+                if (!confirm('Hapus action item ini?')) return;
+                fetch('/logbook/' + entryId + '/action-items/' + id, {
+                    method: 'DELETE',
+                    headers: {'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json'},
+                }).then(r => r.json()).then(() => {
+                    row.remove();
+                    if (!list.querySelector('.action-item-row')) {
+                        list.innerHTML = '<p class="text-xs text-text-secondary">Belum ada action item.</p>';
+                    }
+                });
+            }
+        });
+    });
+
+    // Add form
+    document.querySelectorAll('.action-item-add-form').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var list = form.closest('td').querySelector('.action-items-list');
+            var entryId = list.dataset.entryId;
+            var input = form.querySelector('input[name="text"]');
+            var val = input.value.trim();
+            if (!val) return;
+            fetch('/logbook/' + entryId + '/action-items', {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Content-Type': 'application/json', 'Accept': 'application/json'},
+                body: JSON.stringify({text: val}),
+            }).then(r => r.json()).then(item => {
+                input.value = '';
+                var empty = list.querySelector('p');
+                if (empty) empty.remove();
+                list.appendChild(actionItemRow(item));
+            });
+        });
+    });
+</script>
 @endsection
