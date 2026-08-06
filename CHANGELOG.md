@@ -1,3 +1,10 @@
+# [0.11.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.10.0...v0.11.0) (2026-08-06)
+
+
+### Features
+
+* **logbook:** autosave draft forms and sort dosen student list by urgency ([030b695](https://github.com/relooplab/thesis-logbook-management/commit/030b6953a67cec857081fb88e1e1b377364fbb11))
+
 # [0.10.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.9.0...v0.10.0) (2026-08-06)
 
 
