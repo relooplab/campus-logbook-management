@@ -31,9 +31,10 @@ class MahasiswaTa extends Model
 
     /** Fase perjalanan TA. */
     public const FASES = [
+        'penyusunan_proposal' => 'Penyusunan Proposal',
         'proposal' => 'Seminar Proposal',
         'pengumpulan_data' => 'Pengumpulan Data',
-        'analisis' => 'Analisis',
+        'penyusunan_laporan' => 'Penyusunan Laporan',
         'seminar_hasil' => 'Seminar Hasil',
         'draft_sidang' => 'Draft Sidang',
         'sidang' => 'Sidang',
@@ -104,17 +105,16 @@ class MahasiswaTa extends Model
     }
 
     /**
-     * Label program: "TA" atau "KP".
+     * Label program: "TA" atau "KP" (bisa dikustom per prodi/departemen).
      */
     public function jenisLabel(): string
     {
-        return $this->isKp() ? 'KP' : 'TA';
+        return app(\App\Services\ProgramNamingService::class)->jenisLabel($this);
     }
 
     public function faseLabel(): string
     {
-        $fases = $this->isKp() ? self::FASES_KP : self::FASES;
-        return $fases[$this->fase] ?? $this->fase;
+        return app(\App\Services\ProgramNamingService::class)->faseLabel($this);
     }
 
     public function faseIndex(): int

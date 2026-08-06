@@ -328,8 +328,9 @@
                                 <td class="py-2.5">
                                     <form method="POST" action="{{ route($ta->isKp() ? 'mahasiswa-kp.fase' : 'mahasiswa-ta.fase', $ta) }}" class="flex flex-col sm:flex-row sm:items-center gap-1.5" onsubmit="return confirm('Ubah fase {{ $ta->jenisLabel() }} ini? Pastikan sudah benar.')">
                                         @csrf
+                                        @php $faseLabels = app(\App\Services\ProgramNamingService::class)->faseLabels($ta); @endphp
                                         <select name="fase" class="w-full sm:w-auto rounded-lg border border-border bg-bg-surface px-2 py-1.5 text-xs">
-                                            @foreach ($ta->isKp() ? \App\Models\MahasiswaTa::FASES_KP : \App\Models\MahasiswaTa::FASES as $key => $label)
+                                            @foreach ($faseLabels as $key => $label)
                                                 <option value="{{ $key }}" @selected($ta->fase === $key)>{{ $label }}</option>
                                             @endforeach
                                         </select>

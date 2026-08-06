@@ -70,7 +70,7 @@
                                 <div>
                                     <p class="font-semibold text-text-primary">{{ $m?->name ?? 'Mahasiswa' }}</p>
                                     <p class="text-sm text-text-secondary">{{ $m?->email }}</p>
-                                    <p class="text-xs text-text-secondary mt-0.5">Program: {{ $ta->jenisLabel() }} · Daftar {{ $ta->created_at?->format('d M Y, H:i') }}</p>
+                                    <p class="text-xs text-text-secondary mt-0.5">Program: {{ $ta->program_label ?? $ta->jenisLabel() }} · Daftar {{ $ta->created_at?->format('d M Y, H:i') }}</p>
                                     <p class="text-xs text-text-secondary mt-1">
                                         Memilih: 
                                         @if ($ta->pembimbing1) <span class="inline-block px-1.5 py-0.5 rounded bg-bg-surface border border-border mr-1">P1: {{ $ta->pembimbing1->name }}</span> @endif
@@ -110,7 +110,7 @@
                             <div class="sm:col-span-2">
                                 <label class="block text-xs text-text-secondary mb-1">Fase/Milestone</label>
                                 <select name="fase" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
-                                    @foreach ($ta->isKp() ? \App\Models\MahasiswaTa::FASES_KP : \App\Models\MahasiswaTa::FASES as $key => $label)
+                                    @foreach (($ta->fase_labels ?? ($ta->isKp() ? \App\Models\MahasiswaTa::FASES_KP : \App\Models\MahasiswaTa::FASES)) as $key => $label)
                                         <option value="{{ $key }}" @selected($ta->fase === $key)>{{ $label }}</option>
                                     @endforeach
                                 </select>

@@ -68,6 +68,23 @@ class SeminarSubmission extends Model
 
     public function jenisLabel(): string
     {
+        // Label fase kustom dari prodi/departemen (jika ada).
+        if ($this->mahasiswaTa) {
+            $labels = app(\App\Services\ProgramNamingService::class)->faseLabels($this->mahasiswaTa);
+
+            $faseKey = match ($this->jenis) {
+                self::JENIS_PROPOSAL => 'proposal',
+                self::JENIS_SEMINAR_HASIL => 'seminar_hasil',
+                self::JENIS_SIDANG => 'sidang',
+                self::JENIS_SEMINAR_KP => 'seminar_kp',
+                default => null,
+            };
+
+            if ($faseKey && isset($labels[$faseKey])) {
+                return $labels[$faseKey];
+            }
+        }
+
         return match ($this->jenis) {
             self::JENIS_PROPOSAL => 'Seminar Proposal',
             self::JENIS_SEMINAR_HASIL => 'Seminar Hasil',

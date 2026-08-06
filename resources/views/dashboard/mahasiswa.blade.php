@@ -7,7 +7,7 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="font-heading font-bold text-2xl text-text-primary">Dashboard Mahasiswa</h1>
-            <p class="text-sm text-text-secondary mt-0.5">Pantau progres bimbingan {{ $ta?->isKp() ? 'Kerja Praktek' : 'Tugas Akhir' }} Anda</p>
+            <p class="text-sm text-text-secondary mt-0.5">Pantau progres bimbingan {{ $ta?->jenisLabel() ?? 'TA/KP' }} Anda</p>
         </div>
         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
             <a href="{{ route('logbook.create') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand-fill text-white text-sm font-semibold shadow-md hover:bg-brand-fill-hover hover:shadow-lg transition-shadow text-center" title="Tambah entri logbook bimbingan baru (aksi utama)">+ Logbook</a>
@@ -188,7 +188,7 @@
                 <h2 class="font-heading font-semibold text-text-primary">Milestone Journey</h2>
                 <span class="text-sm text-text-secondary">{{ $ta->faseLabel() }} · {{ $progressPercent }}%</span>
             </div>
-            @include('partials.milestone', ['faseKeys' => $faseKeys, 'faseIndex' => $faseIndex])
+            @include('partials.milestone', ['faseKeys' => $faseKeys, 'faseIndex' => $faseIndex, 'faseLabels' => $faseLabels ?? []])
             <p class="mt-3 text-xs text-text-secondary">Fase ditetapkan oleh dosen pembimbing.</p>
 
             @php

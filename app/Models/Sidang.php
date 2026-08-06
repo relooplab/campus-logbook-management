@@ -50,6 +50,19 @@ class Sidang extends Model
 
     public function jenisLabel(): string
     {
+        // Label fase kustom dari prodi/departemen (jika ada).
+        if ($this->mahasiswaTa) {
+            $labels = app(\App\Services\ProgramNamingService::class)->faseLabels($this->mahasiswaTa);
+
+            $faseKey = $this->mahasiswaTa->isKp()
+                ? 'seminar_kp'
+                : ($this->jenis === self::JENIS_SIDANG ? 'sidang' : 'proposal');
+
+            if (isset($labels[$faseKey])) {
+                return $labels[$faseKey];
+            }
+        }
+
         // Seminar KP memakai tabel sidang yang sama.
         if ($this->mahasiswaTa?->isKp()) {
             return 'Seminar KP';

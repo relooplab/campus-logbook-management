@@ -813,6 +813,160 @@ class AdminController extends Controller
         return back()->with('success', 'Pengaturan paket berhasil diperbarui.');
     }
 
+    // ------------------------------------------------------- penamaan program (TA/KP)
+
+    /**
+     * Halaman kustomisasi penamaan program (TA/KP) & label fase per prodi/departemen.
+     * Admin dengan admin_scopes hanya bisa mengelola node dalam scope-nya.
+     */
+    public function programNaming(Request $request): View
+    {
+        $user = $request->user();
+        $institution = Institution::current();
+
+        // Semua universitas + hierarki (fakultas -> departemen -> prodi).
+        $universities = \App\Models\University::with('faculties.departments.studyPrograms')
+            ->orderBy('name')
+            ->get();
+
+        // Admin dengan admin_scopes: batasi node yang bisa dikelola.
+        $scopes = \App\Models\AdminScope::activeFor($user);
+        $allowedStudyProgramIds = [];
+        $allowedDepartmentIds = [];
+
+        if ($scopes->isNotEmpty()) {
+            foreach ($scopes as $scope) {
+                switch ($scope->scope_type) {
+                    case \App\Models\AdminScope::SCOPE_STUDY_PROGRAM:
+                        $allowedStudyProgramIds[] = (int) $scope->scope_id;
+                        break;
+                    case \App\Models\AdminScope::SCOPE_DEPARTMENT:
+                        $allowedDepartmentIds[] = (int) $scope->scope_id;
+                        // Semua prodi di departemen ini juga boleh dikelola.
+                        $allowedStudyProgramIds = array_merge(
+                            $allowedStudyProgramIds,
+                            \App\Models\StudyProgram::where('department_id', $scope->scope_id)->pluck('id')->all()
+                        );
+                        break;
+                    case \App\Models\AdminScope::SCOPE_FACULTY:
+                        $deptIds = \App\Models\Department::where('faculty_id', $scope->scope_id)->pluck('id')->all();
+                        $allowedDepartmentIds = array_merge($allowedDepartmentIds, $deptIds);
+                        $allowedStudyProgramIds = array_merge(
+                            $allowedStudyProgramIds,
+                            \App\Models\StudyProgram::whereIn('department_id', $deptIds)->pluck('id')->all()
+                        );
+                        break;
+                }
+            }
+            $allowedStudyProgramIds = array_values(array_unique($allowedStudyProgramIds));
+            $allowedDepartmentIds = array_values(array_unique($allowedDepartmentIds));
+        }
+
+        // Konfigurasi yang sudah ada.
+        $configs = \App\Models\ProgramNamingConfig::where('institution_id', $institution->id)->get()
+            ->keyBy(fn ($c) => $c->scope_type.':'.$c->scope_id.':'.$c->jenis);
+
+        return view('admin.program-naming', compact(
+            'universities', 'configs', 'scopes',
+            'allowedStudyProgramIds', 'allowedDepartmentIds'
+        ));
+    }
+
+    /**
+     * Simpan konfigurasi penamaan program untuk prodi/departemen.
+     */
+    public function updateProgramNaming(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $institution = Institution::current();
+
+        $validated = $request->validate([
+            'scope_type' => ['required', 'in:study_program,department'],
+            'scope_id' => ['required', 'integer'],
+            'jenis' => ['required', 'in:ta,kp'],
+            'program_label' => ['nullable', 'string', 'max:100'],
+            'fase_labels' => ['nullable', 'array'],
+            'fase_labels.*' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        // Validasi scope: admin dengan admin_scopes hanya boleh kelola node dalam scope-nya.
+        $scopes = \App\Models\AdminScope::activeFor($user);
+        if ($scopes->isNotEmpty()) {
+            $allowed = false;
+            foreach ($scopes as $scope) {
+                if ($scope->scope_type === \App\Models\AdminScope::SCOPE_STUDY_PROGRAM
+                    && $validated['scope_type'] === 'study_program'
+                    && (int) $scope->scope_id === (int) $validated['scope_id']) {
+                    $allowed = true;
+                    break;
+                }
+                if ($scope->scope_type === \App\Models\AdminScope::SCOPE_DEPARTMENT
+                    && $validated['scope_type'] === 'department'
+                    && (int) $scope->scope_id === (int) $validated['scope_id']) {
+                    $allowed = true;
+                    break;
+                }
+                if ($scope->scope_type === \App\Models\AdminScope::SCOPE_DEPARTMENT
+                    && $validated['scope_type'] === 'study_program') {
+                    $prodi = \App\Models\StudyProgram::find((int) $validated['scope_id']);
+                    if ($prodi && $prodi->department_id === (int) $scope->scope_id) {
+                        $allowed = true;
+                        break;
+                    }
+                }
+                if ($scope->scope_type === \App\Models\AdminScope::SCOPE_FACULTY) {
+                    if ($validated['scope_type'] === 'department') {
+                        $dept = \App\Models\Department::find((int) $validated['scope_id']);
+                        if ($dept && $dept->faculty_id === (int) $scope->scope_id) {
+                            $allowed = true;
+                            break;
+                        }
+                    }
+                    if ($validated['scope_type'] === 'study_program') {
+                        $prodi = \App\Models\StudyProgram::with('department')->find((int) $validated['scope_id']);
+                        if ($prodi && $prodi->department?->faculty_id === (int) $scope->scope_id) {
+                            $allowed = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            abort_unless($allowed, 403, 'Anda tidak memiliki akses ke node ini.');
+        }
+
+        // Filter fase_labels: hanya key yang valid untuk jenis program.
+        $defaults = $validated['jenis'] === \App\Models\MahasiswaTa::JENIS_KP
+            ? \App\Models\MahasiswaTa::FASES_KP
+            : \App\Models\MahasiswaTa::FASES;
+        $faseLabels = [];
+        foreach ($defaults as $key => $defaultLabel) {
+            $faseLabels[$key] = $validated['fase_labels'][$key] ?? null;
+        }
+
+        \App\Models\ProgramNamingConfig::updateOrCreate(
+            [
+                'institution_id' => $institution->id,
+                'scope_type' => $validated['scope_type'],
+                'scope_id' => (int) $validated['scope_id'],
+                'jenis' => $validated['jenis'],
+            ],
+            [
+                'program_label' => $validated['program_label'] ?: null,
+                'fase_labels' => array_filter($faseLabels, fn ($v) => $v !== null && $v !== '') ?: null,
+            ]
+        );
+
+        // Flush cache.
+        app(\App\Services\ProgramNamingService::class)->flush(
+            $institution->id,
+            $validated['scope_type'],
+            (int) $validated['scope_id'],
+            $validated['jenis']
+        );
+
+        return back()->with('success', 'Konfigurasi penamaan program berhasil disimpan.');
+    }
+
     // ------------------------------------------------------- institusi
 
     public function institution(): View

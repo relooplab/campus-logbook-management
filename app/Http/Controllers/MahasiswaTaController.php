@@ -61,6 +61,7 @@ class MahasiswaTaController extends Controller
         $faseKeys = array_keys($mahasiswaTa->isKp() ? MahasiswaTa::FASES_KP : MahasiswaTa::FASES);
         $faseIndex = array_search($mahasiswaTa->fase, $faseKeys, true);
         if ($faseIndex === false) $faseIndex = 0;
+        $faseLabels = app(\App\Services\ProgramNamingService::class)->faseLabels($mahasiswaTa);
 
         // Achievement (unlocked + total) milik mahasiswa pemilik program.
         // Achievement hanya untuk TA.
@@ -85,7 +86,7 @@ class MahasiswaTaController extends Controller
 
         return view('mahasiswa.show', compact(
             'mahasiswaTa', 'entries', 'approved', 'target', 'percent',
-            'faseKeys', 'faseIndex',
+            'faseKeys', 'faseIndex', 'faseLabels',
             'unlockedAchievements', 'unlockedCodes', 'totalAchievements',
             'stats', 'timeline', 'heatmap', 'regularity', 'regularityTooltip',
             'logbookHarian'

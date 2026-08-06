@@ -38,6 +38,15 @@ class StudentApprovalController extends Controller
             ->orderBy('created_at')
             ->get();
 
+        // Label fase kustom per program (berdasarkan afiliasi mahasiswa).
+        $namingService = app(\App\Services\ProgramNamingService::class);
+        $pending = $pending->map(function ($ta) use ($namingService) {
+            $ta->fase_labels = $namingService->faseLabels($ta);
+            $ta->program_label = $namingService->jenisLabel($ta);
+
+            return $ta;
+        });
+
         return view('approval.index', compact('pending'));
     }
 

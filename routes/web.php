@@ -303,6 +303,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/institusi', [AdminController::class, 'institution'])->name('institution');
             Route::post('/institusi', [AdminController::class, 'updateInstitution'])->name('institution.update');
             Route::post('/institusi/test-mail', [AdminController::class, 'testMail'])->name('institution.test-mail');
+
+            // Penamaan program (TA/KP) & label fase per prodi/departemen.
+            Route::get('/program-naming', [AdminController::class, 'programNaming'])->name('program-naming');
+            Route::post('/program-naming', [AdminController::class, 'updateProgramNaming'])->name('program-naming.update');
         });
     });
 

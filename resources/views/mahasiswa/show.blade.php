@@ -114,8 +114,8 @@
                 <form method="POST" action="{{ route($mahasiswaTa->isKp() ? "mahasiswa-kp.fase" : "mahasiswa-ta.fase", $mahasiswaTa) }}" class="mt-2 flex gap-1" onsubmit="return confirm('Ubah fase {{ $mahasiswaTa->jenisLabel() }} mahasiswa ini? Pastikan perubahan sudah benar.')">
                     @csrf <select name="fase"
                         class="rounded-md border border-border bg-bg-surface px-2 py-1 text-xs">
-                        @foreach ($mahasiswaTa->isKp() ? \App\Models\MahasiswaTa::FASES_KP : \App\Models\MahasiswaTa::FASES as $key => $label)
-                            <option value="{{ $key }}" @selected($mahasiswaTa->fase === $key)>{{ $label }}
+                        @foreach ($faseKeys as $key)
+                            <option value="{{ $key }}" @selected($mahasiswaTa->fase === $key)>{{ $faseLabels[$key] ?? $key }}
                             </option>
                         @endforeach
                     </select> <button class="px-2 py-1 rounded-md bg-brand text-white text-xs">Update</button>
@@ -147,7 +147,7 @@
                 <h2 class="font-heading font-semibold text-text-primary">Milestone Journey</h2>
                 <span class="text-sm text-text-secondary">{{ $mahasiswaTa->faseLabel() }} · {{ $percent }}%</span>
             </div>
-            @include('partials.milestone', ['faseKeys' => $faseKeys, 'faseIndex' => $faseIndex])
+            @include('partials.milestone', ['faseKeys' => $faseKeys, 'faseIndex' => $faseIndex, 'faseLabels' => $faseLabels ?? []])
             <p class="mt-3 text-xs text-text-secondary">Fase ditetapkan oleh dosen pembimbing.</p>
         </div>
 

@@ -307,6 +307,10 @@
                         <span class="material-symbols-outlined icon-md">apartment</span>
                         <span class="sidebar-label">Institusi</span>
                     </a>
+                    <a href="{{ route('admin.program-naming') }}" class="{{ $navLink }} {{ $active('admin.program-naming') }}">
+                        <span class="material-symbols-outlined icon-md">edit_note</span>
+                        <span class="sidebar-label">Penamaan Program</span>
+                    </a>
                 @endcan
             @endif
         </nav>

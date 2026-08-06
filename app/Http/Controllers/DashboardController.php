@@ -217,6 +217,7 @@ class DashboardController extends Controller
         $faseKeys = $ta && $ta->isKp() ? array_keys(\App\Models\MahasiswaTa::FASES_KP) : array_keys(\App\Models\MahasiswaTa::FASES);
         $faseIndex = $ta ? array_search($ta->fase, $faseKeys, true) : 0;
         if ($faseIndex === false) $faseIndex = 0;
+        $faseLabels = $ta ? app(\App\Services\ProgramNamingService::class)->faseLabels($ta) : [];
 
         // ---- Achievement (unlocked + total) - hanya untuk TA ----
         $unlockedAchievements = $ta && $ta->isTa() ? $user->achievements()->get() : collect();
@@ -289,7 +290,7 @@ class DashboardController extends Controller
 
         return view('dashboard.mahasiswa', compact(
             'programs', 'activeProgram', 'ta', 'entries', 'approved', 'target', 'progressPercent',
-            'faseKeys', 'faseIndex',
+            'faseKeys', 'faseIndex', 'faseLabels',
             'unlockedAchievements', 'unlockedCodes', 'totalAchievements',
             'logbookHarian',
             'stats', 'timeline', 'heatmap', 'regularity', 'regularityTooltip',
