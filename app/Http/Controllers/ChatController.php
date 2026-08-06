@@ -229,15 +229,24 @@ class ChatController extends Controller
     private function canAccess(?MahasiswaTa $ta, User $user): bool
     {
         if (!$ta) return false;
-        return $user->isAdmin()
-            || $ta->isMember($user)
+
+        if ($user->isAdmin()) {
+            return $user->isSystemAdmin() || $user->institution_id === null || $ta->institution_id === $user->institution_id;
+        }
+
+        return $ta->isMember($user)
             || $ta->isPembimbing($user)
             || $ta->isPenguji($user);
     }
 
     private function scopeForUser($q, User $user): void
     {
-        if ($user->isAdmin()) return;
+        if ($user->isAdmin()) {
+            if (!$user->isSystemAdmin() && $user->institution_id) {
+                $q->where('institution_id', $user->institution_id);
+            }
+            return;
+        }
 
         $memberProgramIds = \DB::table('mahasiswa_ta_members')
             ->where('user_id', $user->id)

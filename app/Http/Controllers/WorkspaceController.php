@@ -97,10 +97,12 @@ class WorkspaceController extends Controller
             return view('workspace.role', compact('user', 'personalFiles', 'personalGrouped', 'personalTotalBytes', 'tas'));
         }
 
-        // Admin: daftar semua TA/KP.
-        $tas = MahasiswaTa::with(['mahasiswa', 'pembimbing1', 'pembimbing2'])
-            ->latest()
-            ->get();
+        // Admin: daftar TA/KP (dibatasi institusi untuk admin institusional).
+        $tasQuery = MahasiswaTa::with(['mahasiswa', 'pembimbing1', 'pembimbing2']);
+        if (!$user->isSystemAdmin() && $user->institution_id) {
+            $tasQuery->where('institution_id', $user->institution_id);
+        }
+        $tas = $tasQuery->latest()->get();
 
         return view('workspace.role', [
             'user' => $user,
@@ -122,24 +124,30 @@ class WorkspaceController extends Controller
         $bab = $request->input('bab');
 
         // Cek kuota dosen pembimbing (pembimbing 1, fallback pembimbing 2).
-        $dosen = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2;
-        if ($dosen) {
+        // Bila belum ada pembimbing yang ditugaskan, bebankan ke akun mahasiswa
+        // sendiri supaya kuota tetap ditegakkan sejak awal.
+        $chargeTo = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2 ?: $mahasiswaTa->mahasiswa;
+        $storeFiles = function () use ($request, $mahasiswaTa, $bab) {
+            foreach ($request->file('files') as $file) {
+                $stored = $file->store('workspace/'.$mahasiswaTa->id, 'local');
+
+                WorkspaceFile::create([
+                    'mahasiswa_ta_id' => $mahasiswaTa->id,
+                    'uploaded_by' => $request->user()->id,
+                    'bab' => $bab,
+                    'original_name' => $file->getClientOriginalName(),
+                    'path' => $stored,
+                    'mime_type' => $file->getClientMimeType(),
+                    'size' => $file->getSize(),
+                ]);
+            }
+        };
+
+        if ($chargeTo) {
             $incoming = collect($request->file('files'))->sum(fn ($f) => $f->getSize());
-            app(StorageUsageService::class)->assertCanUpload($dosen, $incoming);
-        }
-
-        foreach ($request->file('files') as $file) {
-            $stored = $file->store('workspace/'.$mahasiswaTa->id, 'local');
-
-            WorkspaceFile::create([
-                'mahasiswa_ta_id' => $mahasiswaTa->id,
-                'uploaded_by' => $request->user()->id,
-                'bab' => $bab,
-                'original_name' => $file->getClientOriginalName(),
-                'path' => $stored,
-                'mime_type' => $file->getClientMimeType(),
-                'size' => $file->getSize(),
-            ]);
+            app(StorageUsageService::class)->withUploadLock($chargeTo, $incoming, $storeFiles);
+        } else {
+            $storeFiles();
         }
 
         // Notifikasi ke dosen pembimbing.
@@ -195,21 +203,21 @@ class WorkspaceController extends Controller
 
         // Cek kuota dosen itu sendiri.
         $incoming = collect($request->file('files'))->sum(fn ($f) => $f->getSize());
-        app(StorageUsageService::class)->assertCanUpload($user, $incoming);
+        app(StorageUsageService::class)->withUploadLock($user, $incoming, function () use ($request, $user, $bab) {
+            foreach ($request->file('files') as $file) {
+                $stored = $file->store('workspace/dosen/'.$user->id, 'local');
 
-        foreach ($request->file('files') as $file) {
-            $stored = $file->store('workspace/dosen/'.$user->id, 'local');
-
-            WorkspaceFile::create([
-                'user_id' => $user->id,
-                'uploaded_by' => $user->id,
-                'bab' => $bab,
-                'original_name' => $file->getClientOriginalName(),
-                'path' => $stored,
-                'mime_type' => $file->getClientMimeType(),
-                'size' => $file->getSize(),
-            ]);
-        }
+                WorkspaceFile::create([
+                    'user_id' => $user->id,
+                    'uploaded_by' => $user->id,
+                    'bab' => $bab,
+                    'original_name' => $file->getClientOriginalName(),
+                    'path' => $stored,
+                    'mime_type' => $file->getClientMimeType(),
+                    'size' => $file->getSize(),
+                ]);
+            }
+        });
 
         return back()->with('success', 'File berhasil diunggah ke workspace pribadi.');
     }

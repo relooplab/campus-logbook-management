@@ -10,6 +10,7 @@ use App\Models\ThesisFinalization;
 use App\Models\User;
 use App\Models\WorkspaceFile;
 use App\Support\Feature;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -237,6 +238,29 @@ class StorageUsageService
         } catch (\Throwable $ex) {
             return 0;
         }
+    }
+
+    /**
+     * Bungkus cek kuota + penyimpanan file secara atomik agar terhindar dari
+     * race condition (dua upload paralel yang sama-sama lolos cek kuota).
+     * Lock di-key per-institusi untuk user institusi (shared pool dipakai
+     * bersama semua user institusi itu), atau per-user untuk user personal.
+     *
+     * @template T
+     * @param  \Closure(): T  $callback
+     * @return T
+     */
+    public function withUploadLock(User $chargedUser, int $incomingBytes, \Closure $callback): mixed
+    {
+        $lockKey = $chargedUser->institution_id
+            ? 'storage-quota:inst:'.$chargedUser->institution_id
+            : 'storage-quota:user:'.$chargedUser->id;
+
+        return Cache::lock($lockKey, 15)->block(5, function () use ($chargedUser, $incomingBytes, $callback) {
+            $this->assertCanUpload($chargedUser, $incomingBytes);
+
+            return $callback();
+        });
     }
 
     /**

@@ -98,15 +98,19 @@ class LogbookController extends Controller
         if ($request->hasFile('lampiran')) {
             // Cek kuota dosen pembimbing (pembimbing 1, fallback pembimbing 2).
             $dosen = $ta->pembimbing1 ?: $ta->pembimbing2;
-            if ($dosen) {
-                app(StorageUsageService::class)->assertCanUpload($dosen, $request->file('lampiran')->getSize());
-            }
+            $storeLampiran = function () use ($request, $entry) {
+                $entry->update([
+                    'lampiran_path' => $this->storeUniqueFile($request->file('lampiran'), 'lampiran', $entry->id),
+                    'lampiran_original_name' => $request->file('lampiran')->getClientOriginalName(),
+                    'lampiran_size' => $request->file('lampiran')->getSize(),
+                ]);
+            };
 
-            $entry->update([
-                'lampiran_path' => $this->storeUniqueFile($request->file('lampiran'), 'lampiran', $entry->id),
-                'lampiran_original_name' => $request->file('lampiran')->getClientOriginalName(),
-                'lampiran_size' => $request->file('lampiran')->getSize(),
-            ]);
+            if ($dosen) {
+                app(StorageUsageService::class)->withUploadLock($dosen, $request->file('lampiran')->getSize(), $storeLampiran);
+            } else {
+                $storeLampiran();
+            }
         }
 
         if ($submit) {
@@ -150,6 +154,12 @@ class LogbookController extends Controller
                         'parent_entry_id' => 'Entri induk sudah memiliki revisi aktif. Pilih entri induk lain.',
                     ]);
                 }
+
+                if (($parent->revision_round ?? 0) + 1 > LogbookEntry::MAX_REVISION_ROUND) {
+                    throw ValidationException::withMessages([
+                        'parent_entry_id' => 'Entri ini sudah mencapai batas maksimal '.LogbookEntry::MAX_REVISION_ROUND.' ronde revisi.',
+                    ]);
+                }
             }
 
             // Buat entry dulu agar path unik bisa memakai id.
@@ -176,16 +186,20 @@ class LogbookController extends Controller
 
         // Cek kuota dosen pembimbing sebelum menyimpan lampiran revisi.
         $dosen = $ta->pembimbing1 ?: $ta->pembimbing2;
-        if ($dosen && $request->hasFile('lampiran')) {
-            app(StorageUsageService::class)->assertCanUpload($dosen, $request->file('lampiran')->getSize());
-        }
+        $storeLampiranRevisi = function () use ($request, $entry, $data) {
+            $entry->update([
+                'lampiran_path' => $this->storeUniqueFile($request->file('lampiran'), 'lampiran', $entry->id),
+                'lampiran_original_name' => $request->file('lampiran')->getClientOriginalName(),
+                'lampiran_size' => $request->file('lampiran')->getSize(),
+                'riwayat_perbaikan' => $data['riwayat_perbaikan'],
+            ]);
+        };
 
-        $entry->update([
-            'lampiran_path' => $this->storeUniqueFile($request->file('lampiran'), 'lampiran', $entry->id),
-            'lampiran_original_name' => $request->file('lampiran')->getClientOriginalName(),
-            'lampiran_size' => $request->file('lampiran')->getSize(),
-            'riwayat_perbaikan' => $data['riwayat_perbaikan'],
-        ]);
+        if ($dosen && $request->hasFile('lampiran')) {
+            app(StorageUsageService::class)->withUploadLock($dosen, $request->file('lampiran')->getSize(), $storeLampiranRevisi);
+        } else {
+            $storeLampiranRevisi();
+        }
 
         // Generate PDF catatan perbaikan otomatis dari tabel riwayat perbaikan.
         $this->generateCatatanPerbaikanPdf($entry);
@@ -904,7 +918,12 @@ class LogbookController extends Controller
         $request->validate([
             'file_type' => ['required', 'in:'.implode(',', PdfComment::FILE_TYPES)],
             'payload' => ['sometimes', 'array'],
-            'comment' => ['required_without:payload', 'string'],
+            'comment' => ['required_without:payload', 'string', 'max:2000'],
+            'page_number' => ['nullable', 'integer', 'min:1'],
+            'pos_x' => ['nullable', 'numeric', 'between:0,1'],
+            'pos_y' => ['nullable', 'numeric', 'between:0,1'],
+            'x2' => ['nullable', 'numeric', 'between:0,1'],
+            'y2' => ['nullable', 'numeric', 'between:0,1'],
         ]);
 
         $fileType = $request->input('file_type');

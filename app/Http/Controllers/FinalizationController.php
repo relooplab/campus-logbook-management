@@ -8,6 +8,7 @@ use App\Models\ThesisFinalization;
 use App\Services\StorageUsageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class FinalizationController extends Controller
@@ -43,28 +44,32 @@ class FinalizationController extends Controller
 
         // Cek kuota dosen pembimbing sebelum menyimpan file finalisasi.
         $dosen = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2;
+        $storeFinalizationFiles = function () use ($request, $isKp, $items, $mahasiswaTa, $finalization) {
+            $data = [];
+            if (!$isKp) {
+                $data['abstrak'] = $request->input('abstrak');
+                $data['keyword'] = $request->input('keyword');
+                $data['cover_path'] = $this->storePdf($request->file('cover'), 'cover', $mahasiswaTa->id);
+                $data['cover_original_name'] = $request->file('cover')->getClientOriginalName();
+                $data['pengesahan_path'] = $this->storePdf($request->file('pengesahan'), 'pengesahan', $mahasiswaTa->id);
+                $data['pengesahan_original_name'] = $request->file('pengesahan')->getClientOriginalName();
+            }
+            $data['full_file_path'] = $this->storePdf($request->file('full_file'), 'full', $mahasiswaTa->id);
+            $data['full_file_original_name'] = $request->file('full_file')->getClientOriginalName();
+
+            foreach ($items as $item) {
+                $data[$item.'_status'] = 'submitted';
+            }
+            $finalization->update($data);
+        };
+
         if ($dosen) {
             $incoming = collect(['cover', 'pengesahan', 'full_file'])
                 ->sum(fn ($f) => $request->hasFile($f) ? $request->file($f)->getSize() : 0);
-            app(StorageUsageService::class)->assertCanUpload($dosen, $incoming);
+            app(StorageUsageService::class)->withUploadLock($dosen, $incoming, $storeFinalizationFiles);
+        } else {
+            $storeFinalizationFiles();
         }
-
-        $data = [];
-        if (!$isKp) {
-            $data['abstrak'] = $request->input('abstrak');
-            $data['keyword'] = $request->input('keyword');
-            $data['cover_path'] = $this->storePdf($request->file('cover'), 'cover', $mahasiswaTa->id);
-            $data['cover_original_name'] = $request->file('cover')->getClientOriginalName();
-            $data['pengesahan_path'] = $this->storePdf($request->file('pengesahan'), 'pengesahan', $mahasiswaTa->id);
-            $data['pengesahan_original_name'] = $request->file('pengesahan')->getClientOriginalName();
-        }
-        $data['full_file_path'] = $this->storePdf($request->file('full_file'), 'full', $mahasiswaTa->id);
-        $data['full_file_original_name'] = $request->file('full_file')->getClientOriginalName();
-
-        foreach ($items as $item) {
-            $data[$item.'_status'] = 'submitted';
-        }
-        $finalization->update($data);
 
         foreach ([$mahasiswaTa->pembimbing_1_id, $mahasiswaTa->pembimbing_2_id] as $pid) {
             if ($pid) {
@@ -93,15 +98,20 @@ class FinalizationController extends Controller
     {
         $this->authorizePembimbing($request->user(), $finalization);
         $this->validateItem($finalization, $item);
-        $approval = $this->getApproval($finalization, $item, $request->user()->id);
-        $approval->update(['status' => 'approved']);
 
-        $required = $this->requiredApprovals($finalization);
-        $allApproved = $finalization->approvals()->where('item', $item)->where('status', 'approved')->count() >= $required;
-        if ($allApproved) {
-            $finalization->update([$item.'_status' => 'approved']);
-            $this->maybeUnlockMilestone($finalization);
-        }
+        DB::transaction(function () use ($request, $finalization, $item) {
+            $locked = ThesisFinalization::whereKey($finalization->id)->lockForUpdate()->firstOrFail();
+
+            $this->getApproval($locked, $item, $request->user()->id)->update(['status' => 'approved']);
+
+            $required = $this->requiredApprovals($locked);
+            $approvedCount = $locked->approvals()->where('item', $item)->where('status', 'approved')->count();
+
+            if ($approvedCount >= $required) {
+                $locked->update([$item.'_status' => 'approved']);
+                $this->maybeUnlockMilestone($locked);
+            }
+        });
 
         return back()->with('success', "Item '{$item}' disetujui.");
     }
@@ -110,9 +120,18 @@ class FinalizationController extends Controller
     {
         $this->authorizePembimbing($request->user(), $finalization);
         $this->validateItem($finalization, $item);
-        $approval = $this->getApproval($finalization, $item, $request->user()->id);
-        $approval->update(['status' => 'rejected']);
-        $finalization->update([$item.'_status' => 'rejected']);
+
+        DB::transaction(function () use ($request, $finalization, $item) {
+            $locked = ThesisFinalization::whereKey($finalization->id)->lockForUpdate()->firstOrFail();
+
+            // Reset semua approval item ini ke pending supaya setiap pembimbing
+            // wajib menyetujui ulang versi terbaru; baris milik penolak sendiri
+            // tetap 'rejected' sebagai jejak siapa yang menolak.
+            $locked->approvals()->where('item', $item)->update(['status' => 'pending']);
+            $this->getApproval($locked, $item, $request->user()->id)->update(['status' => 'rejected']);
+            $locked->update([$item.'_status' => 'rejected']);
+        });
+
         return back()->with('success', "Item '{$item}' ditolak.");
     }
 
