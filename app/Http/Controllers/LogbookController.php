@@ -55,7 +55,17 @@ class LogbookController extends Controller
 
         $selectedParentId = $request->query('parent_entry_id');
 
-        return view('logbook.create-revisi', compact('ta', 'parents', 'selectedParentId'));
+        $parentComments = collect();
+        if ($selectedParentId) {
+            $selectedParent = $parents->firstWhere('id', $selectedParentId);
+            if ($selectedParent) {
+                $parentComments = $selectedParent->comments()
+                    ->where('resolution_status', '!=', PdfComment::STATUS_RESOLVED)
+                    ->get();
+            }
+        }
+
+        return view('logbook.create-revisi', compact('ta', 'parents', 'selectedParentId', 'parentComments'));
     }
 
     public function store(StoreLogbookEntryRequest $request): RedirectResponse
