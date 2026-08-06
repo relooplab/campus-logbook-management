@@ -215,5 +215,61 @@
             }
         }
     });
+
+    // Auto-save draft ke localStorage (tiap 5 detik) + restore.
+    (function () {
+        var KEY = 'lbta-edit-draft-' + @json($logbook->id);
+        var form = document.querySelector('form[action*="logbook"]');
+        var msg = document.createElement('p');
+        msg.className = 'text-xs text-text-secondary mt-1';
+        msg.id = 'edit-autosave-msg';
+        form.appendChild(msg);
+
+        function collect() {
+            var data = {
+                tanggal_bimbingan: document.getElementById('tanggal_bimbingan')?.value || '',
+                tanggal_pengiriman: document.getElementById('tanggal_pengiriman')?.value || '',
+                topik: document.getElementById('topik')?.value || '',
+                progres_kendala: document.getElementById('progres_kendala')?.value || '',
+                riwayat: []
+            };
+            document.querySelectorAll('#tabel-perbaikan tbody tr').forEach(function (tr) {
+                var row = {};
+                tr.querySelectorAll('input, select').forEach(function (el) {
+                    var name = el.name;
+                    var m = name.match(/riwayat_perbaikan\[\d+\]\[(\w+)\]/);
+                    if (m) row[m[1]] = el.value;
+                });
+                data.riwayat.push(row);
+            });
+            return data;
+        }
+
+        function save() {
+            localStorage.setItem(KEY, JSON.stringify(collect()));
+            msg.textContent = 'Draf tersimpan otomatis ' + new Date().toLocaleTimeString();
+        }
+
+        // Restore draft (hanya jika ada dan belum mengisi ulang).
+        try {
+            var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+            if (saved && saved.progres_kendala && !document.getElementById('progres_kendala').value) {
+                if (saved.tanggal_bimbingan) document.getElementById('tanggal_bimbingan')?.value = saved.tanggal_bimbingan;
+                if (saved.tanggal_pengiriman) document.getElementById('tanggal_pengiriman')?.value = saved.tanggal_pengiriman;
+                if (saved.topik) document.getElementById('topik')?.value = saved.topik;
+                document.getElementById('progres_kendala').value = saved.progres_kendala;
+                if (saved.riwayat && saved.riwayat.length && tbody) {
+                    tbody.innerHTML = '';
+                    saved.riwayat.forEach(function (r) { addRow(r); });
+                }
+                msg.textContent = 'Draf dipulihkan dari penyimpanan otomatis.';
+            }
+        } catch (e) {}
+
+        setInterval(save, 5000);
+        form.addEventListener('submit', function () {
+            localStorage.removeItem(KEY);
+        });
+    })();
 </script>
 @endsection

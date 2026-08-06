@@ -168,11 +168,17 @@ class DashboardController extends Controller
                 $q->where('status_ta', $status);
             });
 
-        $list = $query->latest()->get()->map(fn ($ta) => [
-            'ta' => $ta,
-            'regularity' => $ta->regularity_status,
-            'tooltip' => $ta->regularity_tooltip,
-        ]);
+        // Urutkan berdasarkan urgensi: merah (butuh perhatian) di atas, lalu kuning, lalu hijau.
+        $priority = ['red' => 0, 'yellow' => 1, 'green' => 2];
+
+        $list = $query->latest()->get()
+            ->map(fn ($ta) => [
+                'ta' => $ta,
+                'regularity' => $ta->regularity_status,
+                'tooltip' => $ta->regularity_tooltip,
+            ])
+            ->sortBy(fn ($item) => $priority[$item['regularity']] ?? 3)
+            ->values();
 
         return view('dashboard.dosen-mahasiswa-list', compact('list', 'status', 'user'));
     }

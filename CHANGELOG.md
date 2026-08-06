@@ -133,6 +133,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New views: `workspace-institusi/index.blade.php` (dashboard grouping), `workspace-institusi/show.blade.php` (detail + files + manage access).
 - New `InstitutionWorkspaceTest` (9 tests) — verifies dosen same-prodi access, other-prodi denial, custom grant, admin same-node manage, admin different-level denial, uploader fingerprint, and dosen cannot upload.
 
+#### Logbook Form Autosave (Draft ke localStorage)
+- `logbook/create-revisi.blade.php` and `logbook/edit.blade.php` now **autosave draft to localStorage** every 5 seconds (create already had it).
+- Saves `progres_kendala`, `topik`, `tanggal_bimbingan`/`tanggal_pengiriman`, and the `riwayat_perbaikan` table rows.
+- **Restores** the draft on page reload if the user left mid-typing (e.g., connection drop, accidental back).
+- **Clears** the draft after successful submit.
+- Shows an "Draf tersimpan otomatis" indicator with timestamp.
+
+#### Dosen Mahasiswa List Sorted by Urgency
+- `DashboardController::dosenMahasiswaList()` now sorts the supervised-student list by **urgency** (`regularity_status`): red (needs attention) first, then yellow, then green.
+- Dosen with many students can immediately see who needs to be reminded/pushed without manual scrolling.
+- Consistent with the existing priority ordering already used in `dosenDashboard()`.
+
 #### Proactive Storage Quota Notifications
 - New `storage:notify-near-limit` command — notifies dosen when storage usage crosses **80%** (warning) or **95%** (critical) of their quota.
 - New `StorageQuotaWarningNotification` class — sends database + email notifications with usage percentage, used MB, limit MB, and a link to "Penyimpanan Saya".
