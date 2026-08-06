@@ -1,30 +1,31 @@
-# Spesifikasi Mode Aplikasi — Individual & Institusi
+# Spesifikasi Mode Aplikasi — SaaS Unified
 
 **Project:** Thesis Logbook Management
-**Dokumen:** Desain mode penggunaan aplikasi (individual default / institusi)
-**Status:** Proposal desain — acuan implementasi
+**Dokumen:** Desain mode penggunaan aplikasi (SaaS unified — user personal & institusi hidup bersamaan)
+**Status:** Implementasi — acuan arsitektur
 
 ---
 
 ## 1. Tujuan
 
-Aplikasi dapat dipakai dalam **dua mode**:
+Aplikasi menggunakan **satu deployment SaaS** yang menampung **tiga jenis user**:
 
-- **Mode Individual (default)** — untuk **satu dosen** yang mencatat bimbingan **dan pengujian** mahasiswanya (termasuk menguji mahasiswa lain), tanpa struktur institusi/prodi. Mahasiswa dapat mendaftar sendiri (dengan opsi menjadi penguji) lalu disetujui dosen.
-- **Mode Institusi** — untuk program studi / institusi yang mengelola **banyak dosen**, mahasiswa, pembimbing, penguji, sidang, dan laporan resmi.
+- **User personal/free** (`institution_id = NULL`) — dosen daftar mandiri, data TA milik dosen. Kuota storage dari plan individual (free 5 GB).
+- **User individual paid** (`institution_id = NULL`) — dosen berlangganan plan berbayar (donasi 10 GB), data tetap milik dosen.
+- **User institusi** (`institution_id = ID`) — dosen diadopsi ke institusi, data TA menjadi milik institusi. Kuota storage dari **shared pool institusi** (total semua directory_subscriptions) dengan batas per-user yang bisa diatur admin.
 
-Keduanya berbagi **satu codebase, satu database, satu deployment**. Perbedaan perilaku dikendalikan oleh **konfigurasi mode**, bukan dengan menyalin kode.
+Tidak ada mode global yang membuat seluruh aplikasi menjadi individual atau institution. **Gate dilakukan per-user** berdasarkan `institution_id`, bukan `APP_MODE`.
 
 ---
 
 ## 2. Prinsip Desain
 
 1. **Single codebase, single DB, single deploy** — tidak ada dua branch/dua aplikasi.
-2. **Multitenancy ringan** via kolom `institution_id` (nullable) + **Global Scope** Laravel, aktif hanya di mode institusi.
-3. **Satu titik kontrol fitur** — kelas `Feature` membaca `config('app.mode')`; tidak ada `if mode` tersebar di banyak controller.
-4. **Data pribadi bisa dibawa ke institusi** — mekanisme adopsi yang aman.
-5. **Branding tetap ada di kedua mode** — mode individual memakai satu record `institutions` bawaan agar logika seragam.
-6. **Individual = self-contained oleh satu dosen** — dosen bertindak sebagai pembimbing DAN penguji untuk mahasiswanya (semua peran dipegang satu orang). Fitur prodi (multi-dosen, bulk import, koordinator) yang dikunci di individual — bukan sidang/penguji.
+2. **Multitenancy ringan** via kolom `institution_id` (nullable) + **Global Scope** Laravel, aktif jika user login punya `institution_id`.
+3. **Gate fitur per-user** — kelas `Feature` membaca `institution_id` user; `APP_MODE` hanya nilai netral (`saas`).
+4. **Data pribadi bisa dibawa ke institusi** — mekanisme adopsi via System Admin (ubah `institution_id` user; data TA ikut diadopsi).
+5. **Branding tetap ada** — satu record `institutions` bawaan dipakai sebagai fallback global.
+6. **User free dan user institusi dapat hidup bersamaan** — karena gate dilakukan per user, bukan berdasarkan mode global.
 
 ---
 
@@ -45,14 +46,16 @@ Keduanya berbagi **satu codebase, satu database, satu deployment**. Perbedaan pe
 
 ```env
 # .env
-APP_MODE=individual        # individual (default) | institution
+APP_MODE=saas              # saas (default) — user personal & institusi hidup bersamaan
 ```
 
 Dibaca di `config/app.php`:
 
 ```php
-'mode' => env('APP_MODE', 'individual'),
+'mode' => env('APP_MODE', 'saas'),
 ```
+
+> **Catatan**: `APP_MODE` hanya nilai netral untuk kompatibilitas. **Tidak lagi dipakai untuk meng-gate fitur.** Gate dilakukan per-user berdasarkan `institution_id`.
 
 ### 3.3 Kelas `Feature` (pintu cek fitur)
 
@@ -62,37 +65,47 @@ class Feature
 {
     public static function mode(): string
     {
-        return config('app.mode');
-    }
-
-    public static function isInstitution(): bool
-    {
-        return self::mode() === 'institution';
+        return config('app.mode', 'saas');
     }
 
     /**
-     * Fitur prodi (multi-dosen & manajemen institusi) hanya aktif di mode institusi.
-     * Fitur "inti" (logbook, revisi, sidang, penguji, workspace) tersedia di KEDUA mode.
+     * Gate fitur dilakukan per-user berdasarkan institution_id.
+     * User personal (institution_id null) dan user institusi (institution_id terisi)
+     * hidup bersamaan dalam satu deployment.
      */
-    public static function has(string $feature): bool
+    public static function storageLimitMb(?User $user): int
     {
-        $institutionOnly = ['bulk_import', 'koordinator', 'laporan_institusi', 'multi_dosen'];
-        return in_array($feature, $institutionOnly, true)
-            ? self::isInstitution()
-            : true;
+        // 1. Override admin — menang mutlak.
+        // 2. User institusi: shared pool institusi (min dengan batas per-user).
+        // 3. User personal: plan individual + addon.
+    }
+
+    public static function institutionStorageLimitMb(int $institutionId): int
+    {
+        // Total semua directory_subscriptions aktif milik institusi (shared pool).
+    }
+
+    public static function institutionStorageUsedMb(int $institutionId): int
+    {
+        // Total pemakaian storage seluruh user institusi.
     }
 }
 ```
 
-Controller memanggil `Feature::has('bulk_import')` / `Feature::isInstitution()` — satu titik, mudah dirawat.
+Controller memanggil `Feature::storageLimitMb($user)` / `Feature::institutionStorageLimitMb($institutionId)` — satu titik, mudah dirawat.
 
 ---
 
 ## 4. Perbandingan Fitur
 
-| Fitur | 🌱 Individual (default) | 🏛️ Institusi |
+| Fitur | 🌱 User Personal | 🏛️ User Institusi |
 |---|---|---|
-| Mode / tenant | Implisit — semua milik **satu dosen** | Eksplisit via `institution_id` + Global Scope |
+| `institution_id` | `NULL` (data pribadi) | Assigned (multi-tenant) |
+| Tenant scope | Tidak aktif | Aktif (filter per institusi) |
+| Kuota storage | Plan individual + addon | Shared pool institusi (min dengan batas per-user) |
+| Langganan direktori | Tidak berlaku | Berlaku (directory_subscriptions) |
+| Admin scope | Tidak berlaku | Berlaku (admin_scopes) |
+| Workspace institusi | Tidak dapat akses | Dapat akses sesuai scope |
 | Dosen berperan sebagai | **Pembimbing + Penguji** (satu orang, semua peran) | Bisa pembimbing/penguji per-role resmi |
 | Pengguna | 1 dosen + mahasiswa pribadinya | Banyak dosen, admin prodi, koordinator, mahasiswa |
 | Profil institusi | Satu record bawaan (`Perguruan Tinggi`) | Profil institusi resmi (nama, fakultas, prodi, logo, kontak) |
@@ -110,16 +123,16 @@ Controller memanggil `Feature::has('bulk_import')` / `Feature::isInstitution()` 
 | **Import mahasiswa (Excel)** | 🔒 (manual per-mahasiswa) | ✅ Bulk import + assign massal |
 | Global search (Cmd+K) | Terbatas data sendiri | Mencakup seluruh institusi |
 | Laporan/export | Rekap per mahasiswa + riwayat menguji | Rekap per mahasiswa + per dosen/institusi |
-| **Bawa data pribadi ke institusi** | — | ✅ Command adopsi |
+| **Bawa data pribadi ke institusi** | — | ✅ Alur adopsi via System Admin |
 | Manajemen multi-dosen / koordinator | 🔒 | ✅ |
 
-> 🔒 = fitur **prodi** (bulk import, koordinator, multi-dosen, laporan institusi) — tidak tersedia (atau ditampilkan "Tidak tersedia di mode individual") di mode individual.
+> 🔒 = fitur **prodi** (bulk import, koordinator, multi-dosen, laporan institusi) — hanya tersedia untuk user institusi.
 >
-> **Penting**: sidang, penguji, dan riwayat menguji **TIDAK dikunci** — tersedia di kedua mode, karena satu dosen individual bisa bertindak sebagai pembimbing maupun penguji.
+> **Penting**: sidang, penguji, dan riwayat menguji **TIDAK dikunci** — tersedia untuk semua user, karena satu dosen individual bisa bertindak sebagai pembimbing maupun penguji.
 
 ---
 
-## 5. Global Scope Tenant (mode institusi saja)
+## 5. Global Scope Tenant (aktif jika user punya institution_id)
 
 ```php
 // app/Models/Scopes/InstitutionScope.php
@@ -127,15 +140,16 @@ class InstitutionScope implements Scope
 {
     public function apply(Builder $builder, Model $model): void
     {
-        if (Feature::isInstitution()) {
-            $builder->where($model->qualifyColumn('institution_id'), tenant()->id);
+        $tenant = auth()->user()?->institution_id;
+        if ($tenant) {
+            $builder->where($model->qualifyColumn('institution_id'), $tenant);
         }
-        // Mode individual: tanpa filter (data pribadi pemilik).
+        // User personal (institution_id null): tanpa filter (data pribadi pemilik).
     }
 }
 ```
 
-Dipakai di model yang punya `institution_id` (mis. `MahasiswaTa`). Di mode institusi, semua query otomatis hanya mengambil data institusi aktif.
+Dipakai di model yang punya `institution_id` (mis. `MahasiswaTa`). Jika user login punya `institution_id`, semua query otomatis hanya mengambil data institusi aktif. User personal tidak ter-filter.
 
 ---
 
@@ -235,73 +249,76 @@ Saat dosen mencatat sidang mahasiswa yang bukan bimbingannya, dosen perlu kontek
 ### 6.1 Konsep
 Saat dosen **bergabung/join** ke institusi, mahasiswa pribadinya (`institution_id = NULL` dan `pembimbing = dosen tsb`) dapat **diadopsi** ke institusi tersebut.
 
-### 6.2 Command `ta:adopt-personal-data`
+### 6.2 Alur adopsi via System Admin
 
-```bash
-php artisan ta:adopt-personal-data --dosen=<user_id> --institution=<institution_id>
+System Admin mengubah `institution_id` user via halaman **Kelola Pengguna** (dropdown institusi di kolom aksi):
+
+```php
+// AdminController::updateUserInstitution()
+// Route: POST /admin/users/{user}/institution
 ```
 
-Logika (draft):
+Logika:
 
-1. Temukan semua `mahasiswa_ta` dengan `institution_id = NULL` dan `pembimbing_1_id`/`pembimbing_2_id` = dosen.
-2. Untuk setiap TA: set `institution_id = <institution_id>`.
-3. Opsional: set `users.institution_id = <institution_id>` pada dosen & mahasiswa terkait.
-4. Tulis **audit log** (jumlah data diadopsi, dosen, institusi, waktu).
+1. System Admin memilih institusi tujuan (atau "Personal" untuk mengeluarkan user dari institusi).
+2. Jika mengadopsi ke institusi, pastikan institusi punya langganan aktif (`Feature::institutionHasActiveDirectorySubscription()`).
+3. Update `users.institution_id`.
+4. **Adopsi data TA**: semua `mahasiswa_ta` milik user ikut pindah institusi (`institution_id` ikut terisi).
+5. Jika dosen, adopsi juga TA yang dibimbingnya (pembimbing 1/2).
 
-### 6.3 Parameter adopsi (opsional)
-- `--only=<id1,id2>` : adopsi hanya TA tertentu.
-- `--dry-run` : tampilkan yang akan diadopsi tanpa mengubah.
-- `--include-users` : ikut meng-update `users.institution_id`.
-
-### 6.4 Keamanan
-- Hanya dosen pemilik data yang bisa mengadopsi datanya sendiri.
-- Data yang sudah `institution_id` terisi tidak akan tersentuh (kecuali `--force`).
+### 6.3 Keamanan
+- Hanya System Admin yang dapat mengubah institusi user.
+- Institusi tujuan harus punya langganan aktif.
+- Data yang sudah `institution_id` terisi akan ikut pindah saat user dipindahkan.
 
 ---
 
 ## 7. Penjagaan (Safeguards)
 
-1. **Global Scope hanya aktif di mode institusi** — mencegah individual tidak sengaja menyaring.
-2. **Fitur prodi dikunci via `Feature::has()`** — UI menampilkan "Tidak tersedia di mode individual" alih-alih error.
-3. **Adopsi satu arah & tercatat** — audit log + dry-run.
+1. **Global Scope aktif jika user punya `institution_id`** — user personal tidak ter-filter.
+2. **Gate fitur per-user** — `Feature::storageLimitMb()` membedakan user personal vs institusi.
+3. **Adopsi satu arah & tercatat** — hanya System Admin, dengan validasi langganan aktif.
 4. **Migration `institution_id` nullable** — tidak memaksa data lama.
-5. **Seeder** menciptakan satu record `institutions` bawaan untuk mode individual.
+5. **Seeder** menciptakan satu record `institutions` bawaan sebagai fallback global.
+6. **Shared pool kuota** — `Feature::institutionStorageLimitMb()` + `institutionStorageUsedMb()` memastikan institusi tidak melebihi kuota langganan.
 
 ---
 
-## 8. Roadmap Implementasi (urutan)
+## 8. Roadmap Implementasi (sudah selesai)
 
-| Fase | Isi | Verifikasi |
+| Fase | Isi | Status |
 |---|---|---|
-| **A** | Migration `institution_id` (users, mahasiswa_ta, sidangs) + `registration_status` + config `APP_MODE` + kelas `Feature` | `php artisan migrate`, `php -l` |
-| **B** | Global Scope `InstitutionScope` di mode institusi | Query otomatis tersaring |
-| **C** | **Registrasi mahasiswa + approve & assign peran** (mode individual): form sederhana, list pending, approve-set peran | Register → pending; approve → TA + peran terisi |
-| **D** | Sidang & riwayat menguji berjalan di kedua mode (dosen bisa jadi penguji) | Catat sidang utk data pribadi |
-| **E** | Command `ta:adopt-personal-data` (+ dry-run) | Dry-run tampil, run benar, audit log |
-| **F** | Kunci fitur prodi (bulk_import/koordinator/multi_dosen) via `Feature::has()` di controller & view | Mode individual → fitur "Tidak tersedia" |
-| **G** | UI: indikator mode, on-boarding join institusi | Tampil jelas mode aktif |
-| **H** | Laporan/agregasi koordinator (mode institusi) | Rekap lintas dosen |
+| **A** | Migration `institution_id` (users, mahasiswa_ta, sidangs) + `registration_status` + config `APP_MODE` + kelas `Feature` | ✅ Selesai |
+| **B** | Global Scope `InstitutionScope` (aktif jika user punya `institution_id`) | ✅ Selesai |
+| **C** | **Registrasi mahasiswa + approve & assign peran**: form sederhana, list pending, approve-set peran | ✅ Selesai |
+| **D** | Sidang & riwayat menguji berjalan untuk semua user (dosen bisa jadi penguji) | ✅ Selesai |
+| **E** | Alur adopsi via System Admin (`updateUserInstitution`) | ✅ Selesai |
+| **F** | Gate fitur per-user (bukan mode global) | ✅ Selesai |
+| **G** | Shared pool kuota institusi + batas per-user | ✅ Selesai |
+| **H** | Laporan/agregasi koordinator (user institusi) | 🔄 Berjalan |
 
 ---
 
 ## 9. Catatan Keputusan
 
-- **NULL = individual** dipertahankan sebagai konvensi sederhana.
-- **Satu record `institutions` bawaan** untuk mode individual → branding tetap seragam dan Global Scope tidak perlu cabang khusus NULL.
+- **NULL = personal** dipertahankan sebagai konvensi sederhana.
+- **Satu record `institutions` bawaan** sebagai fallback global (pre-auth, console, queue).
 - **`Feature` + Global Scope** = dua mekanisme komplementer: fitur-gate untuk UI/controller, scope untuk data isolation.
-- **Sidang, penguji, & riwayat menguji TIDAK dikunci** — tersedia di kedua mode (individual = satu dosen memegang semua peran).
-- **Fitur yang dikunci di individual** hanya yang bersifat *multi-dosen / manajemen institusi*: bulk import, koordinator, laporan institusi.
-- Implementasi bertahap dari **A → H**; tidak perlu semua sekaligus.
+- **Sidang, penguji, & riwayat menguji TIDAK dikunci** — tersedia untuk semua user.
+- **Gate fitur per-user** — bukan berdasarkan `APP_MODE` global. `APP_MODE=saas` hanya nilai netral.
+- **Shared pool kuota institusi** — institusi membeli 100 GB, seluruh data TA institusi memakai pool 100 GB. Batas per-user bisa diatur admin (min(pool, batas per-user)).
+- **Alur adopsi** — System Admin mengubah `institution_id` user; data TA ikut diadopsi.
 
 ---
 
-## 10. Pertanyaan Terbuka (untuk dikonfirmasi)
+## 10. Keputusan yang Sudah Dikonfirmasi
 
-1. Apakah mode bisa dipilih saat **install/setup**, atau harus **fixed per deployment**? (Rekomendasi: fixed per deployment via `APP_MODE`).
-2. Apakah **dosen boleh join > 1 institusi**? (Rekomendasi: satu `institution_id` saat ini; multi-institusi = tabel pivot `user_institution`, lebih kompleks).
-3. Apakah **mahasiswa pribadi** yang diadopsi tetap bisa dikelola dosen yang sama setelah pindah ke institusi? (Rekomendasi: ya, dosen tetap pembimbing).
-4. Di mode individual, apakah **dosen perlu approve mahasiswa** (seperti skema 5A) atau cukup **dosen menambah mahasiswa langsung** (tanpa register mahasiswa)? **→ KONFIRMASI: keduanya.** Mahasiswa bisa register + dosen juga bisa tambah manual (lihat 5A).
-5. Apakah **penguji di individual** berarti dosen tsb mencatat sidang mahasiswa ORANG LAIN (di luar bimbingannya), atau hanya mahasiswa bimbingannya sendiri? **→ KONFIRMASI: mahasiswa ORANG LAIN.** Dosen bisa mencatat sidang/riwayat menguji mahasiswa di luar bimbingannya (lihat 5B).
+1. **Mode deployment** — `APP_MODE=saas` (unified). User personal & institusi hidup bersamaan.
+2. **Dosen boleh join > 1 institusi** — saat ini satu `institution_id`; multi-institusi = tabel pivot `user_institution`, lebih kompleks (belum diimplementasikan).
+3. **Mahasiswa pribadi yang diadopsi** — tetap bisa dikelola dosen yang sama setelah pindah ke institusi (dosen tetap pembimbing).
+4. **Dosen perlu approve mahasiswa** — mahasiswa bisa register + dosen juga bisa tambah manual.
+5. **Penguji di personal** — dosen bisa mencatat sidang/riwayat menguji mahasiswa di luar bimbingannya.
+6. **Registrasi publik di mode institusi** — user self-register tetap bisa, tapi `institution_id = null` (terisolasi). Keputusan: biarkan seperti sekarang.
 
 ---
 

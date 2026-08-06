@@ -31,14 +31,14 @@ Aplikasi ini membantu dosen pembimbing/penguji dan mahasiswa memantau proses bim
 
 ### Mode Aplikasi
 
-Aplikasi berjalan dalam salah satu dari dua mode (dikonfigurasi oleh administrator):
+Aplikasi menggunakan **satu deployment SaaS** — user personal dan user institusi hidup bersamaan:
 
-| Mode | Deskripsi |
+| Jenis User | Deskripsi |
 |---|---|
-| 🌱 **Individual** (default) | Digunakan oleh **satu dosen** yang mencatat bimbingan dan pengujian mahasiswanya sendiri. Mahasiswa dapat mendaftar lalu disetujui dosen. |
-| 🏛️ **Institusi** | Digunakan oleh program studi/institusi yang mengelola **banyak dosen**, mahasiswa, pembimbing, penguji, sidang, dan laporan resmi. |
+| 🌱 **User Personal** | Dosen daftar mandiri, data TA milik dosen. Kuota storage dari plan individual (free 5 GB / donasi 10 GB). |
+| 🏛️ **User Institusi** | Dosen diadopsi ke institusi, data TA menjadi milik institusi. Kuota storage dari **shared pool institusi** (total semua langganan direktori) dengan batas per-user yang bisa diatur admin. |
 
-Indikator mode ditampilkan di bagian atas menu samping (sidebar), misalnya label **"Individual"** atau **"Institusi"**.
+Gate fitur dilakukan **per-user** berdasarkan `institution_id`, bukan mode global. User personal dan user institusi dapat hidup bersamaan dalam satu deployment.
 
 ---
 
@@ -75,11 +75,11 @@ Setiap peran memiliki dashboard ringkas:
 - **Dosen**: statistik total bimbingan, sedang progres, tamat, diuji, dan menunggu review; antrean review; health indicator; manajemen fase TA.
 - **Mahasiswa**: pengumuman belum dibaca, status kesehatan bimbingan, milestone journey (fase), judul & pembimbing TA, progres bimbingan, achievement, statistik & streak, heatmap aktivitas 12 bulan, dan timeline bimbingan.
 
-> **💡 Dashboard Admin & Dosen Terpisah** — Jika akun Anda memiliki peran **admin sekaligus dosen**, dashboard admin dan dosen **tidak digabung**. Anda dapat berpindah mode melalui **klik foto profil** di pojok kanan atas → pilih **"Mode Dashboard"** → **Dosen** atau **Admin**. Mode yang dipilih tersimpan selama sesi berlangsung.
->
 > **🔒 Label "Admin" Tersembunyi** — Label peran "admin" dan "system_admin" **tidak pernah ditampilkan** di halaman profil siapa pun (profil sendiri maupun profil orang lain). Status administratif tetap bersifat pribadi.
 >
 > **🛡️ System Admin** — Role **System Admin** memiliki akses penuh ke semua menu admin **plus** menu khusus **"Kelola Admin"** (membuat, reset password, dan menghapus akun admin) serta pengaturan **Paket/Plan**. Role **Admin** biasa tidak dapat mengelola admin lain.
+>
+> **🔗 Admin & Dosen Terpisah** — Akun admin dan dosen **dipisah** (tidak bisa satu akun memegang kedua role). Login sebagai dosen untuk dashboard dosen, login sebagai admin untuk dashboard admin.
 
 ### 3.3 Logbook Bimbingan
 
@@ -508,7 +508,7 @@ A: Otomatis saat dicatat **Sidang Akhir** dengan hasil **Lulus** atau **Lulus + 
 A: Indikator keteraturan bimbingan: 🟢 Sehat (<15 hari), 🟡 Perhatian (15–40 hari), 🔴 Kritis (>40 hari). Membantu dosen dan mahasiswa memantau konsistensi bimbingan.
 
 **Q: Saya dosen sekaligus admin, bagaimana cara berpindah dashboard?**
-A: Klik **foto profil** di pojok kanan atas → pada menu dropdown pilih **"Mode Dashboard"** → pilih **Dosen** atau **Admin**. Mode yang dipilih tersimpan selama sesi berlangsung.
+A: Akun admin dan dosen **dipisah** — tidak bisa satu akun memegang kedua role. Login sebagai dosen untuk dashboard dosen, login sebagai admin untuk dashboard admin.
 
 **Q: Mengapa label "admin" tidak muncul di profil saya?**
 A: Label peran "admin" sengaja disembunyikan dari semua halaman profil agar status administratif tetap pribadi. Label "dosen" dan "mahasiswa" tetap ditampilkan.

@@ -95,48 +95,34 @@ The application follows a cohesive design system optimized for thesis mentoring 
 
 ### Deployment Modes
 
-The application supports **two operational modes** (see `docs/MODE-SPEC.md` for full architecture):
+The application uses a **unified SaaS deployment** (see `docs/MODE-SPEC.md` for full architecture). User personal (free/individual paid) dan user institusi (berbayar) hidup bersamaan dalam satu deployment.
 
-#### Individual Mode (default)
+#### Unified SaaS (default)
 
-Single supervisor manages their own cohort of students. Students self-register via email, verify their email, and then select their preferred supervisor/examiner (pembimbing/penguji) via the **"Pilih Dosen"** page. The selected supervisor approves or rejects the attachment request. Supervisors can also manually record thesis defenses for external students (student name + up to 3 external examiners).
-
-#### Institution Mode
-
-Multi-tenant deployment with centralized administration. Features institution-level settings, bulk Excel import for student onboarding, coordinator roles, and institution-wide reports. Enabled via `APP_MODE=institution` in `.env`.
+- **User personal** (`institution_id = NULL`) — dosen daftar mandiri, data TA milik dosen. Kuota storage dari plan individual + addon.
+- **User institusi** (`institution_id = ID`) — dosen diadopsi ke institusi, data TA menjadi milik institusi. Kuota storage dari **shared pool institusi** (total semua directory_subscriptions) dengan batas per-user yang bisa diatur admin.
+- **Gate fitur per-user** — bukan berdasarkan `APP_MODE` global. `InstitutionScope` aktif jika user login punya `institution_id`.
+- **Alur adopsi** — System Admin mengubah `institution_id` user via halaman Kelola Pengguna; data TA ikut diadopsi.
 
 #### Mode Comparison
 
-| Aspect | Individual Mode | Institution Mode |
-|--------|----------------|------------------|
-| `institution_id` | `NULL` (personal data) | Assigned (multi-tenant) |
-| Tenant scope | Not active | Active (filtered per institution) |
-| Bulk Excel import | ❌ | ✅ |
-| Student registration | Self-register + verify email + select lecturer (lecturer approves) | Requires supervisor/admin approval |
-| Institution-wide reports | ❌ | ✅ |
-| Multi-supervisor / multi-institution | ❌ | ✅ |
-| Sidebar badge | "Individual" | "Institution" |
+| Aspek | User Personal | User Institusi |
+|--------|--------------|----------------|
+| `institution_id` | `NULL` (data pribadi) | Assigned (multi-tenant) |
+| Tenant scope | Tidak aktif | Aktif (filter per institusi) |
+| Kuota storage | Plan individual + addon | Shared pool institusi (min dengan batas per-user) |
+| Langganan direktori | Tidak berlaku | Berlaku (directory_subscriptions) |
+| Admin scope | Tidak berlaku | Berlaku (admin_scopes) |
+| Workspace institusi | Tidak dapat akses | Dapat akses sesuai scope |
 
 **Implementation details:**
 
-- Feature detection via `app/Support/Feature.php` (gates like `Feature::isInstitution()`, `Feature::has('bulk_import')`)
-- Tenant isolation via `app/Models/Scopes/InstitutionScope.php` (Laravel Global Scope)
+- Feature detection via `app/Support/Feature.php` (per-user `institution_id` gating)
+- Tenant isolation via `app/Models/Scopes/InstitutionScope.php` (Laravel Global Scope, aktif jika `institution_id` terisi)
 - Student self-registration at `/register`; supervisor approval at `/approval`
 - Thesis defense records at `/dosen-sidang` (NIDN/NIP-based)
-
-**Migration from individual to institution mode:**
-
-```bash
-php artisan ta:adopt-personal-data \
-  --dosen=<user_id> \
-  --institution=<institution_id> \
-  --dry-run                        # Preview changes without applying
-  --include-users                  # Also migrate user.institution_id
-  --only=<ta_id>                   # Migrate single thesis (optional)
-  --force                          # Skip confirmation prompt
-```
-
-All migrations are logged to the audit channel for compliance and rollback traceability.
+- Shared pool kuota via `Feature::institutionStorageLimitMb()` + `Feature::institutionStorageUsedMb()`
+- Alur adopsi via `AdminController::updateUserInstitution()` (route `POST /admin/users/{user}/institution`)
 
 ### Administration & Access Control
 
@@ -266,8 +252,9 @@ The database seeder creates the following accounts for testing:
 | Role | Email | Password |
 |---|---|---|
 | System Admin | `systemadmin@example.com` | `password` |
-| Admin + Supervisor (NIDN 0001010101) | `admin@example.com` | `password` |
+| Admin (role admin saja) | `admin@example.com` | `password` |
 | Administrator Sistem | `administrator@example.com` | `password` |
+| Supervisor 1 (NIDN 0001010101) | `dosen1@example.com` | `password` |
 | Supervisor 2 (NIDN 0002020202) | `dosen2@example.com` | `password` |
 | Supervisor 3 (NIDN 0003030303) | `dosen3@example.com` | `password` |
 | Supervisor 4 (NIDN 0004040404) | `dosen4@example.com` | `password` |
@@ -276,7 +263,7 @@ The database seeder creates the following accounts for testing:
 | Student — KP (anggota kelompok, NIM 200401003) | `mahasiswa_kp2@example.com` | `password` |
 | Student — Active (belum pilih dosen, NIM 200401004) | `mahasiswa_active@example.com` | `password` |
 
-Demo akun berikut terhubung ke **Universitas Nusantara** (Fakultas Teknik → Departemen Teknik Informatika → S1 Teknik Informatika) dan tergabung dalam grup **"Dosen Teknik Informatika Universitas Nusantara"**: `admin@example.com`, `dosen2@example.com`, `dosen3@example.com`, `dosen4@example.com`.
+Demo akun berikut terhubung ke **Universitas Nusantara** (Fakultas Teknik → Departemen Teknik Informatika → S1 Teknik Informatika) dan tergabung dalam grup **"Dosen Teknik Informatika Universitas Nusantara"**: `dosen1@example.com`, `dosen2@example.com`, `dosen3@example.com`, `dosen4@example.com`.
 
 Akun demo `mahasiswa@example.com` (TA) memiliki fase **proposal** dengan pembimbing 1/2 dan penguji 1/2 untuk demo fitur seminar submission & finalisasi.
 
@@ -372,7 +359,7 @@ APP_DEBUG=false                # Never enable in production
 APP_URL=http://your-domain     # Application base URL
 
 # Application mode
-APP_MODE=individual            # 'individual' (default) | 'institution'
+APP_MODE=saas                  # 'saas' (default) — user personal & institusi hidup bersamaan
 
 # External resource links (customizable per institution)
 APP_JADWAL_URL=https://...     # External guidance scheduling system
