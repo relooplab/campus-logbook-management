@@ -45,11 +45,29 @@
                 <div> <label class="block text-sm font-medium mb-1" for="whatsapp">Nomor WhatsApp @if ($user->isMahasiswa())<span class="text-status-danger">*</span>@endif</label> <input
                         type="text" name="whatsapp" id="whatsapp" @if ($user->isMahasiswa()) required @endif value="{{ old("whatsapp", $user->whatsapp) }}"
                         placeholder="6281xxxxxx"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
+                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    @if ($user->isDosen())
+                        <label class="mt-2 flex items-center gap-2 text-xs text-text-secondary cursor-pointer">
+                            <input type="checkbox" name="bimbingan_via_whatsapp" value="1"
+                                @checked(old('bimbingan_via_whatsapp', $user->bimbingan_via_whatsapp))
+                                class="rounded border-border">
+                            Kontak mahasiswa lewat jalur ini untuk bimbingan
+                        </label>
+                    @endif
+                </div>
                 <div> <label class="block text-sm font-medium mb-1" for="telegram">Telegram</label> <input
                         type="text" name="telegram" id="telegram" value="{{ old("telegram", $user->telegram) }}"
                         placeholder="@username"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
+                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    @if ($user->isDosen())
+                        <label class="mt-2 flex items-center gap-2 text-xs text-text-secondary cursor-pointer">
+                            <input type="checkbox" name="bimbingan_via_telegram" value="1"
+                                @checked(old('bimbingan_via_telegram', $user->bimbingan_via_telegram))
+                                class="rounded border-border">
+                            Kontak mahasiswa lewat jalur ini untuk bimbingan
+                        </label>
+                    @endif
+                </div>
                 <div> <label class="block text-sm font-medium mb-1" for="linkedin">LinkedIn</label> <input
                         type="url" name="linkedin" id="linkedin" value="{{ old("linkedin", $user->linkedin) }}"
                         placeholder="https://linkedin.com/in/..."

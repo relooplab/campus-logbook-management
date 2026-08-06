@@ -22,8 +22,12 @@ class SchedulingController extends Controller
         $user = $request->user();
 
         $query = User::role('dosen')
-            ->whereNotNull('jadwal_bimbingan_url')
-            ->where('jadwal_bimbingan_url', '!=', '');
+            ->where(function ($q) {
+                $q->whereNotNull('jadwal_bimbingan_url')
+                    ->where('jadwal_bimbingan_url', '!=', '')
+                    ->orWhere('bimbingan_via_whatsapp', true)
+                    ->orWhere('bimbingan_via_telegram', true);
+            });
 
         // Mode institusi: batasi ke institusi yang sama dengan user.
         if (Feature::isInstitution() && $user->institution_id) {
