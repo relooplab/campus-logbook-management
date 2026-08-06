@@ -27,7 +27,7 @@
             <label class="block text-xs text-text-secondary mb-1">Status</label>
             <select name="status" class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
                 <option value="">Semua</option>
-                @foreach (['draft' => 'Draf', 'submitted' => 'Dikirim', 'approved' => 'Disetujui', 'revisi' => 'Revisi'] as $v => $l)
+                @foreach (\App\Models\LogbookEntry::STATUS_LABELS as $v => $l)
                     <option value="{{ $v }}" @selected(($filters['status'] ?? '') === $v)>{{ $l }}</option>
                 @endforeach
             </select>
@@ -86,7 +86,7 @@
                     @foreach ($entries as $entry)
                         @php
                             $isMahasiswa = auth()->user()->isMahasiswa();
-                            $needsAction = $isMahasiswa && in_array($entry->status, ['draft', 'revisi']);
+                            $needsAction = $isMahasiswa && in_array($entry->status, ['draft', 'revisi', 'revision_in_progress']);
                         @endphp
                         <tr class="border-b border-border last:border-0 hover:bg-bg-panel/50 {{ $needsAction ? 'bg-status-pending/5' : '' }}">
                             @if (!$isMahasiswa)
@@ -101,7 +101,7 @@
                             <td class="py-3 px-4 table-col-jenis">{{ ucfirst($entry->jenis) }}</td>
                             <td class="py-3 px-4">{{ $entry->topik ?? 'Revisi' }}</td>
                             <td class="py-3 px-4 table-col-tanggal">{{ $entry->tanggal_tampil?->format('d M Y') ?? '—' }}</td>
-                            <td class="py-3 px-4">@include('partials.status-badge', ['status' => $entry->status])</td>
+                            <td class="py-3 px-4">@include('partials.status-badge', ['status' => $entry->status, 'entry' => $entry])</td>
                             <td class="py-3 px-4">
                                 <a href="{{ route('logbook.show', $entry) }}" class="text-brand hover:underline">Detail</a>
                             </td>

@@ -12,142 +12,284 @@
         <h1 class="font-heading font-bold text-2xl text-text-primary">Entri Revisi</h1>
         <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali</a>
     </div>
-    @if ($parents->isEmpty())
-        <div class="mb-4 px-4 py-3 rounded-xl bg-status-pending/10 border border-status-pending/30 text-sm">
-            Anda bisa membuat entri revisi langsung tanpa harus ada logbook sebelumnya. Jika ingin menjawab feedback dari entri yang sudah ada, pilih entri asal di bawah.
-        </div>
-    @endif
+
+    {{-- ===== Wizard Steps Indicator ===== --}}
+    <div class="flex items-center gap-1 mb-6 overflow-x-auto pb-1">
+        @php
+            $steps = [
+                1 => ['Pilih Feedback', 'forum'],
+                2 => ['Isi Perbaikan', 'build'],
+                3 => ['Upload File', 'upload_file'],
+                4 => ['Review & Kirim', 'send'],
+            ];
+        @endphp
+        @foreach ($steps as $num => [$label, $icon])
+            <div class="flex items-center gap-1 shrink-0">
+                <button type="button" data-step="{{ $num }}"
+                    class="wizard-step flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors {{ $num === 1 ? 'bg-brand text-white' : 'bg-bg-panel text-text-secondary hover:bg-bg-hover' }}">
+                    <span class="material-symbols-outlined icon-sm">{{ $icon }}</span>
+                    <span class="hidden sm:inline">{{ $label }}</span>
+                </button>
+                @if ($num < 4)
+                    <span class="w-4 h-0.5 bg-border"></span>
+                @endif
+            </div>
+        @endforeach
+    </div>
+
     <form method="POST" action="{{ route('logbook.store-revisi') }}" enctype="multipart/form-data"
         class="card p-6 space-y-4" id="revisi-form">
         @csrf
-        <div>
-            <label class="block text-xs text-text-secondary mb-1" for="parent_entry_id">Feedback yang dijawab (opsional)</label>
-            <select name="parent_entry_id" id="parent_entry_id"
-                class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
-                <option value="">Tidak ada — revisi mandiri</option>
-                @foreach ($parents as $parent)
-                    <option value="{{ $parent->id }}" @selected(old('parent_entry_id', $selectedParentId) == $parent->id)>
-                        Entri #{{ $parent->id }} · {{ $parent->revision_round ? "Revisi ke-{$parent->revision_round}" : 'Logbook' }} · {{ $parent->reviewed_at?->format('d M Y') }}
-                    </option>
-                @endforeach
-            </select>
-            <p class="text-xs text-text-secondary mt-1">Kosongkan jika ingin membuat revisi tanpa menghubungkan ke entri logbook yang ada.</p>
-            @error('parent_entry_id')
-                <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
-        @foreach ($parents as $parent)
-            <div data-parent-feedback="{{ $parent->id }}" class="rounded-xl bg-bg-panel border border-border p-3 space-y-2 hidden">
-                <p class="text-xs font-semibold text-text-secondary">Feedback entri #{{ $parent->id }}</p>
-                <p class="text-sm whitespace-pre-wrap">{{ $parent->feedback_dosen ?: "Tidak ada feedback teks." }}</p>
-                @foreach ($parent->comments->where("resolution_status", "!=", \App\Models\PdfComment::STATUS_RESOLVED) as $comment)
-                    <label class="flex gap-2 items-start text-xs">
-                        <input type="checkbox" name="addressed_comment_ids[]" value="{{ $comment->id }}"
-                            @checked(in_array($comment->id, old("addressed_comment_ids", []))) class="mt-0.5">
-                        <span>Hal. {{ $comment->page_number }}: {{ $comment->comment }}</span>
-                    </label>
-                @endforeach
+
+        {{-- ===== STEP 1: Pilih Feedback ===== --}}
+        <div class="wizard-panel" data-panel="1">
+            <h2 class="font-heading font-semibold text-text-primary mb-3">1. Pilih Feedback yang Dijawab</h2>
+            <div>
+                <label class="block text-xs text-text-secondary mb-1" for="parent_entry_id">Feedback yang dijawab (opsional)</label>
+                <select name="parent_entry_id" id="parent_entry_id"
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                    <option value="">Tidak ada — revisi mandiri</option>
+                    @foreach ($parents as $parent)
+                        <option value="{{ $parent->id }}" @selected(old('parent_entry_id', $selectedParentId) == $parent->id)>
+                            Entri #{{ $parent->id }} · {{ $parent->revision_round ? "Revisi ke-{$parent->revision_round}" : 'Logbook' }} · {{ $parent->reviewed_at?->format('d M Y') }}
+                        </option>
+                    @endforeach
+                </select>
+                <p class="text-xs text-text-secondary mt-1">Kosongkan jika ingin membuat revisi tanpa menghubungkan ke entri logbook yang ada.</p>
+                @error('parent_entry_id')
+                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
-        @endforeach
-        <div>
-            <label class="block text-xs text-text-secondary mb-1" for="tanggal_pengiriman">Tanggal Pengiriman Revisi</label>
-            <input type="date" name="tanggal_pengiriman" id="tanggal_pengiriman" required
-                value="{{ old('tanggal_pengiriman', now()->format('Y-m-d')) }}"
-                class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
-            @error('tanggal_pengiriman')
-                <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
-            @enderror
+
+            {{-- Feedback & komentar parent --}}
+            @foreach ($parents as $parent)
+                <div data-parent-feedback="{{ $parent->id }}" class="rounded-xl bg-bg-panel border border-border p-3 space-y-2 hidden mt-3">
+                    <p class="text-xs font-semibold text-text-secondary">Feedback entri #{{ $parent->id }}</p>
+                    <p class="text-sm whitespace-pre-wrap">{{ $parent->feedback_dosen ?: "Tidak ada feedback teks." }}</p>
+                    @php $openComments = $parent->comments->where('resolution_status', '!=', \App\Models\PdfComment::STATUS_RESOLVED); @endphp
+                    @if ($openComments->isNotEmpty())
+                        <p class="text-xs font-semibold text-text-secondary pt-1">Komentar PDF yang belum diselesaikan:</p>
+                        @foreach ($openComments as $comment)
+                            <label class="flex gap-2 items-start text-xs">
+                                <input type="checkbox" name="addressed_comment_ids[]" value="{{ $comment->id }}"
+                                    @checked(in_array($comment->id, old("addressed_comment_ids", []))) class="mt-0.5">
+                                <span>Hal. {{ $comment->page_number ?: '—' }}: {{ $comment->comment }}</span>
+                            </label>
+                        @endforeach
+                    @endif
+                </div>
+            @endforeach
+
+            <div class="mt-4 flex justify-end">
+                <button type="button" class="wizard-next px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Lanjut →</button>
+            </div>
         </div>
 
-        {{-- ===== Catatan Perbaikan (tabel terstruktur) ===== --}}
-        <div>
-            <label class="block text-sm font-medium mb-1">Catatan Perbaikan</label>
-            <p class="text-xs text-text-secondary mb-2">Isi tabel perbaikan sesuai komentar dosen. PDF catatan perbaikan dibuat otomatis oleh sistem. Tekan <b>Enter</b> untuk menambah baris.</p>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm border border-border" id="tabel-perbaikan">
-                    <thead>
-                        <tr class="bg-bg-panel text-left text-text-secondary">
-                            <th class="py-2 px-2 border-b border-border w-[15%]">Halaman/Bagian</th>
-                            <th class="py-2 px-2 border-b border-border w-[25%]">Komentar Dosen</th>
-                            <th class="py-2 px-2 border-b border-border w-[30%]">Perbaikan yang Dilakukan</th>
-                            <th class="py-2 px-2 border-b border-border w-[15%]">Status</th>
-                            <th class="py-2 px-2 border-b border-border w-[8%]"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($oldRiwayat as $i => $row)
-                            <tr class="border-b border-border">
-                                <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[{{ $i }}][halaman]" value="{{ $row['halaman'] ?? '' }}" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
-                                <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[{{ $i }}][komentar_dosen]" value="{{ $row['komentar_dosen'] ?? '' }}" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
-                                <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[{{ $i }}][perbaikan]" value="{{ $row['perbaikan'] ?? '' }}" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
-                                <td class="py-1.5 px-1">
-                                    <select name="riwayat_perbaikan[{{ $i }}][status]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm">
-                                        @foreach ($statusOptions as $s)
-                                            <option value="{{ $s }}" @selected(($row['status'] ?? '') === $s || (($row['status'] ?? '') === '' && $loop->first))>{{ $s }}</option>
-                                        @endforeach
-                                    </select>
-                                </td>
-                                <td class="py-1.5 px-1 text-center"><button type="button" class="hapus-baris text-status-danger hover:underline text-xs">Hapus</button></td>
-                            </tr>
-                        @empty
-                            @for ($r = 0; $r < 5; $r++)
-                                <tr class="border-b border-border">
-                                    <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[{{ $r }}][halaman]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
-                                    <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[{{ $r }}][komentar_dosen]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
-                                    <td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[{{ $r }}][perbaikan]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>
-                                    <td class="py-1.5 px-1">
-                                        <select name="riwayat_perbaikan[{{ $r }}][status]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm">
-                                            @foreach ($statusOptions as $s)
-                                                <option value="{{ $s }}" @selected($loop->first)>{{ $s }}</option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td class="py-1.5 px-1 text-center"><button type="button" class="hapus-baris text-status-danger hover:underline text-xs">Hapus</button></td>
-                                </tr>
-                            @endfor
-                        @endforelse
-                    </tbody>
-                </table>
+        {{-- ===== STEP 2: Isi Perbaikan ===== --}}
+        <div class="wizard-panel hidden" data-panel="2">
+            <h2 class="font-heading font-semibold text-text-primary mb-1">2. Isi Perbaikan</h2>
+            <p class="text-xs text-text-secondary mb-3">Isi kartu perbaikan sesuai komentar dosen. PDF catatan perbaikan dibuat otomatis oleh sistem.</p>
+
+            <div id="kartu-perbaikan" class="space-y-3">
+                @forelse ($oldRiwayat as $i => $row)
+                    <div class="perbaikan-card rounded-xl bg-bg-panel border border-border p-4 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-text-secondary">Perbaikan #{{ $i + 1 }}</span>
+                            <button type="button" class="hapus-kartu text-status-danger hover:underline text-xs">Hapus</button>
+                        </div>
+                        <div class="grid sm:grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs text-text-secondary mb-1">Halaman/Bagian</label>
+                                <input type="text" name="riwayat_perbaikan[{{ $i }}][halaman]" value="{{ $row['halaman'] ?? '' }}" placeholder="mis. Hal. 5, Bab 3"
+                                    class="w-full rounded-lg border border-border bg-bg-surface px-3 py-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-text-secondary mb-1">Status</label>
+                                <select name="riwayat_perbaikan[{{ $i }}][status]" class="w-full rounded-lg border border-border bg-bg-surface px-3 py-2 text-sm">
+                                    @foreach ($statusOptions as $s)
+                                        <option value="{{ $s }}" @selected(($row['status'] ?? '') === $s || (($row['status'] ?? '') === '' && $loop->first))>{{ $s }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-text-secondary mb-1">Komentar Dosen</label>
+                            <input type="text" name="riwayat_perbaikan[{{ $i }}][komentar_dosen]" value="{{ $row['komentar_dosen'] ?? '' }}" placeholder="Komentar yang diperbaiki"
+                                class="w-full rounded-lg border border-border bg-bg-surface px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-text-secondary mb-1">Perbaikan yang Dilakukan</label>
+                            <textarea name="riwayat_perbaikan[{{ $i }}][perbaikan]" rows="2" placeholder="Jelaskan perbaikan yang Anda lakukan"
+                                class="w-full rounded-lg border border-border bg-bg-surface px-3 py-2 text-sm">{{ $row['perbaikan'] ?? '' }}</textarea>
+                        </div>
+                    </div>
+                @empty
+                    <div class="perbaikan-card rounded-xl bg-bg-panel border border-border p-4 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-text-secondary">Perbaikan #1</span>
+                            <button type="button" class="hapus-kartu text-status-danger hover:underline text-xs">Hapus</button>
+                        </div>
+                        <div class="grid sm:grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs text-text-secondary mb-1">Halaman/Bagian</label>
+                                <input type="text" name="riwayat_perbaikan[0][halaman]" placeholder="mis. Hal. 5, Bab 3"
+                                    class="w-full rounded-lg border border-border bg-bg-surface px-3 py-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-text-secondary mb-1">Status</label>
+                                <select name="riwayat_perbaikan[0][status]" class="w-full rounded-lg border border-border bg-bg-surface px-3 py-2 text-sm">
+                                    @foreach ($statusOptions as $s)
+                                        <option value="{{ $s }}" @selected($loop->first)>{{ $s }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-text-secondary mb-1">Komentar Dosen</label>
+                            <input type="text" name="riwayat_perbaikan[0][komentar_dosen]" placeholder="Komentar yang diperbaiki"
+                                class="w-full rounded-lg border border-border bg-bg-surface px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-text-secondary mb-1">Perbaikan yang Dilakukan</label>
+                            <textarea name="riwayat_perbaikan[0][perbaikan]" rows="2" placeholder="Jelaskan perbaikan yang Anda lakukan"
+                                class="w-full rounded-lg border border-border bg-bg-surface px-3 py-2 text-sm"></textarea>
+                        </div>
+                    </div>
+                @endforelse
             </div>
-            <div class="mt-2">
-                <button type="button" id="tambah-baris" class="px-3 py-1.5 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-xs font-semibold">+ Tambah Baris</button>
+
+            <div class="mt-3">
+                <button type="button" id="tambah-kartu" class="px-3 py-1.5 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-xs font-semibold">+ Tambah Kartu</button>
             </div>
             @error("riwayat_perbaikan")
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
-        </div>
 
-        {{-- ===== Pesan untuk Dosen ===== --}}
-        <div>
-            <label class="block text-xs text-text-secondary mb-1" for="progres_kendala">Pesan untuk Dosen <span class="text-text-secondary">(opsional)</span></label>
-            <textarea name="progres_kendala" id="progres_kendala" rows="4" maxlength="500"
-                placeholder="Contoh: Mohon maaf atas keterlambatan pengumpulan revisi, saya terkendala ... / Ada satu poin yang masih saya tandai 'Sebagian' karena ... / Mohon arahan untuk bagian ..."
-                class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">{{ old('progres_kendala') }}</textarea>
-            <div class="flex flex-wrap items-center justify-between gap-2 mt-1">
-                <p class="text-xs text-text-secondary">Gunakan untuk konteks yang tidak tertampung di tabel (kendala, alasan, pertanyaan). Pesan ini tampil di atas PDF yang diterima dosen.</p>
-                <span class="text-xs text-text-secondary" id="pesan-counter">0/500</span>
+            <div class="mt-4 flex justify-between">
+                <button type="button" class="wizard-prev px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali</button>
+                <button type="button" class="wizard-next px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Lanjut →</button>
             </div>
-            @error('progres_kendala')
-                <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
-            @enderror
         </div>
 
-        {{-- ===== Berkas ===== --}}
-        <div> <label class="block text-sm font-medium mb-1" for="lampiran">File Perbaikan/Draft ({{ $typesLabel }}, wajib, maks {{ $maxMb }} MB)</label> <input type="file" name="lampiran" id="lampiran" accept="{{ $accept }}" required
-                class="w-full text-sm"> @error("lampiran")
-                <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
-            @enderror
+        {{-- ===== STEP 3: Upload File ===== --}}
+        <div class="wizard-panel hidden" data-panel="3">
+            <h2 class="font-heading font-semibold text-text-primary mb-3">3. Upload File & Pesan</h2>
+
+            <div>
+                <label class="block text-xs text-text-secondary mb-1" for="tanggal_pengiriman">Tanggal Pengiriman Revisi</label>
+                <input type="date" name="tanggal_pengiriman" id="tanggal_pengiriman" required
+                    value="{{ old('tanggal_pengiriman', now()->format('Y-m-d')) }}"
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                @error('tanggal_pengiriman')
+                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-xs text-text-secondary mb-1" for="lampiran">File Perbaikan/Draft ({{ $typesLabel }}, wajib, maks {{ $maxMb }} MB)</label>
+                <input type="file" name="lampiran" id="lampiran" accept="{{ $accept }}" required
+                    class="w-full text-sm">
+                @error("lampiran")
+                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label class="block text-xs text-text-secondary mb-1" for="progres_kendala">Pesan untuk Dosen <span class="text-text-secondary">(opsional)</span></label>
+                <textarea name="progres_kendala" id="progres_kendala" rows="4" maxlength="500"
+                    placeholder="Contoh: Mohon maaf atas keterlambatan pengumpulan revisi, saya terkendala ... / Ada satu poin yang masih saya tandai 'Sebagian' karena ... / Mohon arahan untuk bagian ..."
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">{{ old('progres_kendala') }}</textarea>
+                <div class="flex flex-wrap items-center justify-between gap-2 mt-1">
+                    <p class="text-xs text-text-secondary">Gunakan untuk konteks yang tidak tertampung di tabel (kendala, alasan, pertanyaan).</p>
+                    <span class="text-xs text-text-secondary" id="pesan-counter">0/500</span>
+                </div>
+                @error('progres_kendala')
+                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="mt-4 flex justify-between">
+                <button type="button" class="wizard-prev px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali</button>
+                <button type="button" class="wizard-next px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Lanjut →</button>
+            </div>
         </div>
-        <div class="flex flex-wrap gap-2 pt-2">
-            <button type="submit" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Simpan Revisi</button>
-            <button type="submit" name="submit" value="1" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Kirim ke dosen</button>
-            <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20">Batal</a>
+
+        {{-- ===== STEP 4: Review & Kirim ===== --}}
+        <div class="wizard-panel hidden" data-panel="4">
+            <h2 class="font-heading font-semibold text-text-primary mb-3">4. Review Ringkasan</h2>
+
+            <div class="rounded-xl bg-bg-panel border border-border p-4 space-y-3 text-sm">
+                <div class="flex items-start gap-2">
+                    <span class="material-symbols-outlined icon-sm text-text-secondary mt-0.5">forum</span>
+                    <div>
+                        <p class="text-xs text-text-secondary">Feedback yang dijawab</p>
+                        <p class="text-text-primary" id="review-parent">—</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-2">
+                    <span class="material-symbols-outlined icon-sm text-text-secondary mt-0.5">build</span>
+                    <div>
+                        <p class="text-xs text-text-secondary">Jumlah perbaikan</p>
+                        <p class="text-text-primary" id="review-jumlah">0 kartu</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-2">
+                    <span class="material-symbols-outlined icon-sm text-text-secondary mt-0.5">upload_file</span>
+                    <div>
+                        <p class="text-xs text-text-secondary">File perbaikan</p>
+                        <p class="text-text-primary" id="review-file">Belum dipilih</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-2">
+                    <span class="material-symbols-outlined icon-sm text-text-secondary mt-0.5">event</span>
+                    <div>
+                        <p class="text-xs text-text-secondary">Tanggal pengiriman</p>
+                        <p class="text-text-primary" id="review-tanggal">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 flex flex-wrap gap-2">
+                <button type="button" class="wizard-prev px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Simpan Draft</button>
+                <button type="submit" name="submit" value="1" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Kirim ke Dosen</button>
+            </div>
         </div>
     </form>
 </div>
 @endsection @section("scripts")
 <script>
-    // Counter pesan untuk dosen (max 500).
+    // ===== Wizard navigation =====
+    var currentStep = 1;
+    var totalSteps = 4;
+    var stepButtons = document.querySelectorAll('.wizard-step');
+    var panels = document.querySelectorAll('.wizard-panel');
+
+    function showStep(n) {
+        currentStep = Math.max(1, Math.min(totalSteps, n));
+        panels.forEach(function (p) { p.classList.toggle('hidden', parseInt(p.dataset.panel) !== currentStep); });
+        stepButtons.forEach(function (b) {
+            var active = parseInt(b.dataset.step) === currentStep;
+            b.classList.toggle('bg-brand', active);
+            b.classList.toggle('text-white', active);
+            b.classList.toggle('bg-bg-panel', !active);
+            b.classList.toggle('text-text-secondary', !active);
+        });
+        if (currentStep === 4) updateReview();
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    document.querySelectorAll('.wizard-next').forEach(function (btn) {
+        btn.addEventListener('click', function () { showStep(currentStep + 1); });
+    });
+    document.querySelectorAll('.wizard-prev').forEach(function (btn) {
+        btn.addEventListener('click', function () { showStep(currentStep - 1); });
+    });
+    stepButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () { showStep(parseInt(btn.dataset.step)); });
+    });
+
+    // ===== Counter pesan =====
     var pesanInput = document.getElementById('progres_kendala');
     var pesanCounter = document.getElementById('pesan-counter');
     function updateCounter() {
@@ -156,61 +298,63 @@
     }
     if (pesanInput) pesanInput.addEventListener('input', updateCounter);
 
-    // Tabel perbaikan dinamis: tambah/hapus baris.
-    var tabel = document.getElementById('tabel-perbaikan');
-    var tbody = tabel ? tabel.querySelector('tbody') : null;
-    var tambahBtn = document.getElementById('tambah-baris');
+    // ===== Kartu perbaikan dinamis =====
+    var kartuContainer = document.getElementById('kartu-perbaikan');
+    var tambahBtn = document.getElementById('tambah-kartu');
     var statusOptions = @json($statusOptions);
 
     function reindex() {
-        Array.prototype.forEach.call(tbody.querySelectorAll('tr'), function (tr, i) {
-            tr.querySelectorAll('input, select').forEach(function (el) {
+        Array.prototype.forEach.call(kartuContainer.querySelectorAll('.perbaikan-card'), function (card, i) {
+            card.querySelectorAll('input, select, textarea').forEach(function (el) {
                 var name = el.name.replace(/riwayat_perbaikan\[\d+\]/, 'riwayat_perbaikan[' + i + ']');
                 el.name = name;
             });
+            var label = card.querySelector('.text-xs.font-semibold');
+            if (label) label.textContent = 'Perbaikan #' + (i + 1);
         });
     }
 
-    function addRow(data) {
+    function addKartu(data) {
         data = data || {};
-        var tr = document.createElement('tr');
-        tr.className = 'border-b border-border';
-        // Default status = "Sudah" (statusOptions[0]).
         var defaultStatus = statusOptions.length ? statusOptions[0] : '';
-        tr.innerHTML =
-            '<td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[0][halaman]" value="' + (data.halaman || '') + '" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>' +
-            '<td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[0][komentar_dosen]" value="' + (data.komentar_dosen || '') + '" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>' +
-            '<td class="py-1.5 px-1"><input type="text" name="riwayat_perbaikan[0][perbaikan]" value="' + (data.perbaikan || '') + '" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm"></td>' +
-            '<td class="py-1.5 px-1"><select name="riwayat_perbaikan[0][status]" class="w-full rounded border border-border bg-bg-surface px-2 py-1.5 text-sm">' + statusOptions.map(function (s) { return '<option value="' + s + '"' + ((data.status === s) || (!data.status && s === defaultStatus) ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select></td>' +
-            '<td class="py-1.5 px-1 text-center"><button type="button" class="hapus-baris text-status-danger hover:underline text-xs">Hapus</button></td>';
-        tbody.appendChild(tr);
+        var div = document.createElement('div');
+        div.className = 'perbaikan-card rounded-xl bg-bg-panel border border-border p-4 space-y-2';
+        div.innerHTML =
+            '<div class="flex items-center justify-between">' +
+                '<span class="text-xs font-semibold text-text-secondary">Perbaikan #' + (kartuContainer.querySelectorAll('.perbaikan-card').length + 1) + '</span>' +
+                '<button type="button" class="hapus-kartu text-status-danger hover:underline text-xs">Hapus</button>' +
+            '</div>' +
+            '<div class="grid sm:grid-cols-2 gap-2">' +
+                '<div><label class="block text-xs text-text-secondary mb-1">Halaman/Bagian</label>' +
+                '<input type="text" name="riwayat_perbaikan[0][halaman]" value="' + (data.halaman || '') + '" placeholder="mis. Hal. 5, Bab 3" class="w-full rounded-lg border border-border bg-bg-surface px-3 py-2 text-sm"></div>' +
+                '<div><label class="block text-xs text-text-secondary mb-1">Status</label>' +
+                '<select name="riwayat_perbaikan[0][status]" class="w-full rounded-lg border border-border bg-bg-surface px-3 py-2 text-sm">' +
+                statusOptions.map(function (s) { return '<option value="' + s + '"' + ((data.status === s) || (!data.status && s === defaultStatus) ? ' selected' : '') + '>' + s + '</option>'; }).join('') +
+                '</select></div>' +
+            '</div>' +
+            '<div><label class="block text-xs text-text-secondary mb-1">Komentar Dosen</label>' +
+            '<input type="text" name="riwayat_perbaikan[0][komentar_dosen]" value="' + (data.komentar_dosen || '') + '" placeholder="Komentar yang diperbaiki" class="w-full rounded-lg border border-border bg-bg-surface px-3 py-2 text-sm"></div>' +
+            '<div><label class="block text-xs text-text-secondary mb-1">Perbaikan yang Dilakukan</label>' +
+            '<textarea name="riwayat_perbaikan[0][perbaikan]" rows="2" placeholder="Jelaskan perbaikan yang Anda lakukan" class="w-full rounded-lg border border-border bg-bg-surface px-3 py-2 text-sm">' + (data.perbaikan || '') + '</textarea></div>';
+        kartuContainer.appendChild(div);
         reindex();
-        // Fokus ke input pertama baris baru.
-        var firstInput = tr.querySelector('input');
+        var firstInput = div.querySelector('input');
         if (firstInput) firstInput.focus();
     }
 
-    if (tambahBtn) tambahBtn.addEventListener('click', function () { addRow(); });
+    if (tambahBtn) tambahBtn.addEventListener('click', function () { addKartu(); });
 
-    if (tbody) tbody.addEventListener('click', function (e) {
-        if (e.target.classList.contains('hapus-baris')) {
-            var tr = e.target.closest('tr');
-            if (tbody.querySelectorAll('tr').length > 1) {
-                tr.remove();
+    if (kartuContainer) kartuContainer.addEventListener('click', function (e) {
+        if (e.target.classList.contains('hapus-kartu')) {
+            var card = e.target.closest('.perbaikan-card');
+            if (kartuContainer.querySelectorAll('.perbaikan-card').length > 1) {
+                card.remove();
                 reindex();
             }
         }
     });
 
-    // Tekan Enter pada input di tabel untuk menambah baris baru.
-    if (tbody) tbody.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
-            e.preventDefault();
-            addRow();
-        }
-    });
-
-    // Feedback parent toggle.
+    // ===== Feedback parent toggle =====
     var parentSelect = document.getElementById('parent_entry_id');
     var parentCards = document.querySelectorAll('[data-parent-feedback]');
     function syncParentFeedback() {
@@ -228,7 +372,27 @@
         syncParentFeedback();
     }
 
-    // Auto-save draft ke localStorage (tiap 5 detik) + restore.
+    // ===== Review ringkasan =====
+    function updateReview() {
+        var parentText = '—';
+        if (parentSelect && parentSelect.selectedOptions[0] && parentSelect.value) {
+            parentText = parentSelect.selectedOptions[0].textContent.trim();
+        }
+        document.getElementById('review-parent').textContent = parentText;
+
+        var count = kartuContainer.querySelectorAll('.perbaikan-card').length;
+        document.getElementById('review-jumlah').textContent = count + ' kartu';
+
+        var fileInput = document.getElementById('lampiran');
+        document.getElementById('review-file').textContent = fileInput && fileInput.files.length
+            ? fileInput.files[0].name
+            : 'Belum dipilih';
+
+        var tanggal = document.getElementById('tanggal_pengiriman');
+        document.getElementById('review-tanggal').textContent = tanggal && tanggal.value ? tanggal.value : '—';
+    }
+
+    // ===== Auto-save draft ke localStorage =====
     (function () {
         var KEY = 'lbta-revisi-draft';
         var form = document.getElementById('revisi-form');
@@ -244,9 +408,9 @@
                 parent_entry_id: document.getElementById('parent_entry_id')?.value || '',
                 riwayat: []
             };
-            document.querySelectorAll('#tabel-perbaikan tbody tr').forEach(function (tr) {
+            document.querySelectorAll('#kartu-perbaikan .perbaikan-card').forEach(function (card) {
                 var row = {};
-                tr.querySelectorAll('input, select').forEach(function (el) {
+                card.querySelectorAll('input, select, textarea').forEach(function (el) {
                     var name = el.name;
                     var m = name.match(/riwayat_perbaikan\[\d+\]\[(\w+)\]/);
                     if (m) row[m[1]] = el.value;
@@ -268,17 +432,16 @@
                 if (saved.tanggal_pengiriman) document.getElementById('tanggal_pengiriman').value = saved.tanggal_pengiriman;
                 if (saved.parent_entry_id) document.getElementById('parent_entry_id').value = saved.parent_entry_id;
                 document.getElementById('progres_kendala').value = saved.progres_kendala;
-                // Restore riwayat rows.
                 if (saved.riwayat && saved.riwayat.length) {
-                    tbody.innerHTML = '';
-                    saved.riwayat.forEach(function (r) { addRow(r); });
+                    kartuContainer.innerHTML = '';
+                    saved.riwayat.forEach(function (r) { addKartu(r); });
                 }
                 msg.textContent = 'Draf dipulihkan dari penyimpanan otomatis.';
+                syncParentFeedback();
             }
         } catch (e) {}
 
         setInterval(save, 5000);
-        // Hapus draft saat berhasil submit.
         form.addEventListener('submit', function () {
             localStorage.removeItem(KEY);
         });
