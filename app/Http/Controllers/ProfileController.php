@@ -102,10 +102,16 @@ class ProfileController extends Controller
      * Form pilih dosen (mahasiswa aktif yang belum attach dosen).
      * Menampilkan daftar dosen untuk dipilih sebagai pembimbing/penguji.
      */
-    public function selectDosen(Request $request): View
+    public function selectDosen(Request $request): View|RedirectResponse
     {
         $user = $request->user();
         abort_unless($user->isMahasiswa(), 403);
+
+        // Wajib isi profil dulu (NIM & WhatsApp) sebelum memilih dosen.
+        if (blank($user->identifier) || blank($user->whatsapp)) {
+            return redirect()->route('profile.index')
+                ->with('warning', 'Lengkapi profil Anda (NIM & WhatsApp) terlebih dahulu sebelum memilih dosen.');
+        }
 
         // Daftar dosen yang aktif (registration_status = active).
         $dosenList = \App\Models\User::role('dosen')
@@ -154,6 +160,12 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         abort_unless($user->isMahasiswa(), 403);
+
+        // Wajib isi profil dulu (NIM & WhatsApp) sebelum memilih dosen.
+        if (blank($user->identifier) || blank($user->whatsapp)) {
+            return redirect()->route('profile.index')
+                ->with('warning', 'Lengkapi profil Anda (NIM & WhatsApp) terlebih dahulu sebelum memilih dosen.');
+        }
 
         $jenis = $request->input('jenis');
         $faseKeys = array_keys($jenis === 'kp' ? \App\Models\MahasiswaTa::FASES_KP : \App\Models\MahasiswaTa::FASES);

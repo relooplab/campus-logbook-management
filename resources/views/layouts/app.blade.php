@@ -190,48 +190,58 @@
                 @php
                     $programs = \App\Support\ProgramContext::programs($user);
                     $currentProgram = \App\Support\ProgramContext::resolve($user, request());
+                    $kp = $user->allPrograms()->where('jenis', 'kp')->first();
+                    $hasTa = (bool) $user->mahasiswaTa;
+                    $hasKp = (bool) $kp;
+                    $hasProgram = $hasTa || $hasKp;
+                    $profileIncomplete = blank($user->identifier) || blank($user->whatsapp);
                 @endphp
-                @if ($programs->count() > 1)
-                    <div class="px-3 pt-2 pb-1 sidebar-label">
-                        <div class="flex gap-1">
-                            @foreach ($programs as $p)
-                                <a href="{{ route('dashboard', ['program' => $p->jenis]) }}"
-                                    class="flex-1 text-center px-2 py-1 rounded-lg text-[10px] font-medium border transition-colors
-                                    {{ $currentProgram && $currentProgram->id === $p->id ? 'bg-brand-fill text-white border-brand-fill' : 'bg-bg-surface text-text-secondary border-border hover:bg-bg-hover' }}">
-                                    {{ $p->jenisLabel() }}
-                                </a>
-                            @endforeach
+                @if ($profileIncomplete)
+                    <a href="{{ route('profile.index') }}" class="{{ $navLink }} {{ $active('profile.index') }}">
+                        <span class="material-symbols-outlined icon-md">badge</span>
+                        <span class="sidebar-label">Lengkapi Profil</span>
+                    </a>
+                @endif
+                @if ($hasProgram)
+                    @if ($programs->count() > 1)
+                        <div class="px-3 pt-2 pb-1 sidebar-label">
+                            <div class="flex gap-1">
+                                @foreach ($programs as $p)
+                                    <a href="{{ route('dashboard', ['program' => $p->jenis]) }}"
+                                        class="flex-1 text-center px-2 py-1 rounded-lg text-[10px] font-medium border transition-colors
+                                        {{ $currentProgram && $currentProgram->id === $p->id ? 'bg-brand-fill text-white border-brand-fill' : 'bg-bg-surface text-text-secondary border-border hover:bg-bg-hover' }}">
+                                        {{ $p->jenisLabel() }}
+                                    </a>
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
-                @endif
-                <a href="{{ route('logbook.index') }}" class="{{ $navLink }} {{ $active('logbook.index') }}">
-                    <span class="material-symbols-outlined icon-md">menu_book</span>
-                    <span class="sidebar-label">Logbook</span>
-                </a>
-                <a href="{{ route('logbook.create') }}" class="{{ $navLink }} {{ $active('logbook.create') }}">
-                    <span class="material-symbols-outlined icon-md">add</span>
-                    <span class="sidebar-label">Tambah Logbook</span>
-                </a>
-                <a href="{{ route('logbook.create-revisi') }}" class="{{ $navLink }} {{ $active('logbook.create-revisi') }}">
-                    <span class="material-symbols-outlined icon-md">edit_note</span>
-                    <span class="sidebar-label">Entri Revisi</span>
-                </a>
-                @php $kp = $user->allPrograms()->where('jenis', 'kp')->first(); @endphp
-                <a href="{{ route('logbook.feedback') }}" class="{{ $navLink }} {{ $active('logbook.feedback') }}">
-                    <span class="material-symbols-outlined icon-md">forum</span>
-                    <span class="sidebar-label">Logbook Feedback</span>
-                </a>
-                @if ($kp)
-                    <a href="{{ route('logbook-harian.index', $kp) }}" class="{{ $navLink }} {{ $active('logbook-harian.*') }}">
-                        <span class="material-symbols-outlined icon-md">event_note</span>
-                        <span class="sidebar-label">Logbook Harian KP</span>
+                    @endif
+                    <a href="{{ route('logbook.index') }}" class="{{ $navLink }} {{ $active('logbook.index') }}">
+                        <span class="material-symbols-outlined icon-md">menu_book</span>
+                        <span class="sidebar-label">Logbook</span>
                     </a>
-                    <a href="{{ route('profil-perusahaan.index', $kp) }}" class="{{ $navLink }} {{ $active('profil-perusahaan.*') }}">
-                        <span class="material-symbols-outlined icon-md">business</span>
-                        <span class="sidebar-label">Profil Perusahaan</span>
+                    <a href="{{ route('logbook.create') }}" class="{{ $navLink }} {{ $active('logbook.create') }}">
+                        <span class="material-symbols-outlined icon-md">add</span>
+                        <span class="sidebar-label">Tambah Logbook</span>
                     </a>
-                @endif
-                @if ($user->mahasiswaTa || $kp)
+                    <a href="{{ route('logbook.create-revisi') }}" class="{{ $navLink }} {{ $active('logbook.create-revisi') }}">
+                        <span class="material-symbols-outlined icon-md">edit_note</span>
+                        <span class="sidebar-label">Entri Revisi</span>
+                    </a>
+                    <a href="{{ route('logbook.feedback') }}" class="{{ $navLink }} {{ $active('logbook.feedback') }}">
+                        <span class="material-symbols-outlined icon-md">forum</span>
+                        <span class="sidebar-label">Logbook Feedback</span>
+                    </a>
+                    @if ($hasKp)
+                        <a href="{{ route('logbook-harian.index', $kp) }}" class="{{ $navLink }} {{ $active('logbook-harian.*') }}">
+                            <span class="material-symbols-outlined icon-md">event_note</span>
+                            <span class="sidebar-label">Logbook Harian KP</span>
+                        </a>
+                        <a href="{{ route('profil-perusahaan.index', $kp) }}" class="{{ $navLink }} {{ $active('profil-perusahaan.*') }}">
+                            <span class="material-symbols-outlined icon-md">business</span>
+                            <span class="sidebar-label">Profil Perusahaan</span>
+                        </a>
+                    @endif
                     @php $workspaceTa = $user->mahasiswaTa ?: $kp; @endphp
                     <a href="{{ route('workspace.index', $workspaceTa) }}" class="{{ $navLink }} {{ $active('workspace.*') }}">
                         <span class="material-symbols-outlined icon-md">workspaces</span>
@@ -435,6 +445,11 @@
             @if (session('error'))
                 <div class="mb-5 px-4 py-3 rounded-xl bg-status-danger/10 text-status-danger border border-status-danger/20 flex items-start gap-2.5">
                     <span class="material-symbols-outlined icon-md mt-0.5">warning</span><span>{{ session('error') }}</span>
+                </div>
+            @endif
+            @if (session('warning'))
+                <div class="mb-5 px-4 py-3 rounded-xl bg-status-pending/10 text-status-pending border border-status-pending/20 flex items-start gap-2.5">
+                    <span class="material-symbols-outlined icon-md mt-0.5">info</span><span>{{ session('warning') }}</span>
                 </div>
             @endif
 

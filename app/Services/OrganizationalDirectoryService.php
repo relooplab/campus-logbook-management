@@ -22,13 +22,16 @@ class OrganizationalDirectoryService
      */
     public function findUniversity(string $name, ?string $npsn = null): ?University
     {
-        $query = University::query();
-
+        // Prioritaskan pencarian berdasarkan NPSN jika diberikan.
         if ($npsn) {
-            $query->where('npsn', $npsn);
+            $byNpsn = University::where('npsn', $npsn)->first();
+            if ($byNpsn) {
+                return $byNpsn;
+            }
         }
 
-        return $query->orWhereRaw('LOWER(name) = ?', [mb_strtolower(trim($name))])->first();
+        // Fallback: cari berdasarkan nama (case-insensitive).
+        return University::whereRaw('LOWER(name) = ?', [mb_strtolower(trim($name))])->first();
     }
 
     /**

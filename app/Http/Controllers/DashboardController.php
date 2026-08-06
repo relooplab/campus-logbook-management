@@ -294,6 +294,9 @@ class DashboardController extends Controller
         // saat programAktif() kosong) — tandai agar mahasiswa tetap diarahkan pilih dosen lagi.
         $rejectedProgram = $ta && $ta->status_ta === \App\Models\MahasiswaTa::STATUS_DITOLAK;
 
+        // Profil dianggap belum lengkap jika NIM (identifier) atau WhatsApp kosong.
+        $profileIncomplete = blank($user->identifier) || blank($user->whatsapp);
+
         return view('dashboard.mahasiswa', compact(
             'programs', 'activeProgram', 'ta', 'entries', 'approved', 'target', 'progressPercent',
             'faseKeys', 'faseIndex', 'faseLabels',
@@ -303,7 +306,7 @@ class DashboardController extends Controller
             'unreadAnnouncements',
             'draftCount', 'revisiCount', 'unresolvedActionItems',
             'university', 'nilai', 'agendaTerdekat', 'seminarSubmission',
-            'mahasiswaStatus', 'pendingApproval', 'rejectedProgram'
+            'mahasiswaStatus', 'pendingApproval', 'rejectedProgram', 'profileIncomplete'
         ));
     }
 
