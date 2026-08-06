@@ -90,15 +90,49 @@ class DatabaseSeeder extends Seeder
         }
 
         // Helper: buat user dengan status & email verified.
+        // Jika NIDN/identifier sudah dipakai user lain (email berbeda), update email user tsb.
         $makeUser = function (array $attrs, array $roles, string $status) use ($mahasiswaRole, $dosenRole, $adminRole, $systemAdminRole) {
-            $user = User::firstOrCreate(
-                ['email' => $attrs['email']],
-                array_merge($attrs, [
+            // Cari berdasarkan email dulu.
+            $user = User::where('email', $attrs['email'])->first();
+
+            // Jika tidak ketemu, cari berdasarkan NIDN (jika ada).
+            if (!$user && !empty($attrs['nidn'])) {
+                $user = User::where('nidn', $attrs['nidn'])->first();
+                if ($user) {
+                    $user->update(['email' => $attrs['email']]);
+                }
+            }
+
+            // Jika masih tidak ketemu, cari berdasarkan identifier (jika ada).
+            if (!$user && !empty($attrs['identifier'])) {
+                $user = User::where('identifier', $attrs['identifier'])->first();
+                if ($user) {
+                    $user->update(['email' => $attrs['email']]);
+                }
+            }
+
+            if (!$user) {
+                $user = User::create(array_merge($attrs, [
                     'password' => Hash::make('password'),
                     'registration_status' => $status,
                     'email_verified_at' => now(),
-                ])
-            );
+                ]));
+            } else {
+                // Update hanya field yang tidak konflik unique.
+                $update = array_merge($attrs, [
+                    'registration_status' => $status,
+                    'email_verified_at' => now(),
+                ]);
+                // Jangan overwrite identifier/nidn jika sudah dipakai user lain.
+                if (isset($update['identifier']) && User::where('identifier', $update['identifier'])->where('id', '!=', $user->id)->exists()) {
+                    unset($update['identifier']);
+                }
+                if (isset($update['nidn']) && User::where('nidn', $update['nidn'])->where('id', '!=', $user->id)->exists()) {
+                    unset($update['nidn']);
+                }
+                $user->update($update);
+            }
+
             // Konversi role (model/string) ke nama untuk syncRoles.
             $roleNames = array_map(fn ($r) => $r instanceof \Spatie\Permission\Models\Role ? $r->name : $r, $roles);
             $user->syncRoles($roleNames);
