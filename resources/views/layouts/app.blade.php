@@ -162,12 +162,20 @@
                 $showDosenMenu = $user->isDosen();
                 $showAdminMenu = $user->isAdmin();
             @endphp
-            @if ($primaryUniv)
-                <div class="px-6 pb-2 sidebar-label">
-                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-bg-panel text-text-secondary truncate max-w-full inline-block" title="{{ $primaryUniv->name }}">
-                        <span class="material-symbols-outlined icon-sm align-text-bottom" style="font-size:12px">account_balance</span>
-                        {{ \Illuminate\Support\Str::limit($primaryUniv->name, 24) }}
-                    </span>
+            @if ($primaryUniv || $user->nidn || $user->identifier)
+                <div class="px-6 pb-2 sidebar-label space-y-1">
+                    @if ($user->isDosen() && $user->nidn)
+                        <span class="block text-[10px] text-text-secondary truncate">NIDN: {{ $user->nidn }}</span>
+                    @endif
+                    @if ($user->isMahasiswa() && $user->identifier)
+                        <span class="block text-[10px] text-text-secondary truncate">NIM: {{ $user->identifier }}</span>
+                    @endif
+                    @if ($primaryUniv)
+                        <span class="block text-[10px] px-2 py-0.5 rounded-full bg-bg-panel text-text-secondary truncate max-w-full" title="{{ $primaryUniv->name }}">
+                            <span class="material-symbols-outlined icon-sm align-text-bottom" style="font-size:12px">account_balance</span>
+                            {{ \Illuminate\Support\Str::limit($primaryUniv->name, 24) }}
+                        </span>
+                    @endif
                 </div>
             @endif
         @endauth

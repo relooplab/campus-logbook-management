@@ -43,7 +43,7 @@ class OrganizationalDirectoryTest extends AuditSmokeTest
         $this->assertSame($university->id, $prodi->department->faculty->university->id);
     }
 
-    public function test_dosen_registration_creates_university_and_links(): void
+    public function test_dosen_register_then_fill_instansi_via_profile(): void
     {
         $response = $this->post(route('register'), [
             'name' => 'Dosen Baru',
@@ -52,20 +52,28 @@ class OrganizationalDirectoryTest extends AuditSmokeTest
             'password_confirmation' => 'password',
             'role' => 'dosen',
             'nidn' => '1234567890',
-            'university_name' => 'Universitas Gadjah Mada',
-            'faculty_name' => 'Fakultas Teknik',
-            'department_name' => 'Departemen Teknik Elektro',
-            'study_program_name' => 'S1 Teknik Elektro',
         ]);
 
-        $response->assertRedirect(route('dashboard'));
+        // Dosen diarahkan ke halaman profil untuk mengisi data instansi.
+        $response->assertRedirect(route('profile.index'));
 
         $user = User::where('email', 'dosen-baru@test.com')->first();
         $this->assertNotNull($user);
         $this->assertEquals('1234567890', $user->nidn);
         $this->assertTrue($user->hasRole('dosen'));
+        $this->assertNull($user->primaryUniversity());
 
-        $university = $user->primaryUniversity();
+        // Instansi kini diisi lewat halaman profil (Afiliasi Institusi).
+        $this->actingAs($user)
+            ->post(route('profile.affiliation.update'), [
+                'university_name' => 'Universitas Gadjah Mada',
+                'faculty_name' => 'Fakultas Teknik',
+                'department_name' => 'Departemen Teknik Elektro',
+                'study_program_name' => 'S1 Teknik Elektro',
+            ])
+            ->assertRedirect(route('profile.affiliation'));
+
+        $university = $user->fresh()->primaryUniversity();
         $this->assertNotNull($university);
         $this->assertEquals('Universitas Gadjah Mada', $university->name);
     }

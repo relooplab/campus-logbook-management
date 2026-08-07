@@ -34,10 +34,10 @@
                 type="password" name="password_confirmation" id="password_confirmation" required minlength="6"
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
 
-        {{-- ===== Opsi khusus dosen (NIDN + direktori organisasi) ===== --}}
+        {{-- ===== Opsi khusus dosen (NIDN) — data instansi diisi di halaman profil ===== --}}
         <div id="dosen-directory-section" class="hidden space-y-2 border-t border-border pt-3">
-            <p class="text-sm font-medium text-text-primary">Direktori Organisasi Anda</p>
-            <p class="text-xs text-text-secondary">Nama perguruan tinggi yang sudah ada akan dipakai otomatis (tidak duplikat).</p>
+            <p class="text-sm font-medium text-text-primary">NIDN</p>
+            <p class="text-xs text-text-secondary">Data institusi (perguruan tinggi / fakultas / departemen / program studi) akan Anda isi setelah aktif di halaman profil.</p>
             <div>
                 <label class="block text-sm font-medium mb-1" for="nidn">NIDN</label>
                 <input type="text" name="nidn" id="nidn" value="{{ old("nidn") }}" placeholder="Nomor Induk Dosen Nasional"
@@ -45,33 +45,6 @@
                 @error('nidn')
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1" for="university_name">Perguruan Tinggi</label>
-                <input type="text" name="university_name" id="university_name" value="{{ old("university_name") }}"
-                    placeholder="Nama universitas / institut / politeknik"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                @error('university_name')
-                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1" for="faculty_name">Fakultas</label>
-                <input type="text" name="faculty_name" id="faculty_name" value="{{ old("faculty_name") }}"
-                    placeholder="Contoh: Fakultas Teknik"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1" for="department_name">Departemen</label>
-                <input type="text" name="department_name" id="department_name" value="{{ old("department_name") }}"
-                    placeholder="Contoh: Departemen Teknik Informatika"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-            </div>
-            <div>
-                <label class="block text-sm font-medium mb-1" for="study_program_name">Program Studi</label>
-                <input type="text" name="study_program_name" id="study_program_name" value="{{ old("study_program_name") }}"
-                    placeholder="Contoh: S1 Teknik Informatika"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
             </div>
         </div>
 
@@ -107,7 +80,7 @@
                 if (dosenDirectorySection) dosenDirectorySection.classList.toggle('hidden', role !== 'dosen');
                 if (roleHint) {
                     roleHint.textContent = role === 'dosen'
-                        ? 'Daftar sebagai dosen. Akun Anda perlu disetujui admin sebelum dapat masuk.'
+                        ? 'Daftar sebagai dosen. Setelah mendaftar, lengkapi data institusi Anda di halaman profil.'
                         : 'Daftar sebagai mahasiswa. Setelah verifikasi email, Anda dapat memilih dosen pembimbing.';
                 }
             }

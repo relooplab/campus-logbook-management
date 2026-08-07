@@ -33,6 +33,18 @@ class DashboardController extends Controller
         return $this->mahasiswaDashboard($user);
     }
 
+    /**
+     * Tutup (dismiss) kartu info institusi di dashboard dosen.
+     */
+    public function dismissInstansi(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()->isDosen(), 403, 'Hanya dosen.');
+
+        session(['dosen_instansi_dismissed' => true]);
+
+        return back();
+    }
+
     private function adminDashboard(User $user): View
     {
         $stats = [
@@ -128,6 +140,13 @@ class DashboardController extends Controller
 
         // Informasi institusi & grup untuk kartu dashboard.
         $university = $user->primaryUniversity();
+        // Instansi dosen dianggap lengkap jika NIDN + hierarki direktori terisi.
+        $instansiComplete = false;
+        if ($user->nidn && $university && $university->pivot?->faculty_id
+            && $university->pivot?->department_id && $university->pivot?->study_program_id) {
+            $instansiComplete = true;
+        }
+
         $groupCount = Group::whereHas('memberships', fn ($q) => $q->where('user_id', $user->id)->where('status', 'approved'))
             ->count();
 
@@ -150,7 +169,7 @@ class DashboardController extends Controller
         return view('dashboard.dosen', compact(
             'tas', 'queue', 'perTa', 'healthCount', 'stats',
             'pendingRegistrations', 'needsAttention',
-            'university', 'groupCount', 'agendaTerdekat', 'submissions'
+            'university', 'instansiComplete', 'groupCount', 'agendaTerdekat', 'submissions'
         ));
     }
 

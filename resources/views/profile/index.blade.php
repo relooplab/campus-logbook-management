@@ -112,6 +112,19 @@
         @include('partials.profile-affiliation', ['affUser' => $user])
     </div>
 
+    @if ($user->isDosen())
+        <div class="bg-bg-surface rounded-xl border border-border p-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="font-semibold">Data Institusi / Afiliasi</h2>
+                    <p class="text-sm text-text-secondary mt-0.5">Perguruan tinggi, fakultas, departemen, dan program studi Anda.</p>
+                </div>
+                <a href="{{ route('profile.affiliation') }}"
+                    class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Kelola</a>
+            </div>
+        </div>
+    @endif
+
     {{-- Ganti kata sandi --}} <div class="bg-bg-surface rounded-xl border border-border p-6 space-y-4">
         <h2 class="font-semibold">Ganti Kata Sandi</h2>
         <form method="POST" action="{{ route("profile.password") }}" class="space-y-4"> @csrf @method("PUT") <div>

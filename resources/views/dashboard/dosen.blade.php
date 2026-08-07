@@ -20,36 +20,53 @@
     </div>
 
     {{-- ===== Institusi & Grup ===== --}}
-    <div class="card p-6">
-        <div class="flex items-center gap-3 mb-4">
-            <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                <span class="material-symbols-outlined icon-md">account_balance</span>
-            </span>
-            <div>
-                <h2 class="font-heading font-semibold text-text-primary">Institusi & Grup</h2>
-                <p class="text-sm text-text-secondary">Afiliasi Anda di direktori organisasi</p>
+    @if (! session('dosen_instansi_dismissed'))
+        <div class="card p-6 relative">
+            @if ($instansiComplete)
+                <form method="POST" action="{{ route('dashboard.dismiss-instansi') }}" class="absolute top-4 right-4">
+                    @csrf
+                    <button type="submit" title="Tutup kartu ini"
+                        class="p-1.5 rounded-lg hover:bg-bg-hover text-text-secondary cursor-pointer">
+                        <span class="material-symbols-outlined icon-md">close</span>
+                    </button>
+                </form>
+            @endif
+            <div class="flex items-center gap-3 mb-4">
+                <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
+                    <span class="material-symbols-outlined icon-md">account_balance</span>
+                </span>
+                <div>
+                    <h2 class="font-heading font-semibold text-text-primary">Institusi & Grup</h2>
+                    <p class="text-sm text-text-secondary">Afiliasi Anda di direktori organisasi</p>
+                </div>
             </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="p-4 rounded-xl bg-bg-panel border border-border">
+                    <p class="text-xs text-text-secondary mb-1">Perguruan Tinggi</p>
+                    <p class="font-medium text-text-primary">{{ $university?->name ?? 'Belum diisi' }}</p>
+                    @if ($university?->npsn)
+                        <p class="text-xs text-text-secondary mt-0.5">NPSN: {{ $university->npsn }}</p>
+                    @endif
+                </div>
+                <div class="p-4 rounded-xl bg-bg-panel border border-border">
+                    <p class="text-xs text-text-secondary mb-1">NIDN</p>
+                    <p class="font-medium text-text-primary">{{ $user->nidn ?? 'Belum diisi' }}</p>
+                    <p class="text-xs text-text-secondary mt-0.5">Identitas dosen</p>
+                </div>
+                <a href="{{ route('groups.index') }}" class="p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
+                    <p class="text-xs text-text-secondary mb-1">Grup Dosen</p>
+                    <p class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $groupCount }}</p>
+                    <p class="text-xs text-brand mt-0.5">Kelola Grup →</p>
+                </a>
+            </div>
+            @if (! $instansiComplete)
+                <a href="{{ route('profile.affiliation') }}"
+                    class="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline">
+                    <span class="material-symbols-outlined icon-sm">account_balance</span> Lengkapi Data Institusi
+                </a>
+            @endif
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div class="p-4 rounded-xl bg-bg-panel border border-border">
-                <p class="text-xs text-text-secondary mb-1">Perguruan Tinggi</p>
-                <p class="font-medium text-text-primary">{{ $university?->name ?? 'Belum diisi' }}</p>
-                @if ($university?->npsn)
-                    <p class="text-xs text-text-secondary mt-0.5">NPSN: {{ $university->npsn }}</p>
-                @endif
-            </div>
-            <div class="p-4 rounded-xl bg-bg-panel border border-border">
-                <p class="text-xs text-text-secondary mb-1">NIDN</p>
-                <p class="font-medium text-text-primary">{{ $user->nidn ?? 'Belum diisi' }}</p>
-                <p class="text-xs text-text-secondary mt-0.5">Identitas dosen</p>
-            </div>
-            <a href="{{ route('groups.index') }}" class="p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
-                <p class="text-xs text-text-secondary mb-1">Grup Dosen</p>
-                <p class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $groupCount }}</p>
-                <p class="text-xs text-brand mt-0.5">Kelola Grup →</p>
-            </a>
-        </div>
-    </div>
+    @endif
 
     {{-- ===== Ringkasan Aksi Hari Ini ===== --}}
     <div class="card p-6">

@@ -62,6 +62,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::post('/dashboard/dismiss-instansi', [DashboardController::class, 'dismissInstansi'])->name('dashboard.dismiss-instansi');
 
     // Persetujuan attachment dosen (mahasiswa pilih dosen → dosen setujui/tolak).
     Route::middleware('role_or_permission:dosen|admin')->group(function () {

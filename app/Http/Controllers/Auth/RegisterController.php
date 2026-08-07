@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\OrganizationalDirectoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -29,12 +28,8 @@ class RegisterController extends Controller
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
             'role' => ['required', 'in:mahasiswa,dosen'],
-            // Direktori organisasi (dosen).
+            // Identitas dosen (NIDN) — data instansi diisi di halaman profil.
             'nidn' => ['nullable', 'string', 'max:20', 'unique:users,nidn'],
-            'university_name' => ['nullable', 'string', 'max:255'],
-            'faculty_name' => ['nullable', 'string', 'max:255'],
-            'department_name' => ['nullable', 'string', 'max:255'],
-            'study_program_name' => ['nullable', 'string', 'max:255'],
         ]);
 
         $role = $validated['role'] ?? 'mahasiswa';
@@ -52,41 +47,18 @@ class RegisterController extends Controller
         ]);
         $user->syncRoles([$role]);
 
-        // Dosen: hubungkan ke direktori organisasi (pilih/create + dedup).
-        if ($role === 'dosen' && !empty($validated['university_name'])) {
-            $this->attachUniversity($user, $validated);
-        }
-
         // Login otomatis setelah registrasi.
         auth()->login($user);
+
+        // Mahasiswa: langsung ke dashboard (isi profil & pilih dosen).
+        // Dosen: langsung ke halaman profil untuk mengisi data instansi.
+        if ($role === 'dosen') {
+            return redirect()->route('profile.index')
+                ->with('success', 'Registrasi berhasil. Lengkapi data institusi Anda di halaman profil.');
+        }
 
         return redirect()->route('dashboard')
             ->with('success', 'Registrasi berhasil. Selamat datang!');
     }
 
-    /**
-     * Hubungkan dosen ke direktori organisasi (dedup via service).
-     */
-    private function attachUniversity(User $user, array $data): void
-    {
-        $service = app(OrganizationalDirectoryService::class);
-
-        $university = $service->findOrCreateUniversity($data['university_name']);
-
-        $faculty = null;
-        $department = null;
-        $studyProgram = null;
-
-        if (!empty($data['faculty_name'])) {
-            $faculty = $service->findOrCreateFaculty($university, $data['faculty_name']);
-        }
-        if ($faculty && !empty($data['department_name'])) {
-            $department = $service->findOrCreateDepartment($faculty, $data['department_name']);
-        }
-        if ($department && !empty($data['study_program_name'])) {
-            $studyProgram = $service->findOrCreateStudyProgram($department, $data['study_program_name']);
-        }
-
-        $service->attachUserToUniversity($user, $university, $faculty, $department, $studyProgram, true);
-    }
 }
