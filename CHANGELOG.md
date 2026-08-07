@@ -1,3 +1,10 @@
+# [0.25.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.24.0...v0.25.0) (2026-08-07)
+
+
+### Features
+
+* add logbook delete, extend review to pending programs, and unblock quick-review without PDF ([8da9c12](https://github.com/relooplab/thesis-logbook-management/commit/8da9c12d1eb921960140a83b6e27b7bf83e8cc2d))
+
 # [0.24.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.23.0...v0.24.0) (2026-08-07)
 
 
