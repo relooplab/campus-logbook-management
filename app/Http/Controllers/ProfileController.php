@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MahasiswaTa;
 use App\Models\User;
+use App\Services\OrganizationalDirectoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -53,6 +54,11 @@ class ProfileController extends Controller
             $rules['jadwal_bimbingan_url'] = ['nullable', 'url', 'max:255'];
             $rules['bimbingan_via_whatsapp'] = ['nullable', 'boolean'];
             $rules['bimbingan_via_telegram'] = ['nullable', 'boolean'];
+            // Data instansi (dilengkapi setelah akun aktif, bukan saat registrasi).
+            $rules['university_name'] = ['nullable', 'string', 'max:255'];
+            $rules['faculty_name'] = ['nullable', 'string', 'max:255'];
+            $rules['department_name'] = ['nullable', 'string', 'max:255'];
+            $rules['study_program_name'] = ['nullable', 'string', 'max:255'];
         }
 
         $validated = $request->validate($rules);
@@ -71,7 +77,26 @@ class ProfileController extends Controller
             $validated['profile_photo_path'] = $request->file('photo')->store('profiles', 'public');
         }
 
+        // Data instansi bukan kolom di tabel users — tangani terpisah lewat
+        // direktori organisasi (pilih/create + dedup), lalu buang dari $validated.
+        $instansi = [
+            'university_name' => $validated['university_name'] ?? null,
+            'faculty_name' => $validated['faculty_name'] ?? null,
+            'department_name' => $validated['department_name'] ?? null,
+            'study_program_name' => $validated['study_program_name'] ?? null,
+        ];
+        unset(
+            $validated['university_name'],
+            $validated['faculty_name'],
+            $validated['department_name'],
+            $validated['study_program_name'],
+        );
+
         $user->update($validated);
+
+        if ($user->isDosen() && !empty($instansi['university_name'])) {
+            $this->attachUniversity($user, $instansi);
+        }
 
         // Mahasiswa diarahkan ke dashboard agar langsung bisa memilih dosen.
         if ($user->isMahasiswa()) {
@@ -80,6 +105,32 @@ class ProfileController extends Controller
         }
 
         return back()->with('success', 'Profil berhasil diperbarui.');
+    }
+
+    /**
+     * Hubungkan dosen ke direktori organisasi (dedup via service).
+     */
+    private function attachUniversity(User $user, array $data): void
+    {
+        $service = app(OrganizationalDirectoryService::class);
+
+        $university = $service->findOrCreateUniversity($data['university_name']);
+
+        $faculty = null;
+        $department = null;
+        $studyProgram = null;
+
+        if (!empty($data['faculty_name'])) {
+            $faculty = $service->findOrCreateFaculty($university, $data['faculty_name']);
+        }
+        if ($faculty && !empty($data['department_name'])) {
+            $department = $service->findOrCreateDepartment($faculty, $data['department_name']);
+        }
+        if ($department && !empty($data['study_program_name'])) {
+            $studyProgram = $service->findOrCreateStudyProgram($department, $data['study_program_name']);
+        }
+
+        $service->attachUserToUniversity($user, $university, $faculty, $department, $studyProgram, true);
     }
 
     /**
