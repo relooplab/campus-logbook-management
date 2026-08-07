@@ -1,3 +1,10 @@
+# [0.20.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.19.0...v0.20.0) (2026-08-07)
+
+
+### Features
+
+* **chat:** attach more student work types to messages and scope options to the conversation ([3ae5716](https://github.com/relooplab/thesis-logbook-management/commit/3ae57168a4d1c1d5ac7d5bfd9688953c2e001e03))
+
 # [0.19.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.18.1...v0.19.0) (2026-08-07)
 
 
