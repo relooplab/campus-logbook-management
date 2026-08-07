@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '429')
+@section('title', 'Terlalu Banyak Permintaan')
+@section('icon', 'timer')
+@section('message', 'Terlalu banyak permintaan. Silakan tunggu beberapa saat lalu coba lagi.')

@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '404')
+@section('title', 'Halaman Tidak Ditemukan')
+@section('icon', 'search_off')
+@section('message', 'Halaman yang Anda cari tidak ditemukan atau telah dipindahkan.')

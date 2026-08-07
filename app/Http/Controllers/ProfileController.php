@@ -233,7 +233,7 @@ class ProfileController extends Controller
             }
         }
 
-        return redirect()->route('profile.index')
+        return redirect()->route('dashboard')
             ->with('success', 'Permintaan attachment dosen dikirim. Menunggu persetujuan dosen.');
     }
 

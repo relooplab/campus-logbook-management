@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '503')
+@section('title', 'Sedang Perawatan')
+@section('icon', 'construction')
+@section('message', 'Layanan sedang dalam perawatan. Silakan kembali beberapa saat lagi.')

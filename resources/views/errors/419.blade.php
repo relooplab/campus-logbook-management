@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '419')
+@section('title', 'Sesi Berakhir')
+@section('icon', 'hourglass_empty')
+@section('message', 'Sesi Anda telah berakhir atau tidak valid. Silakan muat ulang halaman.')

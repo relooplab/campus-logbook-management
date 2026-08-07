@@ -109,24 +109,6 @@
         </div>
     @endif
 
-    {{-- ===== Universitas ===== --}}
-    @if ($university)
-        <div class="card p-6">
-            <div class="flex items-center gap-3 mb-3">
-                <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                    <span class="material-symbols-outlined icon-md">account_balance</span>
-                </span>
-                <div>
-                    <h2 class="font-heading font-semibold text-text-primary">Universitas</h2>
-                    <p class="text-sm text-text-secondary">Afiliasi program Anda</p>
-                </div>
-            </div>
-            <p class="font-medium text-text-primary">{{ $university->name }}</p>
-            @if ($university->npsn)
-                <p class="text-xs text-text-secondary mt-0.5">NPSN: {{ $university->npsn }}</p>
-            @endif
-        </div>
-    @endif
 
     {{-- ===== Tab program KP / TA ===== --}}
     @include('partials.program-selector', ['ta' => $ta, 'route' => 'dashboard'])
@@ -187,7 +169,9 @@
                 <h2 class="font-heading font-semibold text-text-primary">Milestone Journey</h2>
                 <span class="text-sm text-text-secondary">{{ $ta->faseLabel() }} · {{ $progressPercent }}%</span>
             </div>
+            <div class="overflow-x-auto pb-1">
             @include('partials.milestone', ['faseKeys' => $faseKeys, 'faseIndex' => $faseIndex, 'faseLabels' => $faseLabels ?? []])
+            </div>
             <p class="mt-3 text-xs text-text-secondary">Fase ditetapkan oleh dosen pembimbing.</p>
 
             @php
@@ -266,7 +250,7 @@
             <div class="card p-6 md:col-span-2">
                 @if ($ta->isKp())
                     <h2 class="font-heading font-semibold text-text-primary mb-1">Tempat Kerja Praktek</h2>
-                    <p class="text-text-primary">{{ $ta->tempat_kp ?: 'Belum diisi' }}</p>
+                    <p class="text-text-primary break-words">{{ $ta->tempat_kp ?: 'Belum diisi' }}</p>
                     @if ($ta->periode_mulai)
                         <p class="text-sm text-text-secondary mt-1">Periode: {{ $ta->periode_mulai->format('d M Y') }} – {{ $ta->periode_selesai?->format('d M Y') ?? 'sekarang' }}</p>
                     @endif
@@ -282,7 +266,7 @@
                     @endif
                 @else
                     <h2 class="font-heading font-semibold text-text-primary mb-1">Judul TA</h2>
-                    <p class="text-text-primary">{{ $ta->judul_ta }}</p>
+                    <p class="text-text-primary break-words">{{ $ta->judul_ta }}</p>
                 @endif
                 <div class="mt-4 grid sm:grid-cols-2 gap-3 text-sm">
                     <div class="px-3 py-2.5 rounded-xl bg-bg-panel">
