@@ -1,3 +1,10 @@
+# [0.19.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.18.1...v0.19.0) (2026-08-07)
+
+
+### Features
+
+* **seeders:** add demo accounts for all roles with a uniform password ([ea57a98](https://github.com/relooplab/thesis-logbook-management/commit/ea57a988fa250c85053eb2e1498ae512ee789ed2))
+
 ## [0.18.1](https://github.com/relooplab/thesis-logbook-management/compare/v0.18.0...v0.18.1) (2026-08-07)
 
 
