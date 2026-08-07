@@ -73,6 +73,12 @@ class ProfileController extends Controller
 
         $user->update($validated);
 
+        // Mahasiswa diarahkan ke dashboard agar langsung bisa memilih dosen.
+        if ($user->isMahasiswa()) {
+            return redirect()->route('dashboard')
+                ->with('success', 'Profil berhasil diperbarui. Silakan pilih dosen pembimbing.');
+        }
+
         return back()->with('success', 'Profil berhasil diperbarui.');
     }
 

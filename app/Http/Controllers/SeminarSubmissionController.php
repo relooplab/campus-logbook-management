@@ -37,6 +37,7 @@ class SeminarSubmissionController extends Controller
     {
         abort_unless($mahasiswaTa->isMember($request->user()), 403);
         abort_unless($mahasiswaTa->status_ta === MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif.');
+        abort_unless($mahasiswaTa->mahasiswa?->registration_status === 'verified', 403, 'Dosen belum menyetujui program Anda. Tidak dapat mengisi seminar/sidang.');
         $this->authorize('viewWorkspace', $mahasiswaTa);
 
         $jenis = $this->jenisFromFase($mahasiswaTa);
@@ -66,6 +67,7 @@ class SeminarSubmissionController extends Controller
     {
         abort_unless($mahasiswaTa->isMember($request->user()), 403);
         abort_unless($mahasiswaTa->status_ta === MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif.');
+        abort_unless($mahasiswaTa->mahasiswa?->registration_status === 'verified', 403, 'Dosen belum menyetujui program Anda. Tidak dapat mengisi seminar/sidang.');
         $this->authorize('viewWorkspace', $mahasiswaTa);
 
         $institution = Institution::current();
