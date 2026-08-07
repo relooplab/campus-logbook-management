@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Logbook Feedback')
+@section('title', 'Umpan Balik Logbook')
 
 @section('content')
 <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="font-heading font-bold text-2xl text-text-primary">Logbook Feedback</h1>
+            <h1 class="font-heading font-bold text-2xl text-text-primary">Umpan Balik Logbook</h1>
             <p class="text-sm text-text-secondary mt-0.5">Umpan balik dosen & alur revisi dalam satu rangkaian</p>
         </div>
         <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali ke Logbook</a>
@@ -59,7 +59,7 @@
                                 <span class="material-symbols-outlined icon-sm">check</span>
                             </span>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-text-primary">Feedback diterima</p>
+                                <p class="text-sm font-medium text-text-primary">Umpan Balik diterima</p>
                                 <p class="text-sm text-text-secondary whitespace-pre-wrap mt-0.5">{{ $entry->feedback_dosen }}</p>
                             </div>
                         </div>

@@ -44,7 +44,7 @@
                                 </span>
                                 @if ($f->{$key.'_status'} === 'submitted' || $f->{$key.'_status'} === 'approved')
                                     <form method="POST" action="{{ route('finalization.approve', [$f, $key]) }}">@csrf
-                                        <button class="px-2 py-1 rounded-lg bg-status-success/10 text-status-success text-xs">Approve</button>
+                                        <button class="px-2 py-1 rounded-lg bg-status-success/10 text-status-success text-xs">Setujui</button>
                                     </form>
                                     <form method="POST" action="{{ route('finalization.reject', [$f, $key]) }}" class="flex flex-col gap-1 items-end"
                                         onsubmit="return confirm('Tolak item ini? Alasan akan wajib diisi.')">

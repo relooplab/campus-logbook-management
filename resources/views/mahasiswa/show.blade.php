@@ -144,7 +144,7 @@
         {{-- Milestone Journey (fase) --}}
         <div class="card p-6 bg-bg-surface rounded-xl border border-border">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="font-heading font-semibold text-text-primary">Milestone Journey</h2>
+                <h2 class="font-heading font-semibold text-text-primary">Perjalanan Fase</h2>
                 <span class="text-sm text-text-secondary">{{ $mahasiswaTa->faseLabel() }} · {{ $percent }}%</span>
             </div>
             @include('partials.milestone', ['faseKeys' => $faseKeys, 'faseIndex' => $faseIndex, 'faseLabels' => $faseLabels ?? []])

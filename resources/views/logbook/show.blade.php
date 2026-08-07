@@ -124,7 +124,7 @@
 
         @if ($logbook->feedback_dosen)
             <div class="px-4 py-3 rounded-xl bg-status-pending/10 border-l-4 border-status-pending text-sm">
-                <div class="flex items-center gap-1.5 mb-1 text-xs font-semibold text-status-pending uppercase tracking-wide"><span class="material-symbols-outlined icon-sm">forum</span> Feedback Dosen</div>
+                <div class="flex items-center gap-1.5 mb-1 text-xs font-semibold text-status-pending uppercase tracking-wide"><span class="material-symbols-outlined icon-sm">forum</span> Umpan Balik Dosen</div>
                 <div class="text-sm">{{ $logbook->feedback_dosen }}</div>
             </div>
         @endif
@@ -195,7 +195,7 @@
     @endif
 
     @if ($owner && $logbook->status === 'revisi' && !$logbook->isLockedByActiveRevision())
-        <a href="{{ route('logbook.create-revisi', ['parent_entry_id' => $logbook->id]) }}" class="inline-block px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Buat Revisi dari Feedback Ini</a>
+        <a href="{{ route('logbook.create-revisi', ['parent_entry_id' => $logbook->id]) }}" class="inline-block px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Buat Revisi dari Umpan Balik Ini</a>
     @endif
 
     @if ($canReview && $logbook->status === 'submitted')
@@ -222,7 +222,7 @@
                 data-pdf-opened="{{ $logbook->review_opened_at ? '1' : '0' }}"
                 data-has-pdf="{{ $logbook->lampiran_path || $logbook->catatan_perbaikan_path ? '1' : '0' }}">
                 @csrf
-                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Setujui (Approve)</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Setujui</button>
             </form>
             <form method="POST" action="{{ route('logbook.request-revisi', $logbook) }}" class="space-y-2">
                 @csrf

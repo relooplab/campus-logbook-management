@@ -51,7 +51,7 @@
                     </label>
 
                     <div>
-                        <label class="block text-xs text-text-secondary mb-1">Batas Penyimpanan (MB)</label>
+                        <label class="block text-xs text-text-secondary mb-1">Batas Workspace (MB)</label>
                         <input type="number" name="storage_limit_mb" value="{{ $override?->storage_limit_mb ?? '' }}" min="0" placeholder="Kosongkan = ikut paket"
                             class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
                     </div>

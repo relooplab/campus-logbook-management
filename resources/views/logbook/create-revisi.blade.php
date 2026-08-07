@@ -26,7 +26,7 @@
     <div class="flex items-center gap-1 mb-6 overflow-x-auto pb-1">
         @php
             $steps = [
-                1 => ['Pilih Feedback', 'forum'],
+                1 => ['Pilih Umpan Balik', 'forum'],
                 2 => ['Isi Perbaikan', 'build'],
                 3 => ['Upload File', 'upload_file'],
                 4 => ['Review & Kirim', 'send'],
@@ -52,9 +52,9 @@
 
         {{-- ===== STEP 1: Pilih Feedback ===== --}}
         <div class="wizard-panel" data-panel="1">
-            <h2 class="font-heading font-semibold text-text-primary mb-3">1. Pilih Feedback yang Dijawab</h2>
+            <h2 class="font-heading font-semibold text-text-primary mb-3">1. Pilih Umpan Balik yang Dijawab</h2>
             <div>
-                <label class="block text-xs text-text-secondary mb-1" for="parent_entry_id">Feedback yang dijawab (opsional)</label>
+                <label class="block text-xs text-text-secondary mb-1" for="parent_entry_id">Umpan Balik yang dijawab (opsional)</label>
                 <select name="parent_entry_id" id="parent_entry_id"
                     class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
                     <option value="">Tidak ada — revisi mandiri</option>
@@ -73,7 +73,7 @@
             {{-- Feedback & komentar parent --}}
             @foreach ($parents as $parent)
                 <div data-parent-feedback="{{ $parent->id }}" class="rounded-xl bg-bg-panel border border-border p-3 space-y-2 hidden mt-3">
-                    <p class="text-xs font-semibold text-text-secondary">Feedback entri #{{ $parent->id }}</p>
+                    <p class="text-xs font-semibold text-text-secondary">Umpan Balik entri #{{ $parent->id }}</p>
                     <p class="text-sm whitespace-pre-wrap">{{ $parent->feedback_dosen ?: "Tidak ada feedback teks." }}</p>
                     @php $openComments = $parent->comments->where('resolution_status', '!=', \App\Models\PdfComment::STATUS_RESOLVED); @endphp
                     @if ($openComments->isNotEmpty())
@@ -231,7 +231,7 @@
                 <div class="flex items-start gap-2">
                     <span class="material-symbols-outlined icon-sm text-text-secondary mt-0.5">forum</span>
                     <div>
-                        <p class="text-xs text-text-secondary">Feedback yang dijawab</p>
+                        <p class="text-xs text-text-secondary">Umpan Balik yang dijawab</p>
                         <p class="text-text-primary" id="review-parent">—</p>
                     </div>
                 </div>

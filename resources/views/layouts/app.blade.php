@@ -238,7 +238,7 @@
                     </a>
                     <a href="{{ route('logbook.feedback') }}" class="{{ $navLink }} {{ $active('logbook.feedback') }}">
                         <span class="material-symbols-outlined icon-md">forum</span>
-                        <span class="sidebar-label">Logbook Feedback</span>
+                        <span class="sidebar-label">Umpan Balik Logbook</span>
                     </a>
                     @if ($hasKp)
                         <a href="{{ route('logbook-harian.index', $kp) }}" class="{{ $navLink }} {{ $active('logbook-harian.*') }}">

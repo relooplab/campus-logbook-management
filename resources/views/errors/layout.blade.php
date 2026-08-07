@@ -65,7 +65,7 @@
             <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
                 <a href="{{ route('dashboard') }}"
                     class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">
-                    <span class="material-symbols-outlined icon-sm">dashboard</span> Kembali ke Dashboard
+                    <span class="material-symbols-outlined icon-sm">dashboard</span> Ke Dashboard
                 </a>
                 <a href="{{ url('/') }}"
                     class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-bg-hover text-text-primary hover:bg-border text-sm font-medium">

@@ -131,7 +131,7 @@
                 $pct = $quotaBytes > 0 ? min(100, round(($usedBytes ?? 0) / $quotaBytes * 100)) : 0;
             @endphp
             <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-text-secondary">
-                <span>Penyimpanan workspace ini: {{ number_format($totalBytes / 1048576, 1) }} MB</span>
+                <span>Pemakaian workspace ini: {{ number_format($totalBytes / 1048576, 1) }} MB</span>
                 <span>Kuota Anda: {{ $usedLabel }} / {{ $quotaLabel }}</span>
             </div>
             @if ($quotaBytes > 0)

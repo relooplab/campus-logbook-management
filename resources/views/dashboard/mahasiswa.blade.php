@@ -166,7 +166,7 @@
         {{-- ===== Milestone Journey (fase) ===== --}}
         <div class="card p-6">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                <h2 class="font-heading font-semibold text-text-primary">Milestone Journey</h2>
+                <h2 class="font-heading font-semibold text-text-primary">Perjalanan Fase</h2>
                 <span class="text-sm text-text-secondary">{{ $ta->faseLabel() }} · {{ $progressPercent }}%</span>
             </div>
             <div class="overflow-x-auto pb-1">
@@ -356,11 +356,11 @@
             </div>
         @endif
 
-        {{-- ===== Badge + Statistik ===== --}}
+        {{-- ===== Pencapaian + Statistik ===== --}}
         <div class="grid lg:grid-cols-2 gap-5">
             @if ($ta->isTa())
                 <div class="card p-6">
-                    <h2 class="font-heading font-semibold text-text-primary mb-3">Achievement ({{ $unlockedAchievements->count() }}/{{ $totalAchievements }})</h2>
+                    <h2 class="font-heading font-semibold text-text-primary mb-3">Pencapaian ({{ $unlockedAchievements->count() }}/{{ $totalAchievements }})</h2>
                     @include('partials.badge-shelf', ['unlockedAchievements' => $unlockedAchievements, 'unlockedCodes' => $unlockedCodes, 'totalAchievements' => $totalAchievements])
                 </div>
             @endif

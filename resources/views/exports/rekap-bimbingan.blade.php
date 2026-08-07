@@ -47,7 +47,7 @@
     <table class="data">
         <thead>
             <tr>
-                <th style="width:8%">No</th><th style="width:20%">Tanggal</th><th>Feedback</th>
+                <th style="width:8%">No</th><th style="width:20%">Tanggal</th><th>Umpan Balik</th>
             </tr>
         </thead>
         <tbody>

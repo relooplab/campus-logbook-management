@@ -20,7 +20,7 @@
     {{-- Ringkasan kuota --}}
     <div class="card p-6">
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="font-heading font-semibold text-text-primary">Kuota Penyimpanan</h2>
+            <h2 class="font-heading font-semibold text-text-primary">Kuota Workspace</h2>
             <span class="text-sm text-text-secondary">{{ $usedLabel }} / {{ $limitLabel }}</span>
         </div>
         @if ($limitBytes > 0)

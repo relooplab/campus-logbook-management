@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Persetujuan Attachment Dosen')
+@section('title', 'Persetujuan Dosen')
 
 @section('content')
 <div class="space-y-6">
     {{-- Header --}}
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="font-heading font-bold text-2xl text-text-primary">Persetujuan Attachment Dosen</h1>
+            <h1 class="font-heading font-bold text-2xl text-text-primary">Persetujuan Dosen</h1>
             <p class="text-sm text-text-secondary mt-0.5">Setujui mahasiswa yang memilih Anda sebagai dosen</p>
         </div>
         <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border text-center">← Dashboard</a>
