@@ -1,3 +1,10 @@
+# [0.28.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.27.0...v0.28.0) (2026-08-07)
+
+
+### Features
+
+* allow external penguji and manual supervisor on sidang records ([f3b49ad](https://github.com/relooplab/thesis-logbook-management/commit/f3b49ad2dd1d4106ab668c1ae326b62af8cd53a9))
+
 # [0.27.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.26.1...v0.27.0) (2026-08-07)
 
 
