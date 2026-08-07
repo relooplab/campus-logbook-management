@@ -364,6 +364,9 @@ class DatabaseSeeder extends Seeder
                 'assigned_by' => $systemAdmin->id,
             ]);
         }
+
+        // Akun demo ringkas untuk semua role (konflik dihapus lalu dibuat ulang).
+        $this->call(DemoAccountSeeder::class);
     }
 
     /**
