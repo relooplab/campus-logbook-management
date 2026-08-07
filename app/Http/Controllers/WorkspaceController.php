@@ -78,6 +78,8 @@ class WorkspaceController extends Controller
                 'personalFiles' => collect(),
                 'personalGrouped' => collect(),
                 'personalTotalBytes' => 0,
+                'personalQuotaBytes' => 0,
+                'personalPct' => 0,
                 'tas' => collect(),
             ]);
         }
@@ -88,13 +90,15 @@ class WorkspaceController extends Controller
                 ->orderByDesc('created_at')->get();
             $personalGrouped = $personalFiles->groupBy(fn ($f) => $f->bab ?: 'Lainnya');
             $personalTotalBytes = $personalFiles->sum('size');
+            $personalQuotaBytes = Feature::storageLimitMb($user) * 1048576;
+            $personalPct = $personalQuotaBytes > 0 ? min(100, round($personalTotalBytes / $personalQuotaBytes * 100)) : 0;
 
             $tas = MahasiswaTa::bimbinganOleh($user)
                 ->with(['mahasiswa', 'pembimbing1', 'pembimbing2'])
                 ->latest()
                 ->get();
 
-            return view('workspace.role', compact('user', 'personalFiles', 'personalGrouped', 'personalTotalBytes', 'tas'));
+            return view('workspace.role', compact('user', 'personalFiles', 'personalGrouped', 'personalTotalBytes', 'personalQuotaBytes', 'personalPct', 'tas'));
         }
 
         // Admin: daftar TA/KP (dibatasi institusi untuk admin institusional).
@@ -109,6 +113,8 @@ class WorkspaceController extends Controller
             'personalFiles' => collect(),
             'personalGrouped' => collect(),
             'personalTotalBytes' => 0,
+            'personalQuotaBytes' => 0,
+            'personalPct' => 0,
             'tas' => $tas,
         ]);
     }

@@ -16,6 +16,12 @@
         </div>
         <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Dashboard</a>
     </div>
+    {{-- Info: dapat dilihat dosen --}}
+    <div class="flex items-start gap-3 rounded-xl border border-brand/20 bg-brand/5 px-4 py-3 text-sm text-text-secondary">
+        <span class="material-symbols-outlined icon-md text-brand flex-shrink-0">visibility</span>
+        <p>Workspace ini dapat <span class="font-medium text-text-primary">dilihat oleh dosen pembimbing</span> Anda ({{ $mahasiswaTa->pembimbing1?->name ?? '—' }}{{ $mahasiswaTa->pembimbing2 ? ', ' . $mahasiswaTa->pembimbing2->name : '' }}). Dosen dapat melihat, mengunggah, dan mengunduh file di sini sebagai bahan bimbingan.</p>
+    </div>
+
     {{-- Filter --}}
     <form method="GET" action="{{ route('workspace.index', $mahasiswaTa) }}" class="card p-4 flex flex-wrap gap-3 items-end">
         <div class="w-full sm:w-auto">

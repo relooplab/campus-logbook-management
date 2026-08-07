@@ -263,7 +263,7 @@
                 </a>
                 <a href="{{ route('storage.index') }}" class="{{ $navLink }} {{ $active('storage.*') }}">
                     <span class="material-symbols-outlined icon-md">database</span>
-                    <span class="sidebar-label">Penyimpanan Saya</span>
+                    <span class="sidebar-label">Workspace Mahasiswa</span>
                 </a>
                 <a href="{{ route('workspace-institusi.index') }}" class="{{ $navLink }} {{ $active('workspace-institusi.*') }}">
                     <span class="material-symbols-outlined icon-md">folder_shared</span>

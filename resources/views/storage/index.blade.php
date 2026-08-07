@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Penyimpanan Saya')
+@section('title', 'Workspace Mahasiswa')
 
 @section('content')
 @php
@@ -11,8 +11,8 @@
 <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="font-heading font-bold text-2xl text-text-primary"><span class="material-symbols-outlined icon-md align-text-bottom">database</span> Penyimpanan Saya</h1>
-            <p class="text-sm text-text-secondary mt-0.5">Kelola file yang dibebankan ke kuota Anda (dari mahasiswa bimbingan)</p>
+            <h1 class="font-heading font-bold text-2xl text-text-primary"><span class="material-symbols-outlined icon-md align-text-bottom">database</span> Workspace Mahasiswa</h1>
+            <p class="text-sm text-text-secondary mt-0.5">File workspace & foto logbook mahasiswa bimbingan yang dibebankan ke kuota Anda</p>
         </div>
         <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Dashboard</a>
     </div>

@@ -73,7 +73,9 @@
                             <span class="px-3 py-2 rounded-md bg-bg-panel"> TA:
                                 {{ \Illuminate\Support\Str::limit($profile->mahasiswaTa->judul_ta, 60) }} </span>
                         @endif
-        </div> {{-- Tautan akademik dosen --}} @if ($profile->isDosen() && ($profile->google_scholar || $profile->orcid || $profile->sinta || $profile->researchgate || $profile->jadwal_bimbingan_url))
+        </div>
+        @include('partials.profile-affiliation', ['affUser' => $profile])
+        {{-- Tautan akademik dosen --}} @if ($profile->isDosen() && ($profile->google_scholar || $profile->orcid || $profile->sinta || $profile->researchgate || $profile->jadwal_bimbingan_url))
             <div class="mt-6 pt-4 border-t border-border">
                 <h3 class="text-sm font-semibold mb-3">Tautan Akademik</h3>
                 <div class="flex flex-wrap gap-2 text-sm">

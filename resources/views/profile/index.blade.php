@@ -109,6 +109,7 @@
                     class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan
                     Profil</button> </div>
         </form>
+        @include('partials.profile-affiliation', ['affUser' => $user])
     </div>
 
     {{-- Ganti kata sandi --}} <div class="bg-bg-surface rounded-xl border border-border p-6 space-y-4">

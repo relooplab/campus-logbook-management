@@ -31,13 +31,21 @@ class ChatController extends Controller
             ->orderByDesc('updated_at')
             ->get();
 
+        $supervised = collect();
+        if ($user->isDosen()) {
+            $supervised = MahasiswaTa::bimbinganOleh($user)
+                ->with(['mahasiswa', 'pembimbing1', 'pembimbing2'])
+                ->latest()
+                ->get();
+        }
+
         // Hitung unread tiap percakapan.
         foreach ($conversations as $c) {
             $c->unread = $c->unreadCountFor($user->id);
             $c->other_user = $c->other($user);
         }
 
-        return view('chat.index', compact('conversations', 'user'));
+        return view('chat.index', compact('conversations', 'user', 'supervised'));
     }
 
     /**

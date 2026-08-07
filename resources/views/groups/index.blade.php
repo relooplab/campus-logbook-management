@@ -12,6 +12,41 @@
         <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Dashboard</a>
     </div>
 
+    {{-- Info fitur (bisa dibuka/ditutup) --}}
+    <div class="card p-6">
+        <button type="button" data-group-info-toggle
+            class="w-full flex items-center justify-between gap-3 text-left cursor-pointer group">
+            <span class="flex items-center gap-2 font-heading font-semibold text-text-primary">
+                <span class="material-symbols-outlined icon-md text-brand">info</span>
+                Tentang Fitur Grup Dosen
+            </span>
+            <span data-group-info-icon class="material-symbols-outlined text-text-secondary">expand_more</span>
+        </button>
+        <div data-group-info-body class="hidden mt-4">
+            <div class="grid sm:grid-cols-2 gap-4 text-sm">
+                <div class="rounded-xl border border-border bg-bg-panel p-4">
+                    <h3 class="font-semibold text-text-primary mb-2 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined icon-sm text-status-success">check_circle</span> Yang bisa dilakukan
+                    </h3>
+                    <ul class="space-y-1.5 text-text-secondary list-disc pl-4">
+                        <li>Membuat grup dosen di universitas yang sama (level universitas / fakultas / departemen / prodi).</li>
+                        <li>Mengundang dosen lain dan menyetujui kebersamaan agar data bisa saling terhubung (cross-link).</li>
+                        <li>Dosen dalam grup yang sama (atau TA bersama) dapat melihat data bimbingan rekan dengan hubungan langsung.</li>
+                    </ul>
+                </div>
+                <div class="rounded-xl border border-border bg-bg-panel p-4">
+                    <h3 class="font-semibold text-text-primary mb-2 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined icon-sm text-status-danger">cancel</span> Yang tidak bisa
+                    </h3>
+                    <ul class="space-y-1.5 text-text-secondary list-disc pl-4">
+                        <li>Grup hanya untuk dosen — mahasiswa tidak dapat menjadi anggota.</li>
+                        <li>Tidak bisa dibuat lintas universitas (harus di perguruan tinggi yang sama dengan Anda).</li>
+                        <li>Data bimbingan rekan hanya tampil bila ada hubungan langsung (bimbingan/penguji bersama).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
     {{-- Undangan pending --}}
     @if ($pendingInvites->isNotEmpty())
         <div class="card p-6">
@@ -190,6 +225,18 @@
 
         levelSelect.addEventListener('change', sync);
         sync();
+    })();
+    // Toggle card info fitur grup.
+    (function () {
+        var btn = document.querySelector('[data-group-info-toggle]');
+        if (!btn) return;
+        var body = document.querySelector('[data-group-info-body]');
+        var icon = document.querySelector('[data-group-info-icon]');
+        btn.addEventListener('click', function () {
+            var open = !body.classList.contains('hidden');
+            body.classList.toggle('hidden', open);
+            if (icon) icon.textContent = open ? 'expand_more' : 'expand_less';
+        });
     })();
 </script>
 @endsection

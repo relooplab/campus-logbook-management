@@ -35,8 +35,17 @@
                     <h2 class="font-heading font-semibold text-text-primary">Workspace Pribadi</h2>
                     <p class="text-sm text-text-secondary">File pribadi milik Anda — hanya Anda yang bisa melihat</p>
                 </div>
-                <span class="text-xs text-text-secondary">{{ number_format($personalTotalBytes / 1048576, 1) }} MB terpakai</span>
+                <span class="text-xs text-text-secondary">{{ number_format($personalTotalBytes / 1048576, 1) }} MB terpakai@if ($personalQuotaBytes > 0) dari {{ number_format($personalQuotaBytes / 1048576, 1) }} MB tersedia @endif</span>
             </div>
+
+            @if ($personalQuotaBytes > 0)
+                <div class="mb-4">
+                    <div class="h-1.5 rounded-full bg-bg-panel overflow-hidden">
+                        <div class="h-full rounded-full {{ $personalPct >= 90 ? 'bg-status-danger' : ($personalPct >= 70 ? 'bg-status-pending' : 'bg-brand') }}" style="width: {{ $personalPct }}%"></div>
+                    </div>
+                    <p class="text-[10px] text-text-secondary mt-0.5">{{ $personalPct }}% kuota workspace pribadi terpakai</p>
+                </div>
+            @endif
 
             {{-- Upload (drag & drop, sama seperti mahasiswa) --}}
             <form method="POST" action="{{ route('workspace.personal-store') }}" enctype="multipart/form-data" id="personal-upload-form" class="mb-4">

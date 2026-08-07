@@ -119,7 +119,7 @@
             });
 
             // Pertahankan role yang dipilih saat ada error validasi (old input).
-            // Gunakan @json (bukan {{ }}) agar tidak di-escape jadi " di dalam <script>.
+            // Gunakan sintaks Json (bukan kurung kurawal) agar nilai tidak di-escape dari tanda kutip di dalam script.
             var oldRole = @json(old('role', 'mahasiswa'));
             setRole(oldRole === 'dosen' ? 'dosen' : 'mahasiswa');
         });
