@@ -1,3 +1,12 @@
+# [0.17.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.16.0...v0.17.0) (2026-08-07)
+
+
+### Features
+
+* add reviewer action items, sidang results, mandatory rejection reason, and read indicator ([4bd1187](https://github.com/relooplab/thesis-logbook-management/commit/4bd1187f156de6def55f3827bdf691cfb7202ffa))
+* **pdf-comments:** add reply functionality to comments and update related views ([218756a](https://github.com/relooplab/thesis-logbook-management/commit/218756a4fb69889f5dbbbfbfb954271726674ba2))
+* update logbook feedback view with enhanced feedback and action item display ([ef429b1](https://github.com/relooplab/thesis-logbook-management/commit/ef429b1894e2ed613ba0e778e0223f0c69120896))
+
 # [0.16.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.15.0...v0.16.0) (2026-08-06)
 
 
