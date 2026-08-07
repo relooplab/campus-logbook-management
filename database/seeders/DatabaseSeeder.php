@@ -89,6 +89,10 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
+        // Akun demo ringkas dibuat lebih dulu agar data kaya (TA, grup, dll.)
+        // dibangun di atas user demo FINAL (tidak terhapus oleh DemoAccountSeeder).
+        $this->call(DemoAccountSeeder::class);
+
         // Helper: buat user dengan status & email verified.
         // Jika NIDN/identifier sudah dipakai user lain (email berbeda), update email user tsb.
         $makeUser = function (array $attrs, array $roles, string $status) use ($mahasiswaRole, $dosenRole, $adminRole, $systemAdminRole) {
@@ -365,8 +369,6 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // Akun demo ringkas untuk semua role (konflik dihapus lalu dibuat ulang).
-        $this->call(DemoAccountSeeder::class);
     }
 
     /**

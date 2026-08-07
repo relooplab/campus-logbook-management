@@ -80,7 +80,28 @@
             </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <a href="{{ route('quick-review.index') }}" class="flex items-center gap-3 p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
+            {{-- Menunggu persetujuan (paling penting) --}}
+            <a href="{{ route('approval.index') }}" class="relative flex items-center gap-3 p-4 rounded-xl bg-status-pending/15 border border-status-pending/40 shadow-lg shadow-status-pending/10 hover:border-status-pending/60 transition-colors">
+                @if ($pendingRegistrations > 0)
+                    <span class="absolute top-3 right-3 flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-status-pending opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-status-pending"></span>
+                    </span>
+                @endif
+                <span class="icon-circle w-10 h-10 bg-status-pending/20 text-status-pending animate-pulse">
+                    <span class="material-symbols-outlined icon-md">person_add</span>
+                </span>
+                <div>
+                    <div class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $pendingRegistrations }}</div>
+                    <div class="text-sm font-medium text-status-pending">Menunggu persetujuan</div>
+                </div>
+                @if ($pendingRegistrations > 0)
+                    <span class="ml-auto text-status-pending text-xs font-semibold">Setujui →</span>
+                @endif
+            </a>
+
+            {{-- Entri menunggu review --}}
+            <a href="{{ route('quick-review.index') }}" class="flex items-center gap-3 p-4 rounded-xl bg-status-danger/10 border border-status-danger/30 hover:border-status-danger/50 transition-colors">
                 <span class="icon-circle w-10 h-10 bg-status-danger/15 text-status-danger">
                     <span class="material-symbols-outlined icon-md">fact_check</span>
                 </span>
@@ -89,23 +110,13 @@
                     <div class="text-sm text-text-secondary">Entri menunggu review</div>
                 </div>
                 @if ($stats['menunggu_review'] > 0)
-                    <span class="ml-auto text-brand text-xs font-medium">Review →</span>
+                    <span class="ml-auto text-status-danger text-xs font-medium">Review →</span>
                 @endif
             </a>
-            <a href="{{ route('approval.index') }}" class="flex items-center gap-3 p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
-                <span class="icon-circle w-10 h-10 bg-status-pending/15 text-status-pending">
-                    <span class="material-symbols-outlined icon-md">person_add</span>
-                </span>
-                <div>
-                    <div class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $pendingRegistrations }}</div>
-                    <div class="text-sm text-text-secondary">Registrasi menunggu</div>
-                </div>
-                @if ($pendingRegistrations > 0)
-                    <span class="ml-auto text-brand text-xs font-medium">Setujui →</span>
-                @endif
-            </a>
-            <a href="{{ route('dashboard.dosen.mahasiswa-list') }}" class="flex items-center gap-3 p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
-                <span class="icon-circle w-10 h-10 bg-status-pending/15 text-status-pending">
+
+            {{-- Mahasiswa perlu perhatian --}}
+            <a href="{{ route('dashboard.dosen.mahasiswa-list') }}" class="flex items-center gap-3 p-4 rounded-xl bg-status-info/10 border border-status-info/30 hover:border-status-info/50 transition-colors">
+                <span class="icon-circle w-10 h-10 bg-status-info/15 text-status-info">
                     <span class="material-symbols-outlined icon-md">monitor_heart</span>
                 </span>
                 <div>
@@ -113,7 +124,7 @@
                     <div class="text-sm text-text-secondary">Mahasiswa perlu perhatian</div>
                 </div>
                 @if ($needsAttention > 0)
-                    <span class="ml-auto text-status-pending text-xs font-medium">Lihat →</span>
+                    <span class="ml-auto text-status-info text-xs font-medium">Lihat →</span>
                 @endif
             </a>
         </div>

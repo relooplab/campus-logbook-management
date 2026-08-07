@@ -20,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Catat waktu terakhir aktif user pada setiap request.
         $middleware->append(\App\Http\Middleware\UpdateLastActive::class);
+
+        // Percaya reverse-proxy (nginx di docker network) agar header
+        // X-Forwarded-Proto diteruskan -> Laravel tahu skema https.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

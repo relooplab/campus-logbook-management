@@ -9,6 +9,7 @@ use App\Observers\LogbookEntryObserver;
 use App\Policies\LogbookEntryPolicy;
 use App\Policies\MahasiswaTaPolicy;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -33,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Invalidate cache health indicator saat entry berubah.
         LogbookEntry::observe(LogbookEntryObserver::class);
+
+        // Paksa skema https bila diakses via reverse-proxy HTTPS.
+        if (config('app.force_https')) {
+            URL::forceScheme('https');
+        }
 
         // Terapkan profil institusi (brand dinamis) saat boot.
         try {

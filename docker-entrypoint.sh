@@ -7,11 +7,12 @@
 # ============================================================================
 set -e
 
-# Isi public/ dari salinan bawaan image jika volume kosong.
-if [ -z "$(ls -A /var/www/public 2>/dev/null)" ]; then
-    echo ">>> Mengisi public/ dari image (aset frontend)..."
-    cp -a /public-dist/. /var/www/public/
-fi
+# Selalu sinkronkan aset bawaan image (build/pdfjs/css) dari /public-dist.
+# Tanpa sinkronisasi ulang, named volume public/ menyimpan aset Vite yang STALE
+# setelah image diperbarui (hash aset berubah) -> viewer PDF/anotasi rusak.
+# Hapus build/pdfjs/css lama agar tidak menumpuk, lalu salin ulang dari image.
+rm -rf /var/www/public/build /var/www/public/pdfjs /var/www/public/css
+cp -a /public-dist/. /var/www/public/
 
 # Pastikan storage:link selalu ada.
 if [ ! -L /var/www/public/storage ]; then

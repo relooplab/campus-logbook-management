@@ -64,7 +64,23 @@ class DemoAccountSeeder extends Seeder
                 $conflictQuery->orWhere('nidn', $attrs['nidn']);
             }
 
-            $conflictQuery->get()->each(function (User $u) {
+            $conflictQuery->get()->each(function (User $u) use ($role, $attrs, $status) {
+                // Jangan hapus user yang sudah punya TA/KP: cascade akan menghapus
+                // data bimbingan demo. Cukup update in-place + pastikan role.
+                if ($u->mahasiswaPrograms()->exists()) {
+                    $u->forceFill([
+                        'name' => $attrs['name'],
+                        'nidn' => $attrs['nidn'] ?? $u->nidn,
+                        'identifier' => $attrs['identifier'] ?? $u->identifier,
+                        'whatsapp' => $attrs['whatsapp'] ?? $u->whatsapp,
+                        'registration_status' => $status,
+                        'email_verified_at' => now(),
+                    ])->save();
+                    $u->syncRoles([$role]);
+
+                    return;
+                }
+
                 $u->syncRoles([]);
                 $u->delete();
             });

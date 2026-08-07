@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Force HTTPS Scheme
+    |--------------------------------------------------------------------------
+    |
+    | Saat akses lewat reverse-proxy HTTPS (mis. https://domain), semua URL yang
+    | digenerate Laravel harus memakai https agar tidak terjadi mixed content
+    | (yang memblokir viewer PDF/anotasi). Aktifkan via APP_FORCE_HTTPS=true.
+    |
+    */
+
+    'force_https' => env('APP_FORCE_HTTPS', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | External Links (configurable per-institution)
     |--------------------------------------------------------------------------
     | Tautan eksternal yang mungkin berbeda antar institusi. Isi di .env:
