@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\AdminScope;
 use App\Models\Department;
+use App\Models\DirectorySubscription;
 use App\Models\Faculty;
 use App\Models\StudyProgram;
 use App\Models\University;
@@ -17,6 +19,11 @@ use App\Models\User;
  */
 class OrganizationalDirectoryService
 {
+    // Status afiliasi pada pivot `user_university`.
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_REVOKED = 'revoked';
+
     /**
      * Cari perguruan tinggi berdasarkan nama (case-insensitive) atau NPSN.
      */
@@ -138,7 +145,8 @@ class OrganizationalDirectoryService
         ?Department $department = null,
         ?StudyProgram $studyProgram = null,
         bool $isPrimary = false,
-        bool $replaceAll = false
+        bool $replaceAll = false,
+        string $status = self::STATUS_ACTIVE
     ): void {
         if ($replaceAll) {
             $user->universities()->detach();
@@ -152,6 +160,7 @@ class OrganizationalDirectoryService
                 'department_id' => $department?->id,
                 'study_program_id' => $studyProgram?->id,
                 'is_primary' => $isPrimary,
+                'status' => $status,
             ]);
             return;
         }
@@ -161,6 +170,7 @@ class OrganizationalDirectoryService
             'department_id' => $department?->id,
             'study_program_id' => $studyProgram?->id,
             'is_primary' => $isPrimary,
+            'status' => $status,
         ]);
     }
 
@@ -169,8 +179,99 @@ class OrganizationalDirectoryService
      */
     public function setPrimaryUniversity(User $user, University $university): void
     {
+        // Update pivot: set semua false dulu, lalu yang ini true.
+        \DB::table('user_university')->where('user_id', $user->id)->update(['is_primary' => false]);
         $user->universities()->updateExistingPivot($university->id, ['is_primary' => true]);
-        $user->universities()->where('university_id', '!=', $university->id)
-            ->update(['is_primary' => false]);
     }
+    /**
+     * Ubah status sebuah afiliasi (pending/active/revoked) + jejak approver.
+     */
+    public function setAffiliationStatus(User $user, University $university, string $status, ?User $approver = null, ?string $note = null): void
+    {
+        $data = ['status' => $status];
+
+        if ($approver) {
+            $data['approved_by'] = $approver->id;
+            $data['approved_at'] = now();
+        }
+        if ($note !== null) {
+            $data['rejection_reason'] = $note;
+        }
+
+        $user->universities()->updateExistingPivot($university->id, $data);
+    }
+
+    /**
+     * Setujui afiliasi dosen: jadikan `active`, tandai sebagai primer (karena
+     * itu yang menurunkan akses Workspace Institusi), dan simpan jejak approver.
+     */
+    public function approveAffiliation(User $user, University $university, User $approver): void
+    {
+        $this->setAffiliationStatus($user, $university, self::STATUS_ACTIVE, $approver);
+
+        // Jadikan afiliasi yg baru disetujui sebagai primer (akses mengikuti).
+        $this->setPrimaryUniversity($user, $university);
+    }
+
+    /**
+     * Cabut afiliasi (oleh dosen/revoke): status `revoked` + nonaktifkan primer.
+     * Akses ke Workspace Institusi dari afiliasi tsb otomatis hilang.
+     */
+    public function revokeAffiliation(User $user, University $university): void
+    {
+        $this->setAffiliationStatus($user, $university, self::STATUS_REVOKED);
+        $user->universities()->updateExistingPivot($university->id, ['is_primary' => false]);
+    }
+
+    /**
+     * Tolak permintaan afiliasi (oleh admin): status `revoked` + alasan.
+     */
+    public function rejectAffiliation(User $user, University $university, User $rejector, string $reason): void
+    {
+        $this->setAffiliationStatus($user, $university, self::STATUS_REVOKED, $rejector, $reason);
+        $user->universities()->updateExistingPivot($university->id, ['is_primary' => false]);
+    }
+
+    /**
+     * Admin level paling rendah yang berwenang menyetujui dosen masuk ke sebuah
+     * prodi (leaf direktori). Prioritas cakupan admin: prodi → departemen →
+     * fakultas (paling spesifik dulu). Jika tidak ada admin ber-scope yang
+     * mencakup node tsb, fallback ke admin institusi penuh (tanpa scope) dan
+     * system admin.
+     *
+     * @return \Illuminate\Support\Collection<int, User>
+     */
+    public function lowestLevelAdminsForStudyProgram(StudyProgram $prodi): \Illuminate\Support\Collection
+    {
+        $deptId = $prodi->department_id;
+        $facultyId = $prodi->department?->faculty_id;
+
+        $candidates = [['type' => AdminScope::SCOPE_STUDY_PROGRAM, 'id' => $prodi->id]];
+        if ($deptId) {
+            $candidates[] = ['type' => AdminScope::SCOPE_DEPARTMENT, 'id' => $deptId];
+        }
+        if ($facultyId) {
+            $candidates[] = ['type' => AdminScope::SCOPE_FACULTY, 'id' => $facultyId];
+        }
+
+        // Cakupan admin yang paling spesifik dulu: prodi → dept → fakultas.
+        foreach ($candidates as $c) {
+            $adminIds = AdminScope::where('status', AdminScope::STATUS_ACTIVE)
+                ->where('scope_type', $c['type'])
+                ->where('scope_id', $c['id'])
+                ->distinct()
+                ->pluck('user_id');
+
+            if ($adminIds->isNotEmpty()) {
+                return User::whereIn('id', $adminIds)
+                    ->get();
+            }
+        }
+
+        // Fallback: admin institusi penuh (tanpa admin_scope aktif) + system admin.
+        return User::whereHas('roles', fn ($q) => $q->whereIn('name', ['admin', 'system_admin']))
+            ->whereDoesntHave('adminScopes')
+            ->get();
+    }
+
 }

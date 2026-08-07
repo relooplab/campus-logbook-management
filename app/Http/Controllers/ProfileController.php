@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\MahasiswaTa;
+use App\Models\StudyProgram;
+use App\Models\University;
 use App\Models\User;
 use App\Services\OrganizationalDirectoryService;
 use Illuminate\Http\RedirectResponse;
@@ -340,6 +342,112 @@ class ProfileController extends Controller
     /**
      * Render halaman profil dengan data pengguna.
      */
+    /**
+     * Form kelola afiliasi (dosen) — daftar afiliasi + status & form tambah/ubah.
+     */
+    public function affiliation(Request $request): View
+    {
+        $user = $request->user();
+
+        $universities = $user->universities()->get()->map(function ($univ) {
+            $p = $univ->pivot;
+
+            return [
+                'university' => $univ,
+                'faculty' => $p->faculty_id ? \App\Models\Faculty::find($p->faculty_id) : null,
+                'department' => $p->department_id ? \App\Models\Department::find($p->department_id) : null,
+                'study_program' => $p->study_program_id ? \App\Models\StudyProgram::find($p->study_program_id) : null,
+                'is_primary' => (bool) $p->is_primary,
+                'status' => $p->status ?: OrganizationalDirectoryService::STATUS_ACTIVE,
+            ];
+        });
+
+        return view('profile.affiliation', ['user' => $user, 'affiliations' => $universities]);
+    }
+
+    /**
+     * Tambah/ubah afiliasi dosen ke direktori organisasi.
+     *
+     * - Node (prodi) tdk berlangganan → afiliasi langsung `active` (aman).
+     * - Node berlangganan → `pending` + notifikasi admin level terendah; akses
+     *   ke Workspace Institusi baru muncul setelah disetujui.
+     */
+    public function updateAffiliation(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user->isDosen(), 403, 'Hanya dosen yang dapat mengubah afiliasi.');
+
+        $validated = $request->validate([
+            'university_name' => ['required', 'string', 'max:255'],
+            'faculty_name' => ['nullable', 'string', 'max:255'],
+            'department_name' => ['nullable', 'string', 'max:255'],
+            'study_program_name' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $service = app(OrganizationalDirectoryService::class);
+
+        $university = $service->findOrCreateUniversity($validated['university_name']);
+
+        $faculty = null;
+        $department = null;
+        $studyProgram = null;
+
+        if (!empty($validated['faculty_name'])) {
+            $faculty = $service->findOrCreateFaculty($university, $validated['faculty_name']);
+        }
+        if ($faculty && !empty($validated['department_name'])) {
+            $department = $service->findOrCreateDepartment($faculty, $validated['department_name']);
+        }
+        if ($department && !empty($validated['study_program_name'])) {
+            $studyProgram = $service->findOrCreateStudyProgram($department, $validated['study_program_name']);
+        }
+
+        // Gate approval: node prodi berlangganan → harus pending.
+        $status = OrganizationalDirectoryService::STATUS_ACTIVE;
+        if ($studyProgram && Feature::directorySubscriptionActive('study_program', $studyProgram->id)) {
+            $status = OrganizationalDirectoryService::STATUS_PENDING;
+        }
+
+        $service->attachUserToUniversity(
+            $user, $university, $faculty, $department, $studyProgram,
+            true, false, $status
+        );
+        // Jadikan afiliasi ini primer (yang lain non-primer).
+        $service->setPrimaryUniversity($user, $university);
+
+        if ($status === OrganizationalDirectoryService::STATUS_PENDING) {
+            $approvers = $service->lowestLevelAdminsForStudyProgram($studyProgram);
+            foreach ($approvers as $approver) {
+                $this->bestEffort(fn () => $approver->notify(new \App\Notifications\ActivityNotification(
+                    "Dosen '{$user->name}' meminta bergabung ke institusi (prodi '{$studyProgram->name}').",
+                    route('affiliation-approval.index'),
+                    'Permintaan Persetujuan Afiliasi Dosen',
+                )));
+            }
+
+            return redirect()->route('profile.affiliation')
+                ->with('success', 'Afiliasi diajukan ke admin institusi. Akses Workspace Institusi aktif setelah disetujui.');
+        }
+
+        return redirect()->route('profile.affiliation')
+            ->with('success', 'Afiliasi berhasil diperbarui.');
+    }
+
+    /**
+     * Cabut afiliasi — akses ke Workspace Institusi dari afiliasi tsb otomatis hilang.
+     */
+    public function revokeAffiliation(Request $request, University $university): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user->isDosen(), 403, 'Hanya dosen yang dapat mencabut afiliasi.');
+
+        app(OrganizationalDirectoryService::class)->revokeAffiliation($user, $university);
+
+        return redirect()->route('profile.affiliation')
+            ->with('success', 'Afiliasi dicabut. Akses Workspace Institusi terkait telah dihapus.');
+    }
+
+
     private function renderProfile(User $user): View
     {
         $user->load('mahasiswaTa');

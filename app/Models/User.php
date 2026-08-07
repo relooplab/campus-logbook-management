@@ -81,16 +81,22 @@ class User extends Authenticatable
     public function universities()
     {
         return $this->belongsToMany(University::class, 'user_university')
-            ->withPivot('faculty_id', 'department_id', 'study_program_id', 'is_primary')
+            ->withPivot('faculty_id', 'department_id', 'study_program_id', 'is_primary', 'status', 'approved_by', 'approved_at', 'rejection_reason')
             ->withTimestamps();
     }
 
     /**
      * Perguruan tinggi utama (is_primary = true), atau yang pertama.
+     * Memprioritaskan afiliasi yang BERSTATUS ACTIVE agar tidak menampilkan
+     * afiliasi pending/revoked sebagai afiliasi utama.
      */
     public function primaryUniversity(): ?University
     {
-        return $this->universities()->wherePivot('is_primary', true)->first()
+        return $this->universities()
+            ->wherePivot('is_primary', true)
+            ->wherePivot('status', 'active')
+            ->first()
+            ?? $this->universities()->wherePivot('status', 'active')->first()
             ?? $this->universities()->first();
     }
 

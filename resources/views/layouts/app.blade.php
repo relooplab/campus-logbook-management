@@ -269,6 +269,12 @@
                     <span class="material-symbols-outlined icon-md">folder_shared</span>
                     <span class="sidebar-label">Workspace Institusi</span>
                 </a>
+                @if ($user->isDosen())
+                    <a href="{{ route('profile.affiliation') }}" class="{{ $navLink }} {{ $active('profile.affiliation*') }}">
+                        <span class="material-symbols-outlined icon-md">account_balance</span>
+                        <span class="sidebar-label">Afiliasi Institusi</span>
+                    </a>
+                @endif
                 <a href="{{ route('groups.index') }}" class="{{ $navLink }} {{ $active('groups.*') }}">
                     <span class="material-symbols-outlined icon-md">groups</span>
                     <span class="sidebar-label">Grup Dosen</span>
@@ -285,6 +291,12 @@
 
             @if ($showAdminMenu)
                 <div class="px-3 pt-4 pb-1 text-[10px] uppercase tracking-widest text-text-secondary sidebar-label">Administrasi</div>
+                @if ($user->isAdmin())
+                    <a href="{{ route('affiliation-approval.index') }}" class="{{ $navLink }} {{ $active('affiliation-approval.*') }}">
+                        <span class="material-symbols-outlined icon-md">person_add</span>
+                        <span class="sidebar-label">Persetujuan Afiliasi</span>
+                    </a>
+                @endif
                 @if ($user->isSystemAdmin())
                     @can('system.admins')
                         <a href="{{ route('admin.system.admins') }}" class="{{ $navLink }} {{ $active('admin.system.admins') }}">
