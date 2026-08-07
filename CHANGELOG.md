@@ -1,3 +1,10 @@
+## [0.18.1](https://github.com/relooplab/thesis-logbook-management/compare/v0.18.0...v0.18.1) (2026-08-07)
+
+
+### Bug Fixes
+
+* **migrations:** shorten auto-generated constraint names to fit MySQL 64-char limit ([e7e034d](https://github.com/relooplab/thesis-logbook-management/commit/e7e034dde10a0579135be906d1b1a7c842172998))
+
 # [0.18.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.17.0...v0.18.0) (2026-08-07)
 
 
