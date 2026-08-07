@@ -1,3 +1,10 @@
+# [0.22.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.21.0...v0.22.0) (2026-08-07)
+
+
+### Features
+
+* simplify post-profile onboarding and gate seminar submission to approved students ([685c431](https://github.com/relooplab/thesis-logbook-management/commit/685c431b6b7133938d1c16e61956b305e49a9fb2))
+
 # [0.21.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.20.0...v0.21.0) (2026-08-07)
 
 
