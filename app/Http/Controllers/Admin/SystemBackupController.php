@@ -102,10 +102,25 @@ class SystemBackupController extends Controller
             @unlink($uploadPath);
         }
 
-        return back()->with(
+        $response = back()->with(
             'success',
             'Restore berhasil. Safety-backup (kondisi sebelum restore) disimpan di server: '.$result['safety_backup_path']
         );
+
+        $issues = $result['integrity_issues'] ?? [];
+        if ($issues !== []) {
+            $summary = collect($issues)
+                ->map(fn ($i) => "{$i['table']}.{$i['column']} → {$i['orphan_count']} baris tidak merujuk {$i['references']} yang valid")
+                ->implode('; ');
+
+            $response->with(
+                'warning',
+                'PERHATIAN: restore selesai tapi terdeteksi data orphan (kemungkinan rujukan ke data yang sudah '
+                .'dihapus sejak backup diambil): '.$summary.'. Detail lengkap (termasuk contoh id) ada di log audit.'
+            );
+        }
+
+        return $response;
     }
 
     private function authorizeSystemAdmin(Request $request): void

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Services\Backup\BackupException;
+use App\Services\Backup\BackupIntegrityChecker;
 use App\Services\Backup\RestoreException;
 use App\Services\Backup\RestoreValidationException;
 use App\Services\Backup\ScopedRestoreExecutor;
@@ -35,11 +36,12 @@ class SystemRestoreService
     public function __construct(
         private readonly SystemBackupService $backupService,
         private readonly ScopedRestoreExecutor $scopedExecutor,
+        private readonly BackupIntegrityChecker $integrityChecker,
     ) {
     }
 
     /**
-     * @return array{safety_backup_path: string}
+     * @return array{safety_backup_path: string, integrity_issues: array<int,array{table:string,column:string,references:string,orphan_count:int,sample_ids:array<int,int>}>}
      *
      * @throws RestoreValidationException jika struktur ZIP tidak valid
      * @throws BackupException jika safety-backup otomatis gagal dibuat
@@ -55,6 +57,7 @@ class SystemRestoreService
 
         $credentialsFile = null;
         $safetyBackupPath = null;
+        $integrityIssues = [];
 
         try {
             $this->extractZip($zipPath, $extractDir);
@@ -76,6 +79,18 @@ class SystemRestoreService
                 $this->replaceDatabase($extractDir.'/database.sql', $credentialsFile);
             } else {
                 $this->scopedExecutor->restore($extractDir, $manifest, $credentialsFile);
+
+                // Wajib untuk jalur parsial: closure saat backup vs saat restore
+                // bisa berbeda (mis. user yang direferensikan sudah dihapus sejak
+                // backup diambil) — jangan diam-diam biarkan data jadi orphan.
+                $integrityIssues = $this->integrityChecker->verify($manifest['tables_included'] ?? []);
+                if ($integrityIssues !== []) {
+                    Log::channel('audit')->warning('System restore: integrity issues detected after scoped restore', [
+                        'by' => auth()->id(),
+                        'source_zip' => $zipPath,
+                        'issues' => $integrityIssues,
+                    ]);
+                }
             }
 
             Log::channel('audit')->info('System restore executed', [
@@ -85,9 +100,10 @@ class SystemRestoreService
                 'is_full' => $isFull,
                 'selection' => $manifest['selection'] ?? null,
                 'tables_included' => $manifest['tables_included'] ?? null,
+                'integrity_issues_count' => count($integrityIssues),
             ]);
 
-            return ['safety_backup_path' => $safetyBackupPath];
+            return ['safety_backup_path' => $safetyBackupPath, 'integrity_issues' => $integrityIssues];
         } finally {
             if ($credentialsFile && file_exists($credentialsFile)) {
                 @unlink($credentialsFile);
