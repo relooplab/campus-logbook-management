@@ -19,6 +19,7 @@ use App\Http\Controllers\LogbookHarianController;
 use App\Http\Controllers\MahasiswaTaController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ActionItemController;
+use App\Http\Controllers\AffiliationApprovalController;
 use App\Http\Controllers\PdfCommentController;
 use App\Http\Controllers\ProfilPerusahaanController;
 use App\Http\Controllers\ProfileController;
@@ -79,6 +80,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/dosen/sidang-list', [DashboardController::class, 'dosenSidangList'])->name('dashboard.dosen.sidang-list');
     Route::get('/dashboard/dosen/sidang-list/export', [ExportController::class, 'exportSidangPdf'])->name('dashboard.dosen.sidang-list.export');
 
+    // ----------------------------------------- persetujuan afiliasi dosen (admin)
+    Route::middleware('role_or_permission:admin|system_admin')->group(function () {
+        Route::get('/afiliasi/persetujuan', [AffiliationApprovalController::class, 'index'])->name('affiliation-approval.index');
+        Route::post('/afiliasi/{user}/{university}/approve', [AffiliationApprovalController::class, 'approve'])->name('affiliation-approval.approve');
+        Route::post('/afiliasi/{user}/{university}/reject', [AffiliationApprovalController::class, 'reject'])->name('affiliation-approval.reject');
+    });
+
     // ---------------------------------------------------------- profil
     Route::get('/profil', [ProfileController::class, 'index'])->name('profile.index');
     Route::put('/profil', [ProfileController::class, 'updateProfile'])->name('profile.update');
@@ -86,6 +94,12 @@ Route::middleware('auth')->group(function () {
     Route::put('/profil/program/{mahasiswaTa}', [ProfileController::class, 'updateProgram'])->name('profile.program');
     Route::get('/profil/pilih-dosen', [ProfileController::class, 'selectDosen'])->name('profile.select-dosen');
     Route::post('/profil/pilih-dosen', [ProfileController::class, 'storeDosen'])->name('profile.store-dosen');
+
+    // ------------------------------------------------------- afiliasi (dosen)
+    Route::get('/profil/afiliasi', [ProfileController::class, 'affiliation'])->name('profile.affiliation');
+    Route::post('/profil/afiliasi', [ProfileController::class, 'updateAffiliation'])->name('profile.affiliation.update');
+    Route::post('/profil/afiliasi/{university}/revoke', [ProfileController::class, 'revokeAffiliation'])->name('profile.affiliation.revoke');
+
     Route::get('/profil/{user}', [ProfileController::class, 'show'])->name('profile.show');
 
     // ------------------------------------------------------ detail & fase TA
