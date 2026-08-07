@@ -42,6 +42,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'no-reply@example.com',
                 'website' => '',
                 'footer_note' => 'Dokumen ini dihasilkan oleh Thesis Logbook Management.',
+                'seminar_hardcopy_note' => 'Jika diadakan secara offline, Anda juga diminta menyerahkan hardcopy laporan paling lambat 48 jam sebelum jadwal Seminar/Sidang. Anda bisa menyerahkannya ke TU atau langsung ke ruangan saya.',
             ]
         );
 

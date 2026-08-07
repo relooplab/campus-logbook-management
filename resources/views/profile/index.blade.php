@@ -125,6 +125,40 @@
         </div>
     @endif
 
+    @if ($user->isMahasiswa() && $programs->isNotEmpty())
+        @foreach ($programs as $prog)
+            <div class="bg-bg-surface rounded-xl border border-border p-6">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <h2 class="font-semibold">{{ $prog->jenisLabel() }}</h2>
+                    @include('partials.status-badge', ['status' => $prog->status_ta])
+                </div>
+                @if ($prog->isKp())
+                    <p class="text-sm mb-3"><span class="text-text-secondary">Tempat Kerja Praktek:</span> <span class="font-medium text-text-primary break-words">{{ $prog->tempat_kp ?: 'Belum diisi' }}</span></p>
+                @else
+                    <p class="text-sm mb-3"><span class="text-text-secondary">Judul Tugas Akhir:</span> <span class="font-medium text-text-primary break-words">{{ $prog->judul_ta ?: 'Belum diisi' }}</span></p>
+                @endif
+                <form method="POST" action="{{ route('profile.program', $prog) }}" class="space-y-3">
+                    @csrf
+                    @method('PUT')
+                    @if ($prog->isKp())
+                        <div>
+                            <label class="block text-xs text-text-secondary mb-1">Tempat Kerja Praktek <span class="text-status-danger">*</span></label>
+                            <input type="text" name="tempat_kp" required value="{{ old('tempat_kp', $prog->tempat_kp) }}" placeholder="Contoh: PT Teknologi Indonesia" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            @error('tempat_kp') <p class="text-status-danger text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                    @else
+                        <div>
+                            <label class="block text-xs text-text-secondary mb-1">Judul Tugas Akhir <span class="text-status-danger">*</span></label>
+                            <input type="text" name="judul_ta" required value="{{ old('judul_ta', $prog->judul_ta) }}" placeholder="Contoh: Rancang Bangun Sistem ..." class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            @error('judul_ta') <p class="text-status-danger text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                    @endif
+                    <button class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan {{ $prog->isKp() ? 'Tempat KP' : 'Judul' }}</button>
+                </form>
+            </div>
+        @endforeach
+    @endif
+
     {{-- Ganti kata sandi --}} <div class="bg-bg-surface rounded-xl border border-border p-6 space-y-4">
         <h2 class="font-semibold">Ganti Kata Sandi</h2>
         <form method="POST" action="{{ route("profile.password") }}" class="space-y-4"> @csrf @method("PUT") <div>

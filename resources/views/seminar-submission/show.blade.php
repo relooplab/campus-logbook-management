@@ -103,49 +103,40 @@
         </div>
     @endif
 
-    {{-- ===== Konversi ke Riwayat Sidang (dosen) ===== --}}
+    {{-- ===== Catat Hasil Sidang/Seminar (dosen) ===== --}}
     @if ($isDosen && !$submission->sidang_id)
         <div class="card p-6">
-            <h2 class="font-heading font-semibold text-text-primary mb-4">Catat ke Riwayat Sidang</h2>
-            <p class="text-sm text-text-secondary mb-3">Setelah sidang selesai, catat hasilnya ke riwayat sidang (BKD).</p>
-            <form method="POST" action="{{ route('seminar-submission.convert-to-sidang', $submission) }}" class="space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-xs text-text-secondary mb-1">Penguji <span class="text-status-danger">*</span></label>
-                    <input type="text" name="penguji_name" required value="{{ old('penguji_name') }}" list="dosen-penguji-list"
-                        placeholder="Nama penguji (bisa dari luar sistem)" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm">
-                    <datalist id="dosen-penguji-list">
-                        @foreach ($submission->mahasiswaTa->allDosenIds() as $dosenId)
-                            @php $dosen = \App\Models\User::find($dosenId); @endphp
-                            @if ($dosen)
-                                <option value="{{ $dosen->name }}"></option>
-                            @endif
-                        @endforeach
-                    </datalist>
-                </div>
-                <div>
-                    <label class="block text-xs text-text-secondary mb-1">Pembimbing <span class="text-text-secondary/60">(isi bila di luar sistem)</span></label>
-                    <input type="text" name="supervisor_name" value="{{ old('supervisor_name', $submission->mahasiswaTa->pembimbing1?->name) }}"
-                        placeholder="Nama pembimbing (kosongkan bila sudah di sistem)" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs text-text-secondary mb-1">Hasil</label>
-                    <select name="hasil" required class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm">
-                        <option value="">— Pilih hasil —</option>
-                        @foreach (\App\Models\Sidang::HASILS as $hasil)
-                            <option value="{{ $hasil }}">{{ ucfirst(str_replace('_', ' ', $hasil)) }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Catat ke Riwayat Sidang</button>
-            </form>
+            <h2 class="font-heading font-semibold text-text-primary mb-2">Catat Hasil Sidang / Seminar</h2>
+            <p class="text-sm text-text-secondary mb-3">Setelah sidang/seminar berlangsung, catat hasilnya ke Riwayat Sidang. Pembimbing & penguji akan mengisi nilai.</p>
+            <a href="{{ route('dosen-sidang.index', ['submission' => $submission->id]) }}"
+                class="inline-block px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Catat Hasil Sidang / Seminar</a>
         </div>
     @endif
 
-    {{-- ===== Sudah dikonversi ===== --}}
-    @if ($submission->sidang_id)
-        <div class="px-4 py-3 rounded-xl bg-status-success/10 text-status-success border border-status-success/20">
-            ✅ Sudah dicatat ke riwayat sidang.
+    {{-- ===== Sudah dicatat + nilai ===== --}}
+    @if ($submission->sidang_id && $submission->sidang)
+        @php $sidangR = $submission->sidang; @endphp
+        <div class="card p-6">
+            <h2 class="font-heading font-semibold text-text-primary mb-3">Hasil & Nilai {{ $sidangR->jenisLabel() }}</h2>
+            <p class="text-sm mb-2">Hasil: <span class="font-medium">{{ $sidangR->hasilLabel() }}</span></p>
+            @php $grades = $sidangR->loadMissing('grades.user')->grades; @endphp
+            @if ($grades->isNotEmpty())
+                <ul class="space-y-1 text-sm">
+                    @foreach ($grades as $g)
+                        <li class="flex items-center justify-between gap-2">
+                            <span>{{ $g->user?->name }} <span class="text-xs text-text-secondary">({{ ucfirst($g->role) }})</span></span>
+                            <span class="font-medium">{{ $g->filled_at ? $g->nilai : 'Belum dinilai' }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+                @if ($sidangR->nilaiFinal() !== null)
+                    <p class="mt-2 font-semibold text-text-primary">Rerata: {{ $sidangR->nilaiFinal() }}</p>
+                @else
+                    <p class="mt-2 text-xs text-text-secondary">Nilai belum lengkap — menunggu dosen terkait melengkapi.</p>
+                @endif
+            @else
+                <p class="text-xs text-text-secondary">Belum ada penilaian dicatat untuk sidang ini.</p>
+            @endif
         </div>
     @endif
 </div>

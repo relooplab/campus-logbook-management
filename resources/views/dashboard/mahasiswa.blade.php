@@ -56,6 +56,18 @@
         </div>
     @endif
 
+    {{-- ===== Lanjut ke Tugas Akhir (setelah KP) ===== --}}
+    @if ($ta && $ta->isKp() && $programs->where('jenis', 'ta')->isEmpty())
+        <div class="px-4 py-3.5 rounded-card border border-brand/30 bg-brand/5 flex flex-wrap items-center gap-3">
+            <span class="material-symbols-outlined icon-md shrink-0 text-brand">school</span>
+            <div class="flex-1 min-w-0 text-sm">
+                <p class="font-semibold text-text-primary">Selesai KP? Lanjut ke Tugas Akhir</p>
+                <p class="text-text-secondary">Buat program Tugas Akhir (TA) dan pilih dosen pembimbing Anda.</p>
+            </div>
+            <a href="{{ route('profile.select-dosen') }}" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Lanjut ke TA</a>
+        </div>
+    @endif
+
     {{-- ===== Aksi Saya ===== --}}
     @if ($ta)
         <div class="card p-6">
@@ -232,13 +244,21 @@
                                 <p class="text-sm font-medium text-text-primary">{{ $sidang->jenisLabel() }}</p>
                                 <p class="text-xs text-text-secondary">{{ $sidang->tanggal?->format('d M Y') }}</p>
                             </div>
-                            @if ($sidang->hasil)
-                                <span class="badge {{ $sidang->hasil === 'lulus' ? 'badge-success' : '' }} {{ $sidang->hasil === 'lulus_revisi' ? 'badge-pending' : '' }} {{ $sidang->hasil === 'mengulang' ? 'badge-danger' : '' }}">
-                                    {{ $sidang->hasilLabel() }}
-                                </span>
-                            @else
-                                <span class="badge badge-neutral">Belum ada hasil</span>
-                            @endif
+                            <div class="flex flex-col items-end gap-1">
+                                @if ($sidang->hasil)
+                                    <span class="badge {{ $sidang->hasil === 'lulus' ? 'badge-success' : '' }} {{ $sidang->hasil === 'lulus_revisi' ? 'badge-pending' : '' }} {{ $sidang->hasil === 'mengulang' ? 'badge-danger' : '' }}">
+                                        {{ $sidang->hasilLabel() }}
+                                    </span>
+                                @else
+                                    <span class="badge badge-neutral">Belum ada hasil</span>
+                                @endif
+                                @php $sidang->loadMissing('grades.user'); $gNilai = $sidang->grades->whereNotNull('filled_at'); @endphp
+                                @if ($gNilai->isNotEmpty())
+                                    <span class="text-xs text-text-primary">{{ $gNilai->count() }}/{{ $sidang->grades->count() }} dinilai{{ $sidang->nilaiFinal() !== null ? ' · rerata ' . $sidang->nilaiFinal() : '' }}</span>
+                                @else
+                                    <span class="text-xs text-text-secondary">Nilai belum diisi dosen</span>
+                                @endif
+                            </div>
                         </div>
                     @endforeach
                 </div>

@@ -49,6 +49,45 @@ class Sidang extends Model
         return $this->belongsTo(User::class, 'penguji_id');
     }
 
+    /**
+     * Nilai per penilai (pembimbing1/2, penguji).
+     */
+    public function grades(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SidangGrade::class);
+    }
+
+    /**
+     * Rata-rata nilai dari penilai yang sudah mengisi.
+     */
+    public function nilaiFinal(): ?float
+    {
+        $filled = $this->grades()->whereNotNull('filled_at')->get(['nilai']);
+        if ($filled->isEmpty()) {
+            return null;
+        }
+
+        $values = $filled->map(fn ($g) => (float) $g->nilai)->filter();
+        if ($values->isEmpty()) {
+            return null;
+        }
+
+        return round($values->avg(), 2);
+    }
+
+    /**
+     * Apakah semua penilai (yang punya baris grade) sudah mengisi nilai.
+     */
+    public function gradesComplete(): bool
+    {
+        $total = $this->grades()->count();
+        if ($total === 0) {
+            return false;
+        }
+
+        return $this->grades()->whereNotNull('filled_at')->count() >= $total;
+    }
+
     public function jenisLabel(): string
     {
         // Label fase kustom dari prodi/departemen (jika ada).

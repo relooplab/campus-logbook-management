@@ -41,7 +41,7 @@ class SeminarSubmissionController extends Controller
         $jenis = $this->jenisFromFase($mahasiswaTa);
         $jenisLabel = (new SeminarSubmission(['jenis' => $jenis]))->jenisLabel();
         $institution = Institution::current();
-        $defaultCatatan = $institution->seminar_hardcopy_note;
+        $defaultCatatan = (string) ($institution->seminar_hardcopy_note ?: '');
         $maxMb = $institution->maxUploadSizeMb();
         $allowedTypes = $institution->allowedFileTypes();
         $fileAccept = $institution->fileAccept();
@@ -88,7 +88,7 @@ class SeminarSubmissionController extends Controller
         }
 
         $jenis = $this->jenisFromFase($mahasiswaTa);
-        $defaultCatatan = $institution->seminar_hardcopy_note;
+        $defaultCatatan = (string) ($institution->seminar_hardcopy_note ?: '');
 
         // Cek kuota target pembebanan (dosen pembimbing saat aktif, mahasiswa 100 MB saat pending).
         $dosen = $mahasiswaTa->storageChargeTarget();
@@ -153,7 +153,7 @@ class SeminarSubmissionController extends Controller
     {
         $this->authorizeView($request->user(), $submission);
 
-        $submission->load(['mahasiswaTa.mahasiswa', 'mahasiswaTa.pembimbing1', 'mahasiswaTa.pembimbing2', 'mahasiswaTa.penguji1', 'mahasiswaTa.penguji2', 'workspaceFile', 'sidang']);
+        $submission->load(['mahasiswaTa.mahasiswa', 'mahasiswaTa.pembimbing1', 'mahasiswaTa.pembimbing2', 'mahasiswaTa.penguji1', 'mahasiswaTa.penguji2', 'workspaceFile', 'sidang.grades.user']);
 
         $isDosen = $request->user()->isDosen();
         $isMember = $submission->mahasiswaTa->isMember($request->user());
@@ -293,49 +293,7 @@ class SeminarSubmissionController extends Controller
         return Storage::disk('local')->download($submission->materi_path, $submission->materi_original_name);
     }
 
-    /**
-     * Konversi ke riwayat sidang (dosen memilih penguji + hasil).
-     */
-    public function convertToSidang(Request $request, SeminarSubmission $submission): RedirectResponse
-    {
-        $this->authorizeDosen($request->user(), $submission);
 
-        $validated = $request->validate([
-            'penguji_name' => ['required', 'string', 'max:255'],
-            'supervisor_name' => ['nullable', 'string', 'max:255'],
-            'hasil' => ['required', 'in:'.implode(',', Sidang::HASILS)],
-        ]);
-
-        $ta = $submission->mahasiswaTa;
-
-        // Link penguji bila nama cocok dengan dosen internal; selain itu simpan nama eksternal.
-        $penguji = \App\Models\User::role('dosen')->where('name', $validated['penguji_name'])->first();
-
-        // Supervisor (pembimbing) untuk riwayat: manual bila diisi, fallback ke pembimbing TA.
-        $supervisorName = trim((string) ($validated['supervisor_name'] ?? ''));
-        $supervisorNames = $supervisorName !== ''
-            ? [$supervisorName]
-            : array_values(array_filter([
-                $ta->pembimbing1?->name,
-                $ta->pembimbing2?->name,
-            ]));
-
-        $sidang = Sidang::create([
-            'institution_id' => $ta->institution_id,
-            'mahasiswa_ta_id' => $ta->id,
-            'mahasiswa_name' => $ta->mahasiswa?->name,
-            'penguji_id' => $penguji?->id,
-            'penguji_name' => $validated['penguji_name'],
-            'jenis' => $submission->jenis === SeminarSubmission::JENIS_SIDANG ? Sidang::JENIS_SIDANG : Sidang::JENIS_PROPOSAL,
-            'tanggal' => $submission->tanggal,
-            'hasil' => $validated['hasil'],
-            'supervisor_names' => $supervisorNames ?: null,
-        ]);
-
-        $submission->update(['sidang_id' => $sidang->id]);
-
-        return back()->with('success', 'Submission dikonversi ke riwayat sidang.');
-    }
 
     /**
      * Daftar pilihan "undangan sebagai" dari data mahasiswa.

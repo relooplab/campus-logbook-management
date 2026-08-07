@@ -56,3 +56,9 @@ Schedule::command('students:delete-inactive')
     ->dailyAt('03:30')
     ->timezone('Asia/Jakarta')
     ->withoutOverlapping();
+
+// Ingatkan dosen mengisi nilai seminar/sidang yang sudah berlangsung (harian 10:00).
+Schedule::command('sidang:remind-grading')
+    ->dailyAt('10:00')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();

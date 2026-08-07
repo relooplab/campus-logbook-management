@@ -289,7 +289,7 @@
                 </a>
                 <a href="{{ route('dosen-sidang.index') }}" class="{{ $navLink }} {{ $active('dosen-sidang.*') }}">
                     <span class="material-symbols-outlined icon-md">verified</span>
-                    <span class="sidebar-label">Catat Sidang</span>
+                    <span class="sidebar-label">Riwayat Sidang</span>
                 </a>
                 <a href="{{ route('approval.index') }}" class="{{ $navLink }} {{ $active('approval.*') }}">
                     <span class="material-symbols-outlined icon-md">check_circle</span>
