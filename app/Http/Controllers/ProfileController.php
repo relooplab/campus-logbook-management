@@ -330,9 +330,9 @@ class ProfileController extends Controller
 
         $validated = $request->validate([
             'university_name' => ['required', 'string', 'max:255'],
-            'faculty_name' => ['nullable', 'string', 'max:255'],
-            'department_name' => ['nullable', 'string', 'max:255'],
-            'study_program_name' => ['nullable', 'string', 'max:255'],
+            'faculty_name' => ['required', 'string', 'max:255'],
+            'department_name' => ['required', 'string', 'max:255'],
+            'study_program_name' => ['required', 'string', 'max:255'],
         ]);
 
         $service = app(OrganizationalDirectoryService::class);
@@ -376,12 +376,12 @@ class ProfileController extends Controller
                 )));
             }
 
-            return redirect()->route('profile.affiliation')
+            return redirect()->route('profile.index')
                 ->with('success', 'Afiliasi diajukan ke admin institusi. Akses Workspace Institusi aktif setelah disetujui.');
         }
 
-        return redirect()->route('profile.affiliation')
-            ->with('success', 'Afiliasi berhasil diperbarui.');
+        return redirect()->route('profile.index')
+            ->with('success', 'Afiliasi berhasil disimpan. Silakan lengkapi data profil Anda.');
     }
 
     /**

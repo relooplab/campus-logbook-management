@@ -60,7 +60,6 @@
                     class="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-brand/30 transition">
                     <p><span class="material-symbols-outlined" style="font-size:48px">folder_open</span></p>
                     <p class="text-sm mt-2">Tarik & lepas file di sini, atau <span class="text-brand font-medium">klik untuk memilih</span></p>
-                    <p class="text-xs text-text-secondary mt-1">PDF, DOC, DOCX, XLS, XLSX — maks 25 MB, hingga 5 file</p>
                     <input type="file" name="files[]" id="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx" class="hidden">
                 </div>
                 <div id="file-list" class="mt-3 space-y-1"></div>

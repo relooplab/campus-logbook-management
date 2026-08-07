@@ -17,20 +17,6 @@
         <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Dashboard</a>
     </div>
 
-    {{-- Ringkasan kuota --}}
-    <div class="card p-6">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="font-heading font-semibold text-text-primary">Kuota Workspace</h2>
-            <span class="text-sm text-text-secondary">{{ $usedLabel }} / {{ $limitLabel }}</span>
-        </div>
-        @if ($limitBytes > 0)
-            <div class="mt-2 h-2 rounded-full bg-bg-panel overflow-hidden">
-                <div class="h-full rounded-full {{ $pct >= 90 ? 'bg-status-danger' : ($pct >= 70 ? 'bg-status-pending' : 'bg-brand') }}" style="width: {{ $pct }}%"></div>
-            </div>
-            <p class="text-xs text-text-secondary mt-1">{{ $pct }}% terpakai</p>
-        @endif
-    </div>
-
     {{-- Workspace files --}}
     <div class="card p-6">
         <h2 class="font-heading font-semibold text-text-primary mb-3">File Workspace Mahasiswa</h2>

@@ -60,24 +60,24 @@
 
         {{-- ===== Dokumen Materi ===== --}}
         <div class="card p-6">
-            <h2 class="font-heading font-semibold text-text-primary mb-4">Dokumen Materi {{ $jenisLabel }}</h2>
+            <h2 class="font-heading font-semibold text-text-primary mb-4">Dokumen Materi {{ $jenisLabel }} <span class="text-status-danger">*</span></h2>
             <p class="text-sm text-text-secondary mb-3">Pilih salah satu: upload file baru ATAU ambil dari workspace.</p>
 
             <div class="space-y-3">
                 <label class="flex items-start gap-3 p-3 rounded-xl bg-bg-panel border border-border cursor-pointer">
-                    <input type="radio" name="materi_source" value="upload" class="mt-1" checked onchange="toggleMateriSource()">
+                    <input type="radio" name="materi_source" value="upload" class="mt-1" checked onchange="toggleMateriSource(this.value)">
                     <div class="flex-1">
                         <span class="text-sm font-medium">Upload file baru</span>
-                        <input type="file" name="materi_upload" id="materi_upload" accept="{{ $fileAccept }}" class="w-full text-sm mt-2">
+                        <input type="file" name="materi_upload" id="materi_upload" accept="{{ $fileAccept }}" class="w-full text-sm mt-2" onchange="toggleMateriSource('upload')">
                         <p class="text-xs text-text-secondary mt-1">Format: {{ implode(', ', $allowedTypes) }} · Maks {{ $maxMb }} MB</p>
                     </div>
                 </label>
 
                 <label class="flex items-start gap-3 p-3 rounded-xl bg-bg-panel border border-border cursor-pointer">
-                    <input type="radio" name="materi_source" value="workspace" class="mt-1" onchange="toggleMateriSource()">
+                    <input type="radio" name="materi_source" value="workspace" class="mt-1" onchange="toggleMateriSource(this.value)">
                     <div class="flex-1">
                         <span class="text-sm font-medium">Ambil dari workspace</span>
-                        <select name="materi_workspace_id" id="materi_workspace_id" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm mt-2" disabled>
+                        <select name="materi_workspace_id" id="materi_workspace_id" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm mt-2" onchange="toggleMateriSource('workspace')">
                             <option value="">— Pilih file workspace —</option>
                             @foreach ($workspaceFiles as $file)
                                 <option value="{{ $file->id }}" @selected(old('materi_workspace_id') == $file->id)>
@@ -120,16 +120,19 @@
 
 @section('scripts')
 <script>
-    function toggleMateriSource() {
-        var source = document.querySelector('input[name="materi_source"]:checked').value;
+    function toggleMateriSource(source) {
         var upload = document.getElementById('materi_upload');
         var workspace = document.getElementById('materi_workspace_id');
-        if (source === 'upload') {
-            upload.disabled = false;
-            workspace.disabled = true;
-        } else {
+        var radioWorkspace = document.querySelector('input[name="materi_source"][value="workspace"]');
+        var radioUpload = document.querySelector('input[name="materi_source"][value="upload"]');
+        if (source === 'workspace') {
+            if (radioWorkspace) radioWorkspace.checked = true;
             upload.disabled = true;
             workspace.disabled = false;
+        } else if (source === 'upload') {
+            if (radioUpload) radioUpload.checked = true;
+            upload.disabled = false;
+            workspace.disabled = true;
         }
     }
 </script>

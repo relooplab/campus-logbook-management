@@ -51,10 +51,10 @@ class RegisterController extends Controller
         auth()->login($user);
 
         // Mahasiswa: langsung ke dashboard (isi profil & pilih dosen).
-        // Dosen: langsung ke halaman profil untuk mengisi data instansi.
+        // Dosen: langsung ke halaman afiliasi (wajib isi semua) sebelum fitur lain.
         if ($role === 'dosen') {
-            return redirect()->route('profile.index')
-                ->with('success', 'Registrasi berhasil. Lengkapi data institusi Anda di halaman profil.');
+            return redirect()->route('profile.affiliation')
+                ->with('success', 'Registrasi berhasil. Lengkapi afiliasi institusi Anda terlebih dahulu.');
         }
 
         return redirect()->route('dashboard')

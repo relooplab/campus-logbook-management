@@ -69,6 +69,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Enforce Dosen Affiliation Onboarding
+    |--------------------------------------------------------------------------
+    |
+    | Bila true, dosen yang BELUM punya afiliasi institusi lengkap tidak dapat
+    | mengakses fitur lain (diarahkan ke halaman afiliasi). Aktif otomatis di
+    | local/production; dinonaktifkan di env testing agar fixture test berjalan.
+    |
+    */
+
+    'enforce_dosen_affiliation' => env('APP_ENFORCE_DOSEN_AFFILIATION', env('APP_ENV', 'production') !== 'testing'),
+
+    /*
+    |--------------------------------------------------------------------------
     | External Links (configurable per-institution)
     |--------------------------------------------------------------------------
     | Tautan eksternal yang mungkin berbeda antar institusi. Isi di .env:

@@ -54,8 +54,8 @@ class OrganizationalDirectoryTest extends AuditSmokeTest
             'nidn' => '1234567890',
         ]);
 
-        // Dosen diarahkan ke halaman profil untuk mengisi data instansi.
-        $response->assertRedirect(route('profile.index'));
+        // Dosen diarahkan ke halaman afiliasi (wajib isi) sebelum fitur lain.
+        $response->assertRedirect(route('profile.affiliation'));
 
         $user = User::where('email', 'dosen-baru@test.com')->first();
         $this->assertNotNull($user);
@@ -71,7 +71,7 @@ class OrganizationalDirectoryTest extends AuditSmokeTest
                 'department_name' => 'Departemen Teknik Elektro',
                 'study_program_name' => 'S1 Teknik Elektro',
             ])
-            ->assertRedirect(route('profile.affiliation'));
+            ->assertRedirect(route('profile.index'));
 
         $university = $user->fresh()->primaryUniversity();
         $this->assertNotNull($university);

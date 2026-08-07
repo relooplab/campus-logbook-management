@@ -25,6 +25,10 @@
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-bg-panel text-text-secondary">
                             <span class="w-2 h-2 rounded-full bg-text-secondary/50"></span> Offline
                         </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-bg-panel text-text-secondary">
+                            <span class="w-2 h-2 rounded-full bg-text-secondary/50"></span> Belum pernah aktif
+                        </span>
                     @endif
                 </div>
                 <p class="text-sm text-text-secondary">{{ $profile->email }}</p>

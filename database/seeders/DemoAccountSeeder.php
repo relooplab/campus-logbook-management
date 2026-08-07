@@ -94,6 +94,17 @@ class DemoAccountSeeder extends Seeder
             $user->syncRoles([$role]);
         }
 
+        // Dosen demo wajib punya afiliasi lengkap (gate onboarding) agar bisa login & pakai fitur.
+        $dosenDemo = User::where('email', 'dosen@example.com')->first();
+        if ($dosenDemo) {
+            $directory = app(\App\Services\OrganizationalDirectoryService::class);
+            $u = $directory->findOrCreateUniversity('Universitas Demo');
+            $f = $directory->findOrCreateFaculty($u, 'Fakultas Teknik');
+            $d = $directory->findOrCreateDepartment($f, 'Departemen Teknik Informatika');
+            $p = $directory->findOrCreateStudyProgram($d, 'S1 Teknik Informatika', '51001');
+            $directory->attachUserToUniversity($dosenDemo, $u, $f, $d, $p, true);
+        }
+
         $this->command->info('Akun demo dibuat untuk semua role (password: "password"):');
         foreach ($accounts as $role => $attrs) {
             $this->command->line(sprintf('  - %-14s %s', $role, $attrs['email']));

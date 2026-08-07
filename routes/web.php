@@ -59,7 +59,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [RegisterController::class, 'register'])->middleware('throttle:5,1')->name('register');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'ensure.dosen.affiliation'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::post('/dashboard/dismiss-instansi', [DashboardController::class, 'dismissInstansi'])->name('dashboard.dismiss-instansi');

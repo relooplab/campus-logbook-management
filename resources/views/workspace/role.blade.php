@@ -35,7 +35,7 @@
                     <h2 class="font-heading font-semibold text-text-primary">Workspace Pribadi</h2>
                     <p class="text-sm text-text-secondary">File pribadi milik Anda — hanya Anda yang bisa melihat</p>
                 </div>
-                <span class="text-xs text-text-secondary">{{ number_format($personalTotalBytes / 1048576, 1) }} MB terpakai{{ $personalQuotaBytes > 0 ? ' dari ' . number_format($personalQuotaBytes / 1048576, 1) . ' MB tersedia' : '' }}</span>
+                <span class="text-xs text-text-secondary">{{ number_format($personalTotalBytes / 1073741824, 2) }} GB{{ $personalQuotaBytes > 0 ? ' / ' . number_format($personalQuotaBytes / 1073741824, 2) . ' GB' : '' }}</span>
             </div>
 
             @if ($personalQuotaBytes > 0)
@@ -61,7 +61,6 @@
                     class="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-brand/30 transition">
                     <p><span class="material-symbols-outlined" style="font-size:48px">folder_open</span></p>
                     <p class="text-sm mt-2">Tarik & lepas file di sini, atau <span class="text-brand font-medium">klik untuk memilih</span></p>
-                    <p class="text-xs text-text-secondary mt-1">PDF, DOC, DOCX, XLS, XLSX — maks 25 MB, hingga 5 file</p>
                     <input type="file" name="files[]" id="personal-file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx" class="hidden">
                 </div>
                 <div id="personal-file-list" class="mt-3 space-y-1"></div>
@@ -79,6 +78,19 @@
             </form>
 
             {{-- Daftar file pribadi --}}
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="font-heading font-semibold text-text-primary">File Pribadi</h3>
+                @if ($allPersonalFiles->isNotEmpty())
+                    <label class="flex items-center gap-2 text-xs text-text-secondary">
+                        Urutkan
+                        <select id="personal-sort" class="rounded-lg border border-border bg-bg-surface px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-brand/40">
+                            <option value="time-desc">Terbaru</option>
+                            <option value="time-asc">Terlama</option>
+                            <option value="type">Tipe file</option>
+                        </select>
+                    </label>
+                @endif
+            </div>
             @if ($allPersonalFiles->isEmpty())
                 <div class="px-4 py-8 rounded-xl bg-bg-panel border border-border text-center text-text-secondary">
                     <span class="material-symbols-outlined icon-lg mb-2 text-text-secondary/50">folder_off</span>
@@ -90,9 +102,9 @@
                         <div class="card p-0 overflow-hidden">
                             <div class="px-4 py-2.5 bg-bg-panel/50 border-b border-border font-semibold text-sm text-text-primary">
                                 {{ $bab }}</div>
-                            <div class="divide-y divide-border">
+                            <div class="divide-y divide-border file-group-list">
                                 @foreach ($files as $file)
-                                    <div class="px-4 py-2.5 flex items-start gap-3">
+                                    <div class="px-4 py-2.5 flex items-start gap-3" data-time="{{ $file->created_at->timestamp }}" data-type="{{ strtolower(pathinfo($file->original_name, PATHINFO_EXTENSION)) }}">
                                         <span class="text-2xl">{{ $file->icon() }}</span>
                                         <div class="min-w-0 flex-1">
                                             <div class="flex flex-wrap items-center gap-2">
@@ -259,6 +271,27 @@
             };
             xhr.open('POST', form.action);
             xhr.send(fd);
+        });
+    })();
+    // ---- Sortir file pribadi (waktu / tipe) ----
+    (function () {
+        var sel = document.getElementById('personal-sort');
+        if (!sel) return;
+        sel.addEventListener('change', function () {
+            var sort = sel.value;
+            document.querySelectorAll('.file-group-list').forEach(function (list) {
+                var rows = Array.prototype.slice.call(list.children);
+                rows.sort(function (a, b) {
+                    var ta = Number(a.dataset.time) || 0;
+                    var tb = Number(b.dataset.time) || 0;
+                    if (sort === 'time-asc') return ta - tb;
+                    if (sort === 'time-desc') return tb - ta;
+                    var xa = (a.dataset.type || '').toLowerCase();
+                    var xb = (b.dataset.type || '').toLowerCase();
+                    return xa.localeCompare(xb) || (tb - ta);
+                });
+                rows.forEach(function (r) { list.appendChild(r); });
+            });
         });
     })();
 </script>

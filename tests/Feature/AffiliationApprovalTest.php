@@ -126,7 +126,7 @@ class AffiliationApprovalTest extends AuditSmokeTest
             'faculty_name' => $this->faculty->name,
             'department_name' => $this->dept->name,
             'study_program_name' => $this->prodi->name,
-        ])->assertRedirect(route('profile.affiliation'));
+        ])->assertRedirect(route('profile.index'));
 
         // Status pending → BELUM ada akses workspace (bocor tercegah).
         $this->lecturer->refresh();
@@ -163,7 +163,7 @@ class AffiliationApprovalTest extends AuditSmokeTest
             'faculty_name' => $facultyB->name,
             'department_name' => $deptB->name,
             'study_program_name' => $prodiB->name,
-        ])->assertRedirect(route('profile.affiliation'));
+        ])->assertRedirect(route('profile.index'));
 
         $this->lecturer->refresh();
         $pivot = $this->lecturer->universities()->where('university_id', $univB->id)->first()->pivot;
