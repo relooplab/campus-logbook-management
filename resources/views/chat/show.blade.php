@@ -19,8 +19,17 @@
                                         href="{{ $a->isPdf() ? route("workspace.preview", $a) : route("workspace.download", $a) }}"
                                         target="_blank" class="underline">[Lihat]</a>
                                 @elseif ($m->attachable_type === \App\Models\LogbookEntry::class)
-                                    <span class="material-symbols-outlined icon-sm align-text-bottom">assignment</span> {{ $a->jenis === "revisi" ? "Revisi" : "Entri #" . $a->sesi_ke }} <a
+                                    <span class="material-symbols-outlined icon-sm align-text-bottom">assignment</span> {{ $a->jenis === "revisi" ? "Revisi r" . $a->revision_round : "Entri #" . $a->sesi_ke }} <a
                                         href="{{ route("logbook.show", $a) }}" class="underline">[Lihat]</a>
+                                @elseif ($m->attachable_type === \App\Models\LogbookHarianKp::class)
+                                    <span class="material-symbols-outlined icon-sm align-text-bottom">calendar_month</span> Logbook Harian KP — {{ $a->tanggal?->format("d M Y") }} <a
+                                        href="{{ $a->mahasiswaTa ? route("logbook-harian.index", $a->mahasiswaTa) : "#" }}" class="underline">[Lihat]</a>
+                                @elseif ($m->attachable_type === \App\Models\SeminarSubmission::class)
+                                    <span class="material-symbols-outlined icon-sm align-text-bottom">school</span> Seminar — {{ $a->jenisLabel() }} <a
+                                        href="{{ route("seminar-submission.show", $a) }}" class="underline">[Lihat]</a>
+                                @elseif ($m->attachable_type === \App\Models\ThesisFinalization::class)
+                                    <span class="material-symbols-outlined icon-sm align-text-bottom">task_alt</span> Finalisasi{{ $a->full_file_original_name ? " — " . $a->full_file_original_name : "" }} <a
+                                        href="{{ $a->mahasiswaTa ? route("finalization.index", $a->mahasiswaTa) : "#" }}" class="underline">[Lihat]</a>
                                 @endif
                             </div>
                         @endif
@@ -96,13 +105,14 @@
             credentials: 'same-origin'
         }).then(function (r) { return r.json(); }).then(function (d) {
             var html = '';
-            d.files.forEach(function (f) {
-                html += '<button type="button" data-type="workspace" data-id="' + f.id + '" class="attach-item block w-full text-left px-2 py-1 rounded hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">description</span> ' + f.name + ' <span class="text-xs text-text-secondary">· ' + (f.student||'') + '</span></button>';
+            (d.categories || []).forEach(function (cat) {
+                if (!cat.items || !cat.items.length) return;
+                html += '<div class="px-2 pt-2 pb-1 text-[10px] uppercase tracking-wide text-text-secondary flex items-center gap-1"><span class="material-symbols-outlined icon-sm">' + cat.icon + '</span> ' + cat.title + '</div>';
+                cat.items.forEach(function (f) {
+                    html += '<button type="button" data-type="' + f.type + '" data-id="' + f.id + '" data-url="' + (f.url || '#') + '" class="attach-item block w-full text-left px-2 py-1 rounded hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">' + cat.icon + '</span> <span class="truncate">' + (f.label || '') + '</span> <span class="text-xs text-text-secondary">· ' + (f.student || '') + '</span></button>';
+                });
             });
-            d.entries.forEach(function (e) {
-                html += '<button type="button" data-type="logbook" data-id="' + e.id + '" class="attach-item block w-full text-left px-2 py-1 rounded hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">assignment</span> ' + e.label + ' <span class="text-xs text-text-secondary">· ' + (e.student||'') + '</span></button>';
-            });
-            if (!html) html = '<p class="text-sm text-text-secondary">Tidak ada file untuk dilampirkan.</p>';
+            if (!html) html = '<p class="text-sm text-text-secondary p-2">Tidak ada karya mahasiswa untuk disematkan.</p>';
             document.getElementById('attach-list').innerHTML = html;
             document.querySelectorAll('.attach-item').forEach(function (b) {
                 b.addEventListener('click', function () {

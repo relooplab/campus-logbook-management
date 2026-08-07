@@ -35,7 +35,7 @@
                     <h2 class="font-heading font-semibold text-text-primary">Workspace Pribadi</h2>
                     <p class="text-sm text-text-secondary">File pribadi milik Anda — hanya Anda yang bisa melihat</p>
                 </div>
-                <span class="text-xs text-text-secondary">{{ number_format($personalTotalBytes / 1048576, 1) }} MB terpakai@if ($personalQuotaBytes > 0) dari {{ number_format($personalQuotaBytes / 1048576, 1) }} MB tersedia @endif</span>
+                <span class="text-xs text-text-secondary">{{ number_format($personalTotalBytes / 1048576, 1) }} MB terpakai{{ $personalQuotaBytes > 0 ? ' dari ' . number_format($personalQuotaBytes / 1048576, 1) . ' MB tersedia' : '' }}</span>
             </div>
 
             @if ($personalQuotaBytes > 0)

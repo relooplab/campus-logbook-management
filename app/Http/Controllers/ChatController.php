@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\LogbookEntry;
+use App\Models\LogbookHarianKp;
 use App\Models\MahasiswaTa;
 use App\Models\Message;
+use App\Models\SeminarSubmission;
+use App\Models\ThesisFinalization;
 use App\Models\User;
 use App\Models\WorkspaceFile;
 use App\Support\Feature;
@@ -95,7 +98,7 @@ class ChatController extends Controller
 
         $validated = $request->validate([
             'body' => ['required', 'string', 'max:5000'],
-            'attachable_type' => ['nullable', 'in:workspace,logbook'],
+            'attachable_type' => ['nullable', 'in:workspace,logbook,logbook_harian,seminar,finalization'],
             'attachable_id' => ['nullable', 'integer'],
         ]);
 
@@ -134,35 +137,98 @@ class ChatController extends Controller
     }
 
     /**
-     * Daftar file yang bisa di-attach (workspace + logbook entry) untuk user.
+     * Daftar karya mahasiswa yang bisa disematkan (workspace, logbook,
+     * revisi, logbook harian KP, seminar/sidang, finalisasi).
      */
     public function attachOptions(Request $request, Conversation $conversation): JsonResponse
     {
         $user = $request->user();
         abort_unless($conversation->hasUser($user->id), 403);
 
-        $files = WorkspaceFile::whereHas('mahasiswaTa', function ($q) use ($user) {
+        // Batasi ke program percakapan (pekerjaan mahasiswa) bila ada.
+        $ta = $conversation->mahasiswaTa;
+        $scope = function ($q) use ($user, $ta) {
+            if ($ta) {
+                $q->where('id', $ta->id);
+                return;
+            }
             $this->scopeForUser($q, $user);
-        })->with('mahasiswaTa.mahasiswa')->limit(10)->get();
+        };
 
-        $entries = LogbookEntry::whereHas('mahasiswaTa', function ($q) use ($user) {
-            $this->scopeForUser($q, $user);
-        })->with('mahasiswaTa.mahasiswa')->limit(10)->get();
+        $files = WorkspaceFile::whereHas('mahasiswaTa', $scope)
+            ->with('mahasiswaTa.mahasiswa')->orderByDesc('created_at')->limit(10)->get();
+
+        $entries = LogbookEntry::whereHas('mahasiswaTa', $scope)
+            ->with('mahasiswaTa.mahasiswa')->orderByDesc('created_at')->limit(20)->get();
+
+        $logbooks = $entries->where('jenis', LogbookEntry::JENIS_LOGBOOK)->take(10)->values();
+        $revisis = $entries->where('jenis', LogbookEntry::JENIS_REVISI)->take(10)->values();
+
+        $harian = LogbookHarianKp::whereHas('mahasiswaTa', $scope)
+            ->with('mahasiswaTa.mahasiswa')->orderByDesc('tanggal')->limit(10)->get();
+
+        $seminars = SeminarSubmission::whereHas('mahasiswaTa', $scope)
+            ->with('mahasiswaTa.mahasiswa')->orderByDesc('created_at')->limit(10)->get();
+
+        $finals = ThesisFinalization::whereHas('mahasiswaTa', $scope)
+            ->with('mahasiswaTa.mahasiswa')->orderByDesc('updated_at')->limit(5)->get();
 
         return response()->json([
-            'files' => $files->map(fn ($f) => [
-                'id' => $f->id,
-                'name' => $f->original_name,
-                'student' => $f->mahasiswaTa?->mahasiswa?->name,
-                'url' => $f->isPdf() ? route('workspace.preview', $f) : route('workspace.download', $f),
-            ]),
-            'entries' => $entries->map(fn ($e) => [
-                'id' => $e->id,
-                'label' => $e->jenis === 'revisi' ? 'Revisi' : 'Entri #'.$e->sesi_ke,
-                'student' => $e->mahasiswaTa?->mahasiswa?->name,
-                'url' => route('logbook.show', $e),
-            ]),
+            'categories' => [
+                $this->attachCategory('workspace', 'Workspace', 'description', $files->map(fn ($f) => [
+                    'type' => 'workspace',
+                    'id' => $f->id,
+                    'label' => $f->original_name,
+                    'student' => $f->mahasiswaTa?->mahasiswa?->name,
+                    'url' => $f->isPdf() ? route('workspace.preview', $f) : route('workspace.download', $f),
+                ])),
+                $this->attachCategory('logbook', 'Logbook', 'assignment', $logbooks->map(fn ($e) => [
+                    'type' => 'logbook',
+                    'id' => $e->id,
+                    'label' => 'Entri #'.$e->sesi_ke.($e->topik ? ' — '.$e->topik : ''),
+                    'student' => $e->mahasiswaTa?->mahasiswa?->name,
+                    'url' => route('logbook.show', $e),
+                ])),
+                $this->attachCategory('revisi', 'Revisi', 'sync', $revisis->map(fn ($e) => [
+                    'type' => 'logbook',
+                    'id' => $e->id,
+                    'label' => 'Revisi r'.$e->revision_round.($e->topik ? ' — '.$e->topik : ''),
+                    'student' => $e->mahasiswaTa?->mahasiswa?->name,
+                    'url' => route('logbook.show', $e),
+                ])),
+                $this->attachCategory('logbook_harian', 'Logbook Harian KP', 'calendar_month', $harian->map(fn ($h) => [
+                    'type' => 'logbook_harian',
+                    'id' => $h->id,
+                    'label' => 'KP '.$h->tanggal->format('d M Y').($h->kegiatan ? ' — '.mb_strimwidth($h->kegiatan, 0, 40, '…') : ''),
+                    'student' => $h->mahasiswaTa?->mahasiswa?->name,
+                    'url' => $h->mahasiswaTa ? route('logbook-harian.index', $h->mahasiswaTa) : '#',
+                ])),
+                $this->attachCategory('seminar', 'Seminar / Sidang', 'school', $seminars->map(fn ($s) => [
+                    'type' => 'seminar',
+                    'id' => $s->id,
+                    'label' => $s->jenisLabel(),
+                    'student' => $s->mahasiswaTa?->mahasiswa?->name,
+                    'url' => route('seminar-submission.show', $s),
+                ])),
+                $this->attachCategory('finalization', 'Finalisasi', 'task_alt', $finals->map(fn ($fz) => [
+                    'type' => 'finalization',
+                    'id' => $fz->id,
+                    'label' => 'Finalisasi'.($fz->full_file_original_name ? ' — '.$fz->full_file_original_name : ''),
+                    'student' => $fz->mahasiswaTa?->mahasiswa?->name,
+                    'url' => $fz->mahasiswaTa ? route('finalization.index', $fz->mahasiswaTa) : '#',
+                ])),
+            ],
         ]);
+    }
+
+    private function attachCategory(string $key, string $title, string $icon, iterable $items): array
+    {
+        return [
+            'key' => $key,
+            'title' => $title,
+            'icon' => $icon,
+            'items' => $items->values()->all(),
+        ];
     }
 
     // ----------------------------------------------------------- helpers
@@ -224,13 +290,19 @@ class ChatController extends Controller
 
     private function resolveAttachable(string $type, int $id, User $user): ?Model
     {
-        if ($type === 'workspace') {
-            $file = WorkspaceFile::find($id);
-            if ($file && $this->canAccess($file->mahasiswaTa, $user)) return $file;
-        } else {
-            $entry = LogbookEntry::find($id);
-            if ($entry && $this->canAccess($entry->mahasiswaTa, $user)) return $entry;
+        $model = match ($type) {
+            'workspace' => WorkspaceFile::find($id),
+            'logbook' => LogbookEntry::find($id),
+            'logbook_harian' => LogbookHarianKp::find($id),
+            'seminar' => SeminarSubmission::find($id),
+            'finalization' => ThesisFinalization::find($id),
+            default => null,
+        };
+
+        if ($model && $this->canAccess($model->mahasiswaTa, $user)) {
+            return $model;
         }
+
         return null;
     }
 
