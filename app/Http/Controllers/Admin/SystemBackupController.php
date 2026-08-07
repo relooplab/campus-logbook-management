@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Institution;
 use App\Services\Backup\BackupException;
 use App\Services\Backup\BackupModuleRegistry;
 use App\Services\Backup\RestoreException;
@@ -32,6 +33,7 @@ class SystemBackupController extends Controller
 
         return view('admin.system.backup', [
             'modules' => $registry->definitions(),
+            'institutions' => Institution::orderBy('institution_name')->get(['id', 'institution_name']),
         ]);
     }
 
@@ -46,12 +48,17 @@ class SystemBackupController extends Controller
         $validated = $request->validate([
             'modules' => ['nullable', 'array'],
             'modules.*' => ['string'],
+            'institutions' => ['nullable', 'array'],
+            'institutions.*' => ['integer'],
+            'include_individual' => ['nullable', 'boolean'],
         ]);
 
         $modules = $validated['modules'] ?? null;
+        $institutions = $validated['institutions'] ?? null;
+        $includeIndividual = (bool) ($validated['include_individual'] ?? false);
 
         try {
-            $zipPath = $service->create($modules ?: null);
+            $zipPath = $service->create($modules ?: null, $institutions ?: null, $includeIndividual);
         } catch (BackupException $e) {
             return back()->with('error', 'Backup gagal: '.$e->getMessage());
         }

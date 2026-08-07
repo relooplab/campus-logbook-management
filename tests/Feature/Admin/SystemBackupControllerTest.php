@@ -92,6 +92,7 @@ class SystemBackupControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertViewHas('modules');
+        $response->assertViewHas('institutions');
         $response->assertSee('Backup Sekarang');
         $response->assertSee('Restore dari Backup');
     }
@@ -104,7 +105,7 @@ class SystemBackupControllerTest extends TestCase
         file_put_contents($fakeZip, 'PK-fake-zip-content');
 
         $this->mock(SystemBackupService::class, function ($mock) use ($fakeZip) {
-            $mock->shouldReceive('create')->once()->with(null)->andReturn($fakeZip);
+            $mock->shouldReceive('create')->once()->with(null, null, false)->andReturn($fakeZip);
         });
 
         $response = $this->actingAs($this->systemAdmin)->post(route('admin.system.backup.store'));
@@ -123,11 +124,32 @@ class SystemBackupControllerTest extends TestCase
         file_put_contents($fakeZip, 'PK-fake-zip-content');
 
         $this->mock(SystemBackupService::class, function ($mock) use ($fakeZip) {
-            $mock->shouldReceive('create')->once()->with(['users', 'mahasiswa_ta'])->andReturn($fakeZip);
+            $mock->shouldReceive('create')->once()->with(['users', 'mahasiswa_ta'], null, false)->andReturn($fakeZip);
         });
 
         $response = $this->actingAs($this->systemAdmin)->post(route('admin.system.backup.store'), [
             'modules' => ['users', 'mahasiswa_ta'],
+        ]);
+
+        $response->assertOk();
+
+        if (file_exists($fakeZip)) {
+            @unlink($fakeZip);
+        }
+    }
+
+    public function test_store_passes_selected_institutions_and_include_individual_to_service(): void
+    {
+        $fakeZip = tempnam(sys_get_temp_dir(), 'test_backup_').'.zip';
+        file_put_contents($fakeZip, 'PK-fake-zip-content');
+
+        $this->mock(SystemBackupService::class, function ($mock) use ($fakeZip) {
+            $mock->shouldReceive('create')->once()->with(null, [3, 7], true)->andReturn($fakeZip);
+        });
+
+        $response = $this->actingAs($this->systemAdmin)->post(route('admin.system.backup.store'), [
+            'institutions' => [3, 7],
+            'include_individual' => '1',
         ]);
 
         $response->assertOk();

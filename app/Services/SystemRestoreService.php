@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Services\Backup\BackupException;
 use App\Services\Backup\RestoreException;
 use App\Services\Backup\RestoreValidationException;
+use App\Services\Backup\ScopedRestoreExecutor;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -13,14 +14,18 @@ use Symfony\Component\Process\Process;
 use ZipArchive;
 
 /**
- * Restore sistem dari ZIP hasil SystemBackupService. Versi ini HANYA
- * mendukung restore FULL (wipe & replace total) — restore backup parsial
- * per-modul belum didukung (lihat rencana milestone 2).
+ * Restore sistem dari ZIP hasil SystemBackupService — mendukung restore full
+ * (wipe & replace total) MAUPUN restore parsial (modul dan/atau institusi,
+ * id-exact replace lewat ScopedRestoreExecutor). Restore selalu menerapkan
+ * TEPAT scope yang tercatat di manifest.json ZIP-nya — mempersempit scope
+ * dilakukan di sisi backup (pilih modul/institusi sebelum backup), bukan
+ * dengan menyeleksi ulang saat restore.
  *
  * Urutan: validasi struktur ZIP (tanpa menyentuh apapun) -> extract ke temp
- * -> safety backup otomatis -> file dulu (storage) -> DB terakhir. Kalau
- * langkah file gagal, DB lama masih utuh (recoverable). Kalau DB gagal,
- * safety-backup sudah tersedia untuk recovery manual.
+ * -> safety backup otomatis -> [full: file dulu baru DB] atau [parsial:
+ * ScopedRestoreExecutor]. Kalau langkah file gagal (full), DB lama masih
+ * utuh (recoverable). Kalau DB gagal, safety-backup sudah tersedia untuk
+ * recovery manual.
  */
 class SystemRestoreService
 {
@@ -29,27 +34,21 @@ class SystemRestoreService
 
     public function __construct(
         private readonly SystemBackupService $backupService,
+        private readonly ScopedRestoreExecutor $scopedExecutor,
     ) {
     }
 
     /**
      * @return array{safety_backup_path: string}
      *
-     * @throws RestoreValidationException jika struktur ZIP tidak valid, atau backup-nya parsial
+     * @throws RestoreValidationException jika struktur ZIP tidak valid
      * @throws BackupException jika safety-backup otomatis gagal dibuat
      * @throws RestoreException jika gagal di tengah proses restore (setelah destruktif dimulai)
      */
     public function restore(string $zipPath): array
     {
         $manifest = $this->validateZip($zipPath);
-
-        if (($manifest['is_full'] ?? false) !== true) {
-            $modules = $manifest['selection']['modules'] ?? [];
-            throw new RestoreValidationException(
-                'ZIP ini adalah backup parsial (modul: '.implode(', ', $modules).'). '
-                .'Restore backup parsial belum didukung di versi ini — hanya restore penuh (full backup) yang didukung.'
-            );
-        }
+        $isFull = ($manifest['is_full'] ?? false) === true;
 
         $extractDir = storage_path('framework/restore-tmp/'.(string) Str::uuid());
         File::ensureDirectoryExists($extractDir);
@@ -68,17 +67,24 @@ class SystemRestoreService
                 'safety_backup_path' => $safetyBackupPath,
             ]);
 
-            // File dulu, baru DB — disk penuh (recoverable, DB lama masih jalan)
-            // lebih mungkin terjadi daripada import DB gagal.
-            $this->swapStorage($extractDir);
-
             $credentialsFile = $this->makeCredentialsFile();
-            $this->replaceDatabase($extractDir.'/database.sql', $credentialsFile);
+
+            if ($isFull) {
+                // File dulu, baru DB — disk penuh (recoverable, DB lama masih
+                // jalan) lebih mungkin terjadi daripada import DB gagal.
+                $this->swapStorage($extractDir);
+                $this->replaceDatabase($extractDir.'/database.sql', $credentialsFile);
+            } else {
+                $this->scopedExecutor->restore($extractDir, $manifest, $credentialsFile);
+            }
 
             Log::channel('audit')->info('System restore executed', [
                 'by' => auth()->id(),
                 'safety_backup' => $safetyBackupPath,
                 'source_zip' => $zipPath,
+                'is_full' => $isFull,
+                'selection' => $manifest['selection'] ?? null,
+                'tables_included' => $manifest['tables_included'] ?? null,
             ]);
 
             return ['safety_backup_path' => $safetyBackupPath];

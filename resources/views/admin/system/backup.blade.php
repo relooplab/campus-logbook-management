@@ -16,10 +16,12 @@
     <div class="card p-6">
         <h2 class="font-heading font-semibold text-text-primary mb-1">Backup Sekarang</h2>
         <p class="text-sm text-text-secondary mb-4">
-            Centang modul tertentu untuk backup parsial (untuk keperluan arsip/migrasi), atau kosongkan semua
-            checkbox untuk backup penuh seluruh sistem. Kalau sebuah modul punya ketergantungan ke modul lain
-            (mis. Logbook &amp; Bimbingan butuh Data Mahasiswa/TA + Pengguna), modul dependensinya otomatis
-            ikut tercentang &amp; terkunci — supaya data yang ter-backup tidak kehilangan rujukannya.
+            Centang modul dan/atau institusi tertentu untuk backup parsial (untuk keperluan arsip/migrasi), atau
+            kosongkan semua checkbox untuk backup penuh seluruh sistem. Kalau sebuah modul punya ketergantungan ke
+            modul lain (mis. Logbook &amp; Bimbingan butuh Data Mahasiswa/TA + Pengguna), modul dependensinya
+            otomatis ikut tercentang &amp; terkunci — supaya data yang ter-backup tidak kehilangan rujukannya.
+            Kalau memfilter institusi, user lain yang direferensikan (mis. dosen pembimbing/penguji lintas
+            institusi) otomatis ikut ter-backup juga — dicatat di manifest hasil backup.
         </p>
 
         <div class="mb-4 px-4 py-3 rounded-xl bg-status-warning/10 text-status-warning border border-status-warning/20 flex items-start gap-2.5 text-sm">
@@ -32,6 +34,7 @@
 
         <form method="POST" action="{{ route('admin.system.backup.store') }}" id="backup-form">
             @csrf
+            <h3 class="text-sm font-semibold text-text-primary mb-2">Modul</h3>
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 @foreach ($modules as $key => $module)
                     <label class="flex items-start gap-2 rounded-xl border border-border bg-bg-panel p-3 text-sm cursor-pointer">
@@ -47,6 +50,26 @@
                     </label>
                 @endforeach
             </div>
+
+            @if ($institutions->isNotEmpty())
+                <h3 class="text-sm font-semibold text-text-primary mt-5 mb-2">Institusi (opsional)</h3>
+                <p class="text-xs text-text-secondary mb-2">Kosongkan semua = semua institusi ikut (tidak difilter).</p>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    @foreach ($institutions as $institution)
+                        <label class="flex items-start gap-2 rounded-xl border border-border bg-bg-panel p-3 text-sm cursor-pointer">
+                            <input type="checkbox" name="institutions[]" value="{{ $institution->id }}"
+                                class="rounded bg-bg-surface border-border mt-0.5">
+                            <span class="font-medium text-text-primary">{{ $institution->institution_name }}</span>
+                        </label>
+                    @endforeach
+                    <label class="flex items-start gap-2 rounded-xl border border-border bg-bg-panel p-3 text-sm cursor-pointer">
+                        <input type="checkbox" name="include_individual" value="1"
+                            class="rounded bg-bg-surface border-border mt-0.5">
+                        <span class="font-medium text-text-primary">Sertakan data individual (tanpa institusi)</span>
+                    </label>
+                </div>
+            @endif
+
             <div class="mt-4">
                 <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Backup Sekarang</button>
             </div>
@@ -57,17 +80,22 @@
     <div class="card p-6">
         <h2 class="font-heading font-semibold text-text-primary mb-1">Restore dari Backup</h2>
         <p class="text-sm text-text-secondary mb-4">
-            Hanya mendukung restore dari file backup <strong>penuh</strong> (seluruh sistem) — file backup parsial
-            per-modul belum bisa direstore di versi ini, hanya untuk keperluan arsip.
+            Mendukung restore dari backup <strong>penuh</strong> maupun backup <strong>parsial</strong> (per-modul
+            dan/atau per-institusi). Restore selalu menerapkan <strong>tepat</strong> scope yang tercatat di dalam
+            file backup itu sendiri — kalau mau restore yang lebih sempit, buat backup yang lebih sempit dulu
+            (bukan menyeleksi ulang saat restore).
         </p>
 
         <div class="mb-4 px-4 py-3 rounded-xl bg-status-danger/10 text-status-danger border border-status-danger/20 flex items-start gap-2.5 text-sm">
             <span class="material-symbols-outlined icon-md mt-0.5">dangerous</span>
             <span>
-                Restore akan <strong>menghapus SELURUH data saat ini</strong> dan menggantinya dengan isi file
-                backup. Aksi ini destruktif &amp; tidak bisa dibatalkan. Sebuah safety-backup otomatis akan dibuat
-                lebih dulu sebelum proses restore berjalan — path-nya akan dicatat di log &amp; ditampilkan setelah
-                selesai (tidak ditawarkan untuk didownload di versi ini).
+                Restore <strong>penuh</strong> menghapus SELURUH data saat ini lalu menggantinya dengan isi backup.
+                Restore <strong>parsial</strong> hanya mengganti baris-baris yang persis ada di dalam backup
+                (baris lain yang tidak ada di backup, termasuk yang baru dibuat setelah backup diambil, tidak
+                disentuh). Kedua jenis restore destruktif &amp; tidak bisa dibatalkan untuk data yang diganti.
+                Sebuah safety-backup penuh otomatis akan dibuat lebih dulu sebelum proses restore berjalan —
+                path-nya akan dicatat di log &amp; ditampilkan setelah selesai (tidak ditawarkan untuk didownload
+                di versi ini).
             </span>
         </div>
 
