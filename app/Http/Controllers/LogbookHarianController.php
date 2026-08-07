@@ -95,8 +95,8 @@ class LogbookHarianController extends Controller
             'kendala' => $validated['kendala'] ?? null,
         ]);
 
-        // Cek kuota dosen pembimbing sebelum upload foto.
-        $dosen = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2;
+        // Cek kuota target pembebanan (dosen pembimbing saat aktif, mahasiswa 100 MB saat pending).
+        $dosen = $mahasiswaTa->storageChargeTarget();
         $storeFotos = function () use ($request, $entry) {
             if ($request->hasFile('foto_1')) {
                 $entry->update(['foto_1' => $this->storeFoto($request->file('foto_1'), $entry->id, 1)]);

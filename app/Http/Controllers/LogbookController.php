@@ -96,8 +96,8 @@ class LogbookController extends Controller
 
         // Simpan lampiran dengan path unik + nama asli.
         if ($request->hasFile('lampiran')) {
-            // Cek kuota dosen pembimbing (pembimbing 1, fallback pembimbing 2).
-            $dosen = $ta->pembimbing1 ?: $ta->pembimbing2;
+            // Cek kuota target pembebanan (dosen pembimbing saat aktif, mahasiswa 100 MB saat pending).
+            $dosen = $ta->storageChargeTarget();
             $storeLampiran = function () use ($request, $entry) {
                 $entry->update([
                     'lampiran_path' => $this->storeUniqueFile($request->file('lampiran'), 'lampiran', $entry->id),
@@ -184,8 +184,8 @@ class LogbookController extends Controller
             return [$parent, $entry];
         });
 
-        // Cek kuota dosen pembimbing sebelum menyimpan lampiran revisi.
-        $dosen = $ta->pembimbing1 ?: $ta->pembimbing2;
+        // Cek kuota target pembebanan (dosen pembimbing saat aktif, mahasiswa 100 MB saat pending).
+        $dosen = $ta->storageChargeTarget();
         $storeLampiranRevisi = function () use ($request, $entry, $data) {
             $entry->update([
                 'lampiran_path' => $this->storeUniqueFile($request->file('lampiran'), 'lampiran', $entry->id),

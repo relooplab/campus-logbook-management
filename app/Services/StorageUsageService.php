@@ -133,7 +133,12 @@ class StorageUsageService
                             ->orWhereDoesntHave('pembimbing1', fn ($u) => $u->where('registration_status', 'approved'));
                      });
               });
-        })->pluck('id');
+            })
+            // Hanya program yang sudah DISETUJUI yang dibebankan ke dosen.
+            // Program yang masih pending/ditolak dibebankan ke mahasiswa (kuota 100 MB),
+            // jadi file-nya tidak boleh ikut terhitung di kuota dosen sebelum disetujui.
+            ->whereNotIn('status_ta', [MahasiswaTa::STATUS_PENDING_APPROVAL, MahasiswaTa::STATUS_DITOLAK])
+            ->pluck('id');
     }
 
     /**
@@ -272,6 +277,14 @@ class StorageUsageService
      */
     public function assertCanUpload(User $dosen, int $incomingBytes): void
     {
+        // Mahasiswa hanya menjadi target kuota pada fase PENDING (program menunggu
+        // persetujuan dosen, lihat MahasiswaTa::storageChargeTarget). Pakai kuota
+        // sementara 100 MB sampai program disetujui.
+        if ($dosen->isMahasiswa()) {
+            $this->assertPendingStudentCanUpload($dosen, $incomingBytes);
+            return;
+        }
+
         // User institusi: cek shared pool institusi.
         if ($dosen->institution_id) {
             $poolMb = Feature::institutionStorageLimitMb($dosen->institution_id);
@@ -329,6 +342,24 @@ class StorageUsageService
             abort(422, 'Kuota penyimpanan tidak mencukupi. Terpakai '.$this->formatBytes($used)
                 .' dari '.$this->formatBytes($limitBytes)
                 .' (sisa '.$this->formatBytes($remaining).').');
+        }
+    }
+
+    /**
+     * Cek kuota sementara 100 MB untuk mahasiswa yang programnya masih
+     * menunggu persetujuan dosen (fase pending).
+     */
+    private function assertPendingStudentCanUpload(User $mahasiswa, int $incomingBytes): void
+    {
+        $limitMb = Feature::pendingStudentStorageLimitMb();
+        $limitBytes = $limitMb * 1048576;
+        $used = $this->totalBytes($mahasiswa);
+
+        if ($used + $incomingBytes > $limitBytes) {
+            $remaining = max(0, $limitBytes - $used);
+            abort(422, 'Kuota penyimpanan sementara tidak cukup (menunggu persetujuan dosen). Terpakai '
+                .$this->formatBytes($used).' dari '.$this->formatBytes($limitBytes)
+                .' (sisa '.$this->formatBytes($remaining).'). Maksimal '.$limitMb.' MB sampai dosen menyetujui program Anda.');
         }
     }
 

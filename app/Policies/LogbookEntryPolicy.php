@@ -45,10 +45,14 @@ class LogbookEntryPolicy
             return false;
         }
 
-        // Hanya program aktif yang bisa membuat logbook.
+        // Mahasiswa boleh membuat logbook pada program aktif ATAU program yang
+        // masih menunggu persetujuan dosen (fase pending) — akses semua menu
+        // segera setelah memilih dosen.
         return $ta
-            ? $ta->isMember($user) && $ta->status_ta === MahasiswaTa::STATUS_AKTIF
-            : $user->programAktif()->exists();
+            ? $ta->isMember($user) && in_array($ta->status_ta, [MahasiswaTa::STATUS_AKTIF, MahasiswaTa::STATUS_PENDING_APPROVAL], true)
+            : $user->mahasiswaPrograms()
+                ->whereIn('status_ta', [MahasiswaTa::STATUS_AKTIF, MahasiswaTa::STATUS_PENDING_APPROVAL])
+                ->exists();
     }
 
     public function view(User $user, LogbookEntry $entry): bool
@@ -81,14 +85,14 @@ class LogbookEntryPolicy
     {
         return $this->owner($user, $entry)
             && $entry->isEditable()
-            && $entry->mahasiswaTa?->status_ta === MahasiswaTa::STATUS_AKTIF;
+            && in_array($entry->mahasiswaTa?->status_ta, [MahasiswaTa::STATUS_AKTIF, MahasiswaTa::STATUS_PENDING_APPROVAL], true);
     }
 
     public function submit(User $user, LogbookEntry $entry): bool
     {
         return $this->owner($user, $entry)
             && $entry->isEditable()
-            && $entry->mahasiswaTa?->status_ta === MahasiswaTa::STATUS_AKTIF;
+            && in_array($entry->mahasiswaTa?->status_ta, [MahasiswaTa::STATUS_AKTIF, MahasiswaTa::STATUS_PENDING_APPROVAL], true);
     }
 
     /**

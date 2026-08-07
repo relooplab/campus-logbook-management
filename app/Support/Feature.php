@@ -14,6 +14,9 @@ use App\Models\UserStorageAddon;
 
 class Feature
 {
+    /** Kuota penyimpanan sementara (MB) untuk mahasiswa fase pending (menunggu persetujuan dosen). */
+    public const PENDING_STUDENT_STORAGE_LIMIT_MB = 100;
+
     public static function mode(): string
     {
         return config('app.mode', 'saas');
@@ -111,6 +114,16 @@ class Feature
 
         // 3. Default.
         return false;
+    }
+
+    /**
+     * Kuota penyimpanan sementara (MB) untuk mahasiswa yang programnya masih
+     * menunggu persetujuan dosen (status pending_approval). Setelah disetujui,
+     * beban kuota dialihkan ke kuota dosen pembimbing.
+     */
+    public static function pendingStudentStorageLimitMb(): int
+    {
+        return self::PENDING_STUDENT_STORAGE_LIMIT_MB;
     }
 
     /**

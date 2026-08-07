@@ -391,4 +391,20 @@ class MahasiswaTa extends Model
             $this->penguji_2_id,
         ])));
     }
+
+    /**
+     * Target kuota penyimpanan untuk data program ini.
+     * - Program yang sudah disetujui (aktif/tamat/nonaktif): dibebankan ke dosen
+     *   pembimbing (pembimbing 1, fallback pembimbing 2).
+     * - Program yang masih menunggu persetujuan dosen (pending_approval) atau
+     *   ditolak: dibebankan ke mahasiswa pemilik dengan kuota sementara 100 MB.
+     */
+    public function storageChargeTarget(): ?User
+    {
+        if (!in_array($this->status_ta, [self::STATUS_PENDING_APPROVAL, self::STATUS_DITOLAK], true)) {
+            return $this->pembimbing1 ?: $this->pembimbing2;
+        }
+
+        return $this->mahasiswa;
+    }
 }

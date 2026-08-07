@@ -46,12 +46,15 @@ class WorkspaceController extends Controller
         // Group by bab (null -> "Lainnya").
         $grouped = $files->groupBy(fn ($f) => $f->bab ?: 'Lainnya');
 
-        // Statistik penyimpanan (kuota dibebankan ke dosen pembimbing).
+        // Statistik penyimpanan (kuota dibebankan sesuai status program:
+        // dosen pembimbing jika sudah disetujui, mahasiswa 100 MB saat pending).
         $usageService = app(StorageUsageService::class);
-        $dosen = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2;
+        $chargeTarget = $mahasiswaTa->storageChargeTarget();
         $totalBytes = $files->sum('size');
-        $quotaBytes = $dosen ? Feature::storageLimitMb($dosen) * 1048576 : 0;
-        $usedBytes = $dosen ? $usageService->totalBytes($dosen) : $totalBytes;
+        $quotaBytes = $chargeTarget
+            ? ($chargeTarget->isMahasiswa() ? Feature::pendingStudentStorageLimitMb() : Feature::storageLimitMb($chargeTarget)) * 1048576
+            : 0;
+        $usedBytes = $chargeTarget ? $usageService->totalBytes($chargeTarget) : $totalBytes;
 
         return view('workspace.index', compact('mahasiswaTa', 'grouped', 'totalBytes', 'quotaBytes', 'usedBytes'));
     }
@@ -129,10 +132,10 @@ class WorkspaceController extends Controller
 
         $bab = $request->input('bab');
 
-        // Cek kuota dosen pembimbing (pembimbing 1, fallback pembimbing 2).
-        // Bila belum ada pembimbing yang ditugaskan, bebankan ke akun mahasiswa
-        // sendiri supaya kuota tetap ditegakkan sejak awal.
-        $chargeTo = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2 ?: $mahasiswaTa->mahasiswa;
+        // Cek kuota sesuai target pembebanan: dosen pembimbing (P1, fallback P2)
+        // setelah program disetujui, atau mahasiswa sendiri dengan kuota 100 MB
+        // selama program masih menunggu persetujuan dosen.
+        $chargeTo = $mahasiswaTa->storageChargeTarget();
         $storeFiles = function () use ($request, $mahasiswaTa, $bab) {
             foreach ($request->file('files') as $file) {
                 $stored = $file->store('workspace/'.$mahasiswaTa->id, 'local');

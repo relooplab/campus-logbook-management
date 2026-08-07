@@ -42,8 +42,8 @@ class FinalizationController extends Controller
         $request->validate($rules);
         $finalization = $mahasiswaTa->finalization ?? $mahasiswaTa->finalization()->create([]);
 
-        // Cek kuota dosen pembimbing sebelum menyimpan file finalisasi.
-        $dosen = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2;
+        // Cek kuota target pembebanan (dosen pembimbing saat aktif, mahasiswa 100 MB saat pending).
+        $dosen = $mahasiswaTa->storageChargeTarget();
         $storeFinalizationFiles = function () use ($request, $isKp, $items, $mahasiswaTa, $finalization) {
             $data = [];
             if (!$isKp) {

@@ -92,8 +92,8 @@ class SeminarSubmissionController extends Controller
         $jenis = $this->jenisFromFase($mahasiswaTa);
         $defaultCatatan = $institution->seminar_hardcopy_note;
 
-        // Cek kuota dosen pembimbing sebelum menyimpan undangan + materi baru.
-        $dosen = $mahasiswaTa->pembimbing1 ?: $mahasiswaTa->pembimbing2;
+        // Cek kuota target pembebanan (dosen pembimbing saat aktif, mahasiswa 100 MB saat pending).
+        $dosen = $mahasiswaTa->storageChargeTarget();
 
         $createSubmission = function () use ($request, $mahasiswaTa, $jenis, $data, $defaultCatatan) {
             // Materi: upload baru ATAU dari workspace (salah satu, tidak boleh keduanya kosong).
@@ -216,8 +216,8 @@ class SeminarSubmissionController extends Controller
             'catatan_keterangan' => $data['catatan_keterangan'] ?? null,
         ];
 
-        // Cek kuota dosen pembimbing sebelum mengganti file (undangan/materi).
-        $dosen = $submission->mahasiswaTa->pembimbing1 ?: $submission->mahasiswaTa->pembimbing2;
+        // Cek kuota target pembebanan (dosen pembimbing saat aktif, mahasiswa 100 MB saat pending).
+        $dosen = $submission->mahasiswaTa->storageChargeTarget();
 
         $applyUpdate = function () use ($request, $submission, $payload) {
             // Ganti undangan bila ada file baru.
