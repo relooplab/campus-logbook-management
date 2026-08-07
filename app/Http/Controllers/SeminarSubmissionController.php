@@ -301,23 +301,31 @@ class SeminarSubmissionController extends Controller
         $this->authorizeDosen($request->user(), $submission);
 
         $validated = $request->validate([
-            'penguji_id' => ['required', 'integer', 'exists:users,id'],
+            'penguji_name' => ['required', 'string', 'max:255'],
+            'supervisor_name' => ['nullable', 'string', 'max:255'],
             'hasil' => ['required', 'in:'.implode(',', Sidang::HASILS)],
         ]);
 
         $ta = $submission->mahasiswaTa;
 
-        // Supervisor names (pembimbing) untuk riwayat.
-        $supervisorNames = array_values(array_filter([
-            $ta->pembimbing1?->name,
-            $ta->pembimbing2?->name,
-        ]));
+        // Link penguji bila nama cocok dengan dosen internal; selain itu simpan nama eksternal.
+        $penguji = \App\Models\User::role('dosen')->where('name', $validated['penguji_name'])->first();
+
+        // Supervisor (pembimbing) untuk riwayat: manual bila diisi, fallback ke pembimbing TA.
+        $supervisorName = trim((string) ($validated['supervisor_name'] ?? ''));
+        $supervisorNames = $supervisorName !== ''
+            ? [$supervisorName]
+            : array_values(array_filter([
+                $ta->pembimbing1?->name,
+                $ta->pembimbing2?->name,
+            ]));
 
         $sidang = Sidang::create([
             'institution_id' => $ta->institution_id,
             'mahasiswa_ta_id' => $ta->id,
             'mahasiswa_name' => $ta->mahasiswa?->name,
-            'penguji_id' => $validated['penguji_id'],
+            'penguji_id' => $penguji?->id,
+            'penguji_name' => $validated['penguji_name'],
             'jenis' => $submission->jenis === SeminarSubmission::JENIS_SIDANG ? Sidang::JENIS_SIDANG : Sidang::JENIS_PROPOSAL,
             'tanggal' => $submission->tanggal,
             'hasil' => $validated['hasil'],

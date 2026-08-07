@@ -24,6 +24,7 @@ class Sidang extends Model
         'mahasiswa_ta_id',
         'mahasiswa_name',
         'penguji_id',
+        'penguji_name',
         'jenis',
         'tanggal',
         'hasil',

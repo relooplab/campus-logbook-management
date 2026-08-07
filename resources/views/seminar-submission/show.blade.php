@@ -111,16 +111,22 @@
             <form method="POST" action="{{ route('seminar-submission.convert-to-sidang', $submission) }}" class="space-y-4">
                 @csrf
                 <div>
-                    <label class="block text-xs text-text-secondary mb-1">Penguji</label>
-                    <select name="penguji_id" required class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm">
-                        <option value="">— Pilih penguji —</option>
+                    <label class="block text-xs text-text-secondary mb-1">Penguji <span class="text-status-danger">*</span></label>
+                    <input type="text" name="penguji_name" required value="{{ old('penguji_name') }}" list="dosen-penguji-list"
+                        placeholder="Nama penguji (bisa dari luar sistem)" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm">
+                    <datalist id="dosen-penguji-list">
                         @foreach ($submission->mahasiswaTa->allDosenIds() as $dosenId)
                             @php $dosen = \App\Models\User::find($dosenId); @endphp
                             @if ($dosen)
-                                <option value="{{ $dosen->id }}">{{ $dosen->name }}</option>
+                                <option value="{{ $dosen->name }}"></option>
                             @endif
                         @endforeach
-                    </select>
+                    </datalist>
+                </div>
+                <div>
+                    <label class="block text-xs text-text-secondary mb-1">Pembimbing <span class="text-text-secondary/60">(isi bila di luar sistem)</span></label>
+                    <input type="text" name="supervisor_name" value="{{ old('supervisor_name', $submission->mahasiswaTa->pembimbing1?->name) }}"
+                        placeholder="Nama pembimbing (kosongkan bila sudah di sistem)" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm">
                 </div>
                 <div>
                     <label class="block text-xs text-text-secondary mb-1">Hasil</label>

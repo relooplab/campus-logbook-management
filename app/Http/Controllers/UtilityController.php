@@ -33,7 +33,7 @@ class UtilityController extends Controller
                 ->orWhere('identifier', 'like', "%{$q}%")
                 ->orWhere('email', 'like', "%{$q}%");
         })
-        ->get(['id', 'name', 'identifier', 'roles'])
+        ->get(['id', 'name', 'identifier'])
         ->filter(fn ($u) => $user->isAdmin() || $user->id === $u->id || $user->hasDirectRelation($u))
         ->take(8)
         ->values();
