@@ -1,3 +1,10 @@
+# [0.29.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.28.0...v0.29.0) (2026-08-07)
+
+
+### Features
+
+* per-examiner grading for seminars/sidang with reminders ([4e7d9a7](https://github.com/relooplab/thesis-logbook-management/commit/4e7d9a7d373a6c6db1d0e766a6455bf8f648e6db))
+
 # [0.28.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.27.0...v0.28.0) (2026-08-07)
 
 
