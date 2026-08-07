@@ -1,3 +1,10 @@
+# [0.24.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.23.0...v0.24.0) (2026-08-07)
+
+
+### Features
+
+* add branded error pages, smoother onboarding redirect, and open seminar access ([70d51cb](https://github.com/relooplab/thesis-logbook-management/commit/70d51cb0987f19513fd4608a306557343a60770c))
+
 # [0.23.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.22.0...v0.23.0) (2026-08-07)
 
 
