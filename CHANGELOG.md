@@ -1,3 +1,10 @@
+# [0.27.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.26.1...v0.27.0) (2026-08-07)
+
+
+### Features
+
+* gate dosen on completing institution affiliation before using the app ([21f7f6c](https://github.com/relooplab/thesis-logbook-management/commit/21f7f6cf075cf5948d7baab8d20d0f47937732cd))
+
 ## [0.26.1](https://github.com/relooplab/thesis-logbook-management/compare/v0.26.0...v0.26.1) (2026-08-07)
 
 
