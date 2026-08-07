@@ -17,6 +17,8 @@ RUN npm run build
 FROM php:8.4-fpm-alpine
 
 # --- system deps ---
+# mariadb-client: wire-compatible dgn MySQL 8.4 server, menyediakan mysqldump/mysql
+# untuk fitur system backup & restore (app/Services/SystemBackupService.php dkk).
 RUN apk add --no-cache \
     icu-dev \
     libzip-dev \
@@ -25,6 +27,7 @@ RUN apk add --no-cache \
     libjpeg-turbo-dev \
     zlib-dev \
     oniguruma-dev \
+    mariadb-client \
     $PHPIZE_DEPS \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" \
@@ -75,10 +78,15 @@ RUN rm -f bootstrap/cache/packages.php bootstrap/cache/services.php \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rw storage bootstrap/cache
 
-# PHP config: upload 10MB, post 12MB
+# PHP config: upload/post dinaikkan ke 512M agar ZIP restore (DB dump + seluruh
+# storage) bisa diupload; max_execution_time 1800s (30 menit) karena system
+# backup/restore sengaja tetap sinkron (bukan queued job) — mysqldump/mysql/zip
+# untuk data besar butuh waktu lebih dari default 30s. Nginx fastcgi_read_timeout
+# (nginx/default.conf) harus tetap selaras dengan nilai ini.
 RUN { \
-    echo 'upload_max_filesize=10M'; \
-    echo 'post_max_size=12M'; \
+    echo 'upload_max_filesize=512M'; \
+    echo 'post_max_size=512M'; \
+    echo 'max_execution_time=1800'; \
     echo 'memory_limit=256M'; \
     echo 'date.timezone=Asia/Jakarta'; \
   } > "$PHP_INI_DIR/conf.d/lbta.ini"

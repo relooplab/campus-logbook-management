@@ -300,6 +300,10 @@
                         <span class="material-symbols-outlined icon-md">subscriptions</span>
                         <span class="sidebar-label">Langganan Direktori</span>
                     </a>
+                    <a href="{{ route('admin.system.backup') }}" class="{{ $navLink }} {{ $active('admin.system.backup*') }}">
+                        <span class="material-symbols-outlined icon-md">cloud_download</span>
+                        <span class="sidebar-label">Backup &amp; Restore</span>
+                    </a>
                 @endif
                 @can('admin.users')
                     <a href="{{ route('admin.users') }}" class="{{ $navLink }} {{ $active('admin.users') }}">

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\SystemBackupController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\ChatController;
@@ -323,5 +324,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/directory-subscriptions', [AdminController::class, 'directorySubscriptions'])->name('directory-subscriptions');
         Route::post('/directory-subscriptions', [AdminController::class, 'storeDirectorySubscription'])->name('directory-subscriptions.store');
         Route::post('/directory-subscriptions/{subscription}/cancel', [AdminController::class, 'cancelDirectorySubscription'])->name('directory-subscriptions.cancel');
+
+        // Backup & restore seluruh sistem: sengaja hanya digerbangi
+        // role:system_admin (bukan permission tambahan) — alasan sama dengan
+        // "Kelola Hak Akses" di atas, bahkan lebih kuat di sini karena aksi
+        // restore bisa mengganti seluruh data sistem.
+        Route::get('/backup', [SystemBackupController::class, 'index'])->name('backup');
+        Route::post('/backup', [SystemBackupController::class, 'store'])->name('backup.store');
+        Route::post('/backup/restore', [SystemBackupController::class, 'restore'])->name('backup.restore');
     });
 });
