@@ -130,20 +130,24 @@ class InstitutionWorkspace extends Model
     }
 
     /**
-     * Prodi utama (study_program_id) dari user melalui universitas primer.
+     * Prodi utama dari afiliasi yg BERSTATUS ACTIVE (disetujui).
+     * Afiliasi pending/revoked TIDAK memberi akses ke Workspace Institusi.
      */
     private function userPrimaryStudyProgramId(User $user): ?int
     {
         $pivot = $user->universities()
             ->wherePivot('is_primary', true)
+            ->wherePivot('status', 'active')
             ->first();
 
         if ($pivot) {
             return $pivot->pivot->study_program_id;
         }
 
-        // Fallback: universitas pertama.
-        $first = $user->universities()->first();
+        // Fallback: universitas pertama yang statusnya active.
+        $first = $user->universities()
+            ->wherePivot('status', 'active')
+            ->first();
 
         return $first?->pivot->study_program_id;
     }

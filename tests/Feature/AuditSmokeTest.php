@@ -151,6 +151,8 @@ class AuditSmokeTest extends TestCase
             ['announcements.index', $this->mhs, []],
             ['announcements.create', $this->admin, []],
             ['profile.index', $this->mhs, []],
+            ['profile.affiliation', $this->dosen, []],
+            ['affiliation-approval.index', $this->admin, []],
             ['profile.show', $this->dosen, ['user' => $this->mhs]],
             ['scheduling.index', $this->mhs, []],
             ['scheduling.index', $this->dosen, []],
