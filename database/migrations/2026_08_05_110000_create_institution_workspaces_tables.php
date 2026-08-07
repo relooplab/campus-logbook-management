@@ -48,11 +48,16 @@ return new class extends Migration
 
         Schema::create('institution_workspace_allowed_users', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('institution_workspace_id')->constrained('institution_workspaces')->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('institution_workspace_id');
+            $table->foreignId('user_id');
             $table->timestamps();
 
-            $table->unique(['institution_workspace_id', 'user_id']);
+            // Nama constraint eksplisit lebih pendek (MySQL limit 64 char).
+            $table->foreign('institution_workspace_id', 'iw_allowed_ws_fk')
+                ->references('id')->on('institution_workspaces')->cascadeOnDelete();
+            $table->foreign('user_id', 'iw_allowed_user_fk')
+                ->references('id')->on('users')->cascadeOnDelete();
+            $table->unique(['institution_workspace_id', 'user_id'], 'iw_allowed_ws_user_unique');
         });
     }
 
