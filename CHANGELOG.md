@@ -1,3 +1,11 @@
+# [0.23.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.22.0...v0.23.0) (2026-08-07)
+
+
+### Features
+
+* implement affiliation management for lecturers with approval workflow ([c4e7832](https://github.com/relooplab/thesis-logbook-management/commit/c4e783263c3144730a874cc9890d96f591098a32))
+* move institution data to profile onboarding and add dosen affiliation prompts ([4345539](https://github.com/relooplab/thesis-logbook-management/commit/43455392f3ca05d000e5317b190de7c8a127cfce))
+
 # [0.22.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.21.0...v0.22.0) (2026-08-07)
 
 
