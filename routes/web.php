@@ -247,6 +247,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/logbook/{logbook}', [LogbookController::class, 'update'])->name('logbook.update');
     Route::delete('/logbook/{logbook}/lampiran', [LogbookController::class, 'removeLampiran'])->name('logbook.remove-lampiran');
     Route::delete('/logbook/{logbook}/catatan', [LogbookController::class, 'removeCatatan'])->name('logbook.remove-catatan');
+    Route::delete('/logbook/{logbook}', [LogbookController::class, 'destroy'])->name('logbook.destroy');
     Route::post('/logbook/{logbook}/submit', [LogbookController::class, 'submit'])->name('logbook.submit');
     Route::post('/logbook/{logbook}/approve', [LogbookController::class, 'approve'])->name('logbook.approve');
     Route::post('/logbook/{logbook}/revisi', [LogbookController::class, 'requestRevisi'])->name('logbook.request-revisi');

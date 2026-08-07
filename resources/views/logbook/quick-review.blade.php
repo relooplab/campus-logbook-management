@@ -93,10 +93,10 @@
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">{{ old("feedback_dosen", $feedbackDraft ?? "") }}</textarea>
             <p id="revisi-error" class="hidden text-xs text-status-danger mt-1">Feedback wajib diisi minimal 20 karakter.</p>
             <div class="flex flex-wrap gap-2">
-                <form method="POST" action="{{ route("quick-review.approve-next", $entry) }}" id="approve-form" data-pdf-opened="{{ $entry->review_opened_at ? "1" : "0" }}"> @csrf <button type="submit" id="approve-btn"
+                <form method="POST" action="{{ route("quick-review.approve-next", $entry) }}" id="approve-form" data-pdf-opened="{{ $entry->review_opened_at || (!$entry->lampiran_path && !$entry->catatan_perbaikan_path) ? "1" : "0" }}"> @csrf <button type="submit" id="approve-btn"
                         class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">check</span>
                         Setujui & Next</button> </form>
-                <form method="POST" action="{{ route("quick-review.revisi-next", $entry) }}" id="revisi-form" data-pdf-opened="{{ $entry->review_opened_at ? "1" : "0" }}">
+                <form method="POST" action="{{ route("quick-review.revisi-next", $entry) }}" id="revisi-form" data-pdf-opened="{{ $entry->review_opened_at || (!$entry->lampiran_path && !$entry->catatan_perbaikan_path) ? "1" : "0" }}">
                     @csrf <input type="hidden" name="feedback_dosen" id="revisi-feedback">
                     <button type="submit" id="revisi-btn"
                         class="px-4 py-2 rounded-md bg-status-pending hover:bg-status-pending/90 text-white text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">autorenew</span>

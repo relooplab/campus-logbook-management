@@ -185,6 +185,12 @@
                 @csrf
                 <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Kirim ke dosen</button>
             </form>
+                <form method="POST" action="{{ route('logbook.destroy', $logbook) }}"
+                    onsubmit="return confirm('Hapus entri ini? Tindakan tidak dapat dibatalkan.');" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20">Hapus</button>
+                </form>
         </div>
     @endif
 

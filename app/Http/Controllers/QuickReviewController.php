@@ -56,7 +56,7 @@ class QuickReviewController extends Controller
         $this->authorize('review', $logbook);
 
         // Hanya program aktif yang bisa di-review.
-        abort_unless($logbook->mahasiswaTa?->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif.');
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
         $logbook->update([
             'status' => LogbookEntry::STATUS_APPROVED,
@@ -82,7 +82,7 @@ class QuickReviewController extends Controller
         $this->authorize('review', $logbook);
 
         // Hanya program aktif yang bisa di-review.
-        abort_unless($logbook->mahasiswaTa?->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif.');
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
         $validated = $request->validate([
             'feedback_dosen' => ['required', 'string', 'min:20'],

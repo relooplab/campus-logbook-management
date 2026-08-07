@@ -446,6 +446,31 @@ class LogbookController extends Controller
     }
 
     /**
+     * Hapus entri logbook — hanya pemilik & hanya saat masih dapat diedit
+     * (draf / revisi sedang dikerjakan). Komentar PDF & action items
+     * terhapus otomatis (cascade), file dihapus dari penyimpanan lokal.
+     */
+    public function destroy(LogbookEntry $logbook): RedirectResponse
+    {
+        $this->authorize('delete', $logbook);
+        abort_unless($logbook->isEditable(), 403, 'Hanya entri yang masih berupa draf yang dapat dihapus.');
+
+        // Lepas relasi anak revisi agar FK tidak menghalangi penghapusan.
+        $logbook->revisionChildren()->update(['parent_entry_id' => null]);
+
+        // Hapus file dari penyimpanan lokal.
+        foreach (['lampiran_path', 'catatan_perbaikan_path'] as $field) {
+            if ($logbook->{$field}) {
+                Storage::disk('local')->delete($logbook->{$field});
+            }
+        }
+
+        $logbook->delete();
+
+        return redirect()->route('logbook.index')->with('success', 'Entri logbook berhasil dihapus.');
+    }
+
+    /**
      * Simpan file ke path unik {dir}/{entry_id}/{uuid}.ext (anti tabrakan nama).
      */
     private function storeUniqueFile($file, string $dir, ?int $entryId): string
@@ -529,7 +554,7 @@ class LogbookController extends Controller
         $this->authorize('submit', $logbook);
 
         // Hanya program aktif yang bisa submit.
-        abort_unless($logbook->mahasiswaTa?->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif. Tunggu dosen menyetujui program Anda.');
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
         $logbook->update([
             'status' => LogbookEntry::STATUS_SUBMITTED,
@@ -556,7 +581,7 @@ class LogbookController extends Controller
         $this->authorize('review', $logbook);
 
         // Hanya program aktif yang bisa di-review.
-        abort_unless($logbook->mahasiswaTa?->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif.');
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
         $logbook->update([
             'status' => LogbookEntry::STATUS_APPROVED,
@@ -584,7 +609,7 @@ class LogbookController extends Controller
         $this->authorize('review', $logbook);
 
         // Hanya program aktif yang bisa di-review.
-        abort_unless($logbook->mahasiswaTa?->status_ta === \App\Models\MahasiswaTa::STATUS_AKTIF, 403, 'Program belum aktif.');
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
         $validated = $request->validate([
             'feedback_dosen' => ['required', 'string', 'min:20'],
