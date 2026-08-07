@@ -1,3 +1,10 @@
+# [0.26.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.25.0...v0.26.0) (2026-08-07)
+
+
+### Features
+
+* standardize UI terminology and add a baku glossary ([80e5a69](https://github.com/relooplab/thesis-logbook-management/commit/80e5a698c42ab09bdc3d880ca7e33c400c490376))
+
 # [0.25.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.24.0...v0.25.0) (2026-08-07)
 
 
