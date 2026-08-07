@@ -1,3 +1,10 @@
+# [0.18.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.17.0...v0.18.0) (2026-08-07)
+
+
+### Features
+
+* add supervised-student chat list, storage quota meter, and profile affiliation block ([d725ad1](https://github.com/relooplab/thesis-logbook-management/commit/d725ad1ad3395da0faa01ed9edec125ed6a3f5ca))
+
 # [0.17.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.16.0...v0.17.0) (2026-08-07)
 
 
