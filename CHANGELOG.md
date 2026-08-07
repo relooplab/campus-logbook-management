@@ -1,3 +1,10 @@
+# [0.21.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.20.0...v0.21.0) (2026-08-07)
+
+
+### Features
+
+* let pending students use the app, hold storage at 100MB, and purge unapproved programs ([8050f75](https://github.com/relooplab/thesis-logbook-management/commit/8050f7593e975558111e3ef39967cad8c15d0650))
+
 # [0.20.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.19.0...v0.20.0) (2026-08-07)
 
 
