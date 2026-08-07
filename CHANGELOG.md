@@ -1,3 +1,10 @@
+## [0.26.1](https://github.com/relooplab/thesis-logbook-management/compare/v0.26.0...v0.26.1) (2026-08-07)
+
+
+### Bug Fixes
+
+* force HTTPS behind proxy, sync frontend assets, and preserve demo data on reseed ([5586f86](https://github.com/relooplab/thesis-logbook-management/commit/5586f8687df992c070128dacf4af48d8de50f626))
+
 # [0.26.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.25.0...v0.26.0) (2026-08-07)
 
 
