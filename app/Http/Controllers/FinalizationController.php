@@ -121,18 +121,24 @@ class FinalizationController extends Controller
         $this->authorizePembimbing($request->user(), $finalization);
         $this->validateItem($finalization, $item);
 
-        DB::transaction(function () use ($request, $finalization, $item) {
+        // Alasan penolakan wajib diisi (mirip feedback logbook min. 20 karakter).
+        $validated = $request->validate([
+            'alasan' => ['required', 'string', 'min:5', 'max:1000'],
+        ]);
+
+        DB::transaction(function () use ($request, $finalization, $item, $validated) {
             $locked = ThesisFinalization::whereKey($finalization->id)->lockForUpdate()->firstOrFail();
 
             // Reset semua approval item ini ke pending supaya setiap pembimbing
             // wajib menyetujui ulang versi terbaru; baris milik penolak sendiri
             // tetap 'rejected' sebagai jejak siapa yang menolak.
             $locked->approvals()->where('item', $item)->update(['status' => 'pending']);
-            $this->getApproval($locked, $item, $request->user()->id)->update(['status' => 'rejected']);
+            $this->getApproval($locked, $item, $request->user()->id)
+                ->update(['status' => 'rejected', 'alasan' => $validated['alasan']]);
             $locked->update([$item.'_status' => 'rejected']);
         });
 
-        return back()->with('success', "Item '{$item}' ditolak.");
+        return back()->with('success', "Item '{$item}' ditolak dengan alasan.");
     }
 
     public function unlockItem(Request $request, ThesisFinalization $finalization, string $item): RedirectResponse

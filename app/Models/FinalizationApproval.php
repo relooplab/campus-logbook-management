@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FinalizationApproval extends Model
 {
-    protected $fillable = ['finalization_id', 'item', 'pembimbing_id', 'status'];
+    protected $fillable = ['finalization_id', 'item', 'pembimbing_id', 'status', 'alasan'];
 
     public function finalization(): BelongsTo
     {

@@ -7,6 +7,7 @@
     $user = auth()->user();
     $owner = $user->isMahasiswa() && $logbook->mahasiswaTa?->isMember($user);
     $canReview = $user->can('review', $logbook);
+    $canManageActionItems = $user->can('manageActionItems', $logbook);
 @endphp
 
 <div class="max-w-3xl space-y-6">
@@ -41,6 +42,21 @@
                     {{ $logbook->dosen?->name ?? ($logbook->mahasiswaTa?->pembimbing1?->name ?? '—') }}</dd>
             </div>
         </dl>
+
+        @if ($owner && $logbook->status === 'submitted')
+            <div class="px-4 py-3 rounded-xl bg-bg-panel border border-border text-sm flex flex-wrap items-center gap-2">
+                @if ($logbook->review_opened_at)
+                    <span class="inline-flex items-center gap-1.5 text-status-success font-medium">
+                        <span class="material-symbols-outlined icon-sm">visibility</span> Sudah dilihat dosen
+                    </span>
+                    <span class="text-xs text-text-secondary">dibuka {{ $logbook->review_opened_at->diffForHumans() }}</span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 text-text-secondary font-medium">
+                        <span class="material-symbols-outlined icon-sm">visibility_off</span> Belum dilihat dosen
+                    </span>
+                @endif
+            </div>
+        @endif
 
         @if ($logbook->parentEntry)
             <div class="px-4 py-3 rounded-xl bg-brand/10 border border-brand/20 text-sm">
@@ -111,31 +127,35 @@
                 <div class="flex items-center gap-1.5 mb-1 text-xs font-semibold text-status-pending uppercase tracking-wide"><span class="material-symbols-outlined icon-sm">forum</span> Feedback Dosen</div>
                 <div class="text-sm">{{ $logbook->feedback_dosen }}</div>
             </div>
+        @endif
 
-            @if ($owner)
-                <div class="px-4 py-3 rounded-xl bg-bg-panel border border-border">
-                    <div class="flex items-center gap-1.5 mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wide">
-                        <span class="material-symbols-outlined icon-sm">checklist</span> Action Items
-                    </div>
-                    <div id="action-items-list" class="space-y-2">
-                        @forelse ($logbook->actionItems as $item)
-                            <div class="flex items-center gap-2 action-item-row" data-item-id="{{ $item->id }}">
-                                <input type="checkbox" class="action-item-toggle rounded bg-bg-surface" @checked($item->is_done)>
-                                <span class="flex-1 text-sm {{ $item->is_done ? 'line-through text-text-secondary' : '' }}">{{ $item->text }}</span>
-                                <button type="button" class="action-item-delete text-status-danger hover:underline text-xs">Hapus</button>
-                            </div>
-                        @empty
-                            <p class="text-sm text-text-secondary">Belum ada action item.</p>
-                        @endforelse
-                    </div>
-                    <form id="action-item-add-form" class="flex gap-2 mt-3">
-                        @csrf
-                        <input type="text" name="text" placeholder="Tambah action item..." maxlength="500"
-                            class="flex-1 rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
-                        <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Tambah</button>
-                    </form>
+        @if ($canManageActionItems)
+            <div class="px-4 py-3 rounded-xl bg-bg-panel border border-border">
+                <div class="flex items-center gap-1.5 mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wide">
+                    <span class="material-symbols-outlined icon-sm">checklist</span> Action Items
                 </div>
-            @endif
+                <div id="action-items-list" class="space-y-2">
+                    @forelse ($logbook->actionItems as $item)
+                        <div class="flex items-center gap-2 action-item-row" data-item-id="{{ $item->id }}">
+                            @if ($owner)
+                                <input type="checkbox" class="action-item-toggle rounded bg-bg-surface" @checked($item->is_done)>
+                            @else
+                                <span class="material-symbols-outlined icon-sm {{ $item->is_done ? '' : 'text-text-secondary' }}">{{ $item->is_done ? 'check_circle' : 'radio_button_unchecked' }}</span>
+                            @endif
+                            <span class="flex-1 text-sm {{ $item->is_done ? 'line-through text-text-secondary' : '' }}">{{ $item->text }}</span>
+                            <button type="button" class="action-item-delete text-status-danger hover:underline text-xs">Hapus</button>
+                        </div>
+                    @empty
+                        <p class="text-sm text-text-secondary">Belum ada action item.</p>
+                    @endforelse
+                </div>
+                <form id="action-item-add-form" class="flex gap-2 mt-3">
+                    @csrf
+                    <input type="text" name="text" placeholder="Tambah action item..." maxlength="500"
+                        class="flex-1 rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Tambah</button>
+                </form>
+            </div>
         @endif
 
         <div class="flex flex-wrap gap-2 text-sm">
@@ -183,6 +203,15 @@
             @else
                 <p class="text-xs text-text-secondary">Tidak ada file PDF pada entri ini untuk dianotasi.</p>
             @endif
+            <div class="px-4 py-3 rounded-xl bg-bg-panel border border-border">
+                <label class="block text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Tambah Action Item (checklist revisi)</label>
+                <form method="POST" action="{{ route('action-items.store', $logbook) }}" class="flex gap-2">
+                    @csrf
+                    <input type="text" name="text" maxlength="500" required placeholder="Checklist dari feedback Anda untuk mahasiswa..."
+                        class="flex-1 rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Tambah</button>
+                </form>
+            </div>
             <form method="POST" action="{{ route('logbook.approve', $logbook) }}" id="review-approve-form" class="mb-3"
                 data-pdf-opened="{{ $logbook->review_opened_at ? '1' : '0' }}"
                 data-has-pdf="{{ $logbook->lampiran_path || $logbook->catatan_perbaikan_path ? '1' : '0' }}">
@@ -205,19 +234,29 @@
 
 @section('scripts')
 <script>
-    // ---- Action items (mahasiswa pemilik) ----
+    // ---- Action items (pemilik boleh toggle + tambah; reviewer boleh tambah/hapus) ----
     var actionList = document.getElementById('action-items-list');
     var actionAddForm = document.getElementById('action-item-add-form');
     var logbookId = {{ $logbook->id }};
+    var ownerCanToggle = {{ $owner ? 'true' : 'false' }};
 
-    function actionItemRow(item) {
+    function actionItemRow(item, interactive) {
+        interactive = interactive !== undefined ? interactive : true;
         var row = document.createElement('div');
         row.className = 'flex items-center gap-2 action-item-row';
         row.dataset.itemId = item.id;
-        var checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'action-item-toggle rounded bg-bg-surface';
-        checkbox.checked = !!item.is_done;
+        if (interactive) {
+            var checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'action-item-toggle rounded bg-bg-surface';
+            checkbox.checked = !!item.is_done;
+            row.appendChild(checkbox);
+        } else {
+            var icon = document.createElement('span');
+            icon.className = 'material-symbols-outlined icon-sm ' + (item.is_done ? '' : 'text-text-secondary');
+            icon.textContent = item.is_done ? 'check_circle' : 'radio_button_unchecked';
+            row.appendChild(icon);
+        }
         var text = document.createElement('span');
         text.className = 'flex-1 text-sm' + (item.is_done ? ' line-through text-text-secondary' : '');
         text.textContent = item.text;
@@ -225,7 +264,6 @@
         del.type = 'button';
         del.className = 'action-item-delete text-status-danger hover:underline text-xs';
         del.textContent = 'Hapus';
-        row.appendChild(checkbox);
         row.appendChild(text);
         row.appendChild(del);
         return row;
@@ -282,7 +320,7 @@
                 input.value = '';
                 var empty = actionList.querySelector('p');
                 if (empty) empty.remove();
-                actionList.appendChild(actionItemRow(item));
+                actionList.appendChild(actionItemRow(item, ownerCanToggle));
             });
         });
     }

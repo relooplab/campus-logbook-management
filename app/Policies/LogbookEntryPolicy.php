@@ -111,6 +111,16 @@ class LogbookEntryPolicy
         return $user->isDosen() && in_array($user->id, $this->pembimbingIds($entry->mahasiswaTa, $entry), true);
     }
 
+    /**
+     * Boleh menambah/menghapus action item: mahasiswa pemilik (owner) ATAU
+     * dosen pembimbing/reviewer. Pemilik tetap satu-satunya yang boleh toggle
+     * status selesai (lihat policy update).
+     */
+    public function manageActionItems(User $user, LogbookEntry $entry): bool
+    {
+        return $this->owner($user, $entry) || $this->isReviewer($user, $entry);
+    }
+
     public function delete(User $user, LogbookEntry $entry): bool
     {
         return $this->owner($user, $entry);

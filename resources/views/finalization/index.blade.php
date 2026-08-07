@@ -29,11 +29,27 @@
         @endphp
         <div class="space-y-2">
             @foreach ($items as $key => $label)
-                <div class="flex items-center justify-between p-3 rounded-xl bg-bg-panel border border-border">
-                    <span class="text-sm font-medium">{{ $label }}</span>
-                    <span class="text-xs px-2 py-0.5 rounded-full {{ $finalization->{$key.'_status'} === 'approved' ? 'bg-status-success/10 text-status-success' : ($finalization->{$key.'_status'} === 'submitted' ? 'bg-status-pending/10 text-status-pending' : 'bg-bg-hover text-text-secondary') }}">
-                        {{ ucfirst($finalization->{$key.'_status'}) }}
-                    </span>
+                <div class="p-3 rounded-xl bg-bg-panel border border-border">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium">{{ $label }}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full {{ $finalization->{$key.'_status'} === 'approved' ? 'bg-status-success/10 text-status-success' : ($finalization->{$key.'_status'} === 'submitted' ? 'bg-status-pending/10 text-status-pending' : 'bg-bg-hover text-text-secondary') }}">
+                            {{ ucfirst($finalization->{$key.'_status'}) }}
+                        </span>
+                    </div>
+                    @php
+                        $rejected = $finalization->approvals->where('item', $key)->where('status', 'rejected');
+                    @endphp
+                    @if ($rejected->isNotEmpty())
+                        <div class="mt-2 space-y-1">
+                            <p class="text-xs font-semibold text-status-danger">Ditolak dengan alasan:</p>
+                            @foreach ($rejected as $ap)
+                                <div class="px-2 py-1.5 rounded-lg bg-status-danger/10 text-xs text-status-danger">
+                                    @if ($ap->pembimbing)<span class="font-medium">{{ $ap->pembimbing->name }}:</span>@endif
+                                    <span class="italic">"{{ $ap->alasan }}"</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             @endforeach
         </div>

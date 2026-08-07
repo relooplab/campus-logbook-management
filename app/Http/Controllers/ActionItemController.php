@@ -10,10 +10,12 @@ class ActionItemController extends Controller
 {
     /**
      * Tambah action item dari feedback revisi.
+     * Boleh dilakukan mahasiswa (owner) maupun dosen pembimbing/reviewer
+     * sehingga dosen bisa "mendorong" checklist langsung dari feedback-nya.
      */
     public function store(Request $request, LogbookEntry $logbook): JsonResponse
     {
-        $this->authorize('update', $logbook);
+        $this->authorize('manageActionItems', $logbook);
 
         $validated = $request->validate([
             'text' => ['required', 'string', 'max:500'],
@@ -42,7 +44,7 @@ class ActionItemController extends Controller
 
     public function destroy(Request $request, LogbookEntry $logbook, \App\Models\ActionItem $item): JsonResponse
     {
-        $this->authorize('update', $logbook);
+        $this->authorize('manageActionItems', $logbook);
         abort_unless($item->logbook_entry_id === $logbook->id, 404);
         $item->delete();
 

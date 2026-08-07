@@ -237,6 +237,30 @@
             </div>
         @endif
 
+        {{-- ===== Hasil Sidang / Seminar (dilihat mahasiswa) ===== --}}
+        @if ($sidangs->isNotEmpty())
+            <div class="card p-6">
+                <h2 class="font-heading font-semibold text-text-primary mb-3">Hasil {{ $ta->isKp() ? 'Seminar KP' : 'Sidang' }}</h2>
+                <div class="space-y-2">
+                    @foreach ($sidangs as $sidang)
+                        <div class="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-bg-panel border border-border">
+                            <div>
+                                <p class="text-sm font-medium text-text-primary">{{ $sidang->jenisLabel() }}</p>
+                                <p class="text-xs text-text-secondary">{{ $sidang->tanggal?->format('d M Y') }}</p>
+                            </div>
+                            @if ($sidang->hasil)
+                                <span class="badge {{ $sidang->hasil === 'lulus' ? 'badge-success' : '' }} {{ $sidang->hasil === 'lulus_revisi' ? 'badge-pending' : '' }} {{ $sidang->hasil === 'mengulang' ? 'badge-danger' : '' }}">
+                                    {{ $sidang->hasilLabel() }}
+                                </span>
+                            @else
+                                <span class="badge badge-neutral">Belum ada hasil</span>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         {{-- ===== Info Program + Progres ===== --}}
         <div class="grid md:grid-cols-3 gap-5">
             <div class="card p-6 md:col-span-2">

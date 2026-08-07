@@ -79,6 +79,9 @@
                         <th class="py-3 px-4">Topik</th>
                         <th class="py-3 px-4 table-col-tanggal">Tanggal</th>
                         <th class="py-3 px-4">Status</th>
+                        @if (auth()->user()->isMahasiswa())
+                            <th class="py-3 px-4">Dilihat</th>
+                        @endif
                         <th class="py-3 px-4">Aksi</th>
                     </tr>
                 </thead>
@@ -102,6 +105,19 @@
                             <td class="py-3 px-4">{{ $entry->topik ?? 'Revisi' }}</td>
                             <td class="py-3 px-4 table-col-tanggal">{{ $entry->tanggal_tampil?->format('d M Y') ?? '—' }}</td>
                             <td class="py-3 px-4">@include('partials.status-badge', ['status' => $entry->status, 'entry' => $entry])</td>
+                            @if ($isMahasiswa)
+                                <td class="py-3 px-4">
+                                    @if ($entry->review_opened_at)
+                                        <span class="inline-flex items-center gap-1 text-status-success text-xs" title="Dibuka dosen {{ $entry->review_opened_at->diffForHumans() }}">
+                                            <span class="material-symbols-outlined icon-sm">visibility</span> Sudah
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 text-text-secondary text-xs">
+                                            <span class="material-symbols-outlined icon-sm">visibility_off</span> Belum
+                                        </span>
+                                    @endif
+                                </td>
+                            @endif
                             <td class="py-3 px-4">
                                 <a href="{{ route('logbook.show', $entry) }}" class="text-brand hover:underline">Detail</a>
                             </td>

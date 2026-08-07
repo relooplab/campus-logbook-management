@@ -46,7 +46,11 @@
                                     <form method="POST" action="{{ route('finalization.approve', [$f, $key]) }}">@csrf
                                         <button class="px-2 py-1 rounded-lg bg-status-success/10 text-status-success text-xs">Approve</button>
                                     </form>
-                                    <form method="POST" action="{{ route('finalization.reject', [$f, $key]) }}">@csrf
+                                    <form method="POST" action="{{ route('finalization.reject', [$f, $key]) }}" class="flex flex-col gap-1 items-end"
+                                        onsubmit="return confirm('Tolak item ini? Alasan akan wajib diisi.')">
+                                        @csrf
+                                        <input type="text" name="alasan" required minlength="5" maxlength="1000" placeholder="Alasan penolakan (min. 5 karakter)..."
+                                            class="w-48 rounded-lg border border-border bg-bg-surface px-2 py-1 text-xs">
                                         <button class="px-2 py-1 rounded-lg bg-status-danger/10 text-status-danger text-xs">Tolak</button>
                                     </form>
                                 @endif

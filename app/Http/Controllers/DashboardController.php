@@ -271,6 +271,11 @@ class DashboardController extends Controller
 
         $nilai = $ta?->finalization?->nilai;
 
+        // ---- Ringkasan hasil sidang/seminar (untuk dilihat mahasiswa sendiri) ----
+        $sidangs = $ta
+            ? $ta->sidangs()->orderByDesc('tanggal')->get()
+            : collect();
+
         // ---- Agenda terdekat (jadwal seminar/sidang yang akan datang) ----
         $agendaTerdekat = $ta
             ? SeminarSubmission::where('mahasiswa_ta_id', $ta->id)
@@ -305,7 +310,7 @@ class DashboardController extends Controller
             'stats', 'timeline', 'heatmap', 'regularity', 'regularityTooltip',
             'unreadAnnouncements',
             'draftCount', 'revisiCount', 'unresolvedActionItems',
-            'university', 'nilai', 'agendaTerdekat', 'seminarSubmission',
+            'university', 'nilai', 'sidangs', 'agendaTerdekat', 'seminarSubmission',
             'mahasiswaStatus', 'pendingApproval', 'rejectedProgram', 'profileIncomplete'
         ));
     }
