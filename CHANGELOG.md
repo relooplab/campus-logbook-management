@@ -1,3 +1,10 @@
+# [0.33.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.32.0...v0.33.0) (2026-08-09)
+
+
+### Features
+
+* dosen storage quota, atomic sesi_ke, stricter admin scope, richer release version ([c0516cc](https://github.com/relooplab/thesis-logbook-management/commit/c0516ccc6a8c02decc16a4f2f907be42b03e7aa1))
+
 # [0.32.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.31.0...v0.32.0) (2026-08-09)
 
 
