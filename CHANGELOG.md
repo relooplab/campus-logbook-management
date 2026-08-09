@@ -1,3 +1,10 @@
+# [0.31.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.30.0...v0.31.0) (2026-08-09)
+
+
+### Features
+
+* require mahasiswa university affiliation (to study program) before dosen selection ([3aa33f0](https://github.com/relooplab/thesis-logbook-management/commit/3aa33f0b1f2d49d10a39d44e624785e524a3d1f6))
+
 # [0.30.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.29.1...v0.30.0) (2026-08-09)
 
 
