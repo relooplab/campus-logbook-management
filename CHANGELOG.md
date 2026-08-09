@@ -1,3 +1,10 @@
+## [0.29.1](https://github.com/relooplab/thesis-logbook-management/compare/v0.29.0...v0.29.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* null-safe logbook progres_kendala, nullable catatan_hardcopy, default hardcopy note accessor ([dff4e29](https://github.com/relooplab/thesis-logbook-management/commit/dff4e2963db4f81352e857b96db197fe38d374e1))
+
 # [0.29.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.28.0...v0.29.0) (2026-08-07)
 
 
