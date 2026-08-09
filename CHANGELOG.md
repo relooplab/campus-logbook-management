@@ -1,3 +1,10 @@
+# [0.32.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.31.0...v0.32.0) (2026-08-09)
+
+
+### Features
+
+* audit log for sensitive admin & auth actions, dynamic release version, duplicate-dosen guard ([13cc6f1](https://github.com/relooplab/thesis-logbook-management/commit/13cc6f13b8d8f4919629b8c2d5970df7bbbb6b02))
+
 # [0.31.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.30.0...v0.31.0) (2026-08-09)
 
 
