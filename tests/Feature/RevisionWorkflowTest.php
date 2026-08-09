@@ -161,4 +161,24 @@ class RevisionWorkflowTest extends AuditSmokeTest
             ->post(route('logbook.request-revisi', $this->entrySubmitted), ['feedback_dosen' => 'Perbaiki.'])
             ->assertSessionHasErrors('feedback_dosen');
     }
+
+    public function test_dosen_sidang_grade_route_is_registered(): void
+    {
+        // Regression guard: dosen-sidang.grade route was missing in feat/revisi-mahasiswa-workflow-rerun
+        // while resources/views/dosen-sidang/index.blade.php still calls route('dosen-sidang.grade').
+        $this->assertNotNull(
+            \Route::getRoutes()->getByName('dosen-sidang.grade'),
+            'Route dosen-sidang.grade harus terdaftar agar view dosen-sidang/index tidak throw RouteNotFoundException.'
+        );
+    }
+
+    public function test_seminar_submission_convert_to_sidang_route_is_not_registered(): void
+    {
+        // Out-of-scope route yang ditambahkan di feat/revisi-mahasiswa-workflow-rerun
+        // harus dihapus: tidak ada caller, dan SeminarSubmissionController tidak punya convertToSidang().
+        $this->assertNull(
+            \Route::getRoutes()->getByName('seminar-submission.convert-to-sidang'),
+            'Route seminar-submission.convert-to-sidang di luar scope revisi-mahasiswa dan harus dihapus.'
+        );
+    }
 }

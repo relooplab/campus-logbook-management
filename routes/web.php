@@ -76,6 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role_or_permission:dosen|admin')->group(function () {
         Route::get('/dosen-sidang', [DosenSidangController::class, 'index'])->name('dosen-sidang.index');
         Route::post('/dosen-sidang', [DosenSidangController::class, 'store'])->name('dosen-sidang.store');
+        Route::post('/dosen-sidang/{sidang}/grade', [DosenSidangController::class, 'grade'])->name('dosen-sidang.grade');
         Route::delete('/dosen-sidang/{sidang}', [DosenSidangController::class, 'destroy'])->name('dosen-sidang.destroy');
     });
     Route::get('/dashboard/dosen/mahasiswa-list', [DashboardController::class, 'dosenMahasiswaList'])->name('dashboard.dosen.mahasiswa-list');
@@ -188,7 +189,6 @@ Route::middleware('auth')->group(function () {
     Route::put('/seminar-submission/{submission}/hardcopy-note', [SeminarSubmissionController::class, 'updateHardcopyNote'])->name('seminar-submission.hardcopy-note');
     Route::get('/seminar-submission/{submission}/undangan/download', [SeminarSubmissionController::class, 'downloadUndangan'])->name('seminar-submission.undangan-download');
     Route::get('/seminar-submission/{submission}/materi/download', [SeminarSubmissionController::class, 'downloadMateri'])->name('seminar-submission.materi-download');
-    Route::post('/seminar-submission/{submission}/convert-to-sidang', [SeminarSubmissionController::class, 'convertToSidang'])->name('seminar-submission.convert-to-sidang');
 
     // -------------------------------------------------- finalisasi TA/KP
     // NOTE: /finalisasi/review HARUS didefinisikan sebelum /finalisasi/{mahasiswaTa}
