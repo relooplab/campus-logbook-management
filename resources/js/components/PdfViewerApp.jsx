@@ -244,12 +244,8 @@ function PdfViewerApp() {
         resolved: d.resolution_status === 'resolved',
         resolutionStatus: d.resolution_status,
       } : x)));
-      // Perbarui juga state selected agar modal tetap terbuka dan menampilkan status terbaru
-      setSelected((s) => (s && s.id === id ? {
-        ...s,
-        resolved: d.resolution_status === 'resolved',
-        resolutionStatus: d.resolution_status,
-      } : s));
+      // Tutup dialog anotasi setelah status resolve berhasil diperbarui
+      setSelected(null);
     } catch (e) {
       alert('Gagal mengubah status anotasi.');
     }
