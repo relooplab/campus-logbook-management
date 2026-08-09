@@ -89,7 +89,7 @@ class LogbookController extends Controller
             'topik' => $data['topik'],
             'sesi_ke' => $sesiKe,
             'jenis' => LogbookEntry::JENIS_LOGBOOK,
-            'progres_kendala' => $data['progres_kendala'],
+            'progres_kendala' => $data['progres_kendala'] ?? null,
             'status' => $submit ? LogbookEntry::STATUS_SUBMITTED : LogbookEntry::STATUS_DRAFT,
             'submitted_at' => $submit ? now() : null,
         ]);
@@ -170,7 +170,7 @@ class LogbookController extends Controller
                 'jenis' => LogbookEntry::JENIS_REVISI,
                 'dosen_id' => $parent?->dosen_id ?: $parent?->reviewDosen()?->id ?: $ta->pembimbing_1_id,
                 'topik' => $parent?->topik,
-                'progres_kendala' => $data['progres_kendala'],
+                'progres_kendala' => $data['progres_kendala'] ?? null,
                 'tanggal_pengiriman' => $data['tanggal_pengiriman'],
                 'status' => $submit ? LogbookEntry::STATUS_SUBMITTED : LogbookEntry::STATUS_REVISION_IN_PROGRESS,
                 'submitted_at' => $submit ? now() : null,

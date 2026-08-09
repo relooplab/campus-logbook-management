@@ -83,6 +83,15 @@ class Institution extends Model
     }
 
     /**
+     * Catatan default untuk form hardcopy seminar/sidang.
+     * Mengembalikan string (bukan null) walau kolom DB null / model cached lama.
+     */
+    public function getSeminarHardcopyNoteAttribute($value): string
+    {
+        return (string) ($value ?? '');
+    }
+
+    /**
      * Sinkron nilai brand + pengaturan email ke konfigurasi yang berjalan.
      * Dipanggil di AppServiceProvider::boot() setiap request.
      */
