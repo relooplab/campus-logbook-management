@@ -128,5 +128,26 @@
         jenisSelect.addEventListener('change', sync);
         sync();
     })();
+
+    // Sembunyikan dosen yang sudah dipilih di field lain (cegah duplikat).
+    (function () {
+        var dosenSelects = Array.from(document.querySelectorAll('[name^="pembimbing_"], [name^="penguji_"]'));
+        if (!dosenSelects.length) return;
+
+        function sync() {
+            var taken = [];
+            dosenSelects.forEach(function (s) { if (s.value) taken.push(s.value); });
+            dosenSelects.forEach(function (s) {
+                Array.from(s.options).forEach(function (opt) {
+                    if (opt.value === '') return; // placeholder
+                    var usedElsewhere = taken.indexOf(opt.value) !== -1 && opt.value !== s.value;
+                    opt.hidden = usedElsewhere;
+                });
+            });
+        }
+
+        dosenSelects.forEach(function (s) { s.addEventListener('change', sync); });
+        sync();
+    })();
 </script>
 @endsection

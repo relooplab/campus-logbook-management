@@ -105,6 +105,12 @@ class AdminController extends Controller
         ]);
         $user->syncRoles($validated['roles']);
 
+        \App\Support\Audit::log('Admin membuat pengguna', [
+            'target_user_id' => $user->id,
+            'target_email' => $user->email,
+            'roles' => $validated['roles'],
+        ]);
+
         return back()->with('success', 'Pengguna berhasil dibuat.');
     }
 
@@ -148,6 +154,13 @@ class AdminController extends Controller
             }
         }
 
+        \App\Support\Audit::log('SysAdmin mengubah institusi user', [
+            'target_user_id' => $user->id,
+            'target_email' => $user->email,
+            'institusi_asal' => $oldInstitutionId,
+            'institusi_baru' => $newInstitutionId,
+        ]);
+
         $action = $newInstitutionId ? 'diadopsi ke institusi' : 'dikeluarkan dari institusi';
         return back()->with('success', "User '{$user->name}' {$action}.");
     }
@@ -168,7 +181,10 @@ class AdminController extends Controller
             return back()->with('error', 'Tidak dapat mengelola user dari institusi lain.');
         }
 
+        $target = ['target_user_id' => $user->id, 'target_email' => $user->email, 'target_name' => $user->name];
         $user->delete();
+
+        \App\Support\Audit::log('Admin menghapus user', $target);
 
         return back()->with('success', 'Pengguna dihapus.');
     }
@@ -195,6 +211,11 @@ class AdminController extends Controller
         }
 
         $user->update(['password' => $validated['password']]);
+
+        \App\Support\Audit::log('Admin mereset password user', [
+            'target_user_id' => $user->id,
+            'target_email' => $user->email,
+        ]);
 
         return back()->with('success', "Password '{$user->name}' berhasil direset.");
     }
@@ -274,6 +295,13 @@ class AdminController extends Controller
                 ]);
             }
         }
+
+        \App\Support\Audit::log('SysAdmin membuat akun admin', [
+            'target_user_id' => $user->id,
+            'target_email' => $user->email,
+            'institution_id' => $user->institution_id,
+            'scopes' => array_map(fn ($s) => $s['scope_type'].':'.$s['scope_id'], $validated['scopes'] ?? []),
+        ]);
 
         return back()->with('success', 'Akun admin berhasil dibuat.');
     }
@@ -361,6 +389,12 @@ class AdminController extends Controller
             ]);
         }
 
+        \App\Support\Audit::log('Admin membuat sub-admin', [
+            'target_user_id' => $user->id,
+            'target_email' => $user->email,
+            'scopes' => array_map(fn ($s) => $s['scope_type'].':'.$s['scope_id'], $validated['scopes']),
+        ]);
+
         return back()->with('success', 'Akun admin berhasil dibuat.');
     }
 
@@ -404,7 +438,10 @@ class AdminController extends Controller
             return back()->with('error', 'User ini bukan akun admin.');
         }
 
+        $target = ['target_user_id' => $user->id, 'target_email' => $user->email, 'target_name' => $user->name];
         $user->delete();
+
+        \App\Support\Audit::log('SysAdmin menghapus akun admin', $target);
 
         return back()->with('success', 'Akun admin dihapus.');
     }
@@ -423,6 +460,11 @@ class AdminController extends Controller
         }
 
         $user->update(['password' => $validated['password']]);
+
+        \App\Support\Audit::log('SysAdmin mereset password admin', [
+            'target_user_id' => $user->id,
+            'target_email' => $user->email,
+        ]);
 
         return back()->with('success', "Password admin '{$user->name}' berhasil direset.");
     }
@@ -689,6 +731,12 @@ class AdminController extends Controller
             ]);
         }
 
+        \App\Support\Audit::log('Admin mengubah paket langganan user', [
+            'target_user_id' => $user->id,
+            'target_email' => $user->email,
+            'plan_id' => $validated['plan_id'],
+        ]);
+
         return back()->with('success', "Paket '{$user->name}' diperbarui.");
     }
 
@@ -743,6 +791,12 @@ class AdminController extends Controller
             'assigned_by' => $request->user()->id,
         ]);
 
+        \App\Support\Audit::log('SysAdmin assign langganan direktori', [
+            'scope_type' => $validated['scope_type'],
+            'scope_id' => (int) $validated['scope_id'],
+            'plan_id' => $validated['plan_id'],
+        ]);
+
         return back()->with('success', 'Langganan direktori berhasil di-assign.');
     }
 
@@ -752,6 +806,12 @@ class AdminController extends Controller
     public function cancelDirectorySubscription(Request $request, \App\Models\DirectorySubscription $subscription): RedirectResponse
     {
         $subscription->update(['status' => \App\Models\DirectorySubscription::STATUS_CANCELLED]);
+
+        \App\Support\Audit::log('SysAdmin membatalkan langganan direktori', [
+            'subscription_id' => $subscription->id,
+            'scope_type' => $subscription->scope_type,
+            'scope_id' => (int) $subscription->scope_id,
+        ]);
 
         return back()->with('success', 'Langganan direktori dibatalkan.');
     }
@@ -781,6 +841,10 @@ class AdminController extends Controller
             $granted = $request->input("permissions.{$role->id}", []);
             $role->syncPermissions($granted);
         }
+
+        \App\Support\Audit::log('Admin mengubah hak akses (permissions) role', [
+            'permissions_per_role' => $request->input('permissions', []),
+        ]);
 
         return back()->with('success', 'Hak akses role berhasil diperbarui.');
     }
@@ -812,6 +876,10 @@ class AdminController extends Controller
                 ],
             ]);
         }
+
+        \App\Support\Audit::log('Admin mengubah pengaturan paket (plan features)', [
+            'plan_ids' => array_keys($validated['plans'] ?? []),
+        ]);
 
         return back()->with('success', 'Pengaturan paket berhasil diperbarui.');
     }
@@ -967,6 +1035,12 @@ class AdminController extends Controller
             $validated['jenis']
         );
 
+        \App\Support\Audit::log('Admin mengubah konfigurasi penamaan program', [
+            'scope_type' => $validated['scope_type'],
+            'scope_id' => (int) $validated['scope_id'],
+            'jenis' => $validated['jenis'],
+        ]);
+
         return back()->with('success', 'Konfigurasi penamaan program berhasil disimpan.');
     }
 
@@ -1020,6 +1094,12 @@ class AdminController extends Controller
         $institution->update($validated);
         Institution::flush($institution->id);
         $institution->applyToConfig();
+
+        \App\Support\Audit::log('Admin mengubah profil institusi / pengaturan', [
+            'institution_id' => $institution->id,
+            'institution_name' => $institution->institution_name,
+            'field_berubah' => array_values(array_diff(array_keys($validated), ['mail_password'])),
+        ]);
 
         return back()->with('success', 'Profil institusi & pengaturan email diperbarui.');
     }
@@ -1120,11 +1200,24 @@ class AdminController extends Controller
             $count = MahasiswaTa::whereIn('id', $validated['ids'])
                 ->update(['pembimbing_1_id' => $dosen->id]);
 
+            \App\Support\Audit::log('Admin bulk assign dosen', [
+                'action' => 'assign_dosen',
+                'dosen_id' => $dosen->id,
+                'count' => $count,
+                'ids' => $validated['ids'],
+            ]);
+
             return back()->with('success', "{$count} data TA di-assign pembimbing 1.");
         }
 
         if ($validated['action'] === 'delete') {
             $count = \App\Models\LogbookEntry::whereIn('id', $validated['ids'])->delete();
+
+            \App\Support\Audit::log('Admin bulk hapus entri', [
+                'action' => 'delete',
+                'count' => $count,
+                'ids' => $validated['ids'],
+            ]);
 
             return back()->with('success', "{$count} entri dihapus.");
         }
@@ -1169,6 +1262,12 @@ class AdminController extends Controller
                 );
             }
         }
+
+        \App\Support\Audit::log('Admin bulk '.$validated['action'], [
+            'action' => $validated['action'],
+            'count' => $entries->count(),
+            'ids' => $validated['ids'],
+        ]);
 
         return back()->with('success', $entries->count().' entri berhasil diproses.');
     }

@@ -215,6 +215,10 @@ class ProfileController extends Controller
             $validated['penguji_1_id'] ?? null,
             $validated['penguji_2_id'] ?? null,
         ]);
+
+        // Cegah dosen yang sama dipilih lebih dari satu peran.
+        abort_unless(count($dosenIds) === count(array_unique($dosenIds)), 422, 'Dosen yang sama tidak boleh dipilih lebih dari satu kali pada form yang sama.');
+
         $validDosen = \App\Models\User::role('dosen')
             ->where('registration_status', 'active')
             ->whereHas('universities', fn ($q) => $q->whereKey($affiliation->id))

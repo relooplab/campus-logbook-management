@@ -27,6 +27,7 @@ class LoginController extends Controller
 
             // Akun yang benar-benar ditolak/dinonaktifkan tidak boleh login.
             if ($user->registration_status === 'rejected') {
+                \App\Support\Audit::log('Login ditolak (akun rejected)', ['email' => $credentials['email'], 'user_id' => $user->id]);
                 Auth::logout();
                 $request->session()->invalidate();
 
@@ -37,8 +38,12 @@ class LoginController extends Controller
 
             $request->session()->regenerate();
 
+            \App\Support\Audit::log('Login berhasil', ['email' => $credentials['email'], 'user_id' => $user->id]);
+
             return redirect()->intended(route('dashboard'));
         }
+
+        \App\Support\Audit::log('Login gagal', ['email' => $credentials['email']]);
 
         return back()
             ->withErrors(['email' => 'Kredensial tidak cocok.'])

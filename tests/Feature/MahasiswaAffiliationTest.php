@@ -154,4 +154,17 @@ class MahasiswaAffiliationTest extends TestCase
             'pembimbing_1_id' => $this->dosenA->id,
         ])->assertRedirect(route('dashboard'));
     }
+
+    public function test_store_dosen_rejects_duplicate_dosen(): void
+    {
+        $this->saveAffiliation($this->mhs, $this->univ1, $this->fac1, $this->dept1, $this->prodi1);
+
+        // Dosen yang sama dipilih di dua peran → ditolak (422).
+        $this->actingAs($this->mhs)->post(route('profile.store-dosen'), [
+            'jenis' => 'ta',
+            'fase' => 'proposal',
+            'pembimbing_1_id' => $this->dosenA->id,
+            'penguji_1_id' => $this->dosenA->id,
+        ])->assertStatus(422);
+    }
 }
