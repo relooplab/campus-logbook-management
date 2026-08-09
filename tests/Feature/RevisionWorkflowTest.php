@@ -121,6 +121,29 @@ class RevisionWorkflowTest extends AuditSmokeTest
             ->assertJsonPath('resolution_status', PdfComment::STATUS_RESOLVED);
     }
 
+    public function test_create_revisi_prefills_rows_from_parent_comments(): void
+    {
+        $this->entrySubmitted->update([
+            'status' => LogbookEntry::STATUS_REVISI,
+            'reviewed_at' => now(),
+        ]);
+
+        $this->entrySubmitted->comments()->create([
+            'user_id' => $this->dosen->id,
+            'file_type' => PdfComment::FILE_TYPE_DRAFT,
+            'page_number' => 3,
+            'comment' => 'Perbaiki diagram pada bab ini.',
+            'resolution_status' => PdfComment::STATUS_OPEN,
+            'is_resolved' => false,
+        ]);
+
+        $this->actingAs($this->mhs)
+            ->get(route('logbook.create-revisi', ['parent_entry_id' => $this->entrySubmitted->id]))
+            ->assertOk()
+            ->assertSee('Hal. 3')
+            ->assertSee('Perbaiki diagram pada bab ini.');
+    }
+
     public function test_revision_feedback_must_be_meaningful(): void
     {
         $this->actingAs($this->dosen)

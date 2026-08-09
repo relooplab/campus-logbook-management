@@ -72,10 +72,12 @@
 
             {{-- Feedback & komentar parent --}}
             @foreach ($parents as $parent)
-                <div data-parent-feedback="{{ $parent->id }}" class="rounded-xl bg-bg-panel border border-border p-3 space-y-2 hidden mt-3">
+                @php $openComments = $parent->comments->where('resolution_status', '!=', \App\Models\PdfComment::STATUS_RESOLVED); @endphp
+                <div data-parent-feedback="{{ $parent->id }}"
+                    data-comments="@json($openComments->map(fn ($c) => ['page_number' => $c->page_number, 'comment' => $c->comment, 'reply' => $c->reply])->values())"
+                    class="rounded-xl bg-bg-panel border border-border p-3 space-y-2 hidden mt-3">
                     <p class="text-xs font-semibold text-text-secondary">Umpan Balik entri #{{ $parent->id }}</p>
                     <p class="text-sm whitespace-pre-wrap">{{ $parent->feedback_dosen ?: "Tidak ada feedback teks." }}</p>
-                    @php $openComments = $parent->comments->where('resolution_status', '!=', \App\Models\PdfComment::STATUS_RESOLVED); @endphp
                     @if ($openComments->isNotEmpty())
                         <p class="text-xs font-semibold text-text-secondary pt-1">Komentar PDF yang belum diselesaikan:</p>
                         @foreach ($openComments as $comment)
@@ -100,7 +102,7 @@
             <p class="text-xs text-text-secondary mb-3">Isi kartu perbaikan sesuai komentar dosen. PDF catatan perbaikan dibuat otomatis oleh sistem.</p>
 
             <div id="kartu-perbaikan" class="space-y-3">
-                @forelse ($oldRiwayat as $i => $row)
+                @forelse ($initialRows as $i => $row)
                     <div class="perbaikan-card rounded-xl bg-bg-panel border border-border p-4 space-y-2">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-semibold text-text-secondary">Perbaikan #{{ $i + 1 }}</span>
@@ -217,9 +219,12 @@
                 @enderror
             </div>
 
-            <div class="mt-4 flex justify-between">
+            <div class="mt-4 flex justify-between items-center">
                 <button type="button" class="wizard-prev px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali</button>
-                <button type="button" class="wizard-next px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Lanjut →</button>
+                <div class="flex flex-col items-end gap-1">
+                    <p id="upload-hint" class="hidden text-xs text-status-danger">Unggah file perbaikan terlebih dahulu sebelum lanjut ke Review.</p>
+                    <button type="button" id="lanjut-upload" class="wizard-next px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Lanjut →</button>
+                </div>
             </div>
         </div>
 
@@ -261,7 +266,7 @@
             <div class="mt-4 flex flex-wrap gap-2">
                 <button type="button" class="wizard-prev px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali</button>
                 <button type="submit" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Simpan Draft</button>
-                <button type="submit" name="submit" value="1" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Kirim ke Dosen</button>
+                <button type="submit" name="submit" value="1" id="btn-kirim" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Kirim ke Dosen</button>
             </div>
         </div>
     </form>
@@ -274,7 +279,20 @@
     var stepButtons = document.querySelectorAll('.wizard-step');
     var panels = document.querySelectorAll('.wizard-panel');
 
+    var fileInputEl = document.getElementById('lampiran');
+    var uploadHintEl = document.getElementById('upload-hint');
+    function hasFile() {
+        return fileInputEl && fileInputEl.files && fileInputEl.files.length > 0;
+    }
     function showStep(n) {
+        if (n === 4 && !hasFile()) {
+            n = 3;
+            if (uploadHintEl) {
+                uploadHintEl.classList.remove('hidden');
+                setTimeout(function () { uploadHintEl.classList.add('hidden'); }, 4000);
+            }
+            if (fileInputEl) fileInputEl.focus();
+        }
         currentStep = Math.max(1, Math.min(totalSteps, n));
         panels.forEach(function (p) { p.classList.toggle('hidden', parseInt(p.dataset.panel) !== currentStep); });
         stepButtons.forEach(function (b) {
@@ -297,6 +315,25 @@
     stepButtons.forEach(function (btn) {
         btn.addEventListener('click', function () { showStep(parseInt(btn.dataset.step)); });
     });
+
+    // ===== Upload wajib sebelum Review & Kirim =====
+    function updateUploadGate() {
+        var ok = hasFile();
+        var lanjut = document.getElementById('lanjut-upload');
+        if (lanjut) lanjut.classList.toggle('opacity-60', !ok);
+        var kirim = document.getElementById('btn-kirim');
+        if (kirim) {
+            kirim.disabled = !ok;
+            kirim.classList.toggle('opacity-60', !ok);
+        }
+    }
+    if (fileInputEl) {
+        fileInputEl.addEventListener('change', function () {
+            updateUploadGate();
+            if (uploadHintEl) uploadHintEl.classList.add('hidden');
+        });
+    }
+    updateUploadGate();
 
     // ===== Counter pesan =====
     var pesanInput = document.getElementById('progres_kendala');
@@ -366,15 +403,16 @@
     // ===== Feedback parent toggle =====
     var parentSelect = document.getElementById('parent_entry_id');
     var parentCards = document.querySelectorAll('[data-parent-feedback]');
-    function fillTableFromComments(comments) {
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        if (!comments || !comments.length) {
-            for (var k = 0; k < 5; k++) addRow();
+    function fillCardsFromComments(comments) {
+        if (!kartuContainer) return;
+        kartuContainer.innerHTML = '';
+        comments = comments || [];
+        if (!comments.length) {
+            addKartu();
             return;
         }
         comments.forEach(function (c) {
-            addRow({
+            addKartu({
                 halaman: c.page_number ? 'Hal. ' + c.page_number : '',
                 komentar_dosen: c.comment || '',
                 perbaikan: c.reply || '',
@@ -382,8 +420,8 @@
             });
         });
     }
-    var initialParentSyncDone = false;
-    function syncParentFeedback() {
+    var lastSyncedParent = parentSelect ? parentSelect.value : '';
+    function syncParentFeedback(fill) {
         if (!parentSelect) return;
         parentCards.forEach(function (card) {
             var active = card.dataset.parentFeedback === parentSelect.value;
@@ -391,18 +429,25 @@
             card.querySelectorAll('input[name="addressed_comment_ids[]"]').forEach(function (input) {
                 input.disabled = !active;
             });
-            if (active && initialParentSyncDone) {
+        });
+        if (fill && parentSelect.value !== lastSyncedParent) {
+            var activeCard = null;
+            parentCards.forEach(function (card) {
+                if (card.dataset.parentFeedback === parentSelect.value) activeCard = card;
+            });
+            if (activeCard) {
                 try {
-                    var comments = JSON.parse(card.dataset.comments || '[]');
-                    fillTableFromComments(comments);
+                    var comments = JSON.parse(activeCard.dataset.comments || '[]');
+                    fillCardsFromComments(comments);
                 } catch (e) {}
             }
-        });
+            lastSyncedParent = parentSelect.value;
+        }
     }
     if (parentSelect) {
-        parentSelect.addEventListener('change', syncParentFeedback);
-        syncParentFeedback();
-        initialParentSyncDone = true;
+        parentSelect.addEventListener('change', function () { syncParentFeedback(true); });
+        syncParentFeedback(false);
+        lastSyncedParent = parentSelect.value;
     }
 
     // ===== Review ringkasan =====
@@ -480,8 +525,8 @@
             document.getElementById('progres_kendala').value = saved.progres_kendala;
             // Restore riwayat rows.
             if (saved.riwayat && saved.riwayat.length) {
-                tbody.innerHTML = '';
-                saved.riwayat.forEach(function (r) { addRow(r); });
+                kartuContainer.innerHTML = '';
+                saved.riwayat.forEach(function (r) { addKartu(r); });
             }
             msg.textContent = 'Draf dipulihkan dari penyimpanan otomatis.';
             restoreBtn.classList.add('hidden');
@@ -493,8 +538,8 @@
             document.getElementById('tanggal_pengiriman').value = '';
             document.getElementById('parent_entry_id').value = '';
             document.getElementById('progres_kendala').value = '';
-            tbody.innerHTML = '';
-            addRow();
+            kartuContainer.innerHTML = '';
+            addKartu();
             msg.textContent = 'Draft dibuang.';
             restoreBtn.classList.add('hidden');
             discardBtn.classList.add('hidden');
