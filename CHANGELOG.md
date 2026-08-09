@@ -1,3 +1,15 @@
+# [0.30.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.29.1...v0.30.0) (2026-08-09)
+
+
+### Bug Fixes
+
+* close annotation modal after student marks as fixed ([21ce200](https://github.com/relooplab/thesis-logbook-management/commit/21ce200b7e2ebbc1d53caf9520d0af6c67a3ba4b))
+
+
+### Features
+
+* prefill revision cards from PDF comments and gate submission on upload ([689e6a3](https://github.com/relooplab/thesis-logbook-management/commit/689e6a37cdb64c6ca2a886901ede11c157e51e94))
+
 ## [0.29.1](https://github.com/relooplab/thesis-logbook-management/compare/v0.29.0...v0.29.1) (2026-08-09)
 
 
