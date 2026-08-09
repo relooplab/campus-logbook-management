@@ -29,7 +29,7 @@
     @endif
 
     {{-- ===== Banner status mahasiswa (aktif/verified) ===== --}}
-    @if ($mahasiswaStatus === 'active' && !$profileIncomplete && (!$ta || $rejectedProgram))
+    @if ($mahasiswaStatus === 'active' && (!$profileIncomplete || $rejectedProgram) && (!$ta || $rejectedProgram))
         <div class="px-4 py-3.5 rounded-card border border-status-pending/30 bg-status-pending/10 flex flex-wrap items-center gap-3">
             <span class="material-symbols-outlined icon-md shrink-0 text-status-pending">person_add</span>
             <div class="flex-1 min-w-0 text-sm">

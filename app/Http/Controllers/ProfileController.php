@@ -23,7 +23,11 @@ class ProfileController extends Controller
         $user = $request->user();
         $programs = $user->allPrograms()->with(['pembimbing1', 'pembimbing2', 'members'])->get();
 
-        return view('profile.index', ['user' => $user, 'programs' => $programs]);
+        // Direktori untuk card afiliasi mahasiswa (pilih dari data yang sudah ada).
+        $universities = University::orderBy('name')->with('faculties.departments.studyPrograms')->get();
+        $affiliation = $user->primaryUniversity();
+
+        return view('profile.index', compact('user', 'programs', 'universities', 'affiliation'));
     }
 
     /**
@@ -123,16 +127,22 @@ class ProfileController extends Controller
                 ->with('warning', 'Lengkapi profil Anda (NIM & WhatsApp) terlebih dahulu sebelum memilih dosen.');
         }
 
-        // Daftar dosen yang aktif (registration_status = active).
-        $dosenList = \App\Models\User::role('dosen')
-            ->where('registration_status', 'active')
-            ->orderBy('name')
-            ->get();
-
-        // Label fase kustom berdasarkan afiliasi mahasiswa (prodi/departemen).
+        // Afiliasi mahasiswa wajib terisi sampai tingkat prodi — menjadi filter
+        // pencarian dosen pada langkah berikutnya.
         $affiliation = $user->universities()
             ->orderByDesc('user_university.is_primary')
             ->first();
+        if (! $affiliation?->pivot?->study_program_id) {
+            return redirect()->route('profile.index')
+                ->with('warning', 'Lengkapi afiliasi perguruan tinggi Anda (sampai program studi) terlebih dahulu sebelum memilih dosen.');
+        }
+
+        // Daftar dosen aktif — difilter oleh perguruan tinggi mahasiswa.
+        $dosenList = \App\Models\User::role('dosen')
+            ->where('registration_status', 'active')
+            ->whereHas('universities', fn ($q) => $q->whereKey($affiliation->id))
+            ->orderBy('name')
+            ->get();
         $namingService = app(\App\Services\ProgramNamingService::class);
         $faseLabelsTa = $namingService->faseLabelsFor(
             $user->institution_id,
@@ -159,7 +169,7 @@ class ProfileController extends Controller
             $affiliation?->pivot->department_id
         );
 
-        return view('profile.select-dosen', compact('user', 'dosenList', 'faseLabelsTa', 'faseLabelsKp', 'jenisLabelTa', 'jenisLabelKp'));
+        return view('profile.select-dosen', compact('user', 'affiliation', 'dosenList', 'faseLabelsTa', 'faseLabelsKp', 'jenisLabelTa', 'jenisLabelKp'));
     }
 
     /**
@@ -175,6 +185,15 @@ class ProfileController extends Controller
         if (blank($user->identifier) || blank($user->whatsapp)) {
             return redirect()->route('profile.index')
                 ->with('warning', 'Lengkapi profil Anda (NIM & WhatsApp) terlebih dahulu sebelum memilih dosen.');
+        }
+
+        // Wajib afiliasi perguruan tinggi (sampai prodi) sebelum memilih dosen.
+        $affiliation = $user->universities()
+            ->orderByDesc('user_university.is_primary')
+            ->first();
+        if (! $affiliation?->pivot?->study_program_id) {
+            return redirect()->route('profile.index')
+                ->with('warning', 'Lengkapi afiliasi perguruan tinggi Anda (sampai program studi) terlebih dahulu sebelum memilih dosen.');
         }
 
         $jenis = $request->input('jenis');
@@ -198,6 +217,7 @@ class ProfileController extends Controller
         ]);
         $validDosen = \App\Models\User::role('dosen')
             ->where('registration_status', 'active')
+            ->whereHas('universities', fn ($q) => $q->whereKey($affiliation->id))
             ->whereIn('id', $dosenIds)
             ->count();
         abort_unless($validDosen === count($dosenIds), 422, 'Dosen yang dipilih tidak valid.');
@@ -382,6 +402,50 @@ class ProfileController extends Controller
 
         return redirect()->route('profile.index')
             ->with('success', 'Afiliasi berhasil disimpan. Silakan lengkapi data profil Anda.');
+    }
+
+    /**
+     * Simpan afiliasi mahasiswa: perguruan tinggi → fakultas → departemen → prodi.
+     * Semua dipilih dari direktori yang sudah ada (tidak membuat data baru).
+     */
+    public function updateMahasiswaAffiliation(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user->isMahasiswa(), 403, 'Hanya mahasiswa yang dapat mengisi afiliasi.');
+
+        $validated = $request->validate([
+            'university_id' => ['required', 'exists:universities,id'],
+            'faculty_id' => ['required', 'exists:faculties,id'],
+            'department_id' => ['required', 'exists:departments,id'],
+            'study_program_id' => ['required', 'exists:study_programs,id'],
+        ]);
+
+        $faculty = \App\Models\Faculty::where('id', $validated['faculty_id'])
+            ->where('university_id', $validated['university_id'])
+            ->first();
+        $department = $faculty
+            ? \App\Models\Department::where('id', $validated['department_id'])
+                ->where('faculty_id', $faculty->id)->first()
+            : null;
+        $studyProgram = $department
+            ? \App\Models\StudyProgram::where('id', $validated['study_program_id'])
+                ->where('department_id', $department->id)->first()
+            : null;
+
+        abort_unless($faculty && $department && $studyProgram, 422, 'Hierarki afiliasi tidak valid.');
+
+        $university = University::findOrFail($validated['university_id']);
+        $service = app(OrganizationalDirectoryService::class);
+        $service->attachUserToUniversity(
+            $user, $university, $faculty, $department, $studyProgram,
+            isPrimary: true,
+            replaceAll: true,
+            status: OrganizationalDirectoryService::STATUS_ACTIVE
+        );
+        $service->setPrimaryUniversity($user, $university);
+
+        return redirect()->route('profile.index')
+            ->with('success', 'Afiliasi perguruan tinggi berhasil disimpan.');
     }
 
     /**

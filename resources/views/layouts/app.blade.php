@@ -380,6 +380,9 @@
                 <span class="material-symbols-outlined icon-sm">code</span>
                 <span class="sidebar-label">GitHub</span>
             </a>
+            <p class="sidebar-label px-3 pt-1.5 text-[10px] uppercase tracking-wide text-text-secondary/60" title="Versi rilis perangkat lunak">
+                v{{ config('app.version', '0.29.1') }}
+            </p>
         </div>
     </aside>
 

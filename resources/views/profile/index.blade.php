@@ -1,4 +1,20 @@
 @extends("layouts.app") @section("title", "Profil") @section("content")
+@php
+    // Direktori afiliasi (PT → fakultas → departemen → prodi) untuk cascade JS.
+    $affiliationTree = $universities->map(fn ($u) => [
+        'id' => $u->id,
+        'name' => $u->name,
+        'faculties' => $u->faculties->map(fn ($f) => [
+            'id' => $f->id,
+            'name' => $f->name,
+            'departments' => $f->departments->map(fn ($d) => [
+                'id' => $d->id,
+                'name' => $d->name,
+                'prodis' => $d->studyPrograms->map(fn ($p) => ['id' => $p->id, 'name' => $p->name])->values(),
+            ])->values(),
+        ])->values(),
+    ])->values();
+@endphp
 <div class="max-w-2xl space-y-6">
     <h1 class="text-xl font-bold">Profil</h1> {{-- Data profil --}} <div
         class="bg-bg-surface rounded-xl border border-border p-6 space-y-4">
@@ -112,6 +128,59 @@
         @include('partials.profile-affiliation', ['affUser' => $user])
     </div>
 
+    @if ($user->isMahasiswa())
+        <div class="bg-bg-surface rounded-xl border border-border p-6" id="kartu-afiliasi">
+            <h2 class="font-semibold mb-1">Afiliasi Perguruan Tinggi</h2>
+            <p class="text-sm text-text-secondary mb-3">Wajib diisi sebelum memilih dosen — pilih perguruan tinggi, fakultas, departemen, dan program studi Anda dari data yang tersedia.</p>
+
+            @if ($affiliation?->pivot?->study_program_id)
+                @php
+                    $affFac = $affiliation->pivot->faculty_id ? \App\Models\Faculty::find($affiliation->pivot->faculty_id) : null;
+                    $affDept = $affiliation->pivot->department_id ? \App\Models\Department::find($affiliation->pivot->department_id) : null;
+                    $affProdi = $affiliation->pivot->study_program_id ? \App\Models\StudyProgram::find($affiliation->pivot->study_program_id) : null;
+                @endphp
+                <div class="mb-3 rounded-xl bg-bg-panel border border-border p-3 text-sm">
+                    <p class="font-medium text-text-primary">{{ $affiliation->name }}</p>
+                    <p class="text-xs text-text-secondary mt-0.5">{{ $affFac?->name }} › {{ $affDept?->name }} › {{ $affProdi?->name }}</p>
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('profile.affiliation-mahasiswa.update') }}" class="space-y-3">
+                @csrf
+                <div class="grid sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-text-secondary mb-1">Perguruan Tinggi <span class="text-status-danger">*</span></label>
+                        <select name="university_id" id="aff-university" required class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            <option value="">— Pilih perguruan tinggi —</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-text-secondary mb-1">Fakultas <span class="text-status-danger">*</span></label>
+                        <select name="faculty_id" id="aff-faculty" required disabled class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            <option value="">— Pilih fakultas —</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-text-secondary mb-1">Departemen <span class="text-status-danger">*</span></label>
+                        <select name="department_id" id="aff-department" required disabled class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            <option value="">— Pilih departemen —</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-text-secondary mb-1">Program Studi <span class="text-status-danger">*</span></label>
+                        <select name="study_program_id" id="aff-prodi" required disabled class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            <option value="">— Pilih prodi —</option>
+                        </select>
+                    </div>
+                </div>
+                @error('university_id')
+                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
+                @enderror
+                <button class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan Afiliasi</button>
+            </form>
+        </div>
+    @endif
+
     @if ($user->isDosen())
         <div class="bg-bg-surface rounded-xl border border-border p-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -187,4 +256,69 @@
         </form>
     </div>
 </div>
+@endsection @section('scripts')
+<script>
+    // Cascade afiliasi mahasiswa: PT → fakultas → departemen → prodi.
+    (function () {
+        var tree = @json($affiliationTree);
+
+        var elU = document.getElementById('aff-university');
+        var elF = document.getElementById('aff-faculty');
+        var elD = document.getElementById('aff-department');
+        var elP = document.getElementById('aff-prodi');
+        if (!elU || !elF || !elD || !elP) return;
+
+        var preselect = {
+            university: @json($affiliation?->id ?? null),
+            faculty: @json($affiliation?->pivot?->faculty_id ?? null),
+            department: @json($affiliation?->pivot?->department_id ?? null),
+            prodi: @json($affiliation?->pivot?->study_program_id ?? null)
+        };
+
+        function fill(select, options, selectedId) {
+            select.innerHTML = '<option value="">— Pilih —</option>';
+            options.forEach(function (o) {
+                var opt = document.createElement('option');
+                opt.value = o.id;
+                opt.textContent = o.name;
+                if (o.id === selectedId) opt.selected = true;
+                select.appendChild(opt);
+            });
+            select.disabled = options.length === 0;
+        }
+
+        function univ() { return tree.find(function (u) { return u.id === parseInt(elU.value, 10); }); }
+        function fac() { var u = univ(); return u ? u.faculties.find(function (f) { return f.id === parseInt(elF.value, 10); }) : null; }
+        function dept() { var f = fac(); return f ? f.departments.find(function (d) { return d.id === parseInt(elD.value, 10); }) : null; }
+
+        function resetDown(step) {
+            if (step <= 1) { elF.innerHTML = '<option value="">— Pilih —</option>'; elF.disabled = true; }
+            if (step <= 2) { elD.innerHTML = '<option value="">— Pilih —</option>'; elD.disabled = true; }
+            if (step <= 3) { elP.innerHTML = '<option value="">— Pilih —</option>'; elP.disabled = true; }
+        }
+
+        function fillFac() { var u = univ(); resetDown(1); fill(elF, u ? u.faculties : [], null); }
+        function fillDept() { var f = fac(); resetDown(2); fill(elD, f ? f.departments : [], null); }
+        function fillProdi() { var d = dept(); resetDown(3); fill(elP, d ? d.prodis : [], null); }
+
+        elU.addEventListener('change', fillFac);
+        elF.addEventListener('change', fillDept);
+        elD.addEventListener('change', fillProdi);
+
+        // Initial: isi universitas + preselect afiliasi yang sudah ada.
+        tree.forEach(function (u) {
+            var opt = document.createElement('option');
+            opt.value = u.id;
+            opt.textContent = u.name;
+            elU.appendChild(opt);
+        });
+        if (preselect.university) {
+            elU.value = preselect.university;
+            fillFac();
+            if (preselect.faculty) { elF.value = preselect.faculty; fillDept(); }
+            if (preselect.department) { elD.value = preselect.department; fillProdi(); }
+            if (preselect.prodi) { elP.value = preselect.prodi; }
+        }
+    })();
+</script>
 @endsection

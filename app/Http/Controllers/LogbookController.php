@@ -387,7 +387,7 @@ class LogbookController extends Controller
         if ($logbook->jenis === LogbookEntry::JENIS_REVISI) {
             $logbook->update([
                 'tanggal_pengiriman' => $data['tanggal_pengiriman'],
-                'progres_kendala' => $data['progres_kendala'],
+                'progres_kendala' => $data['progres_kendala'] ?? null,
                 'riwayat_perbaikan' => $data['riwayat_perbaikan'],
             ]);
 
@@ -397,7 +397,7 @@ class LogbookController extends Controller
             $logbook->update([
                 'tanggal_bimbingan' => $data['tanggal_bimbingan'],
                 'topik' => $data['topik'],
-                'progres_kendala' => $data['progres_kendala'],
+                'progres_kendala' => $data['progres_kendala'] ?? null,
             ]);
         }
 

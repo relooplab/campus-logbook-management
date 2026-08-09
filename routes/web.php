@@ -97,6 +97,7 @@ Route::middleware(['auth', 'ensure.dosen.affiliation'])->group(function () {
     Route::put('/profil/program/{mahasiswaTa}', [ProfileController::class, 'updateProgram'])->name('profile.program');
     Route::get('/profil/pilih-dosen', [ProfileController::class, 'selectDosen'])->name('profile.select-dosen');
     Route::post('/profil/pilih-dosen', [ProfileController::class, 'storeDosen'])->name('profile.store-dosen');
+    Route::post('/profil/afiliasi-mahasiswa', [ProfileController::class, 'updateMahasiswaAffiliation'])->name('profile.affiliation-mahasiswa.update');
 
     // ------------------------------------------------------- afiliasi (dosen)
     Route::get('/profil/afiliasi', [ProfileController::class, 'affiliation'])->name('profile.affiliation');

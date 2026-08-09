@@ -144,6 +144,68 @@ class RevisionWorkflowTest extends AuditSmokeTest
             ->assertSee('Perbaiki diagram pada bab ini.');
     }
 
+    public function test_submit_revisi_without_pesan_does_not_500(): void
+    {
+        $this->entrySubmitted->update([
+            'status' => LogbookEntry::STATUS_REVISI,
+            'reviewed_at' => now(),
+        ]);
+
+        // "Pesan untuk Dosen" (progres_kendala) opsional — dikosongkan.
+        $response = $this->actingAs($this->mhs)->post(route('logbook.store-revisi'), [
+            'parent_entry_id' => $this->entrySubmitted->id,
+            'tanggal_pengiriman' => now()->toDateString(),
+            'progres_kendala' => '',
+            'riwayat_perbaikan' => [
+                ['halaman' => 'Hal. 3', 'komentar_dosen' => 'Perbaiki diagram.', 'perbaikan' => 'Sudah.', 'status' => 'Sudah'],
+            ],
+            'lampiran' => UploadedFile::fake()->create('draft.pdf', 100, 'application/pdf'),
+            'submit' => '1',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('logbook_entries', [
+            'parent_entry_id' => $this->entrySubmitted->id,
+            'jenis' => LogbookEntry::JENIS_REVISI,
+            'progres_kendala' => null,
+        ]);
+    }
+
+    public function test_update_revisi_without_pesan_does_not_500(): void
+    {
+        $this->entrySubmitted->update([
+            'status' => LogbookEntry::STATUS_REVISI,
+            'reviewed_at' => now(),
+        ]);
+
+        $draft = LogbookEntry::create([
+            'mahasiswa_ta_id' => $this->entrySubmitted->mahasiswa_ta_id,
+            'parent_entry_id' => $this->entrySubmitted->id,
+            'revision_round' => 1,
+            'sesi_ke' => 0,
+            'jenis' => LogbookEntry::JENIS_REVISI,
+            'dosen_id' => $this->dosen->id,
+            'topik' => $this->entrySubmitted->topik,
+            'progres_kendala' => 'Pesan awal',
+            'tanggal_pengiriman' => now()->toDateString(),
+            'status' => LogbookEntry::STATUS_REVISION_IN_PROGRESS,
+        ]);
+
+        $response = $this->actingAs($this->mhs)->put(route('logbook.update', $draft), [
+            'tanggal_pengiriman' => now()->toDateString(),
+            'progres_kendala' => '',
+            'riwayat_perbaikan' => [
+                ['halaman' => 'Hal. 3', 'komentar_dosen' => 'Perbaiki diagram.', 'perbaikan' => 'Sudah.', 'status' => 'Sudah'],
+            ],
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('logbook_entries', [
+            'id' => $draft->id,
+            'progres_kendala' => null,
+        ]);
+    }
+
     public function test_revision_feedback_must_be_meaningful(): void
     {
         $this->actingAs($this->dosen)

@@ -12,6 +12,20 @@
         <a href="{{ route('profile.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Profil</a>
     </div>
 
+    @if ($affiliation)
+        <div class="px-4 py-3 rounded-xl bg-bg-panel border border-border text-sm">
+            <span class="text-text-secondary">Menampilkan dosen dari:</span>
+            <span class="font-medium text-text-primary">{{ $affiliation->name }}</span>
+        </div>
+    @endif
+
+    @if ($dosenList->isEmpty())
+        <div class="card p-6 text-sm">
+            <p class="font-semibold text-text-primary mb-1">Belum ada dosen terdaftar dari {{ $affiliation?->name ?? 'perguruan tinggi Anda' }}</p>
+            <p class="text-text-secondary">Pilih perguruan tinggi lain di halaman profil, atau hubungi admin institusi untuk mendaftarkan dosen.</p>
+            <a href="{{ route('profile.index') }}" class="inline-block mt-3 px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Atur Afiliasi di Profil</a>
+        </div>
+    @else
     <div class="card p-6">
         <form method="POST" action="{{ route('profile.store-dosen') }}" class="space-y-4">
             @csrf
@@ -86,6 +100,7 @@
             </div>
         </form>
     </div>
+    @endif
 </div>
 @endsection
 

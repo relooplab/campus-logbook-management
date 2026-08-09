@@ -318,8 +318,9 @@ class DashboardController extends Controller
         // saat programAktif() kosong) — tandai agar mahasiswa tetap diarahkan pilih dosen lagi.
         $rejectedProgram = $ta && $ta->status_ta === \App\Models\MahasiswaTa::STATUS_DITOLAK;
 
-        // Profil dianggap belum lengkap jika NIM (identifier) atau WhatsApp kosong.
-        $profileIncomplete = blank($user->identifier) || blank($user->whatsapp);
+        // Profil dianggap belum lengkap jika NIM (identifier), WhatsApp, atau afiliasi
+        // perguruan tinggi (sampai prodi) belum diisi mahasiswa.
+        $profileIncomplete = blank($user->identifier) || blank($user->whatsapp) || ! $user->primaryUniversity()?->pivot?->study_program_id;
 
         return view('dashboard.mahasiswa', compact(
             'programs', 'activeProgram', 'ta', 'entries', 'approved', 'target', 'progressPercent',
