@@ -59,7 +59,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [RegisterController::class, 'register'])->middleware('throttle:5,1')->name('register');
 });
 
-Route::middleware(['auth', 'ensure.dosen.affiliation'])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::post('/dashboard/dismiss-instansi', [DashboardController::class, 'dismissInstansi'])->name('dashboard.dismiss-instansi');
@@ -76,7 +76,6 @@ Route::middleware(['auth', 'ensure.dosen.affiliation'])->group(function () {
     Route::middleware('role_or_permission:dosen|admin')->group(function () {
         Route::get('/dosen-sidang', [DosenSidangController::class, 'index'])->name('dosen-sidang.index');
         Route::post('/dosen-sidang', [DosenSidangController::class, 'store'])->name('dosen-sidang.store');
-        Route::post('/dosen-sidang/{sidang}/grade', [DosenSidangController::class, 'grade'])->name('dosen-sidang.grade');
         Route::delete('/dosen-sidang/{sidang}', [DosenSidangController::class, 'destroy'])->name('dosen-sidang.destroy');
     });
     Route::get('/dashboard/dosen/mahasiswa-list', [DashboardController::class, 'dosenMahasiswaList'])->name('dashboard.dosen.mahasiswa-list');
@@ -189,6 +188,7 @@ Route::middleware(['auth', 'ensure.dosen.affiliation'])->group(function () {
     Route::put('/seminar-submission/{submission}/hardcopy-note', [SeminarSubmissionController::class, 'updateHardcopyNote'])->name('seminar-submission.hardcopy-note');
     Route::get('/seminar-submission/{submission}/undangan/download', [SeminarSubmissionController::class, 'downloadUndangan'])->name('seminar-submission.undangan-download');
     Route::get('/seminar-submission/{submission}/materi/download', [SeminarSubmissionController::class, 'downloadMateri'])->name('seminar-submission.materi-download');
+    Route::post('/seminar-submission/{submission}/convert-to-sidang', [SeminarSubmissionController::class, 'convertToSidang'])->name('seminar-submission.convert-to-sidang');
 
     // -------------------------------------------------- finalisasi TA/KP
     // NOTE: /finalisasi/review HARUS didefinisikan sebelum /finalisasi/{mahasiswaTa}
@@ -238,6 +238,7 @@ Route::middleware(['auth', 'ensure.dosen.affiliation'])->group(function () {
     Route::get('/logbook/create', [LogbookController::class, 'create'])->name('logbook.create');
     Route::post('/logbook', [LogbookController::class, 'store'])->name('logbook.store');
     Route::get('/logbook/create-revisi', [LogbookController::class, 'createRevisi'])->name('logbook.create-revisi');
+    Route::post('/logbook/revisi/upload', [LogbookController::class, 'uploadRevisi'])->name('logbook.upload-revisi');
     Route::post('/logbook/revisi', [LogbookController::class, 'storeRevisi'])->name('logbook.store-revisi');
     Route::get('/logbook/feedback', [LogbookController::class, 'feedback'])->name('logbook.feedback');
     Route::put('/logbook/{logbook}/feedback-note', [LogbookController::class, 'updateFeedbackNote'])->name('logbook.feedback-note');

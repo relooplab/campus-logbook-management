@@ -6,6 +6,7 @@
     $typesLabel = strtoupper(implode(", ", $inst->allowedFileTypes()));
     $statusOptions = \App\Models\LogbookEntry::PERBAIKAN_STATUSES;
     $oldRiwayat = old("riwayat_perbaikan", []);
+    // Komentar PDF terbuka menjadi kartu awal ketika parent dipilih.
     $initialRows = $oldRiwayat;
     if (!$initialRows && $parentComments->isNotEmpty()) {
         $initialRows = $parentComments->map(fn ($c) => [
@@ -100,7 +101,7 @@
             <p class="text-xs text-text-secondary mb-3">Isi kartu perbaikan sesuai komentar dosen. PDF catatan perbaikan dibuat otomatis oleh sistem.</p>
 
             <div id="kartu-perbaikan" class="space-y-3">
-                @forelse ($oldRiwayat as $i => $row)
+                @forelse ($initialRows as $i => $row)
                     <div class="perbaikan-card rounded-xl bg-bg-panel border border-border p-4 space-y-2">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-semibold text-text-secondary">Perbaikan #{{ $i + 1 }}</span>
@@ -261,7 +262,7 @@
             <div class="mt-4 flex flex-wrap gap-2">
                 <button type="button" class="wizard-prev px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali</button>
                 <button type="submit" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Simpan Draft</button>
-                <button type="submit" name="submit" value="1" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Kirim ke Dosen</button>
+                <button type="submit" name="submit" value="1" id="review-submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90" disabled>Kirim ke Dosen</button>
             </div>
         </div>
     </form>
@@ -271,6 +272,7 @@
     // ===== Wizard navigation =====
     var currentStep = 1;
     var totalSteps = 4;
+    var uploadReady = false;
     var stepButtons = document.querySelectorAll('.wizard-step');
     var panels = document.querySelectorAll('.wizard-panel');
 
@@ -285,11 +287,13 @@
             b.classList.toggle('text-text-secondary', !active);
         });
         if (currentStep === 4) updateReview();
+        var submitBtn = document.getElementById('review-submit');
+        if (submitBtn) submitBtn.disabled = currentStep !== 4 || !uploadReady;
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     document.querySelectorAll('.wizard-next').forEach(function (btn) {
-        btn.addEventListener('click', function () { showStep(currentStep + 1); });
+        btn.addEventListener('click', function () { if (currentStep === 3 && !uploadReady) return; showStep(currentStep + 1); });
     });
     document.querySelectorAll('.wizard-prev').forEach(function (btn) {
         btn.addEventListener('click', function () { showStep(currentStep - 1); });
@@ -306,6 +310,19 @@
         pesanCounter.textContent = len + '/500';
     }
     if (pesanInput) pesanInput.addEventListener('input', updateCounter);
+    var fileInput = document.getElementById('lampiran');
+    var uploadNext = document.querySelector('[data-panel="3"] .wizard-next');
+    if (fileInput) fileInput.addEventListener('change', async function () {
+        uploadReady = false; if (uploadNext) uploadNext.disabled = true;
+        if (!fileInput.files.length || fileInput.files[0].type !== 'application/pdf') return;
+        var body = new FormData(); body.append('lampiran', fileInput.files[0]);
+        try {
+            var response = await fetch('{{ route('logbook.upload-revisi') }}', { method: 'POST', body: body, headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json'} });
+            if (!response.ok) throw new Error('Upload gagal');
+            var result = await response.json(); document.getElementById('revision-upload-token').value = result.token;
+            uploadReady = true; if (uploadNext) uploadNext.disabled = false; showStep(3);
+        } catch (error) { alert('Upload file revisi gagal. Silakan coba lagi.'); }
+    });
 
     // ===== Kartu perbaikan dinamis =====
     var kartuContainer = document.getElementById('kartu-perbaikan');

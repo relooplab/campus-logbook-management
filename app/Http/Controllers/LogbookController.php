@@ -15,6 +15,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -69,6 +71,20 @@ class LogbookController extends Controller
         return view('logbook.create-revisi', compact('ta', 'parents', 'selectedParentId', 'parentComments'));
     }
 
+    public function uploadRevisi(Request $request): JsonResponse
+    {
+        $ta = ProgramContext::resolve($request->user(), $request);
+        abort_unless($ta, 403);
+        $inst = \App\Models\Institution::current();
+        $file = $request->validate(['lampiran' => ['required', 'file', 'mimes:'.implode(',', $inst->allowedFileTypes()), 'max:'.($inst->maxUploadSizeMb() * 1024)]])['lampiran'];
+        $token = (string) Str::uuid();
+        $path = $file->storeAs('revisi-pending/'.$request->user()->id.'/'.$ta->id, $token.'.pdf', 'local');
+        $uploads = $request->session()->get('revisi_uploads', []);
+        $uploads[$token] = ['path' => $path, 'name' => $file->getClientOriginalName(), 'size' => $file->getSize(), 'ta_id' => $ta->id];
+        $request->session()->put('revisi_uploads', $uploads);
+        return response()->json(['token' => $token, 'name' => $file->getClientOriginalName()]);
+    }
+
     public function store(StoreLogbookEntryRequest $request): RedirectResponse
     {
         $ta = ProgramContext::resolve($request->user(), $request);
@@ -89,7 +105,7 @@ class LogbookController extends Controller
             'topik' => $data['topik'],
             'sesi_ke' => $sesiKe,
             'jenis' => LogbookEntry::JENIS_LOGBOOK,
-            'progres_kendala' => $data['progres_kendala'] ?? null,
+            'progres_kendala' => $data['progres_kendala'],
             'status' => $submit ? LogbookEntry::STATUS_SUBMITTED : LogbookEntry::STATUS_DRAFT,
             'submitted_at' => $submit ? now() : null,
         ]);
@@ -135,6 +151,12 @@ class LogbookController extends Controller
 
         $data = $request->validated();
         $submit = $request->boolean('submit');
+        $revisionFile = $request->file('lampiran');
+        if (!$revisionFile && !empty($data['revision_upload_token'])) {
+            $pending = $request->session()->get('revisi_uploads.'.$data['revision_upload_token']);
+            abort_unless($pending && $pending['ta_id'] === $ta->id && Storage::disk('local')->exists($pending['path']), 422, 'Upload revisi tidak ditemukan.');
+            $revisionFile = new UploadedFile(Storage::disk('local')->path($pending['path']), $pending['name'], 'application/pdf', null, true);
+        }
 
         [$parent, $entry] = DB::transaction(function () use ($ta, $data, $submit) {
             // Mahasiswa dapat membuat entri revisi tanpa harus ada logbook dulu.
@@ -170,7 +192,7 @@ class LogbookController extends Controller
                 'jenis' => LogbookEntry::JENIS_REVISI,
                 'dosen_id' => $parent?->dosen_id ?: $parent?->reviewDosen()?->id ?: $ta->pembimbing_1_id,
                 'topik' => $parent?->topik,
-                'progres_kendala' => $data['progres_kendala'] ?? null,
+                'progres_kendala' => $data['progres_kendala'],
                 'tanggal_pengiriman' => $data['tanggal_pengiriman'],
                 'status' => $submit ? LogbookEntry::STATUS_SUBMITTED : LogbookEntry::STATUS_REVISION_IN_PROGRESS,
                 'submitted_at' => $submit ? now() : null,
@@ -186,19 +208,24 @@ class LogbookController extends Controller
 
         // Cek kuota target pembebanan (dosen pembimbing saat aktif, mahasiswa 100 MB saat pending).
         $dosen = $ta->storageChargeTarget();
-        $storeLampiranRevisi = function () use ($request, $entry, $data) {
+        $storeLampiranRevisi = function () use ($revisionFile, $entry, $data) {
             $entry->update([
-                'lampiran_path' => $this->storeUniqueFile($request->file('lampiran'), 'lampiran', $entry->id),
-                'lampiran_original_name' => $request->file('lampiran')->getClientOriginalName(),
-                'lampiran_size' => $request->file('lampiran')->getSize(),
+                'lampiran_path' => $this->storeUniqueFile($revisionFile, 'lampiran', $entry->id),
+                'lampiran_original_name' => $revisionFile->getClientOriginalName(),
+                'lampiran_size' => $revisionFile->getSize(),
                 'riwayat_perbaikan' => $data['riwayat_perbaikan'],
             ]);
         };
 
-        if ($dosen && $request->hasFile('lampiran')) {
-            app(StorageUsageService::class)->withUploadLock($dosen, $request->file('lampiran')->getSize(), $storeLampiranRevisi);
+        if ($dosen && $revisionFile) {
+            app(StorageUsageService::class)->withUploadLock($dosen, $revisionFile->getSize(), $storeLampiranRevisi);
         } else {
             $storeLampiranRevisi();
+        }
+
+        if (!empty($data['revision_upload_token'])) {
+            $pending = $request->session()->get('revisi_uploads.'.$data['revision_upload_token']);
+            if ($pending) { Storage::disk('local')->delete($pending['path']); $request->session()->forget('revisi_uploads.'.$data['revision_upload_token']); }
         }
 
         // Generate PDF catatan perbaikan otomatis dari tabel riwayat perbaikan.
