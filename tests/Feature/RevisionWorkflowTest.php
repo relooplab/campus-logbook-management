@@ -182,7 +182,7 @@ class RevisionWorkflowTest extends AuditSmokeTest
             'mahasiswa_ta_id' => $this->entrySubmitted->mahasiswa_ta_id,
             'parent_entry_id' => $this->entrySubmitted->id,
             'revision_round' => 1,
-            'sesi_ke' => 0,
+            'sesi_ke' => null, // revisi: sesi tidak dipakai (null)
             'jenis' => LogbookEntry::JENIS_REVISI,
             'dosen_id' => $this->dosen->id,
             'topik' => $this->entrySubmitted->topik,

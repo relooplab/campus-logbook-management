@@ -179,7 +179,7 @@ class LogbookController extends Controller
             $entry = $ta->entries()->create([
                 'parent_entry_id' => $parent?->id,
                 'revision_round' => $parent ? ($parent->revision_round ?? 0) + 1 : null,
-                'sesi_ke' => 0,
+                'sesi_ke' => null, // revisi: sesi tidak dipakai (null agar unique index (mahasiswa_ta_id, sesi_ke) mengizinkan banyak revisi)
                 'jenis' => LogbookEntry::JENIS_REVISI,
                 'dosen_id' => $parent?->dosen_id ?: $parent?->reviewDosen()?->id ?: $ta->pembimbing_1_id,
                 'topik' => $parent?->topik,

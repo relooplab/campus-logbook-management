@@ -89,7 +89,7 @@ class AuditSmokeTest extends TestCase
         );
 
         $this->entryRevisi = LogbookEntry::firstOrCreate(
-            ['mahasiswa_ta_id' => $this->ta->id, 'jenis' => 'revisi', 'sesi_ke' => 0],
+            ['mahasiswa_ta_id' => $this->ta->id, 'jenis' => 'revisi', 'sesi_ke' => null],
             ['tanggal_pengiriman' => now(), 'progres_kendala' => 'revisi progres', 'status' => 'draft']
         );
 
