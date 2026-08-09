@@ -17,6 +17,9 @@ class Feature
     /** Kuota penyimpanan sementara (MB) untuk mahasiswa fase pending (menunggu persetujuan dosen). */
     public const PENDING_STUDENT_STORAGE_LIMIT_MB = 100;
 
+    /** Batasan kuota default dosen (MB) = 3 GB. */
+    public const DOSEN_STORAGE_LIMIT_MB = 3072;
+
     public static function mode(): string
     {
         return config('app.mode', 'saas');
@@ -124,6 +127,15 @@ class Feature
     public static function pendingStudentStorageLimitMb(): int
     {
         return self::PENDING_STUDENT_STORAGE_LIMIT_MB;
+    }
+
+    /**
+     * Batasan kuota dosen (MB). Default 3 GB, bisa di-set via env
+     * DOSEN_STORAGE_LIMIT_MB (0 = unlimited).
+     */
+    public static function dosenStorageLimitMb(): int
+    {
+        return (int) config('app.dosen_storage_limit_mb', self::DOSEN_STORAGE_LIMIT_MB);
     }
 
     /**

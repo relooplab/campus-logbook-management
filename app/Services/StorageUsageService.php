@@ -277,6 +277,20 @@ class StorageUsageService
      */
     public function assertCanUpload(User $dosen, int $incomingBytes): void
     {
+        // Batasan kuota dosen (default 3 GB) — hard cap untuk semua dosen, berlaku
+        // juga untuk dosen institusi yang shared pool-nya lebih besar.
+        $dosenCapMb = Feature::dosenStorageLimitMb();
+        if ($dosen->isDosen() && $dosenCapMb > 0) {
+            $capBytes = $dosenCapMb * 1048576;
+            $used = $this->totalBytes($dosen);
+            if ($used + $incomingBytes > $capBytes) {
+                $remaining = max(0, $capBytes - $used);
+                abort(422, 'Kuota penyimpanan dosen tidak mencukupi. Maksimal '.$this->formatBytes($capBytes)
+                    .'. Terpakai '.$this->formatBytes($used)
+                    .' (sisa '.$this->formatBytes($remaining).').');
+            }
+        }
+
         // Mahasiswa hanya menjadi target kuota pada fase PENDING (program menunggu
         // persetujuan dosen, lihat MahasiswaTa::storageChargeTarget). Pakai kuota
         // sementara 100 MB sampai program disetujui.

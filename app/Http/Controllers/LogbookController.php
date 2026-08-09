@@ -78,21 +78,34 @@ class LogbookController extends Controller
 
         // Tombol "Kirim ke Pembimbing" langsung mengirim (bukan draf).
         $submit = $request->boolean('submit');
-        $sesiKe = $ta->entries()
-            ->where('jenis', LogbookEntry::JENIS_LOGBOOK)
-            ->count() + 1;
 
         // Buat entry dulu agar path unik {entry_id}/{uuid} bisa memakai id.
-        $entry = $ta->entries()->create([
-            'dosen_id' => $ta->pembimbing_1_id,
-            'tanggal_bimbingan' => $data['tanggal_bimbingan'],
-            'topik' => $data['topik'],
-            'sesi_ke' => $sesiKe,
-            'jenis' => LogbookEntry::JENIS_LOGBOOK,
-            'progres_kendala' => $data['progres_kendala'] ?? null,
-            'status' => $submit ? LogbookEntry::STATUS_SUBMITTED : LogbookEntry::STATUS_DRAFT,
-            'submitted_at' => $submit ? now() : null,
-        ]);
+        // sesi_ke dihitung secara atomik & di-retry bila bentrok (unique index)
+        // untuk menghindari race condition pada request paralel (TOCTOU).
+        $entry = null;
+        for ($attempt = 0; $attempt < 3 && !$entry; $attempt++) {
+            try {
+                $entry = DB::transaction(function () use ($ta, $data, $submit) {
+                    $sesiKe = (int) $ta->entries()
+                        ->where('jenis', LogbookEntry::JENIS_LOGBOOK)
+                        ->max('sesi_ke') + 1;
+
+                    return $ta->entries()->create([
+                        'dosen_id' => $ta->pembimbing_1_id,
+                        'tanggal_bimbingan' => $data['tanggal_bimbingan'],
+                        'topik' => $data['topik'],
+                        'sesi_ke' => $sesiKe,
+                        'jenis' => LogbookEntry::JENIS_LOGBOOK,
+                        'progres_kendala' => $data['progres_kendala'] ?? null,
+                        'status' => $submit ? LogbookEntry::STATUS_SUBMITTED : LogbookEntry::STATUS_DRAFT,
+                        'submitted_at' => $submit ? now() : null,
+                    ]);
+                });
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                // Request paralel menghitung sesi yang sama — coba lagi.
+            }
+        }
+        abort_unless($entry, 500, 'Gagal membuat entri logbook. Silakan coba kembali.');
 
         // Simpan lampiran dengan path unik + nama asli.
         if ($request->hasFile('lampiran')) {

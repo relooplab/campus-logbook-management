@@ -11,10 +11,12 @@ use App\Models\StudyProgram;
 use App\Models\University;
 use App\Models\User;
 use App\Models\UserPlanOverride;
+use App\Models\WorkspaceFile;
 use App\Models\UserStorageAddon;
 use App\Services\OrganizationalDirectoryService;
 use App\Support\Feature;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * Fase B — Verifikasi resolusi kuota storage:
@@ -356,5 +358,30 @@ class DirectorySubscriptionStorageTest extends AuditSmokeTest
             DirectorySubscription::SCOPE_STUDY_PROGRAM,
             $this->prodi->id
         ));
+    }
+
+    public function test_dosen_dibatasi_3_gb(): void
+    {
+        $svc = app(\App\Services\StorageUsageService::class);
+        $capBytes = Feature::dosenStorageLimitMb() * 1048576; // 3 GB
+
+        // Isi hampir penuh (sisa &lt; 1 MB) via file workspace dosen.
+        \App\Models\WorkspaceFile::create([
+            'user_id' => $this->dosen->id,
+            'uploaded_by' => $this->dosen->id,
+            'mahasiswa_ta_id' => $this->ta->id,
+            'original_name' => 'big.pdf',
+            'path' => 'workspace/big.pdf',
+            'mime_type' => 'application/pdf',
+            'size' => $capBytes - 1024,
+        ]);
+
+        try {
+            $svc->assertCanUpload($this->dosen, 2 * 1048576); // coba upload 2 MB
+            $this->fail('Upload seharusnya diblokir karena melebihi kuota dosen 3 GB.');
+        } catch (HttpException $e) {
+            $this->assertSame(422, $e->getStatusCode());
+            $this->assertStringContainsString('Kuota penyimpanan dosen', $e->getMessage());
+        }
     }
 }

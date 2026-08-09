@@ -217,14 +217,14 @@ class ProfileController extends Controller
         ]);
 
         // Cegah dosen yang sama dipilih lebih dari satu peran.
-        abort_unless(count($dosenIds) === count(array_unique($dosenIds)), 422, 'Dosen yang sama tidak boleh dipilih lebih dari satu kali pada form yang sama.');
+        abort_unless(count($dosenIds) === count(array_unique($dosenIds)), 422, 'Satu dosen tidak boleh dipilih di lebih dari satu peran (pembimbing/penguji).');
 
         $validDosen = \App\Models\User::role('dosen')
             ->where('registration_status', 'active')
             ->whereHas('universities', fn ($q) => $q->whereKey($affiliation->id))
             ->whereIn('id', $dosenIds)
             ->count();
-        abort_unless($validDosen === count($dosenIds), 422, 'Dosen yang dipilih tidak valid.');
+        abort_unless($validDosen === count($dosenIds), 422, 'Salah satu dosen yang dipilih tidak valid atau bukan dari perguruan tinggi yang sama.');
 
         // Cegah duplikat program (satu TA + satu KP per mahasiswa) — program yang
         // sudah ditolak tidak dihitung, agar mahasiswa bisa memilih dosen lain.

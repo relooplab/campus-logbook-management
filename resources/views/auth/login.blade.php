@@ -22,4 +22,7 @@
         <p class="block text-center text-sm text-text-secondary">Belum punya akun? <a href="{{ route("register") }}"
                 class="text-brand hover:underline">Daftar</a></p>
     </form>
+    <p class="mt-6 text-center text-xs text-text-secondary/70">
+        v{{ \App\Support\ReleaseVersion::get() }}
+    </p>
 @endsection

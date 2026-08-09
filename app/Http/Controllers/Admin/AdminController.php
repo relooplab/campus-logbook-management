@@ -539,8 +539,13 @@ class AdminController extends Controller
             'member_ids.*' => ['integer', 'exists:users,id', $this->roleRule('mahasiswa')],
         ]);
 
-        // Admin biasa: program otomatis masuk institusinya.
+        // Admin biasa: program otomatis masuk institusinya; hanya boleh untuk
+        // mahasiswa di institusi & scope-nya.
         if (!$request->user()->isSystemAdmin() && $request->user()->institution_id) {
+            $targetUser = User::find($validated['user_id']);
+            if (! $targetUser || ! $this->canManageUser($request, $targetUser)) {
+                return back()->with('error', 'Tidak dapat membuat program untuk mahasiswa di luar cakupan Anda.');
+            }
             $validated['institution_id'] = $request->user()->institution_id;
         }
 
@@ -627,8 +632,12 @@ class AdminController extends Controller
             'hasil' => ['nullable', 'in:'.implode(',', \App\Models\Sidang::HASILS)],
         ]);
 
-        // Admin biasa: sidang otomatis masuk institusinya.
+        // Admin biasa: sidang otomatis masuk institusinya; hanya untuk TA di scope-nya.
         if (!$request->user()->isSystemAdmin() && $request->user()->institution_id) {
+            $ta = MahasiswaTa::find($validated['mahasiswa_ta_id']);
+            if (! $ta || ! $this->canManageTa($request, $ta)) {
+                return back()->with('error', 'Tidak dapat membuat sidang untuk program di luar cakupan Anda.');
+            }
             $validated['institution_id'] = $request->user()->institution_id;
         }
 
@@ -646,11 +655,14 @@ class AdminController extends Controller
 
     public function destroySidang(Request $request, \App\Models\Sidang $sidang): RedirectResponse
     {
-        // Admin biasa hanya dapat menghapus sidang di institusinya sendiri.
-        if (!$request->user()->isSystemAdmin()
-            && $request->user()->institution_id
-            && $sidang->institution_id !== $request->user()->institution_id) {
-            return back()->with('error', 'Tidak dapat mengelola data dari institusi lain.');
+        // Admin biasa hanya dapat menghapus sidang di institusinya & scope-nya.
+        if (!$request->user()->isSystemAdmin() && $request->user()->institution_id) {
+            $ta = $sidang->mahasiswaTa;
+            if ($sidang->institution_id !== $request->user()->institution_id
+                || ! $ta
+                || ! $this->canManageTa($request, $ta)) {
+                return back()->with('error', 'Tidak dapat mengelola data dari institusi lain.');
+            }
         }
 
         $sidang->delete();
@@ -1177,14 +1189,18 @@ class AdminController extends Controller
         // action approve/revisi/delete, dan ID MahasiswaTa untuk action assign_dosen.
         // Filter harus lewat relasi mahasiswaTa untuk LogbookEntry.
         if (!$request->user()->isSystemAdmin() && $request->user()->institution_id) {
+            // Batasi ke institusi & scope admin (prodi/departemen/fakultas).
+            $allowedTaIds = MahasiswaTa::whereIn('id', $validated['ids'])
+                ->where('institution_id', $request->user()->institution_id)
+                ->tap(fn ($q) => $this->applyAdminScopeFilterToTa($q, $request->user()))
+                ->pluck('id')
+                ->all();
+
             if ($validated['action'] === 'assign_dosen') {
-                $validated['ids'] = MahasiswaTa::whereIn('id', $validated['ids'])
-                    ->where('institution_id', $request->user()->institution_id)
-                    ->pluck('id')
-                    ->all();
+                $validated['ids'] = $allowedTaIds;
             } else {
                 $validated['ids'] = \App\Models\LogbookEntry::whereIn('id', $validated['ids'])
-                    ->whereHas('mahasiswaTa', fn ($q) => $q->where('institution_id', $request->user()->institution_id))
+                    ->whereIn('mahasiswa_ta_id', $allowedTaIds)
                     ->pluck('id')
                     ->all();
             }
@@ -1349,7 +1365,18 @@ class AdminController extends Controller
             return true;
         }
 
-        return $target->institution_id === $request->user()->institution_id;
+        if ($target->institution_id !== $request->user()->institution_id) {
+            return false;
+        }
+
+        // Fase D: admin dengan admin_scopes hanya boleh kelola TA yang mahasiswanya
+        // berada dalam cakupan scope-nya.
+        $mahasiswa = $target->mahasiswa;
+        if (! $mahasiswa) {
+            return false;
+        }
+
+        return $this->canManageUser($request, $mahasiswa);
     }
 
     /**

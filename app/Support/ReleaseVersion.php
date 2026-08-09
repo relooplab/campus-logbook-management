@@ -18,6 +18,25 @@ class ReleaseVersion
             return $override;
         }
 
+        // 1) File VERSION di root proyek (dikomit, selalu tersedia).
+        $versionFile = base_path('VERSION');
+        if (is_file($versionFile)) {
+            $v = trim((string) file_get_contents($versionFile));
+            if ($v !== '') {
+                return ltrim($v, 'v');
+            }
+        }
+
+        // 2) composer.json field "version".
+        $composerJson = base_path('composer.json');
+        if (is_file($composerJson)) {
+            $data = json_decode((string) file_get_contents($composerJson), true);
+            if (is_array($data) && !empty($data['version'])) {
+                return ltrim((string) $data['version'], 'v');
+            }
+        }
+
+        // 3) CHANGELOG.md — versi terbaru "## [x.y.z]".
         $changelog = base_path('CHANGELOG.md');
         if (is_file($changelog)) {
             $content = (string) file_get_contents($changelog);
