@@ -1,3 +1,10 @@
+## [0.33.1](https://github.com/relooplab/thesis-logbook-management/compare/v0.33.0...v0.33.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* portable sesi_ke unique index, prioritise CHANGELOG for release version ([be58884](https://github.com/relooplab/thesis-logbook-management/commit/be58884756355bd9f92fe11826a1d9676027819e))
+
 # [0.33.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.32.0...v0.33.0) (2026-08-09)
 
 
