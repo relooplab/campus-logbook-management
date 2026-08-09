@@ -10,7 +10,9 @@
     $initialRows = $oldRiwayat;
     if (!$initialRows && $parentComments->isNotEmpty()) {
         $initialRows = $parentComments->map(fn ($c) => [
-            'halaman' => 'Hal. '.$c->page_number,
+            'halaman' => 'Hal. '.$c->page_number.($c->pos_x !== null && $c->pos_y !== null
+                ? sprintf(' · Posisi %.3f,%.3f', $c->pos_x, $c->pos_y)
+                : ''),
             'komentar_dosen' => $c->comment,
             'perbaikan' => $c->reply,
             'status' => $statusOptions[0] ?? null,
@@ -50,6 +52,7 @@
     <form method="POST" action="{{ route('logbook.store-revisi') }}" enctype="multipart/form-data"
         class="card p-6 space-y-4" id="revisi-form">
         @csrf
+        <input type="hidden" name="revision_upload_token" id="revision-upload-token" value="{{ old('revision_upload_token') }}">
 
         {{-- ===== STEP 1: Pilih Feedback ===== --}}
         <div class="wizard-panel" data-panel="1">
@@ -299,7 +302,12 @@
         btn.addEventListener('click', function () { showStep(currentStep - 1); });
     });
     stepButtons.forEach(function (btn) {
-        btn.addEventListener('click', function () { showStep(parseInt(btn.dataset.step)); });
+        btn.addEventListener('click', function () {
+            var target = parseInt(btn.dataset.step);
+            if (target > 3 && !uploadReady) return;
+            if (target > currentStep && target === 3 && !uploadReady) return;
+            showStep(target);
+        });
     });
 
     // ===== Counter pesan =====

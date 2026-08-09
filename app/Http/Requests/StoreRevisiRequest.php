@@ -44,8 +44,9 @@ class StoreRevisiRequest extends FormRequest
             'riwayat_perbaikan.*.komentar_dosen' => ['required', 'string', 'max:1000'],
             'riwayat_perbaikan.*.perbaikan' => ['required', 'string', 'max:2000'],
             'riwayat_perbaikan.*.status' => ['required', 'in:'.implode(',', LogbookEntry::PERBAIKAN_STATUSES)],
-            'lampiran' => ['nullable', 'file', 'mimes:'.$mimes, 'max:'.$maxKb, 'required_without:revision_upload_token'],
-            'revision_upload_token' => ['nullable', 'string', 'required_without:lampiran'],
+            // File harus melewati endpoint upload terlebih dahulu; token session mencegah bypass UI.
+            'lampiran' => ['nullable', 'file', 'mimes:pdf', 'max:'.$maxKb],
+            'revision_upload_token' => ['required', 'string'],
         ];
     }
 

@@ -11,6 +11,16 @@ class RevisionWorkflowTest extends AuditSmokeTest
 {
     use DatabaseTransactions;
 
+    private function revisionUploadToken(): string
+    {
+        return $this->actingAs($this->mhs)
+            ->post(route('logbook.upload-revisi'), [
+                'lampiran' => UploadedFile::fake()->create('revision.pdf', 100, 'application/pdf'),
+            ])
+            ->assertOk()
+            ->json('token');
+    }
+
     public function test_revision_is_linked_to_parent_and_copies_review_assignment(): void
     {
         $this->entrySubmitted->update([
@@ -31,7 +41,7 @@ class RevisionWorkflowTest extends AuditSmokeTest
                     'status' => 'Sudah',
                 ],
             ],
-            'lampiran' => UploadedFile::fake()->create('draft.pdf', 100, 'application/pdf'),
+            'revision_upload_token' => $this->revisionUploadToken(),
         ]);
 
         $response->assertRedirect();
@@ -60,7 +70,7 @@ class RevisionWorkflowTest extends AuditSmokeTest
                     'status' => 'Sudah',
                 ],
             ],
-            'lampiran' => UploadedFile::fake()->create('draft.pdf', 100, 'application/pdf'),
+            'revision_upload_token' => $this->revisionUploadToken(),
         ];
 
         $this->actingAs($this->mhs)->post(route('logbook.store-revisi'), $payload)->assertRedirect();
@@ -92,7 +102,7 @@ class RevisionWorkflowTest extends AuditSmokeTest
                     'status' => 'Sebagian',
                 ],
             ],
-            'lampiran' => UploadedFile::fake()->create('draft.pdf', 100, 'application/pdf'),
+            'revision_upload_token' => $this->revisionUploadToken(),
         ])->assertRedirect();
 
         $this->assertDatabaseHas('pdf_comments', [
@@ -119,6 +129,30 @@ class RevisionWorkflowTest extends AuditSmokeTest
         $this->actingAs($this->dosen)
             ->postJson(route('pdf-comments.resolve', $comment))
             ->assertJsonPath('resolution_status', PdfComment::STATUS_RESOLVED);
+    }
+
+    public function test_revision_upload_must_be_pdf(): void
+    {
+        $this->actingAs($this->mhs)
+            ->post(route('logbook.upload-revisi'), [
+                'lampiran' => UploadedFile::fake()->create('revision.txt', 10, 'text/plain'),
+            ])
+            ->assertSessionHasErrors('lampiran');
+    }
+
+    public function test_revision_submit_without_successful_upload_is_rejected(): void
+    {
+        $this->actingAs($this->mhs)
+            ->post(route('logbook.store-revisi'), [
+                'tanggal_pengiriman' => now()->toDateString(),
+                'riwayat_perbaikan' => [[
+                    'halaman' => 'Hal. 1',
+                    'komentar_dosen' => 'Perbaiki bagian ini.',
+                    'perbaikan' => 'Sudah diperbaiki.',
+                    'status' => 'Sudah',
+                ]],
+            ])
+            ->assertSessionHasErrors('revision_upload_token');
     }
 
     public function test_revision_feedback_must_be_meaningful(): void
