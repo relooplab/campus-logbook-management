@@ -1,3 +1,10 @@
+# [0.34.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.33.1...v0.34.0) (2026-08-10)
+
+
+### Features
+
+* rebrand to "Campus Logbook Management", free plan 3 GB, new "Mahasiswa Saya" page, relaxed dosen selection ([9b59f08](https://github.com/relooplab/thesis-logbook-management/commit/9b59f08467bd567601c9b2df61951476a211e4f5))
+
 ## [0.33.1](https://github.com/relooplab/thesis-logbook-management/compare/v0.33.0...v0.33.1) (2026-08-09)
 
 
