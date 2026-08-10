@@ -1,3 +1,10 @@
+# [0.36.0](https://github.com/relooplab/campus-logbook-management/compare/v0.35.0...v0.36.0) (2026-08-10)
+
+
+### Features
+
+* optional email verification, admin users overhaul, system settings, directory management ([627ccbc](https://github.com/relooplab/campus-logbook-management/commit/627ccbc920f977a2aba73e997797b90ee80adb82))
+
 # [0.35.0](https://github.com/relooplab/campus-logbook-management/compare/v0.34.0...v0.35.0) (2026-08-10)
 
 
