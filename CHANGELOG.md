@@ -1,3 +1,10 @@
+# [0.35.0](https://github.com/relooplab/campus-logbook-management/compare/v0.34.0...v0.35.0) (2026-08-10)
+
+
+### Features
+
+* university admin scope + lock scope-less admins, per-dosen institution quota, larger uploads, repo URL migration ([6e09e01](https://github.com/relooplab/campus-logbook-management/commit/6e09e0136bb55fb7d889c8c7c1a401d95e1a4e50))
+
 # [0.34.0](https://github.com/relooplab/campus-logbook-management/compare/v0.33.1...v0.34.0) (2026-08-10)
 
 
