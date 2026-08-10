@@ -7,11 +7,11 @@
 <div class="space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Detail Mahasiswa</h1> <a href="{{ url()->previous() }}"
-            class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">← Kembali</a>
+            class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Kembali</a>
     </div> {{-- Kartu profil mahasiswa --}} <div
         class="bg-bg-surface rounded-xl border border-border p-6 flex flex-wrap items-center gap-4">
         <div
-            class="h-16 w-16 rounded-full overflow-hidden bg-brand text-white flex items-center justify-center text-xl font-bold flex-shrink-0">
+            class="h-16 w-16 rounded-full overflow-hidden bg-brand text-[#0b1420] flex items-center justify-center text-xl font-bold flex-shrink-0">
             @if ($mahasiswaTa->mahasiswa?->photoUrl())
                 <img src="{{ $mahasiswaTa->mahasiswa->photoUrl() }}" class="h-full w-full object-cover" alt="Foto">
             @else
@@ -21,7 +21,7 @@
         <div class="flex-1">
             <h2 class="font-semibold text-lg">{{ $mahasiswaTa->mahasiswa?->name }}</h2>
             <p class="text-sm text-text-secondary">{{ $mahasiswaTa->mahasiswa?->email }} ·
-                {{ $mahasiswaTa->mahasiswa?->identifier }}</p>
+                <span class="font-mono">{{ $mahasiswaTa->mahasiswa?->identifier }}</span></p>
             <p class="text-sm text-text-primary mt-1">{{ $mahasiswaTa->isKp() ? ($mahasiswaTa->tempat_kp ?: 'Tempat KP') : $mahasiswaTa->judul_ta }}</p>
             @if ($mahasiswaTa->isKp() && $mahasiswaTa->members->isNotEmpty())
                 <div class="mt-2">
@@ -40,9 +40,9 @@
         </div>
         <div class="flex flex-wrap gap-2"> <a
                 href="{{ route("chat.start", ["user" => $mahasiswaTa->user_id, "ta" => $mahasiswaTa->id]) }}"
-                class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">chat</span> Chat</a> <a
+                class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">chat</span> Chat</a> <a
                 href="{{ route("workspace.index", $mahasiswaTa) }}"
-                class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">folder</span>
+                class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom text-accent-teal">folder</span>
                 Workspace</a>
             @if ($mahasiswaTa->pembimbing1 || $mahasiswaTa->pembimbing2)
                 <a href="{{ route("logbook.export.pdf", $mahasiswaTa) }}"
@@ -64,7 +64,7 @@
                 @if ($mhs->whatsapp)
                     <a href="{{ $mhs->whatsappUrl() }}" target="_blank" rel="noopener"
                         class="px-3 py-2.5 rounded-md bg-bg-panel hover:bg-bg-hover flex items-start gap-2 min-w-0">
-                        <span class="material-symbols-outlined icon-sm flex-shrink-0 mt-0.5">chat</span>
+                        <span class="material-symbols-outlined icon-sm flex-shrink-0 mt-0.5 text-accent-teal">chat</span>
                         <span class="min-w-0">
                             <span class="block text-xs text-text-secondary">WhatsApp</span>
                             <span class="block font-medium text-text-primary break-words">{{ $mhs->whatsapp }}</span>
@@ -73,7 +73,7 @@
                 @endif
                 @if ($mhs->telegram)
                     <div class="px-3 py-2.5 rounded-md bg-bg-panel flex items-start gap-2 min-w-0">
-                        <span class="material-symbols-outlined icon-sm flex-shrink-0 mt-0.5">send</span>
+                        <span class="material-symbols-outlined icon-sm flex-shrink-0 mt-0.5 text-accent-teal">send</span>
                         <span class="min-w-0">
                             <span class="block text-xs text-text-secondary">Telegram</span>
                             <span class="block font-medium text-text-primary break-words">{{ $mhs->telegram }}</span>
@@ -83,7 +83,7 @@
                 @if ($mhs->linkedin)
                     <a href="{{ $mhs->linkedin }}" target="_blank" rel="noopener"
                         class="px-3 py-2.5 rounded-md bg-bg-panel hover:bg-bg-hover flex items-start gap-2 min-w-0">
-                        <span class="material-symbols-outlined icon-sm flex-shrink-0 mt-0.5">link</span>
+                        <span class="material-symbols-outlined icon-sm flex-shrink-0 mt-0.5 text-accent-teal">link</span>
                         <span class="min-w-0">
                             <span class="block text-xs text-text-secondary">LinkedIn</span>
                             <span class="block font-medium text-text-primary break-words">{{ \Illuminate\Support\Str::limit($mhs->linkedin, 40) }}</span>
@@ -118,7 +118,7 @@
                             <option value="{{ $key }}" @selected($mahasiswaTa->fase === $key)>{{ $faseLabels[$key] ?? $key }}
                             </option>
                         @endforeach
-                    </select> <button class="px-2 py-1 rounded-md bg-brand text-white text-xs">Update</button>
+                    </select> <button class="px-2 py-1 rounded-md bg-brand text-[#0b1420] text-xs">Update</button>
                 </form>
             @endif
         </div>
@@ -234,10 +234,10 @@
                     <tbody>
                         @foreach ($entries as $entry)
                             <tr class="border-b border-border">
-                                <td class="py-2 pr-4">{{ $entry->jenis === "revisi" ? "—" : $entry->sesi_ke }}</td>
+                                <td class="py-2 pr-4 font-mono">{{ $entry->jenis === "revisi" ? "—" : $entry->sesi_ke }}</td>
                                 <td class="py-2 pr-4 table-col-jenis">{{ ucfirst($entry->jenis) }}</td>
                                 <td class="py-2 pr-4">{{ $entry->topik ?? "Revisi" }}</td>
-                                <td class="py-2 pr-4 table-col-tanggal">{{ $entry->tanggal_bimbingan?->format("d M Y") ?? "—" }}</td>
+                                <td class="py-2 pr-4 table-col-tanggal font-mono">{{ $entry->tanggal_bimbingan?->format("d M Y") ?? "—" }}</td>
                                 <td class="py-2 pr-4">@include("partials.status-badge", ["status" => $entry->status])</td>
                                 <td class="py-2"><a href="{{ route("logbook.show", $entry) }}"
                                         class="text-brand hover:underline">Detail</a></td>

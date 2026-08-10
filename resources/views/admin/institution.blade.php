@@ -118,7 +118,7 @@
                         </div>
                         <div> <label class="block text-sm font-medium mb-1">From Name</label>
                             <input type="text" name="mail_from_name" value="{{ old("mail_from_name", $institution->mail_from_name) }}"
-                                placeholder="Thesis Logbook Management"
+                                placeholder="Campus Logbook Management"
                                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                         </div>
                     </div>
@@ -126,7 +126,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-3 pt-2"> <button
-                    class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan</button>
+                    class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan</button>
             </div>
         </form>
     </div>
@@ -144,7 +144,7 @@
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
             </div>
             <button type="submit"
-                class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">
+                class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">
                 <span class="material-symbols-outlined icon-sm align-text-bottom">send</span> Kirim Email Uji
             </button>
         </form>

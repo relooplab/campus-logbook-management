@@ -2,7 +2,7 @@
 <div class="max-w-3xl mx-auto">
     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h1 class="text-xl font-bold">Chat dengan {{ $conversation->other_user?->name }}</h1> <a
-            href="{{ route("chat.index") }}" class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">←
+            href="{{ route("chat.index") }}" class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">←
             Daftar</a>
     </div>
     <div class="bg-bg-surface rounded-xl border border-border overflow-hidden">
@@ -10,32 +10,32 @@
             @foreach ($messages as $m)
                 @php $mine = $m->sender_id === $user->id; @endphp <div class="flex {{ $mine ? "justify-end" : "justify-start" }}">
                     <div
-                        class="max-w-[75%] {{ $mine ? "bg-brand text-white" : "bg-bg-hover" }} rounded-lg px-3 py-2 text-sm">
+                        class="max-w-[75%] {{ $mine ? "bg-brand text-[#0b1420]" : "bg-bg-hover" }} rounded-lg px-3 py-2 text-sm">
                         @if ($m->attachable)
                             @php $a = $m->attachable; @endphp <div
-                                class="mb-1 {{ $mine ? "text-white/90" : "text-text-secondary" }} text-xs">
+                                class="mb-1 {{ $mine ? "text-[#0b1420]/80" : "text-text-secondary" }} text-xs">
                                 @if ($m->attachable_type === \App\Models\WorkspaceFile::class)
                                     <span class="material-symbols-outlined icon-sm align-text-bottom">description</span> {{ $a->original_name }} <span class="opacity-70">· Workspace</span> <a
                                         href="{{ $a->isPdf() ? route("workspace.preview", $a) : route("workspace.download", $a) }}"
-                                        target="_blank" class="underline">[Lihat]</a>
+                                        target="_blank" class="underline text-[#0b1420] font-semibold">[Lihat]</a>
                                 @elseif ($m->attachable_type === \App\Models\LogbookEntry::class)
                                     <span class="material-symbols-outlined icon-sm align-text-bottom">assignment</span> {{ $a->jenis === "revisi" ? "Revisi r" . $a->revision_round : "Entri #" . $a->sesi_ke }} <a
-                                        href="{{ route("logbook.show", $a) }}" class="underline">[Lihat]</a>
+                                        href="{{ route("logbook.show", $a) }}" class="underline text-[#0b1420] font-semibold">[Lihat]</a>
                                 @elseif ($m->attachable_type === \App\Models\LogbookHarianKp::class)
                                     <span class="material-symbols-outlined icon-sm align-text-bottom">calendar_month</span> Logbook Harian KP — {{ $a->tanggal?->format("d M Y") }} <a
-                                        href="{{ $a->mahasiswaTa ? route("logbook-harian.index", $a->mahasiswaTa) : "#" }}" class="underline">[Lihat]</a>
+                                        href="{{ $a->mahasiswaTa ? route("logbook-harian.index", $a->mahasiswaTa) : "#" }}" class="underline text-[#0b1420] font-semibold">[Lihat]</a>
                                 @elseif ($m->attachable_type === \App\Models\SeminarSubmission::class)
                                     <span class="material-symbols-outlined icon-sm align-text-bottom">school</span> Seminar — {{ $a->jenisLabel() }} <a
-                                        href="{{ route("seminar-submission.show", $a) }}" class="underline">[Lihat]</a>
+                                        href="{{ route("seminar-submission.show", $a) }}" class="underline text-[#0b1420] font-semibold">[Lihat]</a>
                                 @elseif ($m->attachable_type === \App\Models\ThesisFinalization::class)
                                     <span class="material-symbols-outlined icon-sm align-text-bottom">task_alt</span> Finalisasi{{ $a->full_file_original_name ? " — " . $a->full_file_original_name : "" }} <a
-                                        href="{{ $a->mahasiswaTa ? route("finalization.index", $a->mahasiswaTa) : "#" }}" class="underline">[Lihat]</a>
+                                        href="{{ $a->mahasiswaTa ? route("finalization.index", $a->mahasiswaTa) : "#" }}" class="underline text-[#0b1420] font-semibold">[Lihat]</a>
                                 @endif
                             </div>
                         @endif
                         <p class="whitespace-pre-wrap">{{ $m->body }}</p>
-                        <p class="text-[10px] mt-1 {{ $mine ? "text-white/90" : "text-text-secondary" }}">
-                            {{ $m->created_at?->format("H:i") }} @if ($m->edited_at)
+                        <p class="text-[10px] mt-1 {{ $mine ? "text-[#0b1420]/80" : "text-text-secondary" }}">
+                            <span class="font-mono">{{ $m->created_at?->format("H:i") }}</span> @if ($m->edited_at)
                                 · diedit
                                 @endif @if ($mine && $m->isEditable())
                                     · <a href="#" data-edit="{{ $m->id }}"
@@ -49,10 +49,10 @@
         <form method="POST" action="{{ route("chat.store", $conversation) }}"
             class="border-t border-border p-3 flex gap-2 items-end"> @csrf <input type="hidden" name="attachable_type"
                 id="attach-type"> <input type="hidden" name="attachable_id" id="attach-id"> <button type="button"
-                id="attach-btn" class="p-2 rounded-md hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-md">attach_file</span></button>
+                id="attach-btn" class="p-2 rounded-md hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-md text-accent-teal">attach_file</span></button>
             <textarea name="body" id="msg-body" rows="1" required placeholder="Tulis pesan..."
                 class="flex-1 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm resize-none"></textarea> <button
-                class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Kirim</button>
+                class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Kirim</button>
         </form> {{-- Panel attach --}} <div id="attach-panel" class="hidden border-t border-border p-3">
             <div class="flex items-center justify-between mb-2">
                 <p class="text-sm font-semibold">Lampirkan referensi</p> <button type="button" id="attach-close"
@@ -70,7 +70,7 @@
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"></textarea>
             <div class="flex justify-end gap-2 mt-3"> <button type="button" id="edit-cancel"
                     class="px-3 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</button> <button
-                    class="px-3 py-2 rounded-md bg-brand text-white text-sm">Simpan</button> </div>
+                    class="px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Simpan</button> </div>
         </form>
     </div>
 </div>

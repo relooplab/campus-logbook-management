@@ -55,6 +55,13 @@ RUN composer install --no-interaction --no-scripts --no-autoloader --no-dev --pr
 # Copy seluruh source (BAKE ke image)
 COPY . .
 
+# Fix #7: pastikan CHANGELOG.md & VERSION selalu ada di image. ReleaseVersion
+# membaca CHANGELOG (sumber utama = versi latest) lalu VERSION sebagai fallback.
+# Eksplisit COPY agar tidak hilang bila .dockerignore berubah — sebelumnya
+# *.md mengecualikan CHANGELOG.md dan menampilkan fallback 0.0.0.
+COPY VERSION ./VERSION
+COPY CHANGELOG.md ./CHANGELOG.md
+
 # Ambil aset frontend yang sudah di-build dari stage assets
 COPY --from=assets /build/public/build ./public/build
 

@@ -2,7 +2,7 @@
 <div class="max-w-4xl mx-auto space-y-4">
     <div class="flex items-center justify-between">
         <h1 class="text-xl font-bold">Chat</h1> <a href="{{ route("dashboard") }}"
-            class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">← Dashboard</a>
+            class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Dashboard</a>
     </div>
     @if ($user->isDosen() && $supervised->isNotEmpty())
         <div class="bg-bg-surface rounded-xl border border-border p-4">
@@ -14,7 +14,7 @@
                 @foreach ($supervised as $ta)
                     <div class="flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-border hover:bg-bg-hover/50">
                         <div class="flex items-center gap-3 min-w-0">
-                            <span class="h-9 w-9 rounded-full bg-brand text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+                            <span class="h-9 w-9 rounded-full bg-brand text-[#0b1420] flex items-center justify-center text-sm font-bold flex-shrink-0">
                                 @if ($ta->mahasiswa?->photoUrl())
                                     <img src="{{ $ta->mahasiswa->photoUrl() }}" class="h-full w-full object-cover rounded-full" alt="">
                                 @else
@@ -27,7 +27,7 @@
                             </div>
                         </div>
                         <a href="{{ route('chat.start', ['user' => $ta->mahasiswa?->id, 'ta' => $ta->id]) }}"
-                            class="flex-shrink-0 px-3 py-1.5 rounded-lg bg-brand text-white text-xs font-medium hover:opacity-90">Chat</a>
+                            class="flex-shrink-0 px-3 py-1.5 rounded-lg bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Chat</a>
                     </div>
                 @endforeach
             </div>
@@ -42,7 +42,7 @@
                 <a href="{{ route("chat.show", $c) }}"
                     class="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-bg-panel hover:bg-bg-hover/50">
                     <span
-                        class="h-10 w-10 rounded-full bg-brand text-white flex items-center justify-center font-bold flex-shrink-0">
+                        class="h-10 w-10 rounded-full bg-brand text-[#0b1420] flex items-center justify-center font-bold flex-shrink-0">
                         @if ($c->other_user?->photoUrl())
                             <img src="{{ $c->other_user->photoUrl() }}" class="h-full w-full object-cover rounded-full"
                                 alt="">

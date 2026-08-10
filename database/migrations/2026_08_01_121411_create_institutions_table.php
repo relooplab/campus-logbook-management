@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('institutions', function (Blueprint $table) {
             $table->id();
-            $table->string('app_name')->default('Thesis Logbook Management');
+            $table->string('app_name')->default('Campus Logbook Management');
             $table->string('institution_name')->default('Perguruan Tinggi');
             $table->string('faculty')->nullable();
             $table->string('study_program')->nullable();

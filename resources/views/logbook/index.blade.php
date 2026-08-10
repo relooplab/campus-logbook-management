@@ -12,8 +12,8 @@
         @auth
             @if (auth()->user()->isMahasiswa())
                 <div class="flex flex-wrap gap-2">
-                    <a href="{{ route('logbook.create') }}" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90 inline-flex items-center gap-1.5">
-                        <span class="material-symbols-outlined icon-sm">add</span> + Logbook
+                    <a href="{{ route('logbook.create') }}" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 inline-flex items-center gap-1.5">
+                        <span class="material-symbols-outlined icon-sm text-accent-orange">add</span> + Logbook
                     </a>
                     <a href="{{ route('logbook.create-revisi') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">+ Entri Revisi</a>
                 </div>
@@ -56,7 +56,7 @@
                 class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
         </div>
         <div class="flex gap-2 w-full sm:w-auto">
-            <button type="submit" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Cari</button>
+            <button type="submit" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Cari</button>
             <a href="{{ route('logbook.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border text-center">Reset</a>
         </div>
     </form>
@@ -100,20 +100,20 @@
                                     @endif
                                 </td>
                             @endif
-                            <td class="py-3 px-4">{{ $entry->jenis === 'revisi' ? '—' : $entry->sesi_ke }}</td>
+                            <td class="py-3 px-4 font-mono">{{ $entry->jenis === 'revisi' ? '—' : $entry->sesi_ke }}</td>
                             <td class="py-3 px-4 table-col-jenis">{{ ucfirst($entry->jenis) }}</td>
                             <td class="py-3 px-4">{{ $entry->topik ?? 'Revisi' }}</td>
-                            <td class="py-3 px-4 table-col-tanggal">{{ $entry->tanggal_tampil?->format('d M Y') ?? '—' }}</td>
+                            <td class="py-3 px-4 table-col-tanggal font-mono">{{ $entry->tanggal_tampil?->format('d M Y') ?? '—' }}</td>
                             <td class="py-3 px-4">@include('partials.status-badge', ['status' => $entry->status, 'entry' => $entry])</td>
                             @if ($isMahasiswa)
                                 <td class="py-3 px-4">
                                     @if ($entry->review_opened_at)
                                         <span class="inline-flex items-center gap-1 text-status-success text-xs" title="Dibuka dosen {{ $entry->review_opened_at->diffForHumans() }}">
-                                            <span class="material-symbols-outlined icon-sm">visibility</span> Sudah
+                                            <span class="material-symbols-outlined icon-sm text-status-info">visibility</span> Sudah
                                         </span>
                                     @else
                                         <span class="inline-flex items-center gap-1 text-text-secondary text-xs">
-                                            <span class="material-symbols-outlined icon-sm">visibility_off</span> Belum
+                                            <span class="material-symbols-outlined icon-sm text-status-info">visibility_off</span> Belum
                                         </span>
                                     @endif
                                 </td>

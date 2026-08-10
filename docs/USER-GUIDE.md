@@ -1,6 +1,6 @@
-# Panduan Pengguna — Thesis Logbook Management
+# Panduan Pengguna — Campus Logbook Management
 
-Selamat datang di **Thesis Logbook Management**, aplikasi pencatatan dan monitoring bimbingan Tugas Akhir (TA) mahasiswa. Panduan ini menjelaskan seluruh fitur aplikasi serta alur kerja (mekanisme) untuk setiap peran pengguna.
+Selamat datang di **Campus Logbook Management**, aplikasi pencatatan dan monitoring bimbingan Tugas Akhir (TA) mahasiswa. Panduan ini menjelaskan seluruh fitur aplikasi serta alur kerja (mekanisme) untuk setiap peran pengguna.
 
 ---
 

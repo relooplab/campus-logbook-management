@@ -2,7 +2,7 @@
 <div class="space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Pengumuman</h1> <a href="{{ route("announcements.create") }}"
-            class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">+ Buat Pengumuman</a>
+            class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">+ Buat Pengumuman</a>
     </div>
     @if ($announcements->isEmpty())
         <div class="px-4 py-10 rounded-lg bg-bg-surface border border-border text-center text-text-secondary"> Belum ada
@@ -12,7 +12,7 @@
             <div class="bg-bg-surface rounded-xl border border-border p-5">
                 <div class="flex items-start justify-between gap-3">
                     <div>
-                        <p class="font-semibold"><span class="material-symbols-outlined icon-sm">campaign</span> {{ $a->title }}</p>
+                        <p class="font-semibold"><span class="material-symbols-outlined icon-sm text-accent-orange">campaign</span> {{ $a->title }}</p>
                         <p class="text-sm text-text-secondary mt-1">{{ $a->body }}</p>
                         <p class="text-xs text-text-secondary mt-2">{{ $a->created_at?->diffForHumans() }}</p>
                     </div>

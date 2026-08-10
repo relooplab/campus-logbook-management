@@ -99,7 +99,7 @@
                 </div>
 
                 <button
-                    class="w-full px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Simpan</button>
+                    class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan</button>
             </form>
         </div>
     </div>
@@ -113,7 +113,7 @@
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
             <div class="flex justify-end gap-2 mt-4"> <button type="button" id="reset-cancel"
                     class="px-3 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</button> <button
-                    class="px-3 py-2 rounded-md bg-brand text-white text-sm">Reset</button> </div>
+                    class="px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Reset</button> </div>
         </form>
     </div>
 </div>

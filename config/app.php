@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'Campus Logbook Management'),
 
     /*
     |--------------------------------------------------------------------------
@@ -25,17 +25,6 @@ return [
     */
 
     'version' => env('APP_VERSION'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Batasan Kuota Dosen (MB)
-    |--------------------------------------------------------------------------
-    | Hard cap penyimpanan untuk setiap dosen (default 3 GB). Ditegakkan di
-    | StorageUsageService::assertCanUpload. Set 0 untuk unlimited.
-    |
-    */
-
-    'dosen_storage_limit_mb' => env('DOSEN_STORAGE_LIMIT_MB', 3072),
 
     /*
     |--------------------------------------------------------------------------

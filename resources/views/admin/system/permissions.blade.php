@@ -57,7 +57,7 @@
                 </table>
             </div>
             <div class="mt-4">
-                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Simpan Hak Akses</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Simpan Hak Akses</button>
             </div>
         </form>
     </div>
@@ -107,7 +107,7 @@
                 @endforeach
             </div>
             <div class="mt-4">
-                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Simpan Paket</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Simpan Paket</button>
             </div>
         </form>
     </div>

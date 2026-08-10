@@ -86,7 +86,7 @@
                     <label class="block text-xs text-text-secondary mb-1">File Lengkap (PDF, awal-akhir)</label>
                     <input type="file" name="full_file" accept="application/pdf" required class="w-full text-sm">
                 </div>
-                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Kirim Finalisasi</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Kirim Finalisasi</button>
             </form>
         </div>
     @endif

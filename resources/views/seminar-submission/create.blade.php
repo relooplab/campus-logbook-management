@@ -111,7 +111,7 @@
         </div>
 
         <div class="flex flex-wrap gap-2">
-            <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Kirim Bahan {{ $jenisLabel }}</button>
+            <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Kirim Bahan {{ $jenisLabel }}</button>
             <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Batal</a>
         </div>
     </form>

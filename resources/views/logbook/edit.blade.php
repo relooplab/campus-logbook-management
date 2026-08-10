@@ -52,7 +52,7 @@
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <label class="block text-sm font-medium">Catatan Perbaikan</label>
-                    <button type="button" id="tambah-baris" class="px-3 py-1.5 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-xs font-semibold">+ Tambah Baris</button>
+                    <button type="button" id="tambah-baris" class="px-3 py-1.5 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-xs font-semibold">+ Tambah Baris</button>
                 </div>
                 <p class="text-xs text-text-secondary mb-2">PDF catatan perbaikan dibuat otomatis oleh sistem dari tabel ini.</p>
                 <div class="overflow-x-auto">
@@ -127,7 +127,7 @@
         {{-- Lampiran draft --}} <div> <label class="block text-sm font-medium mb-1">Lampiran Draft
                 ({{ $typesLabel }})</label>
             @if ($logbook->lampiran_path)
-                    <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-bg-panel"> <span class="material-symbols-outlined icon-lg">description</span>
+                    <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-bg-panel"> <span class="material-symbols-outlined icon-lg text-accent-blue">description</span>
                     <div class="flex-1">
                         <p class="text-sm font-medium">
                             {{ $logbook->lampiran_original_name ?: basename($logbook->lampiran_path) }}</p>
@@ -138,7 +138,7 @@
                     <div class="flex items-center gap-1"> <a href="{{ route("logbook.pdf", $logbook) }}"
                             target="_blank" class="px-2 py-1 rounded-md bg-bg-panel hover:bg-bg-hover text-xs">Lihat</a>
                         <label
-                            class="px-2 py-1 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-xs cursor-pointer">
+                            class="px-2 py-1 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-xs cursor-pointer">
                             Ganti <input type="file" name="lampiran" accept="{{ $accept }}" class="hidden">
                         </label>
                         <form method="POST" action="{{ route("logbook.remove-lampiran", $logbook) }}"
@@ -159,7 +159,7 @@
         <span class="material-symbols-outlined icon-sm align-text-bottom">warning</span> Mengganti atau menghapus file akan mengarsipkan versi lama dan tidak bisa dikembalikan. Komentar PDF
         pada file yang diganti akan otomatis ditandai selesai (resolve). </div>
     <div class="flex flex-wrap gap-2 pt-2">
-        <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Simpan</button>
+        <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Simpan</button>
         <a href="{{ route('logbook.show', $logbook) }}" class="px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20">Batal</a>
     </div>
 </form>

@@ -3,7 +3,7 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Riwayat Sidang ({{ $sidangs->count() }})</h1>
         <div class="flex flex-wrap gap-2"> <a href="{{ route("dashboard.dosen.sidang-list.export") }}"
-                class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">download</span> Export PDF</a>
+                class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">download</span> Export PDF</a>
             <a href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-bg-hover hover:bg-border text-text-primary text-sm">← Dashboard</a> </div>
     </div>
 
@@ -36,7 +36,7 @@
                                 <input type="text" name="catatan" value="{{ $g->catatan }}" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                             </div>
                             <div class="sm:col-span-2">
-                                <button class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">{{ $g->filled_at ? 'Perbarui Nilai' : 'Simpan Nilai' }}</button>
+                                <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">{{ $g->filled_at ? 'Perbarui Nilai' : 'Simpan Nilai' }}</button>
                             </div>
                         </form>
                     </div>
@@ -114,7 +114,7 @@
                 </div>
             </div>
             <div class="sm:col-span-2">
-                <button type="submit" class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Simpan Riwayat</button>
+                <button type="submit" class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan Riwayat</button>
             </div>
         </form>
     </div>

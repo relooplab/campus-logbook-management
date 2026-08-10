@@ -15,38 +15,38 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
         <div class="p-5 rounded-card bg-bg-surface border border-border">
             <div class="flex items-center justify-between mb-3">
-                <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                    <span class="material-symbols-outlined icon-md">group</span>
+                <span class="icon-chip w-10 h-10">
+                    <span class="material-symbols-outlined icon-md text-accent-blue">group</span>
                 </span>
             </div>
-            <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['mahasiswa'] }}</div>
+            <div class="font-mono font-bold text-[32px] leading-tight text-text-primary tabular-nums">{{ $stats['mahasiswa'] }}</div>
             <div class="text-sm text-text-secondary mt-1">Mahasiswa</div>
         </div>
         <div class="p-5 rounded-card bg-bg-surface border border-border">
             <div class="flex items-center justify-between mb-3">
-                <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                    <span class="material-symbols-outlined icon-md">school</span>
+                <span class="icon-chip w-10 h-10">
+                    <span class="material-symbols-outlined icon-md text-accent-purple">school</span>
                 </span>
             </div>
-            <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['dosen'] }}</div>
+            <div class="font-mono font-bold text-[32px] leading-tight text-text-primary tabular-nums">{{ $stats['dosen'] }}</div>
             <div class="text-sm text-text-secondary mt-1">Dosen</div>
         </div>
         <div class="p-5 rounded-card bg-bg-surface border border-border">
             <div class="flex items-center justify-between mb-3">
-                <span class="icon-circle w-10 h-10 bg-sand/15 text-sand">
+                <span class="icon-chip w-10 h-10">
                     <span class="material-symbols-outlined icon-md">archive</span>
                 </span>
             </div>
-            <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['ta'] }}</div>
+            <div class="font-mono font-bold text-[32px] leading-tight text-text-primary tabular-nums">{{ $stats['ta'] }}</div>
             <div class="text-sm text-text-secondary mt-1">Data TA</div>
         </div>
         <div class="p-5 rounded-card bg-bg-surface border border-border">
             <div class="flex items-center justify-between mb-3">
-                <span class="icon-circle w-10 h-10 bg-status-danger/15 text-status-danger">
-                    <span class="material-symbols-outlined icon-md">fact_check</span>
+                <span class="icon-chip w-10 h-10">
+                    <span class="material-symbols-outlined icon-md text-status-pending">fact_check</span>
                 </span>
             </div>
-            <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['menunggu_review'] }}</div>
+            <div class="font-mono font-bold text-[32px] leading-tight text-text-primary tabular-nums">{{ $stats['menunggu_review'] }}</div>
             <div class="text-sm text-text-secondary mt-1">Menunggu Review</div>
         </div>
     </div>
@@ -68,7 +68,7 @@
                     @endforeach
                 </select>
             </div>
-            <button class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium">Import</button>
+            <button class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium">Import</button>
             @error('file')
                 <p class="text-status-danger text-xs w-full">{{ $message }}</p>
             @enderror

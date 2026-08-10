@@ -13,7 +13,7 @@
         </select> <select name="sort" class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
             <option value="latest" @selected(request("sort") === "latest")>Terbaru</option>
             <option value="name" @selected(request("sort") === "name")>Nama (A-Z)</option>
-        </select> <button class="w-full sm:w-auto px-3 py-2 rounded-md bg-brand text-white text-sm">Cari</button> </form>
+        </select> <button class="w-full sm:w-auto px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Cari</button> </form>
     <div class="grid lg:grid-cols-3 gap-4">
         <div class="lg:col-span-2 bg-bg-surface rounded-xl border border-border overflow-x-auto">
             <table class="w-full text-sm">
@@ -36,7 +36,7 @@
                                     <span class="block text-[10px] text-text-secondary mt-0.5">{{ $uUniv->name }}</span>
                                 @endif
                             </td>
-                            <td class="py-3 px-4 table-col-identifier">{{ $u->identifier ?? "—" }}</td>
+                            <td class="py-3 px-4 table-col-identifier font-mono">{{ $u->identifier ?? "—" }}</td>
                             <td class="py-3 px-4 table-col-email">{{ $u->email }}</td>
                             <td class="py-3 px-4">
                                 @foreach ($u->roles->whereNotIn('name', ['admin', 'system_admin']) as $role)
@@ -98,7 +98,7 @@
                         @endforeach
                     </div>
                 </div> <button
-                    class="w-full px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Simpan</button>
+                    class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan</button>
             </form>
 
             @if (auth()->user()->hasRole('admin') && !auth()->user()->isSystemAdmin() && auth()->user()->adminScopes->isNotEmpty())
@@ -129,7 +129,7 @@
                             </div>
                             <button type="button" id="add-sub-scope" class="mt-2 text-xs text-brand hover:underline">+ Tambah scope</button>
                         </div>
-                        <button class="w-full px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Simpan Admin</button>
+                        <button class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan Admin</button>
                     </form>
                 </div>
             @endif
@@ -145,7 +145,7 @@
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
             <div class="flex justify-end gap-2 mt-4"> <button type="button" id="reset-cancel"
                     class="px-3 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</button> <button
-                    class="px-3 py-2 rounded-md bg-brand text-white text-sm">Reset</button> </div>
+                    class="px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Reset</button> </div>
         </form>
     </div>
 </div>

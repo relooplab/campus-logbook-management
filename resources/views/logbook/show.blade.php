@@ -47,12 +47,12 @@
             <div class="px-4 py-3 rounded-xl bg-bg-panel border border-border text-sm flex flex-wrap items-center gap-2">
                 @if ($logbook->review_opened_at)
                     <span class="inline-flex items-center gap-1.5 text-status-success font-medium">
-                        <span class="material-symbols-outlined icon-sm">visibility</span> Sudah dilihat dosen
+                        <span class="material-symbols-outlined icon-sm text-status-info">visibility</span> Sudah dilihat dosen
                     </span>
                     <span class="text-xs text-text-secondary">dibuka {{ $logbook->review_opened_at->diffForHumans() }}</span>
                 @else
                     <span class="inline-flex items-center gap-1.5 text-text-secondary font-medium">
-                        <span class="material-symbols-outlined icon-sm">visibility_off</span> Belum dilihat dosen
+                        <span class="material-symbols-outlined icon-sm text-status-info">visibility_off</span> Belum dilihat dosen
                     </span>
                 @endif
             </div>
@@ -124,7 +124,7 @@
 
         @if ($logbook->feedback_dosen)
             <div class="px-4 py-3 rounded-xl bg-status-pending/10 border-l-4 border-status-pending text-sm">
-                <div class="flex items-center gap-1.5 mb-1 text-xs font-semibold text-status-pending uppercase tracking-wide"><span class="material-symbols-outlined icon-sm">forum</span> Umpan Balik Dosen</div>
+                <div class="flex items-center gap-1.5 mb-1 text-xs font-semibold text-status-pending uppercase tracking-wide"><span class="material-symbols-outlined icon-sm text-accent-teal">forum</span> Umpan Balik Dosen</div>
                 <div class="text-sm">{{ $logbook->feedback_dosen }}</div>
             </div>
         @endif
@@ -132,7 +132,7 @@
         @if ($canManageActionItems)
             <div class="px-4 py-3 rounded-xl bg-bg-panel border border-border">
                 <div class="flex items-center gap-1.5 mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wide">
-                    <span class="material-symbols-outlined icon-sm">checklist</span> Action Items
+                    <span class="material-symbols-outlined icon-sm text-accent-blue">checklist</span> Action Items
                 </div>
                 <div id="action-items-list" class="space-y-2">
                     @forelse ($logbook->actionItems as $item)
@@ -153,14 +153,14 @@
                     @csrf
                     <input type="text" name="text" placeholder="Tambah action item..." maxlength="500"
                         class="flex-1 rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Tambah</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Tambah</button>
                 </form>
             </div>
         @endif
 
         <div class="flex flex-wrap gap-2 text-sm">
             @if ($logbook->lampiran_path || $logbook->catatan_perbaikan_path)
-                <a href="{{ route('logbook.pdf-viewer', $logbook) }}" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">
+                <a href="{{ route('logbook.pdf-viewer', $logbook) }}" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">
                     @if ($canReview)
                         Review PDF & Beri Anotasi
                     @else
@@ -183,7 +183,7 @@
             <a href="{{ route('logbook.edit', $logbook) }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Edit</a>
             <form method="POST" action="{{ route('logbook.submit', $logbook) }}">
                 @csrf
-                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Kirim ke dosen</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Kirim ke dosen</button>
             </form>
                 <form method="POST" action="{{ route('logbook.destroy', $logbook) }}"
                     onsubmit="return confirm('Hapus entri ini? Tindakan tidak dapat dibatalkan.');" class="inline">
@@ -195,7 +195,7 @@
     @endif
 
     @if ($owner && $logbook->status === 'revisi' && !$logbook->isLockedByActiveRevision())
-        <a href="{{ route('logbook.create-revisi', ['parent_entry_id' => $logbook->id]) }}" class="inline-block px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Buat Revisi dari Umpan Balik Ini</a>
+        <a href="{{ route('logbook.create-revisi', ['parent_entry_id' => $logbook->id]) }}" class="inline-block px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Buat Revisi dari Umpan Balik Ini</a>
     @endif
 
     @if ($canReview && $logbook->status === 'submitted')
@@ -204,7 +204,7 @@
             @if ($logbook->lampiran_path || $logbook->catatan_perbaikan_path)
                 <div class="px-4 py-3 rounded-xl bg-brand/10 border border-brand/20">
                     <p class="text-sm mb-2">Buka PDF, seret untuk menandai area, dan beri komentar sebelum memutuskan.</p>
-                    <a href="{{ route('logbook.pdf-viewer', $logbook) }}" class="inline-block px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Buka PDF & Anotasi</a>
+                    <a href="{{ route('logbook.pdf-viewer', $logbook) }}" class="inline-block px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Buka PDF & Anotasi</a>
                 </div>
             @else
                 <p class="text-xs text-text-secondary">Tidak ada file PDF pada entri ini untuk dianotasi.</p>
@@ -215,14 +215,14 @@
                     @csrf
                     <input type="text" name="text" maxlength="500" required placeholder="Checklist dari feedback Anda untuk mahasiswa..."
                         class="flex-1 rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Tambah</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Tambah</button>
                 </form>
             </div>
             <form method="POST" action="{{ route('logbook.approve', $logbook) }}" id="review-approve-form" class="mb-3"
                 data-pdf-opened="{{ $logbook->review_opened_at ? '1' : '0' }}"
                 data-has-pdf="{{ $logbook->lampiran_path || $logbook->catatan_perbaikan_path ? '1' : '0' }}">
                 @csrf
-                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Setujui</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Setujui</button>
             </form>
             <form method="POST" action="{{ route('logbook.request-revisi', $logbook) }}" class="space-y-2">
                 @csrf

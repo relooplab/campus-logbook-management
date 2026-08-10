@@ -5,9 +5,9 @@
     {{-- Tab TA / KP --}}
     <div class="flex flex-wrap gap-2">
         <a href="{{ route("admin.tas", ["jenis" => "ta"]) }}"
-            class="px-4 py-2 rounded-xl text-sm font-medium border transition-colors {{ $jenis === "ta" ? "bg-brand-fill text-white border-brand-fill" : "bg-bg-surface text-text-secondary border-border hover:bg-bg-hover" }}">Tugas Akhir</a>
+            class="px-4 py-2 rounded-xl text-sm font-medium border transition-colors {{ $jenis === "ta" ? "bg-brand text-[#0b1420] border-brand" : "bg-bg-surface text-text-secondary border-border hover:bg-bg-hover" }}">Tugas Akhir</a>
         <a href="{{ route("admin.tas", ["jenis" => "kp"]) }}"
-            class="px-4 py-2 rounded-xl text-sm font-medium border transition-colors {{ $jenis === "kp" ? "bg-brand-fill text-white border-brand-fill" : "bg-bg-surface text-text-secondary border-border hover:bg-bg-hover" }}">Kerja Praktek</a>
+            class="px-4 py-2 rounded-xl text-sm font-medium border transition-colors {{ $jenis === "kp" ? "bg-brand text-[#0b1420] border-brand" : "bg-bg-surface text-text-secondary border-border hover:bg-bg-hover" }}">Kerja Praktek</a>
     </div>
 
     {{-- Search / filter --}} <form method="GET"
@@ -20,7 +20,7 @@
             @foreach ($dosenList as $d)
                 <option value="{{ $d->id }}" @selected((string) request("pembimbing") === (string) $d->id)>{{ $d->name }}</option>
             @endforeach
-        </select> <button class="w-full sm:w-auto px-3 py-2 rounded-md bg-brand text-white text-sm">Cari</button>
+        </select> <button class="w-full sm:w-auto px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Cari</button>
     </form>
     <div class="grid lg:grid-cols-3 gap-4">
         <div class="lg:col-span-2 bg-bg-surface rounded-xl border border-border overflow-x-auto">
@@ -84,7 +84,7 @@
                         @foreach ($dosenList as $d)
                             <option value="{{ $d->id }}">{{ $d->name }}</option>
                         @endforeach
-                    </select> <button class="px-3 py-2 rounded-md bg-brand text-white text-sm">Assign Pembimbing
+                    </select> <button class="px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Assign Pembimbing
                         1</button> </div>
             </form>
             <div class="p-3">{{ $tas->links() }}</div>
@@ -152,7 +152,7 @@
                 @endif
                 <input type="number" name="target_sesi" value="7" min="1"
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <button
-                    class="w-full px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Simpan</button>
+                    class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan</button>
             </form>
         </div>
     </div> {{-- Inline edit forms --}} @foreach ($tas as $ta)
@@ -221,7 +221,7 @@
                     <option value="aktif" @selected($ta->status_ta === "aktif")>Aktif</option>
                     <option value="tamat" @selected($ta->status_ta === "tamat")>Tamat</option>
                     <option value="nonaktif" @selected($ta->status_ta === "nonaktif")>Nonaktif</option>
-                </select> <button class="px-4 py-2 rounded-md bg-brand text-white text-sm">Simpan
+                </select> <button class="px-4 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Simpan
                     Perubahan</button> </form>
         </div>
     @endforeach

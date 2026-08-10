@@ -68,7 +68,7 @@
             </div>
 
             <div class="flex gap-2 pt-2">
-                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Simpan Paket</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Simpan Paket</button>
             </div>
         </form>
     </div>

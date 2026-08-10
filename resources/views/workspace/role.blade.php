@@ -71,7 +71,7 @@
                     <p id="personal-progress-text" class="text-xs text-text-secondary mt-1">0%</p>
                 </div>
                 <button type="submit" id="personal-upload-btn" disabled
-                    class="mt-3 px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90 disabled:opacity-40">Upload</button>
+                    class="mt-3 px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 disabled:opacity-40">Upload</button>
                 @error('files.*')
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -122,16 +122,16 @@
                                         <div class="flex items-center gap-1 flex-shrink-0">
                                             @if ($file->isPdf())
                                                 <a href="{{ route('workspace.preview', $file) }}" target="_blank" title="Preview"
-                                                    class="p-1.5 rounded hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm">visibility</span></a>
+                                                    class="p-1.5 rounded hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm text-status-info">visibility</span></a>
                                             @endif
                                             <a href="{{ route('workspace.download', $file) }}" title="Download"
-                                                class="p-1.5 rounded hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm">download</span></a>
+                                                class="p-1.5 rounded hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm text-accent-orange">download</span></a>
                                             <form method="POST" action="{{ route('workspace.destroy', $file) }}"
                                                 onsubmit="return confirm('Hapus file ini?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button class="p-1.5 rounded hover:bg-status-danger/10 text-status-danger" title="Hapus">
-                                                    <span class="material-symbols-outlined icon-sm">delete</span>
+                                                    <span class="material-symbols-outlined icon-sm text-status-danger">delete</span>
                                                 </button>
                                             </form>
                                         </div>
@@ -169,7 +169,7 @@
                 @foreach ($tas as $ta)
                     <a href="{{ route('workspace.index', $ta) }}" class="flex items-center gap-3 p-3 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
                         <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                            <span class="material-symbols-outlined icon-md">folder</span>
+                            <span class="material-symbols-outlined icon-md text-accent-teal">folder</span>
                         </span>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-medium text-text-primary">{{ $ta->mahasiswa?->name }} <span class="text-xs text-text-secondary">({{ $ta->jenisLabel() }})</span></p>

@@ -80,6 +80,8 @@ Route::middleware(['auth', 'ensure.dosen.affiliation'])->group(function () {
         Route::delete('/dosen-sidang/{sidang}', [DosenSidangController::class, 'destroy'])->name('dosen-sidang.destroy');
     });
     Route::get('/dashboard/dosen/mahasiswa-list', [DashboardController::class, 'dosenMahasiswaList'])->name('dashboard.dosen.mahasiswa-list');
+    Route::get('/dashboard/dosen/mahasiswa-saya', [DashboardController::class, 'mahasiswaSaya'])->name('dosen.mahasiswa-saya');
+    Route::post('/dashboard/lanjut-ta/dismiss', [DashboardController::class, 'dismissLanjutTa'])->name('dashboard.lanjut-ta.dismiss');
     Route::get('/dashboard/dosen/sidang-list', [DashboardController::class, 'dosenSidangList'])->name('dashboard.dosen.sidang-list');
     Route::get('/dashboard/dosen/sidang-list/export', [ExportController::class, 'exportSidangPdf'])->name('dashboard.dosen.sidang-list.export');
 

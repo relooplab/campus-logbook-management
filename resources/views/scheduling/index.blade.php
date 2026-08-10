@@ -25,7 +25,7 @@
                 <div class="card p-5 flex flex-col gap-4">
                     <div class="flex items-start gap-4">
                         <div
-                            class="h-14 w-14 rounded-full overflow-hidden bg-brand text-white flex items-center justify-center text-lg font-bold flex-shrink-0">
+                            class="h-14 w-14 rounded-full overflow-hidden bg-brand text-[#0b1420] flex items-center justify-center text-lg font-bold flex-shrink-0">
                             @if ($d->photoUrl())
                                 <img src="{{ $d->photoUrl() }}" class="h-full w-full object-cover" alt="Foto {{ $d->name }}">
                             @else

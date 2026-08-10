@@ -5,7 +5,7 @@
         <h1 class="text-xl font-bold"> Viewer PDF & Anotasi —
             {{ $logbook->jenis === "revisi" ? "Revisi" : "Sesi " . $logbook->sesi_ke }} </h1>
         <a href="{{ route("logbook.show", $logbook) }}"
-            class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">← Kembali</a>
+            class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Kembali</a>
     </div>
     <div id="pdf-viewer-root"></div>
 </div>

@@ -203,6 +203,62 @@ class DashboardController extends Controller
     }
 
     /**
+     * Halaman "Mahasiswa Saya" dosen — daftar mahasiswa yang dibimbing (pembimbing 1/2)
+     * atau diuji (penguji 1/2), dikelompokkan, baik TA maupun KP. Setiap entri
+     * disertai label peran dosen (bisa lebih dari satu jika dosen merangkap).
+     * Agar tidak duplikat, mahasiswa yang dosen BIMBING tampil di seksi Dibimbing
+     * saja (peran penguji ditampilkan sebagai chip tambahan), bukan muncul di
+     * kedua seksi.
+     */
+    public function mahasiswaSaya(Request $request): View
+    {
+        $user = $request->user();
+        abort_unless($user->isDosen(), 403, 'Halaman ini khusus dosen.');
+
+        $with = ['mahasiswa', 'pembimbing1', 'pembimbing2', 'penguji1', 'penguji2'];
+
+        // Ambil semua TA di mana dosen terkait (bimbing/uji), lalu anotasi peran.
+        $all = MahasiswaTa::where(function ($q) use ($user) {
+                $q->where('pembimbing_1_id', $user->id)
+                    ->orWhere('pembimbing_2_id', $user->id)
+                    ->orWhere('penguji_1_id', $user->id)
+                    ->orWhere('penguji_2_id', $user->id);
+            })
+            ->with($with)
+            ->latest()
+            ->get()
+            ->map(function ($ta) use ($user) {
+                $roles = [];
+                if ($ta->pembimbing_1_id === $user->id) $roles[] = 'Pembimbing 1';
+                if ($ta->pembimbing_2_id === $user->id) $roles[] = 'Pembimbing 2';
+                if ($ta->penguji_1_id === $user->id) $roles[] = 'Penguji 1';
+                if ($ta->penguji_2_id === $user->id) $roles[] = 'Penguji 2';
+                $ta->my_roles = $roles;
+                return $ta;
+            });
+
+        // "Dibimbing" = dosen adalah pembimbing (peran penguji ditampilkan sebagai chip).
+        $dibimbing = $all->filter(fn ($ta) => in_array('Pembimbing 1', $ta->my_roles, true)
+            || in_array('Pembimbing 2', $ta->my_roles, true))->values();
+
+        // "Diuji" = dosen HANYA penguji (bukan pembimbing) — agar tidak duplikat.
+        $diuji = $all->filter(fn ($ta) => !in_array('Pembimbing 1', $ta->my_roles, true)
+            && !in_array('Pembimbing 2', $ta->my_roles, true))->values();
+
+        return view('dashboard.dosen-mahasiswa-saya', compact('dibimbing', 'diuji', 'user'));
+    }
+
+    /**
+     * Tutup (dismiss) card "Lanjut ke TA" di dashboard mahasiswa untuk sesi ini.
+     * Link permanen tetap tersedia di halaman Profil.
+     */
+    public function dismissLanjutTa(Request $request): RedirectResponse
+    {
+        $request->session()->put('lanjut_ta_dismissed', true);
+        return back();
+    }
+
+    /**
      * Riwayat menguji dosen.
      */
     public function dosenSidangList(Request $request): View

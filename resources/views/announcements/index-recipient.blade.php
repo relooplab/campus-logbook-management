@@ -10,7 +10,7 @@
                 class="bg-bg-surface rounded-xl border {{ $unread ? "border-status-pending/30" : "border-border" }} p-5">
                 <div class="flex items-start justify-between gap-3">
                     <div>
-                        <p class="font-semibold"><span class="material-symbols-outlined icon-sm">campaign</span> {{ $a->title }}</p>
+                        <p class="font-semibold"><span class="material-symbols-outlined icon-sm text-accent-orange">campaign</span> {{ $a->title }}</p>
                         <p class="text-sm text-text-primary mt-1">{{ $a->body }}</p>
                         <p class="text-xs text-text-secondary mt-2">Dari: {{ $a->sender?->name }} ·
                             {{ $a->created_at?->diffForHumans() }}</p>
@@ -23,7 +23,7 @@
                 </div>
                 @if ($unread)
                     <form method="POST" action="{{ route("announcements.read", $a) }}" class="mt-3"> @csrf <button
-                            class="px-3 py-1.5 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-xs">Tandai
+                            class="px-3 py-1.5 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-xs">Tandai
                             Dibaca</button> </form>
                 @endif
             </div>

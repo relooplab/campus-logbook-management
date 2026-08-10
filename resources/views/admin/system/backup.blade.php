@@ -6,7 +6,7 @@
 <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="font-heading font-bold text-2xl text-text-primary"><span class="material-symbols-outlined icon-md align-text-bottom">cloud_download</span> Backup & Restore Sistem</h1>
+            <h1 class="font-heading font-bold text-2xl text-text-primary"><span class="material-symbols-outlined icon-md align-text-bottom text-accent-orange">cloud_download</span> Backup & Restore Sistem</h1>
             <p class="text-sm text-text-secondary mt-0.5">Backup seluruh sistem (database + file) atau sebagian modul saja, dan restore dari backup sebelumnya.</p>
         </div>
         <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Dashboard</a>
@@ -25,7 +25,7 @@
         </p>
 
         <div class="mb-4 px-4 py-3 rounded-xl bg-status-warning/10 text-status-warning border border-status-warning/20 flex items-start gap-2.5 text-sm">
-            <span class="material-symbols-outlined icon-md mt-0.5">warning</span>
+            <span class="material-symbols-outlined icon-md mt-0.5 text-status-danger">warning</span>
             <span>
                 File ZIP hasil backup berisi kredensial SMTP institusi dalam bentuk plaintext (password email).
                 Simpan &amp; kirim file ini hanya lewat jalur yang aman.
@@ -71,7 +71,7 @@
             @endif
 
             <div class="mt-4">
-                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Backup Sekarang</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Backup Sekarang</button>
             </div>
         </form>
     </div>
@@ -87,7 +87,7 @@
         </p>
 
         <div class="mb-4 px-4 py-3 rounded-xl bg-status-danger/10 text-status-danger border border-status-danger/20 flex items-start gap-2.5 text-sm">
-            <span class="material-symbols-outlined icon-md mt-0.5">dangerous</span>
+            <span class="material-symbols-outlined icon-md mt-0.5 text-status-danger">dangerous</span>
             <span>
                 Restore <strong>penuh</strong> menghapus SELURUH data saat ini lalu menggantinya dengan isi backup.
                 Restore <strong>parsial</strong> hanya mengganti baris-baris yang persis ada di dalam backup

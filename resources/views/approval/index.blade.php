@@ -17,7 +17,7 @@
     <div class="card p-6">
         <div class="flex items-center gap-3 mb-4">
             <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                <span class="material-symbols-outlined icon-md">person_add</span>
+                <span class="material-symbols-outlined icon-md text-accent-teal">person_add</span>
             </span>
             <div>
                 <h2 class="font-heading font-semibold text-text-primary">Tambah Mahasiswa Manual</h2>
@@ -35,8 +35,8 @@
                 @enderror
             </div>
             <div class="flex items-end">
-                <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90 inline-flex items-center justify-center gap-1.5">
-                    <span class="material-symbols-outlined icon-sm">add</span> Tambah
+                <button type="submit" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 inline-flex items-center justify-center gap-1.5">
+                    <span class="material-symbols-outlined icon-sm text-accent-orange">add</span> Tambah
                 </button>
             </div>
         </form>
@@ -117,8 +117,8 @@
                                 <p class="text-xs text-text-secondary mt-1">Fase yang dipilih mahasiswa — dapat disesuaikan.</p>
                             </div>
                             <div class="sm:col-span-2 flex flex-wrap gap-2 pt-1">
-                                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90 inline-flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined icon-sm">check_circle</span> Setujui & Assign
+                                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 inline-flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined icon-sm text-status-success">check_circle</span> Setujui & Assign
                                 </button>
                             </div>
                         </form>
@@ -135,7 +135,7 @@
                                 @enderror
                             </div>
                             <button type="submit" class="px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20 inline-flex items-center gap-1.5">
-                                <span class="material-symbols-outlined icon-sm">close</span> Tolak
+                                <span class="material-symbols-outlined icon-sm text-status-danger">close</span> Tolak
                             </button>
                         </form>
                     </div>

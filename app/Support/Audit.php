@@ -2,7 +2,9 @@
 
 namespace App\Support;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Audit log untuk aksi sensitif (admin & auth) agar bisa di-forensik.
@@ -12,11 +14,14 @@ class Audit
 {
     public static function log(string $action, array $context = []): void
     {
+        $user = Auth::user();
         Log::channel('audit')->info($action, array_merge([
-            'oleh' => auth()->user()
-                ? auth()->user()->name.' ('.auth()->id().')'
-                : 'anonymous',
-            'ip' => request()->ip(),
+            'oleh' => $user
+                ? $user->name.' ('.Auth::id().')'
+                : 'system',
+            'ip' => app()->bound('request') && ($req = request()) instanceof Request
+                ? $req->ip()
+                : null,
             'waktu' => now()->toDateTimeString(),
         ], $context));
     }

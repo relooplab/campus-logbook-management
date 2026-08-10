@@ -3,14 +3,14 @@
     <div class="max-w-2xl mx-auto text-center py-16">
         <h1 class="text-2xl font-bold">Quick Review</h1>
         <p class="text-text-secondary mt-2">Tidak ada entri menunggu review. <span class="material-symbols-outlined icon-sm align-text-bottom">celebration</span></p> <a href="{{ route("dashboard") }}"
-            class="inline-block mt-4 px-4 py-2 rounded-md bg-brand text-white text-sm">← Dashboard</a>
+            class="inline-block mt-4 px-4 py-2 rounded-md bg-brand text-[#0b1420] text-sm">← Dashboard</a>
     </div>
 @else
     <div class="space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <h1 class="text-xl font-bold">Quick Review (1 dari {{ $queueCount }}) —
                 {{ $entry->jenis === "revisi" ? "Revisi" : "Sesi " . $entry->sesi_ke }}</h1> <a
-                href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">←
+                href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">←
                 Dashboard</a>
         </div> {{-- Ringkasan entry --}} <div class="bg-bg-surface rounded-xl border border-border p-5 space-y-3">
             <div class="flex items-center justify-between">
@@ -54,7 +54,7 @@
             </div>
             @if ($entry->lampiran_path || $entry->catatan_perbaikan_path)
                 <a href="{{ route("logbook.pdf-viewer", $entry) }}" target="_blank"
-                    class="inline-block px-3 py-2 rounded-md bg-brand text-white text-sm">Lihat PDF &
+                    class="inline-block px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Lihat PDF &
                     Anotasi</a>
             @endif
             @if ($entry->exceedsRevisionRoundLimit())
@@ -94,7 +94,7 @@
             <p id="revisi-error" class="hidden text-xs text-status-danger mt-1">Umpan Balik wajib diisi minimal 20 karakter.</p>
             <div class="flex flex-wrap gap-2">
                 <form method="POST" action="{{ route("quick-review.approve-next", $entry) }}" id="approve-form" data-pdf-opened="{{ $entry->review_opened_at || (!$entry->lampiran_path && !$entry->catatan_perbaikan_path) ? "1" : "0" }}"> @csrf <button type="submit" id="approve-btn"
-                        class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">check</span>
+                        class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">check</span>
                         Setujui & Next</button> </form>
                 <form method="POST" action="{{ route("quick-review.revisi-next", $entry) }}" id="revisi-form" data-pdf-opened="{{ $entry->review_opened_at || (!$entry->lampiran_path && !$entry->catatan_perbaikan_path) ? "1" : "0" }}">
                     @csrf <input type="hidden" name="feedback_dosen" id="revisi-feedback">
@@ -118,7 +118,7 @@
         </div>
         <div class="flex justify-end gap-2 mt-4"> <button type="button" id="tpl-cancel"
                 class="px-3 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</button> <button type="button" id="tpl-save"
-                class="px-3 py-2 rounded-md bg-brand text-white text-sm">Simpan</button> </div>
+                class="px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Simpan</button> </div>
     </div>
 </div>
 @endsection @section("scripts")

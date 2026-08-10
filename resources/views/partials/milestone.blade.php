@@ -12,10 +12,10 @@
             <div class="flex flex-col items-center text-center w-20 sm:w-24">
                 @if ($state === "done")
                     <span
-                        class="h-8 w-8 rounded-full bg-brand text-white flex items-center justify-center shadow"><span class="material-symbols-outlined icon-sm">check</span></span>
+                        class="h-8 w-8 rounded-full bg-brand text-[#0b1420] flex items-center justify-center shadow"><span class="material-symbols-outlined icon-sm text-status-success">check</span></span>
                 @elseif ($state === "active")
                     <span
-                        class="h-8 w-8 rounded-full bg-brand text-white flex items-center justify-center shadow animate-pulse ring-2 ring-brand ring-offset-2 ring-offset-bg-panel">●</span>
+                        class="h-8 w-8 rounded-full bg-brand text-[#0b1420] flex items-center justify-center shadow animate-pulse ring-2 ring-brand ring-offset-2 ring-offset-bg-panel">●</span>
                 @else
                     <span
                         class="h-8 w-8 rounded-full bg-bg-panel text-text-secondary flex items-center justify-center">○</span>

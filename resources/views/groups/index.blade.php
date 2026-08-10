@@ -3,7 +3,7 @@
 @section('title', 'Grup Dosen')
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6 ctx-kelompok">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="font-heading font-bold text-2xl text-text-primary">Grup Dosen</h1>
@@ -61,7 +61,7 @@
                         <div class="flex gap-2">
                             <form method="POST" action="{{ route('groups.approve', $group) }}">
                                 @csrf
-                                <button type="submit" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Terima</button>
+                                <button type="submit" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Terima</button>
                             </form>
                             <form method="POST" action="{{ route('groups.reject', $group) }}">
                                 @csrf
@@ -98,7 +98,7 @@
                     </select>
                 </div>
                 <div class="flex items-end">
-                    <button type="submit" class="w-full px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Buat Grup</button>
+                    <button type="submit" class="w-full px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Buat Grup</button>
                 </div>
 
                 {{-- Dropdown fakultas (level = fakultas) --}}
@@ -195,7 +195,7 @@
                         </div>
                         <form method="POST" action="{{ route('groups.join', $group) }}">
                             @csrf
-                            <button type="submit" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Gabung</button>
+                            <button type="submit" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Gabung</button>
                         </form>
                     </div>
                 @endforeach

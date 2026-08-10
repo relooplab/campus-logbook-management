@@ -99,7 +99,7 @@
                 </div>
             </div>
 
-            <button class="px-4 py-2 rounded-xl bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan Afiliasi</button>
+            <button class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan Afiliasi</button>
         </form>
     </div>
 @endsection

@@ -55,7 +55,7 @@
                     <p class="text-xs text-text-secondary">Undangan sebagai: {{ $submission->undanganSebagaiLabel() }}</p>
                 </div>
             </div>
-            <a href="{{ route('seminar-submission.undangan-download', $submission) }}" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Download</a>
+            <a href="{{ route('seminar-submission.undangan-download', $submission) }}" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Download</a>
         </div>
     </div>
 
@@ -73,7 +73,7 @@
                         </p>
                     </div>
                 </div>
-                <a href="{{ route('seminar-submission.materi-download', $submission) }}" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Download</a>
+                <a href="{{ route('seminar-submission.materi-download', $submission) }}" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Download</a>
             </div>
         @else
             <p class="text-sm text-text-secondary">Belum ada dokumen materi.</p>
@@ -109,7 +109,7 @@
             <h2 class="font-heading font-semibold text-text-primary mb-2">Catat Hasil Sidang / Seminar</h2>
             <p class="text-sm text-text-secondary mb-3">Setelah sidang/seminar berlangsung, catat hasilnya ke Riwayat Sidang. Pembimbing & penguji akan mengisi nilai.</p>
             <a href="{{ route('dosen-sidang.index', ['submission' => $submission->id]) }}"
-                class="inline-block px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Catat Hasil Sidang / Seminar</a>
+                class="inline-block px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Catat Hasil Sidang / Seminar</a>
         </div>
     @endif
 

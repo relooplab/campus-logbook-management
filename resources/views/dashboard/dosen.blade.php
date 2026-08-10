@@ -10,11 +10,11 @@
             <p class="text-sm text-text-secondary mt-0.5">Ringkasan aktivitas bimbingan & pengujian TA</p>
         </div>
         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-            <a href="{{ route('approval.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90 inline-flex items-center justify-center gap-1.5">
-                <span class="material-symbols-outlined icon-sm">person_add</span> Tambah Mahasiswa
+            <a href="{{ route('approval.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 inline-flex items-center justify-center gap-1.5">
+                <span class="material-symbols-outlined icon-sm text-accent-teal">person_add</span> Tambah Mahasiswa
             </a>
             <a href="{{ route('dosen-sidang.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border inline-flex items-center justify-center gap-1.5">
-                <span class="material-symbols-outlined icon-sm">verified</span> Catat Sidang
+                <span class="material-symbols-outlined icon-sm text-accent-purple">verified</span> Catat Sidang
             </a>
         </div>
     </div>
@@ -33,7 +33,7 @@
             @endif
             <div class="flex items-center gap-3 mb-4">
                 <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                    <span class="material-symbols-outlined icon-md">account_balance</span>
+                    <span class="material-symbols-outlined icon-md text-accent-teal">account_balance</span>
                 </span>
                 <div>
                     <h2 class="font-heading font-semibold text-text-primary">Institusi & Grup</h2>
@@ -45,12 +45,12 @@
                     <p class="text-xs text-text-secondary mb-1">Perguruan Tinggi</p>
                     <p class="font-medium text-text-primary">{{ $university?->name ?? 'Belum diisi' }}</p>
                     @if ($university?->npsn)
-                        <p class="text-xs text-text-secondary mt-0.5">NPSN: {{ $university->npsn }}</p>
+                        <p class="text-xs text-text-secondary mt-0.5 font-mono">NPSN: {{ $university->npsn }}</p>
                     @endif
                 </div>
                 <div class="p-4 rounded-xl bg-bg-panel border border-border">
                     <p class="text-xs text-text-secondary mb-1">NIDN</p>
-                    <p class="font-medium text-text-primary">{{ $user->nidn ?? 'Belum diisi' }}</p>
+                    <p class="font-mono font-medium text-text-primary">{{ $user->nidn ?? 'Belum diisi' }}</p>
                     <p class="text-xs text-text-secondary mt-0.5">Identitas dosen</p>
                 </div>
                 <a href="{{ route('groups.index') }}" class="p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
@@ -62,7 +62,7 @@
             @if (! $instansiComplete)
                 <a href="{{ route('profile.affiliation') }}"
                     class="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline">
-                    <span class="material-symbols-outlined icon-sm">account_balance</span> Lengkapi Data Institusi
+                    <span class="material-symbols-outlined icon-sm text-accent-teal">account_balance</span> Lengkapi Data Institusi
                 </a>
             @endif
         </div>
@@ -72,7 +72,7 @@
     <div class="card p-6">
         <div class="flex items-center gap-3 mb-4">
             <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                <span class="material-symbols-outlined icon-md">today</span>
+                <span class="material-symbols-outlined icon-md text-status-info">today</span>
             </span>
             <div>
                 <h2 class="font-heading font-semibold text-text-primary">Aksi Hari Ini</h2>
@@ -89,7 +89,7 @@
                     </span>
                 @endif
                 <span class="icon-circle w-10 h-10 bg-status-pending/20 text-status-pending animate-pulse">
-                    <span class="material-symbols-outlined icon-md">person_add</span>
+                    <span class="material-symbols-outlined icon-md text-accent-teal">person_add</span>
                 </span>
                 <div>
                     <div class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $pendingRegistrations }}</div>
@@ -103,7 +103,7 @@
             {{-- Entri menunggu review --}}
             <a href="{{ route('quick-review.index') }}" class="flex items-center gap-3 p-4 rounded-xl bg-status-danger/10 border border-status-danger/30 hover:border-status-danger/50 transition-colors">
                 <span class="icon-circle w-10 h-10 bg-status-danger/15 text-status-danger">
-                    <span class="material-symbols-outlined icon-md">fact_check</span>
+                    <span class="material-symbols-outlined icon-md text-accent-blue">fact_check</span>
                 </span>
                 <div>
                     <div class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $stats['menunggu_review'] }}</div>
@@ -117,7 +117,7 @@
             {{-- Mahasiswa perlu perhatian --}}
             <a href="{{ route('dashboard.dosen.mahasiswa-list') }}" class="flex items-center gap-3 p-4 rounded-xl bg-status-info/10 border border-status-info/30 hover:border-status-info/50 transition-colors">
                 <span class="icon-circle w-10 h-10 bg-status-info/15 text-status-info">
-                    <span class="material-symbols-outlined icon-md">monitor_heart</span>
+                    <span class="material-symbols-outlined icon-md text-status-danger">monitor_heart</span>
                 </span>
                 <div>
                     <div class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $needsAttention }}</div>
@@ -135,7 +135,7 @@
         <a href="{{ route('dashboard.dosen.mahasiswa-list') }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-brand/30 transition-colors">
             <div class="flex items-center justify-between mb-3">
                 <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                    <span class="material-symbols-outlined icon-md">group</span>
+                    <span class="material-symbols-outlined icon-md text-accent-blue">group</span>
                 </span>
             </div>
             <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['total_bimbingan'] }}</div>
@@ -144,7 +144,7 @@
         <a href="{{ route('dashboard.dosen.mahasiswa-list', ['status' => 'aktif']) }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-brand/30 transition-colors">
             <div class="flex items-center justify-between mb-3">
                 <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                    <span class="material-symbols-outlined icon-md">bolt</span>
+                    <span class="material-symbols-outlined icon-md text-accent-orange">bolt</span>
                 </span>
             </div>
             <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['sedang_progres'] }}</div>
@@ -153,7 +153,7 @@
         <a href="{{ route('dashboard.dosen.mahasiswa-list', ['status' => 'tamat']) }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-sand/30 transition-colors">
             <div class="flex items-center justify-between mb-3">
                 <span class="icon-circle w-10 h-10 bg-sand/15 text-sand">
-                    <span class="material-symbols-outlined icon-md">school</span>
+                    <span class="material-symbols-outlined icon-md text-accent-purple">school</span>
                 </span>
             </div>
             <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['tamat'] }}</div>
@@ -162,7 +162,7 @@
         <a href="{{ route('dashboard.dosen.sidang-list') }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-brand/30 transition-colors">
             <div class="flex items-center justify-between mb-3">
                 <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                    <span class="material-symbols-outlined icon-md">verified</span>
+                    <span class="material-symbols-outlined icon-md text-accent-purple">verified</span>
                 </span>
             </div>
             <div class="font-heading font-bold text-3xl text-text-primary tabular-nums">{{ $stats['diuji'] }}</div>
@@ -171,7 +171,7 @@
         <a href="{{ route('quick-review.index') }}" class="p-5 rounded-card bg-bg-surface border border-border hover:border-status-danger/30 transition-colors">
             <div class="flex items-center justify-between mb-3">
                 <span class="icon-circle w-10 h-10 bg-status-danger/15 text-status-danger">
-                    <span class="material-symbols-outlined icon-md">fact_check</span>
+                    <span class="material-symbols-outlined icon-md text-accent-blue">fact_check</span>
                 </span>
                 @if ($stats['menunggu_review'] > 0)
                     <span class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-status-danger/15 text-status-danger">↑ {{ $stats['menunggu_review'] }} review</span>
@@ -210,7 +210,7 @@
                                 <td class="py-2.5 pr-4">{{ $entry->jenis === 'revisi' ? 'Revisi' : 'Sesi ' . $entry->sesi_ke . ' — ' . $entry->topik }}</td>
                                 <td class="py-2.5 pr-4 text-text-secondary hidden md:table-cell">{{ $entry->submitted_at?->format('d M H:i') }}</td>
                                 <td class="py-2.5">
-                                    <a href="{{ route('logbook.show', $entry) }}" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Review</a>
+                                    <a href="{{ route('logbook.show', $entry) }}" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Review</a>
                                 </td>
                             </tr>
                         @endforeach
@@ -231,7 +231,7 @@
                 @foreach ($agendaTerdekat as $agenda)
                     <a href="{{ route('seminar-submission.show', $agenda) }}" class="flex items-center gap-3 p-3 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
                         <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                            <span class="material-symbols-outlined icon-md">event</span>
+                            <span class="material-symbols-outlined icon-md text-status-info">event</span>
                         </span>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-medium text-text-primary">{{ $agenda->mahasiswaTa->mahasiswa?->name }} — {{ $agenda->jenisLabel() }}</p>
@@ -255,7 +255,7 @@
                 @foreach ($submissions->take(10) as $submission)
                     <a href="{{ route('seminar-submission.show', $submission) }}" class="flex items-center gap-3 p-3 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
                         <span class="icon-circle w-10 h-10 {{ $submission->status === \App\Models\SeminarSubmission::STATUS_SUBMITTED ? 'bg-status-success/15 text-status-success' : 'bg-bg-hover text-text-secondary' }}">
-                            <span class="material-symbols-outlined icon-md">upload_file</span>
+                            <span class="material-symbols-outlined icon-md text-accent-orange">upload_file</span>
                         </span>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-medium text-text-primary">{{ $submission->mahasiswaTa->mahasiswa?->name }} — {{ $submission->jenisLabel() }}</p>
@@ -362,7 +362,7 @@
                                                 <option value="{{ $key }}" @selected($ta->fase === $key)>{{ $label }}</option>
                                             @endforeach
                                         </select>
-                                        <button class="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-brand text-white text-xs font-medium hover:opacity-90">Update</button>
+                                        <button class="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Update</button>
                                     </form>
                                 </td>
                             </tr>
@@ -383,9 +383,9 @@
     filters.forEach(function (btn) {
         btn.addEventListener('click', function () {
             var f = btn.dataset.health;
-            filters.forEach(function (b) { b.classList.remove('bg-brand', 'text-white'); b.classList.add('bg-bg-panel', 'text-text-secondary'); });
+            filters.forEach(function (b) { b.classList.remove('bg-brand', 'text-[#0b1420]'); b.classList.add('bg-bg-panel', 'text-text-secondary'); });
             btn.classList.remove('bg-bg-panel', 'text-text-secondary');
-            btn.classList.add('bg-brand', 'text-white');
+            btn.classList.add('bg-brand', 'text-[#0b1420]');
             rows.forEach(function (r) { r.style.display = (f === 'all' || r.dataset.health === f) ? '' : 'none'; });
         });
     });

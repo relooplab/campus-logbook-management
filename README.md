@@ -2,12 +2,12 @@
   meta-keywords: laravel, logbook, thesis, mentoring, thesis-management,
   final-project, pdf-annotation, dompdf, reverb, laravel-excel, spatie-permission,
   tailwindcss, docker, mysql, redis, web-application, education
-  meta-description: ReLoop Logbook — A comprehensive Laravel 11 web application for
+  meta-description: Campus Logbook Management — A comprehensive Laravel 11 web application for
   recording and monitoring undergraduate thesis mentoring sessions with PDF annotations,
   real-time collaboration, and both individual and institutional deployment modes.
 -->
 
-# Thesis Logbook Management
+# Campus Logbook Management
 
 ![Laravel](https://img.shields.io/badge/Laravel-11-red?logo=laravel&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-8.4-blue?logo=php&logoColor=white)

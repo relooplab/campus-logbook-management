@@ -10,7 +10,7 @@
             <p class="text-sm text-text-secondary mt-0.5">Pantau progres bimbingan {{ $ta?->jenisLabel() ?? 'TA/KP' }} Anda</p>
         </div>
         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-            <a href="{{ route('logbook.create') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand-fill text-white text-sm font-semibold shadow-md hover:bg-brand-fill-hover hover:shadow-lg transition-shadow text-center" title="Tambah entri logbook bimbingan baru (aksi utama)">+ Logbook</a>
+            <a href="{{ route('logbook.create') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-control bg-brand text-[#0b1420] text-sm font-semibold hover:bg-brand-hover transition-colors text-center" title="Tambah entri logbook bimbingan baru (aksi utama)">+ Logbook</a>
             <a href="{{ route('logbook.create-revisi') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border text-center">+ Entri Revisi</a>
             <a href="{{ route('logbook.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-transparent border border-border text-text-secondary text-sm font-medium hover:bg-bg-hover hover:text-text-primary text-center">Semua Entri</a>
         </div>
@@ -24,7 +24,7 @@
                 <p class="font-semibold text-text-primary">Lengkapi Profil Anda</p>
                 <p class="text-text-secondary">Isi NIM dan nomor WhatsApp terlebih dahulu sebelum memilih dosen pembimbing.</p>
             </div>
-            <a href="{{ route('profile.index') }}" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Isi Profil</a>
+            <a href="{{ route('profile.index') }}" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Isi Profil</a>
         </div>
     @endif
 
@@ -44,7 +44,7 @@
                     <p class="text-text-secondary">Pilih dosen pembimbing dan penguji untuk TA/KP Anda.</p>
                 @endif
             </div>
-            <a href="{{ route('profile.select-dosen') }}" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Pilih Dosen</a>
+            <a href="{{ route('profile.select-dosen') }}" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Pilih Dosen</a>
         </div>
     @elseif ($pendingApproval)
         <div class="px-4 py-3.5 rounded-card border border-status-pending/30 bg-status-pending/10 flex flex-wrap items-center gap-3">
@@ -56,15 +56,26 @@
         </div>
     @endif
 
-    {{-- ===== Lanjut ke Tugas Akhir (setelah KP) ===== --}}
-    @if ($ta && $ta->isKp() && $programs->where('jenis', 'ta')->isEmpty())
+    {{-- ===== Lanjut ke Tugas Akhir (setelah KP) =====
+         Syarat: KP minimal sudah di fase penyusunan laporan, dan belum punya program TA.
+         Card dismissable (session) — link permanen tersedia di halaman Profil. --}}
+    @if ($ta && $ta->isKp() && $programs->where('jenis', 'ta')->isEmpty()
+        && in_array($ta->fase, ['laporan', 'seminar_kp', 'selesai'], true)
+        && !session('lanjut_ta_dismissed'))
         <div class="px-4 py-3.5 rounded-card border border-brand/30 bg-brand/5 flex flex-wrap items-center gap-3">
             <span class="material-symbols-outlined icon-md shrink-0 text-brand">school</span>
             <div class="flex-1 min-w-0 text-sm">
                 <p class="font-semibold text-text-primary">Selesai KP? Lanjut ke Tugas Akhir</p>
                 <p class="text-text-secondary">Buat program Tugas Akhir (TA) dan pilih dosen pembimbing Anda.</p>
             </div>
-            <a href="{{ route('profile.select-dosen') }}" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Lanjut ke TA</a>
+            <a href="{{ route('profile.select-dosen') }}" class="px-3 py-1.5 rounded-control bg-brand text-[#0b1420] text-xs font-semibold hover:bg-brand-hover transition-colors">Lanjut ke TA</a>
+            <form method="POST" action="{{ route('dashboard.lanjut-ta.dismiss') }}" class="inline-flex">
+                @csrf
+                <button type="submit" title="Tutup kartu ini" aria-label="Tutup"
+                    class="p-1.5 rounded-lg hover:bg-bg-hover text-text-secondary cursor-pointer">
+                    <span class="material-symbols-outlined icon-md">close</span>
+                </button>
+            </form>
         </div>
     @endif
 
@@ -73,7 +84,7 @@
         <div class="card p-6">
             <div class="flex items-center gap-3 mb-4">
                 <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                    <span class="material-symbols-outlined icon-md">today</span>
+                    <span class="material-symbols-outlined icon-md text-status-info">today</span>
                 </span>
                 <div>
                     <h2 class="font-heading font-semibold text-text-primary">Aksi Saya</h2>
@@ -83,7 +94,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <a href="{{ route('logbook.index', ['status' => 'draft']) }}" class="flex items-center gap-3 p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
                     <span class="icon-circle w-10 h-10 bg-status-pending/15 text-status-pending">
-                        <span class="material-symbols-outlined icon-md">draft</span>
+                        <span class="material-symbols-outlined icon-md text-text-secondary">draft</span>
                     </span>
                     <div>
                         <div class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $draftCount }}</div>
@@ -95,7 +106,7 @@
                 </a>
                 <a href="{{ route('logbook.index', ['status' => 'revisi']) }}" class="flex items-center gap-3 p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
                     <span class="icon-circle w-10 h-10 bg-status-danger/15 text-status-danger">
-                        <span class="material-symbols-outlined icon-md">edit_note</span>
+                        <span class="material-symbols-outlined icon-md text-accent-orange">edit_note</span>
                     </span>
                     <div>
                         <div class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $revisiCount }}</div>
@@ -107,7 +118,7 @@
                 </a>
                 <a href="{{ route('logbook.feedback') }}" class="flex items-center gap-3 p-4 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
                     <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                        <span class="material-symbols-outlined icon-md">checklist</span>
+                        <span class="material-symbols-outlined icon-md text-accent-blue">checklist</span>
                     </span>
                     <div>
                         <div class="font-heading font-bold text-2xl text-text-primary tabular-nums">{{ $unresolvedActionItems }}</div>
@@ -127,7 +138,7 @@
 
     @if (!$ta)
         <div class="px-4 py-6 rounded-card bg-status-pending/10 text-status-pending border border-status-pending/20 flex items-start gap-2.5">
-            <span class="material-symbols-outlined icon-md mt-0.5">info</span><span>Data program Anda (TA/KP) belum diinput oleh admin.</span>
+            <span class="material-symbols-outlined icon-md mt-0.5 text-status-info">info</span><span>Data program Anda (TA/KP) belum diinput oleh admin.</span>
         </div>
     @else
         {{-- ===== Peringatan: judul TA / tempat KP wajib diisi ===== --}}
@@ -141,13 +152,13 @@
                     <p class="font-semibold text-text-primary">Lengkapi {{ $ta->isKp() ? 'Tempat Kerja Praktek' : 'Judul Tugas Akhir' }} Anda</p>
                     <p class="text-text-secondary">Data ini wajib diisi agar program Anda dapat diproses.</p>
                 </div>
-                <a href="{{ route('profile.index') }}" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Isi di Profil</a>
+                <a href="{{ route('profile.index') }}" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Isi di Profil</a>
             </div>
         @endif
         {{-- ===== Pengumuman belum dibaca (banner) ===== --}}
         @foreach ($unreadAnnouncements as $a)
             <div class="px-4 py-3.5 rounded-card border border-status-pending/30 bg-status-pending/10 flex flex-wrap items-start gap-3">
-                <span class="material-symbols-outlined icon-lg shrink-0">campaign</span>
+                <span class="material-symbols-outlined icon-lg shrink-0 text-accent-orange">campaign</span>
                 <div class="flex-1 min-w-0 text-sm">
                     <p class="font-semibold text-text-primary break-words">{{ $a->title }}</p>
                     <p class="text-text-secondary break-words">{{ $a->body }}</p>
@@ -155,7 +166,7 @@
                 </div>
                 <form method="POST" action="{{ route('announcements.read', $a) }}" class="w-full sm:w-auto sm:flex-shrink-0">
                     @csrf
-                    <button class="w-full sm:w-auto px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Tandai Dibaca</button>
+                    <button class="w-full sm:w-auto px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Tandai Dibaca</button>
                 </form>
             </div>
         @endforeach
@@ -199,11 +210,11 @@
                                 <p class="text-sm font-medium text-text-primary">Bahan {{ $seminarSubmission->jenisLabel() }}: {{ $seminarSubmission->statusLabel() }}</p>
                                 <p class="text-xs text-text-secondary">Jadwal: {{ $seminarSubmission->tanggal->format('d M Y') }} · {{ $seminarSubmission->waktu?->format('H:i') }}</p>
                             </div>
-                            <a href="{{ route('seminar-submission.show', $seminarSubmission) }}" class="px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-medium hover:opacity-90">Lihat Detail</a>
+                            <a href="{{ route('seminar-submission.show', $seminarSubmission) }}" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Lihat Detail</a>
                         </div>
                     @else
-                        <a href="{{ route('seminar-submission.create', $ta) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">
-                            <span class="material-symbols-outlined icon-sm">upload_file</span> Kirim Bahan {{ $ta->faseLabel() }}
+                        <a href="{{ route('seminar-submission.create', $ta) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">
+                            <span class="material-symbols-outlined icon-sm text-accent-orange">upload_file</span> Kirim Bahan {{ $ta->faseLabel() }}
                         </a>
                     @endif
                 </div>
@@ -220,7 +231,7 @@
                     @foreach ($agendaTerdekat as $agenda)
                         <a href="{{ route('seminar-submission.show', $agenda) }}" class="flex items-center gap-3 p-3 rounded-xl bg-bg-panel border border-border hover:border-brand/30 transition-colors">
                             <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                                <span class="material-symbols-outlined icon-md">event</span>
+                                <span class="material-symbols-outlined icon-md text-status-info">event</span>
                             </span>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-medium text-text-primary">{{ $agenda->jenisLabel() }}</p>

@@ -10,7 +10,7 @@
             <p class="text-sm text-text-secondary">Workspace berbagi file di level universitas/fakultas/departemen/prodi.</p>
         </div>
         @if ($user->isAdmin())
-            <a href="#buat" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium">+ Buat Workspace</a>
+            <a href="#buat" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium">+ Buat Workspace</a>
         @endif
     </div>
 
@@ -44,7 +44,7 @@
                         <option value="custom">Custom (dosen tertentu)</option>
                     </select>
                 </div>
-                <button class="w-full px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Buat</button>
+                <button class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Buat</button>
             </form>
         </div>
     @endif

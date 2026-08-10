@@ -95,7 +95,7 @@
                     <input type="date" name="ends_at" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                 </div>
 
-                <button class="w-full px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Assign</button>
+                <button class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Assign</button>
             </form>
         </div>
     </div>

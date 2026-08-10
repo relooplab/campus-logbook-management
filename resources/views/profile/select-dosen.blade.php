@@ -23,7 +23,7 @@
         <div class="card p-6 text-sm">
             <p class="font-semibold text-text-primary mb-1">Belum ada dosen terdaftar dari {{ $affiliation?->name ?? 'perguruan tinggi Anda' }}</p>
             <p class="text-text-secondary">Pilih perguruan tinggi lain di halaman profil, atau hubungi admin institusi untuk mendaftarkan dosen.</p>
-            <a href="{{ route('profile.index') }}" class="inline-block mt-3 px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Atur Afiliasi di Profil</a>
+            <a href="{{ route('profile.index') }}" class="inline-block mt-3 px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Atur Afiliasi di Profil</a>
         </div>
     @else
     <div class="card p-6">
@@ -54,8 +54,8 @@
             </div>
 
             <div>
-                <label class="block text-xs text-text-secondary mb-1">Pembimbing 1 <span class="text-status-danger">*</span></label>
-                <select name="pembimbing_1_id" required class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm">
+                <label class="block text-xs text-text-secondary mb-1">Pembimbing 1 <span class="text-text-secondary">(opsional)</span></label>
+                <select name="pembimbing_1_id" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm">
                     <option value="">— Pilih dosen —</option>
                     @foreach ($dosenList as $dosen)
                         <option value="{{ $dosen->id }}">{{ $dosen->name }} ({{ $dosen->nidn ?: '—' }})</option>
@@ -95,7 +95,7 @@
             </div>
 
             <div class="flex flex-wrap gap-2 pt-2">
-                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Kirim Permintaan</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Kirim Permintaan</button>
                 <a href="{{ route('profile.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Batal</a>
             </div>
         </form>

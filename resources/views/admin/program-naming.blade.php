@@ -70,7 +70,7 @@
                                                         </div>
                                                     </div>
 
-                                                    <button type="submit" class="px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:opacity-90">Simpan</button>
+                                                    <button type="submit" class="px-4 py-2 rounded-lg bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Simpan</button>
                                                 </form>
                                             @endforeach
                                         </div>
@@ -121,7 +121,7 @@
                                                             </div>
                                                         </div>
 
-                                                        <button type="submit" class="px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:opacity-90">Simpan</button>
+                                                        <button type="submit" class="px-4 py-2 rounded-lg bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Simpan</button>
                                                     </form>
                                                 @endforeach
                                             </div>

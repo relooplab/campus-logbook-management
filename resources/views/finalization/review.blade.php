@@ -70,7 +70,7 @@
                         <label class="block text-xs text-text-secondary mb-1">Nilai Akhir</label>
                         <input type="number" name="nilai" min="0" max="100" step="0.01" value="{{ $f->nilai }}" class="w-32 rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm">
                     </div>
-                    <button class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Simpan Nilai</button>
+                    <button class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Simpan Nilai</button>
                 </form>
             </div>
         @endforeach

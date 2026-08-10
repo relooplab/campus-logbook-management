@@ -20,7 +20,7 @@
         class="bg-bg-surface rounded-xl border border-border p-6 space-y-4">
         <div class="flex items-center gap-4">
             <div
-                class="h-20 w-20 rounded-full overflow-hidden bg-brand text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                class="h-20 w-20 rounded-full overflow-hidden bg-brand text-[#0b1420] flex items-center justify-center text-2xl font-bold flex-shrink-0">
                 @if ($user->photoUrl())
                     <img src="{{ $user->photoUrl() }}" class="h-full w-full object-cover" alt="Foto profil">
                 @else
@@ -122,7 +122,7 @@
                 </div>
             @endif
             <div class="flex items-center gap-3 pt-2"> <button
-                    class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan
+                    class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan
                     Profil</button> </div>
         </form>
         @include('partials.profile-affiliation', ['affUser' => $user])
@@ -176,7 +176,7 @@
                 @error('university_id')
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
-                <button class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan Afiliasi</button>
+                <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan Afiliasi</button>
             </form>
         </div>
     @endif
@@ -189,7 +189,7 @@
                     <p class="text-sm text-text-secondary mt-0.5">Perguruan tinggi, fakultas, departemen, dan program studi Anda.</p>
                 </div>
                 <a href="{{ route('profile.affiliation') }}"
-                    class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Kelola</a>
+                    class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Kelola</a>
             </div>
         </div>
     @endif
@@ -222,8 +222,17 @@
                             @error('judul_ta') <p class="text-status-danger text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                     @endif
-                    <button class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan {{ $prog->isKp() ? 'Tempat KP' : 'Judul' }}</button>
+                    <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan {{ $prog->isKp() ? 'Tempat KP' : 'Judul' }}</button>
                 </form>
+                @if ($prog->isKp() && in_array($prog->fase, ['laporan', 'seminar_kp', 'selesai'], true)
+                    && $programs->where('jenis', 'ta')->isEmpty())
+                    <div class="mt-4 pt-3 border-t border-border">
+                        <a href="{{ route('profile.select-dosen') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-control bg-brand text-[#0b1420] text-xs font-semibold hover:bg-brand-hover transition-colors">
+                            <span class="material-symbols-outlined icon-sm">school</span> Lanjut ke Tugas Akhir
+                        </a>
+                    </div>
+                @endif
+                
             </div>
         @endforeach
     @endif
@@ -250,7 +259,7 @@
                     <input type="password" name="password_confirmation" id="password_confirmation" required
                         minlength="6" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                 </div>
-            </div> <button class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Ubah
+            </div> <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Ubah
                 Kata
                 Sandi</button>
         </form>

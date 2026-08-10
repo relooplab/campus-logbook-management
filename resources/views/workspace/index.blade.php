@@ -39,7 +39,7 @@
                 class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
         </div>
         <div class="flex gap-2 w-full sm:w-auto">
-            <button type="submit" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Cari</button>
+            <button type="submit" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Cari</button>
             <a href="{{ route('workspace.index', $mahasiswaTa) }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border text-center">Reset</a>
         </div>
     </form>
@@ -70,7 +70,7 @@
                     <p id="progress-text" class="text-xs text-text-secondary mt-1">0%</p>
                 </div>
                 <button type="submit" id="upload-btn" disabled
-                    class="mt-3 px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90 disabled:opacity-40">Upload</button>
+                    class="mt-3 px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 disabled:opacity-40">Upload</button>
                 @error('files.*')
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -111,19 +111,19 @@
                                     @if ($file->isPdf())
                                         <a href="{{ route("workspace.preview", $file) }}" target="_blank"
                                             title="Preview"
-                                            class="p-1.5 rounded hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm">visibility</span></a>
+                                            class="p-1.5 rounded hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm text-status-info">visibility</span></a>
                                     @endif <a href="{{ route("workspace.download", $file) }}"
-                                        title="Download" class="p-1.5 rounded hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm">download</span></a>
+                                        title="Download" class="p-1.5 rounded hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm text-accent-orange">download</span></a>
                                     @if ($canModify)
                                         <button type="button" data-edit="{{ $file->id }}"
                                             data-bab="{{ $file->bab }}" data-desc="{{ $file->description }}"
                                             class="edit-btn p-1.5 rounded hover:bg-bg-hover hover:bg-bg-hover"
-                                            title="Edit"><span class="material-symbols-outlined icon-sm">edit</span></button>
+                                            title="Edit"><span class="material-symbols-outlined icon-sm text-accent-blue">edit</span></button>
                                         <form method="POST" action="{{ route("workspace.destroy", $file) }}"
                                             onsubmit="return confirm('Hapus file ini?')"> @csrf @method("DELETE")
                                             <button
                                                 class="p-1.5 rounded hover:bg-status-danger/10 hover:bg-status-danger/15 text-status-danger"
-                                                title="Hapus"><span class="material-symbols-outlined icon-sm">delete</span></button>
+                                                title="Hapus"><span class="material-symbols-outlined icon-sm text-status-danger">delete</span></button>
                                         </form>
                                     @endif
                                 </div>
@@ -166,7 +166,7 @@
             </div>
             <div class="flex justify-end gap-2 mt-4"> <button type="button" id="edit-cancel"
                     class="px-3 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</button> <button
-                    class="px-3 py-2 rounded-md bg-brand text-white text-sm">Simpan</button> </div>
+                    class="px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Simpan</button> </div>
         </form>
     </div>
 </div>

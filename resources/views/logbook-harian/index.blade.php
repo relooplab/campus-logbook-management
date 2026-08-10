@@ -14,7 +14,7 @@
         </div>
         @if ($mahasiswaTa->isMember(auth()->user()))
             <a href="{{ route('logbook-harian.create', $mahasiswaTa) }}"
-                class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">+ Tambah Catatan</a>
+                class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">+ Tambah Catatan</a>
         @endif
     </div>
 

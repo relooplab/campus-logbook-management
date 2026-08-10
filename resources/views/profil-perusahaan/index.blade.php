@@ -9,7 +9,7 @@
                 {{ $mahasiswaTa->mahasiswa?->name }} — {{ $mahasiswaTa->tempat_kp ?: "Tempat KP" }}
             </p>
         </div>
-        <a href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">← Dashboard</a>
+        <a href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Dashboard</a>
     </div>
 
     @if (session("success"))
@@ -74,7 +74,7 @@
             @enderror
         </div>
         <div class="flex flex-wrap gap-2 pt-2">
-            <button type="submit" class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Simpan</button>
+            <button type="submit" class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan</button>
         </div>
     </form>
 </div>

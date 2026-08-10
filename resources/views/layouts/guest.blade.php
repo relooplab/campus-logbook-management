@@ -12,7 +12,7 @@
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet" />
     <style>
         .material-symbols-outlined {
@@ -31,18 +31,20 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Roboto Mono', 'ui-monospace', 'monospace'],
-                        heading: ['Roboto Mono', 'ui-monospace', 'monospace'],
+                        sans: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        heading: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        mono: ['IBM Plex Mono', 'ui-monospace', 'monospace'],
                     },
                     colors: {
                         bg: { base: 'rgb(var(--bg-base) / <alpha-value>)', surface: 'rgb(var(--bg-surface) / <alpha-value>)', panel: 'rgb(var(--bg-panel) / <alpha-value>)', hover: 'rgb(var(--bg-hover) / <alpha-value>)' },
                         border: { DEFAULT: 'rgb(var(--border) / <alpha-value>)' },
                         text: { primary: 'rgb(var(--text-primary) / <alpha-value>)', secondary: 'rgb(var(--text-secondary) / <alpha-value>)' },
                         brand: { DEFAULT: 'rgb(var(--brand) / <alpha-value>)', hover: 'rgb(var(--brand-hover) / <alpha-value>)', light: 'rgb(var(--brand-light) / <alpha-value>)', fill: 'rgb(var(--brand-fill) / <alpha-value>)', 'fill-hover': 'rgb(var(--brand-fill-hover) / <alpha-value>)' },
+                        accent: { blue: 'rgb(var(--accent-blue) / <alpha-value>)', orange: 'rgb(var(--accent-orange) / <alpha-value>)', teal: 'rgb(var(--accent-teal) / <alpha-value>)', purple: 'rgb(var(--accent-purple) / <alpha-value>)' },
                         sand: { DEFAULT: 'rgb(var(--sand) / <alpha-value>)', light: 'rgb(var(--sand-light) / <alpha-value>)' },
                         status: { success: 'rgb(var(--status-success) / <alpha-value>)', danger: 'rgb(var(--status-danger) / <alpha-value>)', info: 'rgb(var(--status-info) / <alpha-value>)', pending: 'rgb(var(--status-pending) / <alpha-value>)' },
                     },
-                    borderRadius: { card: '20px' },
+                    borderRadius: { card: '20px', control: '10px' },
                 },
             },
         };
@@ -53,13 +55,13 @@
     </script>
     <link rel="stylesheet" href="{{ asset('css/global.css') }}?v={{ @filemtime(public_path('css/global.css')) }}">
 </head>
-<body class="bg-bg-base text-text-primary min-h-screen flex items-center justify-center p-4 font-sans antialiased">
+<body class="bg-bg-base text-text-primary min-h-screen flex items-center justify-center p-4 font-sans antialiased ctx-mahasiswa">
     <div class="w-full max-w-md">
         <div class="text-center mb-6">
-            <div class="inline-flex w-14 h-14 rounded-2xl bg-brand-light text-brand items-center justify-center mb-3 p-2.5">
-                @include('partials.logo-mark')
-            </div>
-            <h1 class="font-heading font-extrabold text-2xl text-text-primary">{{ $inst->app_name }}</h1>
+            @include('partials.wordmark', [
+                'markSize' => 'w-14 h-14',
+                'accent' => 'text-brand',
+            ])
             <p class="text-sm text-text-secondary mt-1">Aplikasi pencatatan &amp; monitoring bimbingan Tugas Akhir mahasiswa</p>
             <div class="mt-3 inline-block px-4 py-2 rounded-card bg-bg-surface border border-border">
                 <p class="font-semibold text-text-primary">{{ $inst->institution_name }}</p>
@@ -75,12 +77,12 @@
             <a href="https://github.com/relooplab/thesis-logbook-management" target="_blank" rel="noopener"
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors"
                 title="Lihat kode sumber aplikasi di GitHub">
-                <span class="material-symbols-outlined icon-sm">code</span> GitHub
+                <span class="material-symbols-outlined icon-sm text-accent-purple">code</span> GitHub
             </a>
             <a href="https://reloop.notion.site/3b1155a221e880829514df5d0a8dcfd6" target="_blank" rel="noopener"
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold bg-status-pending/15 text-status-pending hover:bg-status-pending/25 border border-status-pending/30 transition-colors"
                 title="Laporkan masalah atau kirim ide untuk pengembangan aplikasi">
-                <span class="material-symbols-outlined icon-sm">feedback</span> Kirim Masukan
+                <span class="material-symbols-outlined icon-sm text-status-pending">feedback</span> Kirim Masukan
             </a>
         </div>
     </div>

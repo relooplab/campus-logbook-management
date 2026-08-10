@@ -45,7 +45,7 @@
 
                     <form method="POST" action="{{ route('affiliation-approval.approve', [$req->user_id, $req->university_id]) }}">
                         @csrf
-                        <button type="submit" class="px-4 py-2 rounded-xl bg-brand-fill hover:bg-brand-fill-hover text-white text-sm font-semibold">Setujui</button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Setujui</button>
                     </form>
                 </div>
             @endforeach

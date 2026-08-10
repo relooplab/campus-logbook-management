@@ -1,6 +1,6 @@
-# User Guide — Thesis Logbook Management
+# User Guide — Campus Logbook Management
 
-Welcome to **Thesis Logbook Management**, an application for recording and monitoring the supervision of students' Final Projects (Tugas Akhir / Thesis). This guide explains all application features and the working mechanisms (workflows) for each user role.
+Welcome to **Campus Logbook Management**, an application for recording and monitoring the supervision of students' Final Projects (Tugas Akhir / Thesis). This guide explains all application features and the working mechanisms (workflows) for each user role.
 
 ---
 

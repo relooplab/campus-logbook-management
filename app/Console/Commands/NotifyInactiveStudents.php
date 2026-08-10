@@ -68,7 +68,7 @@ class NotifyInactiveStudents extends Command
                     "Ini adalah salinan untuk pembimbing.\n\nMahasiswa {$ta->mahasiswa->name} ({$ta->mahasiswa->identifier}) tidak ada aktivitas bimbingan sejak {$lastDate} ({$inactiveDays} hari). Fase TA saat ini: {$ta->faseLabel()}.",
                     function ($message) use ($ta, $appUrl) {
                         $message->to($ta->pembimbing1->email)
-                            ->subject('[Thesis Logbook Management] Salinan: Mahasiswa tidak aktif bimbingan');
+                            ->subject('[Campus Logbook Management] Salinan: Mahasiswa tidak aktif bimbingan');
                     }
                 );
             }

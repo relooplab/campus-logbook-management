@@ -11,13 +11,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Thesis Logbook Management') · Thesis Logbook Management</title>
+    <title>@yield('title', config('app.name')) · {{ config('app.name') }}</title>
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="icon" href="{{ asset('favicon-32x32.png') }}" sizes="32x32" type="image/png">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet" />
     <style>
@@ -40,8 +40,9 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Roboto Mono', 'ui-monospace', 'monospace'],
-                        heading: ['Roboto Mono', 'ui-monospace', 'monospace'],
+                        sans: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        heading: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        mono: ['IBM Plex Mono', 'ui-monospace', 'monospace'],
                     },
                     colors: {
                         bg: {
@@ -62,6 +63,12 @@
                             fill: 'rgb(var(--brand-fill) / <alpha-value>)',
                             'fill-hover': 'rgb(var(--brand-fill-hover) / <alpha-value>)',
                         },
+                        accent: {
+                            blue: 'rgb(var(--accent-blue) / <alpha-value>)',
+                            orange: 'rgb(var(--accent-orange) / <alpha-value>)',
+                            teal: 'rgb(var(--accent-teal) / <alpha-value>)',
+                            purple: 'rgb(var(--accent-purple) / <alpha-value>)',
+                        },
                         sand: {
                             DEFAULT: 'rgb(var(--sand) / <alpha-value>)',
                             light: 'rgb(var(--sand-light) / <alpha-value>)',
@@ -73,7 +80,7 @@
                             pending: 'rgb(var(--status-pending) / <alpha-value>)',
                         },
                     },
-                    borderRadius: { card: '20px' },
+                    borderRadius: { card: '20px', control: '10px' },
                     spacing: { card: '24px' },
                 },
             },
@@ -135,7 +142,7 @@
     </style>
     @yield('head')
 </head>
-<body class="bg-bg-base text-text-primary min-h-screen font-sans antialiased">
+<body class="bg-bg-base text-text-primary min-h-screen font-sans antialiased {{ $user?->isDosen() ? 'ctx-dosen' : ($user?->isAdmin() ? 'ctx-admin' : 'ctx-mahasiswa') }}">
 
 <div class="flex min-h-screen">
 
@@ -149,7 +156,7 @@
         </button>
         <div id="sidebar-logo-row" class="px-4 py-5 flex flex-col items-center gap-2.5">
             <div id="sidebar-clock" class="sidebar-label flex flex-col items-center">
-                <div class="text-sm font-semibold text-text-primary" id="clock-date">Memuat…</div>
+                <div class="text-sm font-semibold text-text-primary font-mono" id="clock-date">Memuat…</div>
             </div>
             <button type="button" id="sidebar-close-btn" title="Tutup menu" class="md:hidden p-1.5 rounded-lg text-text-secondary hover:bg-bg-hover hover:text-text-primary">
                 <span class="material-symbols-outlined icon-md">close</span>
@@ -165,10 +172,10 @@
             @if ($primaryUniv || $user->nidn || $user->identifier)
                 <div class="px-6 pb-2 sidebar-label space-y-1">
                     @if ($user->isDosen() && $user->nidn)
-                        <span class="block text-[10px] text-text-secondary truncate">NIDN: {{ $user->nidn }}</span>
+                        <span class="block text-[10px] text-text-secondary truncate font-mono">NIDN: {{ $user->nidn }}</span>
                     @endif
                     @if ($user->isMahasiswa() && $user->identifier)
-                        <span class="block text-[10px] text-text-secondary truncate">NIM: {{ $user->identifier }}</span>
+                        <span class="block text-[10px] text-text-secondary truncate font-mono">NIM: {{ $user->identifier }}</span>
                     @endif
                     @if ($primaryUniv)
                         <span class="block text-[10px] px-2 py-0.5 rounded-full bg-bg-panel text-text-secondary truncate max-w-full" title="{{ $primaryUniv->name }}">
@@ -182,15 +189,15 @@
 
         <nav class="flex-1 px-3 space-y-1 overflow-y-auto mt-1">
             <a href="{{ route('dashboard') }}" class="{{ $navLink }} {{ $active('dashboard') }}">
-                <span class="material-symbols-outlined icon-md">dashboard</span>
+                <span class="material-symbols-outlined icon-md text-accent-blue">dashboard</span>
                 <span class="sidebar-label">Dashboard</span>
             </a>
             <a href="{{ route('chat.index') }}" class="{{ $navLink }} {{ $active('chat.*') }}">
-                <span class="material-symbols-outlined icon-md">chat</span>
+                <span class="material-symbols-outlined icon-md text-accent-teal">chat</span>
                 <span class="sidebar-label">Chat</span>
             </a>
             <a href="{{ route('announcements.index') }}" class="{{ $navLink }} {{ $active('announcements.*') }}">
-                <span class="material-symbols-outlined icon-md">campaign</span>
+                <span class="material-symbols-outlined icon-md text-accent-orange">campaign</span>
                 <span class="sidebar-label">Pengumuman</span>
             </a>
 
@@ -206,7 +213,7 @@
                 @endphp
                 @if ($profileIncomplete)
                     <a href="{{ route('profile.index') }}" class="{{ $navLink }} {{ $active('profile.index') }}">
-                        <span class="material-symbols-outlined icon-md">badge</span>
+                        <span class="material-symbols-outlined icon-md text-accent-blue">badge</span>
                         <span class="sidebar-label">Lengkapi Profil</span>
                     </a>
                 @endif
@@ -217,7 +224,7 @@
                                 @foreach ($programs as $p)
                                     <a href="{{ route('dashboard', ['program' => $p->jenis]) }}"
                                         class="flex-1 text-center px-2 py-1 rounded-lg text-[10px] font-medium border transition-colors
-                                        {{ $currentProgram && $currentProgram->id === $p->id ? 'bg-brand-fill text-white border-brand-fill' : 'bg-bg-surface text-text-secondary border-border hover:bg-bg-hover' }}">
+                                        {{ $currentProgram && $currentProgram->id === $p->id ? 'bg-brand text-[#0b1420] border-brand' : 'bg-bg-surface text-text-secondary border-border hover:bg-bg-hover' }}">
                                         {{ $p->jenisLabel() }}
                                     </a>
                                 @endforeach
@@ -225,74 +232,78 @@
                         </div>
                     @endif
                     <a href="{{ route('logbook.index') }}" class="{{ $navLink }} {{ $active('logbook.index') }}">
-                        <span class="material-symbols-outlined icon-md">menu_book</span>
+                        <span class="material-symbols-outlined icon-md text-accent-blue">menu_book</span>
                         <span class="sidebar-label">Logbook</span>
                     </a>
                     <a href="{{ route('logbook.create') }}" class="{{ $navLink }} {{ $active('logbook.create') }}">
-                        <span class="material-symbols-outlined icon-md">add</span>
+                        <span class="material-symbols-outlined icon-md text-accent-orange">add</span>
                         <span class="sidebar-label">Tambah Logbook</span>
                     </a>
                     <a href="{{ route('logbook.create-revisi') }}" class="{{ $navLink }} {{ $active('logbook.create-revisi') }}">
-                        <span class="material-symbols-outlined icon-md">edit_note</span>
+                        <span class="material-symbols-outlined icon-md text-accent-orange">edit_note</span>
                         <span class="sidebar-label">Entri Revisi</span>
                     </a>
                     <a href="{{ route('logbook.feedback') }}" class="{{ $navLink }} {{ $active('logbook.feedback') }}">
-                        <span class="material-symbols-outlined icon-md">forum</span>
-                        <span class="sidebar-label">Umpan Balik Logbook</span>
+                        <span class="material-symbols-outlined icon-md text-accent-teal">forum</span>
+                        <span class="sidebar-label">Riwayat Umpan Balik</span>
                     </a>
                     @if ($hasKp)
                         <a href="{{ route('logbook-harian.index', $kp) }}" class="{{ $navLink }} {{ $active('logbook-harian.*') }}">
-                            <span class="material-symbols-outlined icon-md">event_note</span>
+                            <span class="material-symbols-outlined icon-md text-accent-blue">event_note</span>
                             <span class="sidebar-label">Logbook Harian KP</span>
                         </a>
                         <a href="{{ route('profil-perusahaan.index', $kp) }}" class="{{ $navLink }} {{ $active('profil-perusahaan.*') }}">
-                            <span class="material-symbols-outlined icon-md">business</span>
+                            <span class="material-symbols-outlined icon-md text-accent-teal">business</span>
                             <span class="sidebar-label">Profil Perusahaan</span>
                         </a>
                     @endif
                     @php $workspaceTa = $user->mahasiswaTa ?: $kp; @endphp
                     <a href="{{ route('workspace.index', $workspaceTa) }}" class="{{ $navLink }} {{ $active('workspace.*') }}">
-                        <span class="material-symbols-outlined icon-md">workspaces</span>
+                        <span class="material-symbols-outlined icon-md text-accent-purple">workspaces</span>
                         <span class="sidebar-label">Workspace</span>
                     </a>
                 @endif
             @elseif ($showDosenMenu)
+<a href="{{ route('dosen.mahasiswa-saya') }}" class="{{ $navLink }} {{ $active('dosen.mahasiswa-saya') }}">
+                    <span class="material-symbols-outlined icon-md text-accent-blue">group</span>
+                    <span class="sidebar-label">Mahasiswa Saya</span>
+                </a>
                 <a href="{{ route('logbook.index') }}" class="{{ $navLink }} {{ $active('logbook.index') }}">
-                    <span class="material-symbols-outlined icon-md">inbox</span>
+                    <span class="material-symbols-outlined icon-md text-status-pending">inbox</span>
                     <span class="sidebar-label">Antrean Review</span>
                 </a>
                 <a href="{{ route('quick-review.index') }}" class="{{ $navLink }} {{ $active('quick-review.*') }}">
-                    <span class="material-symbols-outlined icon-md">bolt</span>
+                    <span class="material-symbols-outlined icon-md text-accent-orange">bolt</span>
                     <span class="sidebar-label">Quick Review</span>
                 </a>
                 <a href="{{ route('workspace.role') }}" class="{{ $navLink }} {{ $active('workspace.role') }}">
-                    <span class="material-symbols-outlined icon-md">folder</span>
+                    <span class="material-symbols-outlined icon-md text-accent-purple">folder</span>
                     <span class="sidebar-label">Workspace</span>
                 </a>
                 <a href="{{ route('storage.index') }}" class="{{ $navLink }} {{ $active('storage.*') }}">
-                    <span class="material-symbols-outlined icon-md">database</span>
+                    <span class="material-symbols-outlined icon-md text-accent-purple">database</span>
                     <span class="sidebar-label">Workspace Mahasiswa</span>
                 </a>
                 <a href="{{ route('workspace-institusi.index') }}" class="{{ $navLink }} {{ $active('workspace-institusi.*') }}">
-                    <span class="material-symbols-outlined icon-md">folder_shared</span>
+                    <span class="material-symbols-outlined icon-md text-accent-purple">folder_shared</span>
                     <span class="sidebar-label">Workspace Institusi</span>
                 </a>
                 @if ($user->isDosen())
                     <a href="{{ route('profile.affiliation') }}" class="{{ $navLink }} {{ $active('profile.affiliation*') }}">
-                        <span class="material-symbols-outlined icon-md">account_balance</span>
+                        <span class="material-symbols-outlined icon-md text-accent-teal">account_balance</span>
                         <span class="sidebar-label">Afiliasi Institusi</span>
                     </a>
                 @endif
                 <a href="{{ route('groups.index') }}" class="{{ $navLink }} {{ $active('groups.*') }}">
-                    <span class="material-symbols-outlined icon-md">groups</span>
+                    <span class="material-symbols-outlined icon-md text-accent-teal">groups</span>
                     <span class="sidebar-label">Grup Dosen</span>
                 </a>
                 <a href="{{ route('dosen-sidang.index') }}" class="{{ $navLink }} {{ $active('dosen-sidang.*') }}">
-                    <span class="material-symbols-outlined icon-md">verified</span>
+                    <span class="material-symbols-outlined icon-md text-accent-purple">verified</span>
                     <span class="sidebar-label">Riwayat Sidang</span>
                 </a>
                 <a href="{{ route('approval.index') }}" class="{{ $navLink }} {{ $active('approval.*') }}">
-                    <span class="material-symbols-outlined icon-md">check_circle</span>
+                    <span class="material-symbols-outlined icon-md text-status-success">check_circle</span>
                     <span class="sidebar-label">Persetujuan</span>
                 </a>
             @endif
@@ -301,61 +312,61 @@
                 <div class="px-3 pt-4 pb-1 text-[10px] uppercase tracking-widest text-text-secondary sidebar-label">Administrasi</div>
                 @if ($user->isAdmin())
                     <a href="{{ route('affiliation-approval.index') }}" class="{{ $navLink }} {{ $active('affiliation-approval.*') }}">
-                        <span class="material-symbols-outlined icon-md">person_add</span>
+                        <span class="material-symbols-outlined icon-md text-accent-teal">person_add</span>
                         <span class="sidebar-label">Persetujuan Afiliasi</span>
                     </a>
                 @endif
                 @if ($user->isSystemAdmin())
                     @can('system.admins')
                         <a href="{{ route('admin.system.admins') }}" class="{{ $navLink }} {{ $active('admin.system.admins') }}">
-                            <span class="material-symbols-outlined icon-md">admin_panel_settings</span>
+                            <span class="material-symbols-outlined icon-md text-accent-purple">admin_panel_settings</span>
                             <span class="sidebar-label">Kelola Admin</span>
                         </a>
                     @endcan
                     <a href="{{ route('admin.system.permissions') }}" class="{{ $navLink }} {{ $active('admin.system.permissions') }}">
-                        <span class="material-symbols-outlined icon-md">lock</span>
+                        <span class="material-symbols-outlined icon-md text-accent-purple">lock</span>
                         <span class="sidebar-label">Kelola Hak Akses</span>
                     </a>
                     <a href="{{ route('admin.system.directory-subscriptions') }}" class="{{ $navLink }} {{ $active('admin.system.directory-subscriptions') }}">
-                        <span class="material-symbols-outlined icon-md">subscriptions</span>
+                        <span class="material-symbols-outlined icon-md text-accent-purple">subscriptions</span>
                         <span class="sidebar-label">Langganan Direktori</span>
                     </a>
                     <a href="{{ route('admin.system.backup') }}" class="{{ $navLink }} {{ $active('admin.system.backup*') }}">
-                        <span class="material-symbols-outlined icon-md">cloud_download</span>
+                        <span class="material-symbols-outlined icon-md text-accent-orange">cloud_download</span>
                         <span class="sidebar-label">Backup &amp; Restore</span>
                     </a>
                 @endif
                 @can('admin.users')
                     <a href="{{ route('admin.users') }}" class="{{ $navLink }} {{ $active('admin.users') }}">
-                        <span class="material-symbols-outlined icon-md">group</span>
+                        <span class="material-symbols-outlined icon-md text-accent-blue">group</span>
                         <span class="sidebar-label">Pengguna</span>
                     </a>
                 @endcan
                 @can('admin.tas')
                     <a href="{{ route('admin.tas') }}" class="{{ $navLink }} {{ $active('admin.tas') }}">
-                        <span class="material-symbols-outlined icon-md">archive</span>
+                        <span class="material-symbols-outlined icon-md text-accent-purple">archive</span>
                         <span class="sidebar-label">Data TA</span>
                     </a>
                 @endcan
                 @can('admin.bulk-review')
                     <a href="{{ route('admin.entries') }}" class="{{ $navLink }} {{ $active('admin.entries') }}">
-                        <span class="material-symbols-outlined icon-md">fact_check</span>
+                        <span class="material-symbols-outlined icon-md text-accent-blue">fact_check</span>
                         <span class="sidebar-label">Review Massal</span>
                     </a>
                 @endcan
                 @can('admin.sidangs')
                     <a href="{{ route('admin.sidangs') }}" class="{{ $navLink }} {{ $active('admin.sidangs') }}">
-                        <span class="material-symbols-outlined icon-md">gavel</span>
+                        <span class="material-symbols-outlined icon-md text-accent-purple">gavel</span>
                         <span class="sidebar-label">Sidang</span>
                     </a>
                 @endcan
                 @can('admin.institution')
                     <a href="{{ route('admin.institution') }}" class="{{ $navLink }} {{ $active('admin.institution') }}">
-                        <span class="material-symbols-outlined icon-md">apartment</span>
+                        <span class="material-symbols-outlined icon-md text-accent-teal">apartment</span>
                         <span class="sidebar-label">Institusi</span>
                     </a>
                     <a href="{{ route('admin.program-naming') }}" class="{{ $navLink }} {{ $active('admin.program-naming') }}">
-                        <span class="material-symbols-outlined icon-md">edit_note</span>
+                        <span class="material-symbols-outlined icon-md text-accent-orange">edit_note</span>
                         <span class="sidebar-label">Penamaan Program</span>
                     </a>
                 @endcan
@@ -365,19 +376,19 @@
         <div id="sidebar-footer" class="p-4 border-t border-border space-y-1">
             @if ($user->isMahasiswa())
                 <a href="{{ route('scheduling.index') }}" class="{{ $navLink }} {{ $active('scheduling.*') }}">
-                    <span class="material-symbols-outlined icon-sm">calendar_month</span> <span class="sidebar-label">Jadwalkan Bimbingan</span>
+                    <span class="material-symbols-outlined icon-sm text-status-info">calendar_month</span> <span class="sidebar-label">Jadwalkan Bimbingan</span>
                 </a>
             @endif
             <a href="https://reloop.notion.site/3b1155a221e880829514df5d0a8dcfd6" target="_blank" rel="noopener"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors bg-status-pending/15 text-status-pending hover:bg-status-pending/25 hover:text-status-pending border border-status-pending/30"
                 title="Laporkan masalah atau kirim ide untuk pengembangan aplikasi">
-                <span class="material-symbols-outlined icon-sm">feedback</span>
+                <span class="material-symbols-outlined icon-sm text-status-pending">feedback</span>
                 <span class="sidebar-label">Kirim Masukan</span>
             </a>
             <a href="https://github.com/relooplab/thesis-logbook-management" target="_blank" rel="noopener"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-text-secondary hover:bg-bg-hover hover:text-text-primary"
                 title="Lihat kode sumber aplikasi di GitHub">
-                <span class="material-symbols-outlined icon-sm">code</span>
+                <span class="material-symbols-outlined icon-sm text-accent-purple">code</span>
                 <span class="sidebar-label">GitHub</span>
             </a>
             <p class="sidebar-label px-3 pt-1.5 text-[10px] uppercase tracking-wide text-text-secondary/60" title="Versi rilis perangkat lunak">
@@ -395,13 +406,19 @@
                 </button>
                 @yield('header-title', '')
             </div>
-            <a href="{{ route('dashboard') }}" class="hidden md:flex items-center gap-2 px-2 min-w-0 justify-center" title="Thesis Logbook Management">
-                <span class="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-brand-light text-brand flex items-center justify-center shrink-0 p-1.5">
+            @php
+                $headerAppName = config('app.name');
+                $headerWords = explode(' ', $headerAppName);
+                $headerLast = array_pop($headerWords);
+                $headerFirst = implode(' ', $headerWords);
+            @endphp
+            <a href="{{ route('dashboard') }}" class="hidden md:flex items-center gap-2 px-2 min-w-0 justify-center" title="{{ $headerAppName }}">
+                <span class="w-8 h-8 md:w-9 md:h-9 rounded-[14px] bg-brand-light text-brand flex items-center justify-center shrink-0 p-1.5">
                     @include('partials.logo-mark')
                 </span>
                 <span class="hidden sm:flex flex-col min-w-0 leading-tight">
-                    <span class="font-heading font-extrabold text-sm md:text-base text-text-primary truncate">Thesis Logbook</span>
-                    <span class="text-[9px] md:text-[10px] uppercase tracking-widest text-text-secondary">Management</span>
+                    <span class="font-heading font-extrabold text-sm md:text-base text-text-primary truncate">{{ $headerFirst }}</span>
+                    <span class="text-[9px] md:text-[10px] font-semibold text-brand truncate">{{ $headerLast }}</span>
                 </span>
             </a>
             <div class="flex items-center justify-end gap-3">
@@ -413,7 +430,7 @@
 
                 <div class="relative">
                     <button type="button" id="notif-bell" class="relative p-2.5 rounded-xl bg-bg-hover text-text-secondary hover:text-text-primary" title="Notifikasi">
-                        <span class="material-symbols-outlined icon-md">notifications</span>
+                        <span class="material-symbols-outlined icon-md text-status-info">notifications</span>
                         <span id="notif-badge" class="hidden absolute -top-1 -right-1 h-4 w-4 rounded-full bg-status-danger text-[10px] text-white items-center justify-center"></span>
                     </button>
                     <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-bg-surface rounded-card shadow-lg border border-border overflow-hidden">
@@ -434,7 +451,7 @@
 
                 @auth
                 <div class="relative" id="profile-menu-wrap">
-                    <button type="button" id="profile-menu-btn" title="{{ $user->name }}" class="w-9 h-9 rounded-full bg-brand-light text-brand flex items-center justify-center text-xs font-bold overflow-hidden hover:ring-2 hover:ring-brand/40 transition shrink-0">
+                    <button type="button" id="profile-menu-btn" title="{{ $user->name }}" class="avatar w-9 h-9 text-xs overflow-hidden hover:ring-2 hover:ring-brand/40 transition shrink-0">
                         @if ($user->photoUrl())
                             <img src="{{ $user->photoUrl() }}" class="h-full w-full object-cover" alt="Foto profil">
                         @else
@@ -447,13 +464,13 @@
                             <div class="text-xs text-text-secondary truncate">{{ $user->email }}</div>
                         </div>
                         <a href="{{ route('profile.index') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-hover hover:text-text-primary">
-                            <span class="material-symbols-outlined icon-sm">person</span>
+                            <span class="material-symbols-outlined icon-sm text-accent-blue">person</span>
                             Profil
                         </a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-hover hover:text-status-danger">
-                                <span class="material-symbols-outlined icon-sm">logout</span>
+                                <span class="material-symbols-outlined icon-sm text-status-danger">logout</span>
                                 Keluar
                             </button>
                         </form>
@@ -466,23 +483,23 @@
         <main class="px-4 py-6 md:px-8 md:py-8">
             @if (session('success'))
                 <div class="mb-5 px-4 py-3 rounded-xl bg-status-success/10 text-status-success border border-status-success/20 flex items-start gap-2.5">
-                    <span class="material-symbols-outlined icon-md mt-0.5">check_circle</span><span>{{ session('success') }}</span>
+                    <span class="material-symbols-outlined icon-md mt-0.5 text-status-success">check_circle</span><span>{{ session('success') }}</span>
                 </div>
             @endif
             @if (session('error'))
                 <div class="mb-5 px-4 py-3 rounded-xl bg-status-danger/10 text-status-danger border border-status-danger/20 flex items-start gap-2.5">
-                    <span class="material-symbols-outlined icon-md mt-0.5">warning</span><span>{{ session('error') }}</span>
+                    <span class="material-symbols-outlined icon-md mt-0.5 text-status-danger">warning</span><span>{{ session('error') }}</span>
                 </div>
             @endif
             @if (session('warning'))
                 <div class="mb-5 px-4 py-3 rounded-xl bg-status-pending/10 text-status-pending border border-status-pending/20 flex items-start gap-2.5">
-                    <span class="material-symbols-outlined icon-md mt-0.5">info</span><span>{{ session('warning') }}</span>
+                    <span class="material-symbols-outlined icon-md mt-0.5 text-status-info">info</span><span>{{ session('warning') }}</span>
                 </div>
             @endif
             @if (session('import_errors'))
                 <div class="mb-5 px-4 py-3 rounded-xl bg-status-pending/10 text-status-pending border border-status-pending/20">
                     <div class="flex items-start gap-2.5 font-medium">
-                        <span class="material-symbols-outlined icon-md mt-0.5">info</span>
+                        <span class="material-symbols-outlined icon-md mt-0.5 text-status-info">info</span>
                         <span>Sebagian baris dilewati saat import:</span>
                     </div>
                     <ul class="mt-2 ml-8 list-disc space-y-1 text-sm">

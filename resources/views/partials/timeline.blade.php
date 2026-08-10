@@ -23,6 +23,18 @@
             };
         }
     }
+    if (!function_exists('tlIconColor')) {
+        function tlIconColor($status) {
+            return match ($status) {
+                "approved" => "text-status-success",
+                "revisi" => "text-status-danger",
+                "submitted" => "text-status-info",
+                "comment" => "text-accent-teal",
+                "future" => "text-text-secondary",
+                default => "text-text-secondary",
+            };
+        }
+    }
     // Dot health: green/yellow/red (sama dengan health indicator).
     if (!function_exists('healthDot')) {
         function healthDot($r) {
@@ -45,14 +57,14 @@
             <li class="ml-4"> <span
                     class="absolute -left-[9px] mt-1.5 h-3.5 w-3.5 rounded-full {{ tlColor($item["status"]) }}"></span>
                 <div class="flex items-center gap-2"> <span
-                        class="text-xs text-text-secondary font-medium w-16 shrink-0">{{ $item["date"] }}</span>
+                        class="text-xs text-text-secondary font-medium w-16 shrink-0 font-mono">{{ $item["date"] }}</span>
                     @if (!empty($item["url"]))
                         <a href="{{ $item["url"] }}" class="text-sm hover:text-brand hover:underline min-w-0 break-words">{{ $item["label"] }}</a>
                     @else
                         <span class="text-sm min-w-0 break-words">{{ $item["label"] }}</span>
                     @endif
                     <span
-                        class="material-symbols-outlined icon-sm shrink-0">{{ tlIcon($item["status"]) }}</span>
+                        class="material-symbols-outlined icon-sm shrink-0 {{ tlIconColor($item["status"]) }}">{{ tlIcon($item["status"]) }}</span>
                     @if ($item["type"] !== "future")
                         <span class="inline-block w-2.5 h-2.5 rounded-full ml-auto shrink-0 {{ healthDot($reg) }}"
                             title="Health bimbingan: {{ ucfirst($reg) }} — {{ $regTip }}"></span>

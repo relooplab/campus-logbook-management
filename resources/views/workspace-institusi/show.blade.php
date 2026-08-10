@@ -19,7 +19,7 @@
                 @csrf
                 <input type="file" name="files[]" multiple required class="w-full text-sm">
                 <input type="text" name="description" placeholder="Deskripsi (opsional)" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                <button class="px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Upload</button>
+                <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Upload</button>
             </form>
         </div>
 
@@ -44,7 +44,7 @@
                     </select>
                     <p class="text-xs text-text-secondary mt-1">Kosongkan jika mode sesama prodi. Multi-select untuk custom.</p>
                 </div>
-                <button class="px-4 py-2 rounded-md bg-brand text-white text-sm">Simpan Akses</button>
+                <button class="px-4 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Simpan Akses</button>
             </form>
         </div>
     @endif

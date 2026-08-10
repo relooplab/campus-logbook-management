@@ -62,7 +62,7 @@
             </div>
         </div>
         <div class="flex flex-wrap gap-2 pt-2">
-            <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Simpan</button>
+            <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Simpan</button>
             <a href="{{ route('logbook-harian.index', $mahasiswaTa) }}" class="px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20">Batal</a>
         </div>
     </form>

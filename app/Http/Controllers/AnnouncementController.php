@@ -111,7 +111,8 @@ class AnnouncementController extends Controller
      */
     public function report(Announcement $announcement): View
     {
-        abort_unless(auth()->id() === $announcement->sender_id || auth()->user()->isAdmin(), 403);
+        $u = auth()->user();
+        abort_unless($u && ($u->id === $announcement->sender_id || $u->isAdmin()), 403);
 
         $recipients = $announcement->recipients()->get();
         $read = $recipients->filter(fn ($r) => $r->pivot->read_at);
@@ -140,7 +141,8 @@ class AnnouncementController extends Controller
      */
     public function remindUnread(Announcement $announcement): RedirectResponse
     {
-        abort_unless(auth()->id() === $announcement->sender_id || auth()->user()->isAdmin(), 403);
+        $u = auth()->user();
+        abort_unless($u && ($u->id === $announcement->sender_id || $u->isAdmin()), 403);
 
         $unread = $announcement->recipients()
             ->wherePivotNull('read_at')

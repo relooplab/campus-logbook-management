@@ -1,6 +1,6 @@
 # Spesifikasi Mode Aplikasi — SaaS Unified
 
-**Project:** Thesis Logbook Management
+**Project:** Campus Logbook Management
 **Dokumen:** Desain mode penggunaan aplikasi (SaaS unified — user personal & institusi hidup bersamaan)
 **Status:** Implementasi — acuan arsitektur
 

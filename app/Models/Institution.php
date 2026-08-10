@@ -44,7 +44,7 @@ class Institution extends Model
     {
         return Cache::remember('institution.active', now()->addDay(), function () {
             return static::first() ?? static::create([
-                'app_name' => 'Thesis Logbook Management',
+                'app_name' => 'Campus Logbook Management',
                 'institution_name' => 'Perguruan Tinggi',
                 'email' => 'no-reply@example.com',
             ]);
@@ -97,11 +97,11 @@ class Institution extends Model
      */
     public function applyToConfig(): void
     {
-        config(['app.name' => $this->app_name ?: 'Thesis Logbook Management']);
+        config(['app.name' => $this->app_name ?: 'Campus Logbook Management']);
 
         // From address: prioritas mail_from_address, fallback email institusi.
         $fromAddress = $this->mail_from_address ?: $this->email;
-        $fromName = $this->mail_from_name ?: ($this->app_name ?: 'Thesis Logbook Management');
+        $fromName = $this->mail_from_name ?: ($this->app_name ?: 'Campus Logbook Management');
 
         if ($fromAddress) {
             config(['mail.from.address' => $fromAddress]);

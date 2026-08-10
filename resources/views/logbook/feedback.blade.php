@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Umpan Balik Logbook')
+@section('title', 'Riwayat Umpan Balik')
 
 @section('content')
 <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-            <h1 class="font-heading font-bold text-2xl text-text-primary">Umpan Balik Logbook</h1>
+            <h1 class="font-heading font-bold text-2xl text-text-primary">Riwayat Umpan Balik</h1>
             <p class="text-sm text-text-secondary mt-0.5">Umpan balik dosen & alur revisi dalam satu rangkaian</p>
         </div>
         <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali ke Logbook</a>
@@ -33,7 +33,7 @@
                     <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
                         <div class="flex items-start gap-3">
                             <span class="icon-circle w-10 h-10 bg-brand-light text-brand">
-                                <span class="material-symbols-outlined icon-md">forum</span>
+                                <span class="material-symbols-outlined icon-md text-accent-teal">forum</span>
                             </span>
                             <div>
                                 <p class="font-semibold text-text-primary">
@@ -56,7 +56,7 @@
                     <div class="space-y-3">
                         <div class="flex items-start gap-3">
                             <span class="mt-0.5 w-6 h-6 rounded-full bg-status-success/15 text-status-success flex items-center justify-center flex-shrink-0">
-                                <span class="material-symbols-outlined icon-sm">check</span>
+                                <span class="material-symbols-outlined icon-sm text-status-success">check</span>
                             </span>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-medium text-text-primary">Umpan Balik diterima</p>
@@ -68,7 +68,7 @@
                         @if ($openComments->isNotEmpty())
                             <div class="flex items-start gap-3">
                                 <span class="mt-0.5 w-6 h-6 rounded-full bg-status-pending/15 text-status-pending flex items-center justify-center flex-shrink-0">
-                                    <span class="material-symbols-outlined icon-sm">comment</span>
+                                    <span class="material-symbols-outlined icon-sm text-accent-teal">comment</span>
                                 </span>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-text-primary">Komentar belum diselesaikan ({{ $openComments->count() }})</p>
@@ -88,7 +88,7 @@
                         @if ($totalItems > 0)
                             <div class="flex items-start gap-3">
                                 <span class="mt-0.5 w-6 h-6 rounded-full bg-brand-light text-brand flex items-center justify-center flex-shrink-0">
-                                    <span class="material-symbols-outlined icon-sm">checklist</span>
+                                    <span class="material-symbols-outlined icon-sm text-accent-blue">checklist</span>
                                 </span>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-text-primary">Action Items ({{ $doneItems }}/{{ $totalItems }} selesai)</p>
@@ -108,7 +108,7 @@
                         @if ($latestRevision && $latestRevision->riwayat_perbaikan)
                             <div class="flex items-start gap-3">
                                 <span class="mt-0.5 w-6 h-6 rounded-full bg-status-success/15 text-status-success flex items-center justify-center flex-shrink-0">
-                                    <span class="material-symbols-outlined icon-sm">build</span>
+                                    <span class="material-symbols-outlined icon-sm text-accent-purple">build</span>
                                 </span>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-text-primary">Perbaikan dilakukan</p>
@@ -129,7 +129,7 @@
                         @if ($latestRevision)
                             <div class="flex items-start gap-3">
                                 <span class="mt-0.5 w-6 h-6 rounded-full bg-brand-light text-brand flex items-center justify-center flex-shrink-0">
-                                    <span class="material-symbols-outlined icon-sm">send</span>
+                                    <span class="material-symbols-outlined icon-sm text-accent-teal">send</span>
                                 </span>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium text-text-primary">
@@ -149,8 +149,8 @@
                     <div class="mt-4 pt-4 border-t border-border flex flex-wrap gap-2">
                         @if ($canCreateRevision)
                             <a href="{{ route('logbook.create-revisi', ['parent_entry_id' => $entry->id]) }}"
-                                class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90 inline-flex items-center gap-1.5">
-                                <span class="material-symbols-outlined icon-sm">edit_note</span> Buat Revisi
+                                class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 inline-flex items-center gap-1.5">
+                                <span class="material-symbols-outlined icon-sm text-accent-orange">edit_note</span> Buat Revisi
                             </a>
                         @endif
                         <a href="{{ route('logbook.show', $entry) }}"

@@ -74,10 +74,16 @@ class DirectorySubscriptionStorageTest extends AuditSmokeTest
                 'label' => 'Gratis',
                 'price' => 0,
                 'period' => 'monthly',
-                'features' => ['storage_mb' => 5120, 'export' => false, 'import' => false],
+                'features' => ['storage_mb' => 3072, 'export' => false, 'import' => false],
                 'is_active' => true,
             ]
         );
+        // Sinkronkan storage_mb free plan ke default aplikasi (3 GB). Saat seeder
+        // sudah pernah membuat plan dengan nilai lama (5 GB), firstOrCreate tidak
+        // akan menyentuh features, jadi update eksplisit di sini.
+        $this->planFree->update([
+            'features' => ['storage_mb' => 3072, 'export' => false, 'import' => false],
+        ]);
 
         // Dosen terafiliasi ke prodi + masuk institusi.
         $this->service->attachUserToUniversity($this->dosen, $this->univ, $this->faculty, $this->dept, $this->prodi, true);
@@ -187,7 +193,7 @@ class DirectorySubscriptionStorageTest extends AuditSmokeTest
             'ends_at' => null,
         ]);
 
-        $this->assertSame(5120, Feature::storageLimitMb($this->dosen));
+        $this->assertSame(3072, Feature::storageLimitMb($this->dosen));
     }
 
     public function test_institusi_expired_fallback_ke_plan_free_default(): void
@@ -203,7 +209,7 @@ class DirectorySubscriptionStorageTest extends AuditSmokeTest
         ]);
 
         // Tidak ada plan individual aktif -> fallback free (5 GB).
-        $this->assertSame(5120, Feature::storageLimitMb($this->dosen));
+        $this->assertSame(3072, Feature::storageLimitMb($this->dosen));
     }
 
     public function test_dua_afiliasi_cabang_berbeda_kuota_dijumlah(): void
@@ -360,12 +366,17 @@ class DirectorySubscriptionStorageTest extends AuditSmokeTest
         ));
     }
 
-    public function test_dosen_dibatasi_3_gb(): void
+    public function test_dosen_pakai_kuota_plan_free_3_gb(): void
     {
+        // Setelah penghapusan hard cap per-dosen, batasan dosen personal
+        // (institusi tanpa langganan) mengikuti plan free: 3 GB.
         $svc = app(\App\Services\StorageUsageService::class);
-        $capBytes = Feature::dosenStorageLimitMb() * 1048576; // 3 GB
 
-        // Isi hampir penuh (sisa &lt; 1 MB) via file workspace dosen.
+        $this->assertSame(0, \App\Support\Feature::institutionStorageLimitMb($this->dosen->institution_id));
+
+        $capBytes = \App\Support\Feature::storageLimitMb($this->dosen) * 1048576;
+        $this->assertSame(3072 * 1048576, $capBytes);
+
         \App\Models\WorkspaceFile::create([
             'user_id' => $this->dosen->id,
             'uploaded_by' => $this->dosen->id,
@@ -377,11 +388,11 @@ class DirectorySubscriptionStorageTest extends AuditSmokeTest
         ]);
 
         try {
-            $svc->assertCanUpload($this->dosen, 2 * 1048576); // coba upload 2 MB
-            $this->fail('Upload seharusnya diblokir karena melebihi kuota dosen 3 GB.');
+            $svc->assertCanUpload($this->dosen, 2 * 1048576);
+            $this->fail('Upload seharusnya diblokir karena melebihi kuota plan free 3 GB.');
         } catch (HttpException $e) {
             $this->assertSame(422, $e->getStatusCode());
-            $this->assertStringContainsString('Kuota penyimpanan dosen', $e->getMessage());
+            $this->assertStringContainsString('Kuota penyimpanan', $e->getMessage());
         }
     }
 }

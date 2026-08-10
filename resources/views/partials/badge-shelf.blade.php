@@ -6,44 +6,44 @@
     // Saat locked: kartu netral + ikon grayscale (opacity-50), tidak clickable (cursor-default).
     $achvColors = [
         'langkah_pertama' => [
-            'bg-[#FEF3C7] text-[#B45309] border-[#FDE68A]',
-            'dark:bg-[#3A2C10] dark:text-[#FCD34D] dark:border-[#5C4A1A]',
-            'text-[#B45309] dark:text-[#FCD34D]',
+            'bg-accent-orange/15 text-accent-orange border-accent-orange/30',
+            'dark:bg-accent-orange/15 dark:text-accent-orange dark:border-accent-orange/30',
+            'text-accent-orange',
         ],
         'konsisten' => [
-            'bg-[#ECFCCB] text-[#3F6212] border-[#D9F99D]',
-            'dark:bg-[#2B3310] dark:text-[#D9F99D] dark:border-[#4A551C]',
-            'text-[#3F6212] dark:text-[#D9F99D]',
+            'bg-status-success/15 text-status-success border-status-success/30',
+            'dark:bg-status-success/15 dark:text-status-success dark:border-status-success/30',
+            'text-status-success',
         ],
         'zero_revisi' => [
-            'bg-[#CCFBF1] text-[#0F766E] border-[#99F6E4]',
-            'dark:bg-[#102C2A] dark:text-[#5EEAD4] dark:border-[#1F4E48]',
-            'text-[#0F766E] dark:text-[#5EEAD4]',
+            'bg-accent-teal/15 text-accent-teal border-accent-teal/30',
+            'dark:bg-accent-teal/15 dark:text-accent-teal dark:border-accent-teal/30',
+            'text-accent-teal',
         ],
         'comeback' => [
-            'bg-[#FFE4D1] text-[#C2410C] border-[#FDBA74]',
-            'dark:bg-[#3A1E14] dark:text-[#FDBA74] dark:border-[#5C3620]',
-            'text-[#C2410C] dark:text-[#FDBA74]',
+            'bg-accent-orange/15 text-accent-orange border-accent-orange/30',
+            'dark:bg-accent-orange/15 dark:text-accent-orange dark:border-accent-orange/30',
+            'text-accent-orange',
         ],
         'setengah_jalan' => [
-            'bg-[#DBEAFE] text-[#1D4ED8] border-[#BFDBFE]',
-            'dark:bg-[#142B4E] dark:text-[#93C5FD] dark:border-[#234873]',
-            'text-[#1D4ED8] dark:text-[#93C5FD]',
+            'bg-accent-blue/15 text-accent-blue border-accent-blue/30',
+            'dark:bg-accent-blue/15 dark:text-accent-blue dark:border-accent-blue/30',
+            'text-accent-blue',
         ],
         'garis_akhir' => [
-            'bg-[#EDE9FE] text-[#6D28D9] border-[#DDD6FE]',
-            'dark:bg-[#2E2345] dark:text-[#C4B5FD] dark:border-[#4C3E73]',
-            'text-[#6D28D9] dark:text-[#C4B5FD]',
+            'bg-accent-purple/15 text-accent-purple border-accent-purple/30',
+            'dark:bg-accent-purple/15 dark:text-accent-purple dark:border-accent-purple/30',
+            'text-accent-purple',
         ],
         'responsif' => [
-            'bg-[#CFFAFE] text-[#0E7490] border-[#A5F3FC]',
-            'dark:bg-[#0E3038] dark:text-[#67E8F9] dark:border-[#1C4F5C]',
-            'text-[#0E7490] dark:text-[#67E8F9]',
+            'bg-accent-teal/15 text-accent-teal border-accent-teal/30',
+            'dark:bg-accent-teal/15 dark:text-accent-teal dark:border-accent-teal/30',
+            'text-accent-teal',
         ],
         'tepat_waktu' => [
-            'bg-[#FCE7F3] text-[#BE185D] border-[#FBCFE8]',
-            'dark:bg-[#3A1E33] dark:text-[#F9A8D4] dark:border-[#5C3350]',
-            'text-[#BE185D] dark:text-[#F9A8D4]',
+            'bg-status-pending/15 text-status-pending border-status-pending/30',
+            'dark:bg-status-pending/15 dark:text-status-pending dark:border-status-pending/30',
+            'text-status-pending',
         ],
     ];
 @endphp

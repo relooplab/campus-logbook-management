@@ -19,7 +19,7 @@
                 type="password" name="password_confirmation" id="password_confirmation" required minlength="6"
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div> <button
             type="submit"
-            class="w-full rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white py-2 text-sm font-semibold">Reset
+            class="w-full rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] py-2 text-sm font-semibold">Reset
             Kata
             Sandi</button>
     </form>

@@ -45,9 +45,9 @@ class LogbookEntry extends Model
      */
     public const STATUS_LABELS = [
         self::STATUS_DRAFT => 'Draf',
-        self::STATUS_SUBMITTED => 'Menunggu review',
+        self::STATUS_SUBMITTED => 'Menunggu Review',
         self::STATUS_APPROVED => 'Disetujui',
-        self::STATUS_REVISI => 'Perlu revisi',
+        self::STATUS_REVISI => 'Revisi Diminta',
         self::STATUS_REVISION_IN_PROGRESS => 'Revisi sedang dikerjakan',
     ];
 
@@ -232,7 +232,7 @@ class LogbookEntry extends Model
     /**
      * Notify pemilik TA + pembimbing (DB + email) dengan pesan tertentu.
      */
-    public function notifyParties(string $message, ?string $url = null, string $subject = 'Pemberitahuan Thesis Logbook Management'): void
+    public function notifyParties(string $message, ?string $url = null, string $subject = 'Pemberitahuan Campus Logbook Management'): void
     {
         $recipients = [];
         if ($ownerId = $this->mahasiswaTa?->user_id) {

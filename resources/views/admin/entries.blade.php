@@ -23,7 +23,7 @@
                 name="keyword" value="{{ request("keyword") }}" placeholder="Topik / nama / isi"
                 class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
         <div class="flex gap-2 w-full sm:w-auto"> <button
-                class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Cari</button> <a
+                class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Cari</button> <a
                 href="{{ route("admin.entries") }}"
                 class="flex-1 sm:flex-none px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm text-center">Reset</a>
         </div>
@@ -68,7 +68,7 @@
         <div class="mt-4 bg-bg-surface rounded-xl border border-border p-4 flex flex-wrap items-center gap-3"> <span
                 class="text-sm text-text-secondary">Aksi massal untuk entri terpilih:</span> <button type="button"
                 data-action="approve"
-                class="bulk-btn px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">Setujui</button>
+                class="bulk-btn px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Setujui</button>
             <button type="button" data-action="revisi"
                 class="bulk-btn px-3 py-2 rounded-md bg-status-pending hover:bg-status-pending/90 text-white text-sm">Tandai
                 Revisi</button> <button type="button" data-action="delete"

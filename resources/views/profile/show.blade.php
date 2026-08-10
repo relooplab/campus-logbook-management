@@ -2,12 +2,12 @@
 <div class="max-w-2xl space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Profil</h1> <a href="{{ url()->previous() }}"
-            class="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">← Kembali</a>
+            class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Kembali</a>
     </div>
     <div class="bg-bg-surface rounded-xl border border-border p-6">
         <div class="flex items-center gap-4">
             <div
-                class="h-20 w-20 rounded-full overflow-hidden bg-brand text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                class="h-20 w-20 rounded-full overflow-hidden bg-brand text-[#0b1420] flex items-center justify-center text-2xl font-bold flex-shrink-0">
                 @if ($profile->photoUrl())
                     <img src="{{ $profile->photoUrl() }}" class="h-full w-full object-cover" alt="Foto profil">
                 @else

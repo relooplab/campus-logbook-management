@@ -13,7 +13,7 @@
     {{-- ===== Pemilih peran (Mahasiswa / Dosen) ===== --}}
     <div id="role-tabs" class="flex rounded-lg border border-border overflow-hidden mb-4 text-sm">
         <button type="button" data-role="mahasiswa" id="role-mahasiswa"
-            class="role-toggle flex-1 py-2.5 font-semibold bg-brand-fill text-white transition-colors cursor-pointer">Mahasiswa</button>
+            class="role-toggle flex-1 py-2.5 font-semibold bg-brand text-[#0b1420] transition-colors cursor-pointer">Mahasiswa</button>
         <button type="button" data-role="dosen" id="role-dosen"
             class="role-toggle flex-1 py-2.5 font-medium bg-bg-panel text-text-secondary hover:bg-bg-hover transition-colors cursor-pointer">Dosen</button>
     </div>
@@ -49,7 +49,7 @@
         </div>
 
         <button type="submit"
-            class="w-full rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white py-2 text-sm font-semibold">Daftar</button>
+            class="w-full rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] py-2 text-sm font-semibold">Daftar</button>
         <a href="{{ route("login") }}" class="block text-center text-sm text-brand hover:underline">Sudah punya akun?
             Masuk</a>
     </form>
@@ -69,8 +69,8 @@
                 var toggles = roleTabs.querySelectorAll('.role-toggle');
                 Array.prototype.forEach.call(toggles, function (btn) {
                     var active = btn.dataset.role === role;
-                    btn.classList.toggle('bg-brand-fill', active);
-                    btn.classList.toggle('text-white', active);
+                    btn.classList.toggle('bg-brand', active);
+                    btn.classList.toggle('text-[#0b1420]', active);
                     btn.classList.toggle('font-semibold', active);
                     btn.classList.toggle('bg-bg-panel', !active);
                     btn.classList.toggle('text-text-secondary', !active);

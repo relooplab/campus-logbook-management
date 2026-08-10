@@ -45,13 +45,13 @@
                                 </div>
                                 <div class="flex items-center gap-1 flex-shrink-0">
                                     <a href="{{ $file->isPdf() ? route('workspace.preview', $file) : route('workspace.download', $file) }}" target="_blank" title="Buka"
-                                        class="p-1.5 rounded hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm">open_in_new</span></a>
+                                        class="p-1.5 rounded hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm text-status-info">open_in_new</span></a>
                                     <form method="POST" action="{{ route('storage.destroy-workspace', $file) }}"
                                         onsubmit="return confirm('Hapus file workspace ini? Mahasiswa akan kehilangan akses ke file ini.')">
                                         @csrf
                                         @method('DELETE')
                                         <button class="p-1.5 rounded hover:bg-status-danger/10 text-status-danger" title="Hapus">
-                                            <span class="material-symbols-outlined icon-sm">delete</span>
+                                            <span class="material-symbols-outlined icon-sm text-status-danger">delete</span>
                                         </button>
                                     </form>
                                 </div>
@@ -90,13 +90,13 @@
                                     </div>
                                     <div class="flex items-center gap-1 flex-shrink-0">
                                         <a href="{{ route('logbook-harian.foto', [$entryTa, $entry, $idx]) }}" target="_blank" title="Buka"
-                                            class="p-1.5 rounded hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm">open_in_new</span></a>
+                                            class="p-1.5 rounded hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm text-status-info">open_in_new</span></a>
                                         <form method="POST" action="{{ route('storage.destroy-logbook-harian', [$entry, 'foto_'.$idx]) }}"
                                             onsubmit="return confirm('Hapus foto logbook harian ini?')">
                                             @csrf
                                             @method('DELETE')
                                             <button class="p-1.5 rounded hover:bg-status-danger/10 text-status-danger" title="Hapus">
-                                                <span class="material-symbols-outlined icon-sm">delete</span>
+                                                <span class="material-symbols-outlined icon-sm text-status-danger">delete</span>
                                             </button>
                                         </form>
                                     </div>

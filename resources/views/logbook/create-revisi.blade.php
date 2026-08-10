@@ -35,7 +35,7 @@
         @foreach ($steps as $num => [$label, $icon])
             <div class="flex items-center gap-1 shrink-0">
                 <button type="button" data-step="{{ $num }}"
-                    class="wizard-step flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors {{ $num === 1 ? 'bg-brand text-white' : 'bg-bg-panel text-text-secondary hover:bg-bg-hover' }}">
+                    class="wizard-step flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors {{ $num === 1 ? 'bg-brand text-[#0b1420]' : 'bg-bg-panel text-text-secondary hover:bg-bg-hover' }}">
                     <span class="material-symbols-outlined icon-sm">{{ $icon }}</span>
                     <span class="hidden sm:inline">{{ $label }}</span>
                 </button>
@@ -92,7 +92,7 @@
             @endforeach
 
             <div class="mt-4 flex justify-end">
-                <button type="button" class="wizard-next px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Lanjut →</button>
+                <button type="button" class="wizard-next px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Lanjut →</button>
             </div>
         </div>
 
@@ -170,7 +170,7 @@
             </div>
 
             <div class="mt-3">
-                <button type="button" id="tambah-kartu" class="px-3 py-1.5 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-xs font-semibold">+ Tambah Kartu</button>
+                <button type="button" id="tambah-kartu" class="px-3 py-1.5 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-xs font-semibold">+ Tambah Kartu</button>
             </div>
             @error("riwayat_perbaikan")
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
@@ -178,7 +178,7 @@
 
             <div class="mt-4 flex justify-between">
                 <button type="button" class="wizard-prev px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali</button>
-                <button type="button" class="wizard-next px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Lanjut →</button>
+                <button type="button" class="wizard-next px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Lanjut →</button>
             </div>
         </div>
 
@@ -223,7 +223,7 @@
                 <button type="button" class="wizard-prev px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali</button>
                 <div class="flex flex-col items-end gap-1">
                     <p id="upload-hint" class="hidden text-xs text-status-danger">Unggah file perbaikan terlebih dahulu sebelum lanjut ke Review.</p>
-                    <button type="button" id="lanjut-upload" class="wizard-next px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Lanjut →</button>
+                    <button type="button" id="lanjut-upload" class="wizard-next px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Lanjut →</button>
                 </div>
             </div>
         </div>
@@ -266,7 +266,7 @@
             <div class="mt-4 flex flex-wrap gap-2">
                 <button type="button" class="wizard-prev px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali</button>
                 <button type="submit" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Simpan Draft</button>
-                <button type="submit" name="submit" value="1" id="btn-kirim" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Kirim ke Dosen</button>
+                <button type="submit" name="submit" value="1" id="btn-kirim" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Kirim ke Dosen</button>
             </div>
         </div>
     </form>
@@ -298,7 +298,7 @@
         stepButtons.forEach(function (b) {
             var active = parseInt(b.dataset.step) === currentStep;
             b.classList.toggle('bg-brand', active);
-            b.classList.toggle('text-white', active);
+            b.classList.toggle('text-[#0b1420]', active);
             b.classList.toggle('bg-bg-panel', !active);
             b.classList.toggle('text-text-secondary', !active);
         });

@@ -1,84 +1,123 @@
 /* ============================================================
-   Thesis Logbook Management — Brand & UI tokens (light + dark)
-   Selaras dengan tailwind.config.js dan public/css/global.css.
-   Token memakai CSS variables RGB-channel sehingga mendukung
-   opacity modifier Tailwind (mis. bg-brand/15) dan otomatis
-   switch light/dark lewat selector `.dark` (strategy 'class').
+   Campus Logbook Management — Brand & UI tokens (light + dark)
+   Diadopsi dari brand guideline v1.0 (2026).
+   - Dark mode adalah tema utama; light mode pakai token sama.
+   - Token memakai CSS variables RGB-channel sehingga mendukung
+     opacity modifier (mis. bg-brand/10).
+   - Aksen dirotasi per konteks: mahasiswa=blue, dosen=orange,
+     kelompok=teal, admin=purple. Rotasi dilakukan dengan
+     menimpa alias `--brand` pada class konteks (.ctx-*).
    ============================================================ */
 
 :root {
-  /* ----- Light mode (default) ----- */
-  --bg-base: 248 249 245;
-  --bg-surface: 255 255 255;
-  --bg-panel: 239 242 234;
-  --bg-hover: 239 242 234;
-  --border: 225 230 217;
+  /* ----- Light mode ----- */
+  --bg-base: 245 245 243;      /* #f5f5f3 */
+  --bg-surface: 255 255 255;   /* #ffffff */
+  --bg-panel: 248 248 247;     /* #f8f8f7 */
+  --bg-hover: 238 238 236;     /* #eeeeec */
+  --border: 226 226 224;       /* #e2e2e0 */
 
-  --text-primary: 35 41 30;
-  --text-secondary: 107 117 102;
+  --text-primary: 30 32 36;    /* #1e2024 */
+  --text-secondary: 107 114 128; /* #6b7280 */
 
-  --brand: 124 148 115;
-  --brand-fill: 100 120 92;
-  --brand-fill-hover: 82 98 75;
-  --brand-hover: 100 120 92;
-  --brand-light: 228 234 219;
+  /* Aksen (guideline) */
+  --accent-blue: 74 111 192;      /* #4a6fc0 */
+  --accent-orange: 193 127 62;    /* #c17f3e */
+  --accent-teal: 63 143 125;      /* #3f8f7d */
+  --accent-purple: 125 99 176;    /* #7d63b0 */
 
-  --sand: 201 169 126;
-  --sand-light: 242 231 210;
+  /* Alias brand — default = accent-blue (mahasiswa) */
+  --brand: 74 111 192;
+  --brand-hover: 67 100 173;
+  --brand-light: 228 233 246;
+  --brand-fill: 74 111 192;
+  --brand-fill-hover: 64 98 176;
 
-  --status-success: 124 148 115;
-  --status-danger: 201 124 107;
-  --status-info: 107 140 174;
-  --status-pending: 201 169 126;
+  /* Alias sand — dipertahankan, dipetakan ke accent-orange */
+  --sand: 193 127 62;
+  --sand-light: 246 236 226;
 
-  --card-inverse: 35 41 30;
+  /* Status (guideline) */
+  --status-success: 79 143 82;    /* #4f8f52 */
+  --status-danger: 193 93 79;     /* #c15d4f */
+  --status-info: 74 111 192;      /* #4a6fc0 */
+  --status-pending: 184 144 63;   /* #b8903f */
+
+  --card-inverse: 30 32 36;
 
   --radius-card: 20px;
+  --radius-control: 10px;
   --spacing-card: 24px;
 
-  --font-sans: 'Roboto Mono', ui-monospace, monospace;
-  --font-heading: 'Roboto Mono', ui-monospace, monospace;
-}
-
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;}
 .dark {
-  /* ----- Dark mode (satu keluarga hue) ----- */
-  --bg-base: 19 24 15;
-  --bg-surface: 27 34 22;
-  --bg-panel: 34 43 28;
-  --bg-hover: 34 43 28;
-  --border: 44 54 36;
+  /* ----- Dark mode (tema utama) ----- */
+  --bg-base: 20 22 28;         /* #14161c */
+  --bg-surface: 26 29 37;      /* #1a1d25 */
+  --bg-panel: 32 35 44;        /* #20232c */
+  --bg-hover: 38 42 53;        /* #262a35 */
+  --border: 47 51 63;          /* #2f333f */
 
-  --text-primary: 237 240 231;
-  --text-secondary: 154 166 146;
+  --text-primary: 242 243 245; /* #f2f3f5 */
+  --text-secondary: 154 161 173; /* #9aa1ad */
 
-  --brand: 147 174 133;
-  --brand-fill: 124 148 115;
-  --brand-fill-hover: 100 120 92;
-  --brand-hover: 124 148 115;
-  --brand-light: 42 51 34;
+  /* Aksen (guideline) */
+  --accent-blue: 109 143 217;    /* #6d8fd9 */
+  --accent-orange: 217 154 91;   /* #d99a5b */
+  --accent-teal: 95 172 157;     /* #5fac9d */
+  --accent-purple: 155 131 201;  /* #9b83c9 */
 
-  --sand: 217 189 143;
-  --sand-light: 51 43 29;
+  /* Alias brand — default = accent-blue */
+  --brand: 109 143 217;
+  --brand-hover: 98 129 195;
+  --brand-light: 42 52 82;
+  --brand-fill: 109 143 217;
+  --brand-fill-hover: 96 130 205;
 
-  --status-success: 147 174 133;
-  --status-danger: 217 148 133;
-  --status-info: 143 173 201;
-  --status-pending: 217 189 143;
+  --sand: 217 154 91;
+  --sand-light: 55 48 45;
 
-  --card-inverse: 237 240 231;
+  /* Status (guideline) */
+  --status-success: 111 174 111;  /* #6fae6f */
+  --status-danger: 217 123 111;   /* #d97b6f */
+  --status-info: 123 163 224;     /* #7ba3e0 */
+  --status-pending: 217 179 95;   /* #d9b35f */
+
+  --card-inverse: 242 243 245;
 }
 
+/* ============================================================
+   Rotasi aksen per konteks — timpa alias --brand
+   ============================================================ */
+.ctx-dosen   { --brand: var(--accent-orange); --brand-hover: 195 139 82; --brand-light: 55 48 45; --brand-fill: var(--accent-orange); --brand-fill-hover: 195 139 82; }
+.ctx-kelompok{ --brand: var(--accent-teal);   --brand-hover: 86 155 141; --brand-light: 36 50 55; --brand-fill: var(--accent-teal);   --brand-fill-hover: 86 155 141; }
+.ctx-admin   { --brand: var(--accent-purple); --brand-hover: 140 118 181; --brand-light: 45 44 62; --brand-fill: var(--accent-purple); --brand-fill-hover: 140 118 181; }
+.ctx-mahasiswa { --brand: var(--accent-blue); --brand-hover: 98 129 195; --brand-light: 42 52 82; --brand-fill: var(--accent-blue); --brand-fill-hover: 96 130 205; }
+/* Variasi light untuk konteks */
+.light .ctx-dosen, body:not(.dark) .ctx-dosen { --brand-light: 246 236 226; }
+.light .ctx-kelompok, body:not(.dark) .ctx-kelompok { --brand-light: 226 238 236; }
+.light .ctx-admin, body:not(.dark) .ctx-admin { --brand-light: 236 232 243; }
+.light .ctx-mahasiswa, body:not(.dark) .ctx-mahasiswa { --brand-light: 228 233 246; }
 /* ============================================================
    Primitive utilities (komponen dari guideline)
    ============================================================ */
 
 body {
   font-family: var(--font-sans);
+  background: rgb(var(--bg-base));
 }
 
 .font-heading,
 h1, h2, h3, .font-heading {
   font-family: var(--font-heading);
+}
+
+/* Direktori data terstruktur: tanggal, NIM/NIDN, ID, angka tabel */
+.font-mono,
+.mono {
+  font-family: var(--font-mono);
 }
 
 /* ---------- Badge status: dot + label ---------- */
@@ -110,38 +149,65 @@ h1, h2, h3, .font-heading {
 /* ---------- Tombol hierarchy ---------- */
 .btn-primary {
   background: rgb(var(--brand));
-  color: #fff;
+  color: #0b1420;
+  border-radius: var(--radius-control);
   transition: opacity .15s ease;
 }
-.btn-primary:hover { background: rgb(var(--brand-hover)); }
+.btn-primary:hover { opacity: .9; }
 .btn-secondary {
   background: rgb(var(--bg-hover));
   color: rgb(var(--text-primary));
   border: 1px solid transparent;
+  border-radius: var(--radius-control);
 }
 .btn-secondary:hover { background: rgb(var(--border)); }
 .btn-ghost {
   background: transparent;
   color: rgb(var(--text-primary));
   border: 1px solid rgb(var(--border));
+  border-radius: var(--radius-control);
 }
 .btn-ghost:hover { background: rgb(var(--bg-hover)); }
-.btn-danger { background: rgb(var(--status-danger)); color: #fff; }
+.btn-danger { background: rgb(var(--status-danger)); color: #fff; border-radius: var(--radius-control); }
 .btn-danger:hover { opacity: .9; }
-.btn-warning { background: rgb(var(--status-pending)); color: #1a1300; }
+.btn-warning { background: rgb(var(--status-pending)); color: #1a1200; border-radius: var(--radius-control); }
 
-/* ---------- Card (rounded generous) ---------- */
+/* ---------- Card (radius 20px) ---------- */
 .card {
   background: rgb(var(--bg-surface));
   border: 1px solid rgb(var(--border));
   border-radius: var(--radius-card);
 }
 
-/* ---------- Icon-circle ---------- */
+/* ---------- Icon chip (stat card): radius control, bg aksen 10% ---------- */
+.icon-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-control);
+  flex-shrink: 0;
+  background: rgba(var(--brand) / 0.10);
+  color: rgb(var(--brand));
+}
+
+/* ---------- Icon circle (avatar/badge round) ---------- */
 .icon-circle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
+  flex-shrink: 0;
+}
+
+/* ---------- Avatar inisial ---------- */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(var(--brand) / 0.15);
+  border: 1px solid rgba(var(--brand) / 0.25);
+  color: rgb(var(--brand));
+  font-weight: 600;
   flex-shrink: 0;
 }

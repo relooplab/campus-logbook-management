@@ -202,10 +202,15 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'jenis' => ['required', 'in:ta,kp'],
             'fase' => ['required', 'in:'.implode(',', $faseKeys)],
-            'pembimbing_1_id' => ['required', 'exists:users,id'],
+            // Mahasiswa wajib mengisi SALAH SATU dari 4 peran dosen
+            // (pembimbing 1/2 atau penguji 1/2). Boleh pilih 1–4 peran;
+            // yang penting minimal satu dosen ter-assign.
+            'pembimbing_1_id' => ['nullable', 'required_without_all:pembimbing_2_id,penguji_1_id,penguji_2_id', 'exists:users,id'],
             'pembimbing_2_id' => ['nullable', 'exists:users,id'],
             'penguji_1_id' => ['nullable', 'exists:users,id'],
             'penguji_2_id' => ['nullable', 'exists:users,id'],
+        ], [
+            'pembimbing_1_id.required_without_all' => 'Pilih minimal satu peran dosen (pembimbing atau penguji).',
         ]);
 
         // Pastikan dosen yang dipilih benar-benar dosen aktif.

@@ -13,3 +13,4 @@ vendor
 nginx
 docker-compose.yml
 *.md
+!CHANGELOG.md

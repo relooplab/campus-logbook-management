@@ -8,9 +8,9 @@
     ];
     $map = [
         "draft" => ["badge-neutral", "Draf"],
-        "submitted" => ["badge-pending", "Menunggu review"],
+        "submitted" => ["badge-pending", "Menunggu Review"],
         "approved" => ["badge-success", "Disetujui"],
-        "revisi" => ["badge-danger", "Perlu revisi"],
+        "revisi" => ["badge-danger", "Revisi Diminta"],
         "revision_in_progress" => ["badge-pending", "Revisi sedang dikerjakan"],
     ];
 

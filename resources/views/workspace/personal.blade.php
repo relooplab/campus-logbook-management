@@ -35,7 +35,7 @@
                 class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
         </div>
         <div class="flex gap-2 w-full sm:w-auto">
-            <button type="submit" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90">Cari</button>
+            <button type="submit" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Cari</button>
             <a href="{{ route('workspace.personal') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border text-center">Reset</a>
         </div>
     </form>
@@ -66,7 +66,7 @@
                 <p id="progress-text" class="text-xs text-text-secondary mt-1">0%</p>
             </div>
             <button type="submit" id="upload-btn" disabled
-                class="mt-3 px-4 py-2 rounded-xl bg-brand text-white text-sm font-medium hover:opacity-90 disabled:opacity-40">Upload</button>
+                class="mt-3 px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 disabled:opacity-40">Upload</button>
             @error('files.*')
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
             @enderror
@@ -104,16 +104,16 @@
                             <div class="flex items-center gap-1 flex-shrink-0">
                                 @if ($file->isPdf())
                                     <a href="{{ route('workspace.preview', $file) }}" target="_blank" title="Preview"
-                                        class="p-1.5 rounded hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm">visibility</span></a>
+                                        class="p-1.5 rounded hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm text-status-info">visibility</span></a>
                                 @endif
                                 <a href="{{ route('workspace.download', $file) }}" title="Download"
-                                    class="p-1.5 rounded hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm">download</span></a>
+                                    class="p-1.5 rounded hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm text-accent-orange">download</span></a>
                                 <form method="POST" action="{{ route('workspace.destroy', $file) }}"
                                     onsubmit="return confirm('Hapus file ini?')">
                                     @csrf
                                     @method('DELETE')
                                     <button class="p-1.5 rounded hover:bg-status-danger/10 text-status-danger" title="Hapus">
-                                        <span class="material-symbols-outlined icon-sm">delete</span>
+                                        <span class="material-symbols-outlined icon-sm text-status-danger">delete</span>
                                     </button>
                                 </form>
                             </div>
