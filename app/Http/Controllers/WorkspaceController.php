@@ -203,8 +203,8 @@ class WorkspaceController extends Controller
         abort_unless($user->isDosen() || $user->isAdmin(), 403, 'Halaman ini khusus dosen.');
 
         $validated = $request->validate([
-            'files' => ['required', 'array', 'max:5'],
-            'files.*' => ['file', 'max:25600'], // 25 MB
+            'files' => ['required', 'array'],
+            'files.*' => ['file', 'max:51200'], // 50 MB
             'bab' => ['nullable', 'string', 'max:50'],
         ]);
 

@@ -74,7 +74,7 @@
             @yield('guest-content')
         </div>
         <div class="mt-6 flex items-center justify-center gap-3 text-sm">
-            <a href="https://github.com/relooplab/thesis-logbook-management" target="_blank" rel="noopener"
+            <a href="https://github.com/relooplab/campus-logbook-management" target="_blank" rel="noopener"
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors"
                 title="Lihat kode sumber aplikasi di GitHub">
                 <span class="material-symbols-outlined icon-sm text-accent-purple">code</span> GitHub

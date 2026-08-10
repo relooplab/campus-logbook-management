@@ -12,6 +12,7 @@
     <div class="bg-bg-surface rounded-xl border border-border overflow-hidden">
         <div class="px-4 py-3 border-b border-border font-semibold text-sm"> {{ $read->count() }} dari
             {{ $announcement->recipients->count() }} mahasiswa sudah membaca </div>
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
                 <tr class="text-left text-text-secondary border-b border-border">
@@ -35,6 +36,7 @@
                     @endforeach
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 @endsection

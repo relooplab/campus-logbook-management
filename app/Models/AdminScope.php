@@ -13,10 +13,12 @@ class AdminScope extends Model
     public const SCOPE_STUDY_PROGRAM = 'study_program';
     public const SCOPE_DEPARTMENT = 'department';
     public const SCOPE_FACULTY = 'faculty';
+    public const SCOPE_UNIVERSITY = 'university';
     public const SCOPES = [
-        self::SCOPE_STUDY_PROGRAM,
-        self::SCOPE_DEPARTMENT,
+        self::SCOPE_UNIVERSITY,
         self::SCOPE_FACULTY,
+        self::SCOPE_DEPARTMENT,
+        self::SCOPE_STUDY_PROGRAM,
     ];
 
     public const STATUS_ACTIVE = 'active';

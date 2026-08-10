@@ -16,8 +16,8 @@ class StoreWorkspaceFileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'files' => ['required', 'array', 'max:5'],
-            'files.*' => ['file', 'mimes:pdf,doc,docx,xls,xlsx', 'max:25600'], // 25 MB
+            'files' => ['required', 'array'],
+            'files.*' => ['file', 'mimes:pdf,doc,docx,xls,xlsx', 'max:51200'], // 50 MB
             'bab' => ['nullable', 'string', 'max:50'],
         ];
     }
@@ -26,9 +26,8 @@ class StoreWorkspaceFileRequest extends FormRequest
     {
         return [
             'files.required' => 'Pilih minimal satu file.',
-            'files.max' => 'Maksimal 5 file dalam satu upload.',
             'files.*.mimes' => 'Hanya file PDF, DOC, DOCX, XLS, atau XLSX yang diperbolehkan.',
-            'files.*.max' => 'Ukuran file maksimal 25 MB.',
+            'files.*.max' => 'Ukuran file maksimal 50 MB.',
             'bab.max' => 'Label bab maksimal 50 karakter.',
         ];
     }

@@ -18,8 +18,9 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 /**
  * Fase D — Filter cakupan admin_scopes:
- * - Admin tanpa admin_scopes = institusi penuh (perilaku existing).
- * - Admin dengan admin_scopes aktif = data lintas-dosen ter-filter ke scope-nya.
+ * - Admin tanpa admin_scopes = DIKUNCI (tidak melihat data dosen/mahasiswa).
+ * - Admin dengan admin_scopes aktif = data lintas-dosen ter-filter ke scope-nya
+ *   (hierarkis: university > faculty > department > study_program).
  */
 class AdminScopeFilterTest extends AuditSmokeTest
 {
@@ -150,15 +151,16 @@ class AdminScopeFilterTest extends AuditSmokeTest
         parent::tearDown();
     }
 
-    public function test_admin_tanpa_scope_melihat_semua_user_institusi(): void
+    public function test_admin_tanpa_scope_dikunci_tidak_melihat_user(): void
     {
+        // Admin non-system tanpa admin_scopes DIKUNCI — tidak melihat siapa pun.
         $response = $this->actingAs($this->adminFull)->get(route('admin.users'));
 
         $response->assertOk();
-        $response->assertSee('Dosen Prodi A');
-        $response->assertSee('Dosen Prodi B');
-        $response->assertSee('Mhs Prodi A');
-        $response->assertSee('Mhs Prodi B');
+        $response->assertDontSee('Dosen Prodi A');
+        $response->assertDontSee('Dosen Prodi B');
+        $response->assertDontSee('Mhs Prodi A');
+        $response->assertDontSee('Mhs Prodi B');
     }
 
     public function test_admin_dengan_scope_hanya_melihat_user_di_scope_nya(): void
@@ -194,7 +196,7 @@ class AdminScopeFilterTest extends AuditSmokeTest
         $this->assertDatabaseMissing('users', ['id' => $this->dosenProdiA->id]);
     }
 
-    public function test_admin_tanpa_scope_melihat_semua_ta(): void
+    public function test_admin_tanpa_scope_dikunci_tidak_melihat_ta(): void
     {
         // Buat TA untuk mhs prodi A & B.
         $taA = MahasiswaTa::create([
@@ -214,11 +216,12 @@ class AdminScopeFilterTest extends AuditSmokeTest
             'status_ta' => MahasiswaTa::STATUS_AKTIF,
         ]);
 
+        // Admin non-system tanpa admin_scopes DIKUNCI — tidak melihat TA siapa pun.
         $response = $this->actingAs($this->adminFull)->get(route('admin.tas'));
 
         $response->assertOk();
-        $response->assertSee('Mhs Prodi A');
-        $response->assertSee('Mhs Prodi B');
+        $response->assertDontSee('Mhs Prodi A');
+        $response->assertDontSee('Mhs Prodi B');
     }
 
     public function test_admin_dengan_scope_hanya_melihat_ta_di_scope_nya(): void

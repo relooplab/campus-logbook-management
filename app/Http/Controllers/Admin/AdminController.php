@@ -33,10 +33,11 @@ class AdminController extends Controller
             // Admin biasa hanya melihat user di institusinya sendiri.
             if ($request->user()->institution_id) {
                 $query->where('institution_id', $request->user()->institution_id);
-
-                // Fase D: admin dengan admin_scopes aktif dibatasi ke scope-nya.
-                $this->applyAdminScopeFilter($query, $request->user());
             }
+
+            // Admin dengan admin_scopes dibatasi ke scope-nya (hierarkis);
+            // admin TANPA admin_scopes dikunci (tidak melihat data dosen/mahasiswa).
+            $this->applyAdminScopeFilter($query, $request->user());
         }
 
         if ($role = $request->query('role')) {
@@ -253,7 +254,7 @@ class AdminController extends Controller
             'password' => ['required', 'string', 'min:6'],
             'institution_id' => ['nullable', 'exists:institutions,id'],
             'scopes' => ['nullable', 'array'],
-            'scopes.*.scope_type' => ['required_with:scopes', 'in:study_program,department,faculty'],
+            'scopes.*.scope_type' => ['required_with:scopes', 'in:university,faculty,department,study_program'],
             'scopes.*.scope_id' => ['required_with:scopes', 'integer'],
         ]);
 
@@ -330,14 +331,14 @@ class AdminController extends Controller
             'identifier' => ['nullable', 'string', 'max:30'],
             'password' => ['required', 'string', 'min:6'],
             'scopes' => ['required', 'array', 'min:1'],
-            'scopes.*.scope_type' => ['required', 'in:study_program,department,faculty'],
+            'scopes.*.scope_type' => ['required', 'in:university,faculty,department,study_program'],
             'scopes.*.scope_id' => ['required', 'integer'],
         ]);
 
         $creator = $request->user();
         $creatorScopes = \App\Models\AdminScope::activeFor($creator);
 
-        // Admin pembuat harus punya scope (tidak bisa buat sub-admin kalau institusi penuh).
+        // Admin pembuat harus punya scope (tidak bisa buat sub-admin tanpa scope).
         if ($creatorScopes->isEmpty()) {
             return back()->with('error', 'Anda tidak memiliki scope admin. Hanya admin dengan scope yang dapat membuat admin di bawahnya.');
         }
@@ -494,8 +495,9 @@ class AdminController extends Controller
             });
         }
 
-        // Fase D: admin dengan admin_scopes aktif dibatasi ke scope-nya.
-        if (!$request->user()->isSystemAdmin() && $request->user()->institution_id) {
+        // Fase D: admin dengan admin_scopes aktif dibatasi ke scope-nya (hierarkis);
+        // admin TANPA admin_scopes dikunci (tidak melihat data di luar institusi/scope).
+        if (!$request->user()->isSystemAdmin()) {
             $this->applyAdminScopeFilterToTa($query, $request->user());
         }
 
@@ -506,10 +508,18 @@ class AdminController extends Controller
             ? $q->where('institution_id', $request->user()->institution_id)
             : $q;
 
-        $dosenList = $institutionFilter(User::role('dosen'))->orderBy('name')->get();
-        $mahasiswaList = $institutionFilter(
+        $dosenQuery = $institutionFilter(User::role('dosen'))->orderBy('name');
+        $mahasiswaQuery = $institutionFilter(
             User::role('mahasiswa')->whereDoesntHave('mahasiswaPrograms', fn ($q) => $q->where('jenis', $jenis))
-        )->orderBy('name')->get();
+        )->orderBy('name');
+
+        if (!$request->user()->isSystemAdmin()) {
+            $this->applyAdminScopeFilter($dosenQuery, $request->user());
+            $this->applyAdminScopeFilter($mahasiswaQuery, $request->user());
+        }
+
+        $dosenList = $dosenQuery->get();
+        $mahasiswaList = $mahasiswaQuery->get();
 
         return view('admin.tas', compact('tas', 'dosenList', 'mahasiswaList', 'jenis'));
     }
@@ -602,22 +612,34 @@ class AdminController extends Controller
         $query = \App\Models\Sidang::with(['mahasiswaTa.mahasiswa', 'penguji']);
 
         // Sidang tidak punya InstitutionScope — filter manual ke institusi admin.
-        if (!$request->user()->isSystemAdmin() && $request->user()->institution_id) {
-            $query->where('institution_id', $request->user()->institution_id);
+        if (!$request->user()->isSystemAdmin()) {
+            if ($request->user()->institution_id) {
+                $query->where('institution_id', $request->user()->institution_id);
+            }
 
-            // Fase D: admin dengan admin_scopes aktif dibatasi ke scope-nya.
+            // Admin dengan admin_scopes dibatasi ke scope-nya (hierarkis);
+            // admin TANPA admin_scopes dikunci.
             $this->applyAdminScopeFilterToTa($query, $request->user(), 'mahasiswaTa');
         }
 
         $sidangs = $query->orderByDesc('tanggal')->paginate(20)->withQueryString();
 
-        // Dosen & mahasiswa yang bisa dipilih dibatasi ke institusi yang sama.
+        // Dosen & mahasiswa yang bisa dipilih dibatasi ke institusi yang sama,
+        // lalu ke admin_scopes (hierarkis) untuk admin non-system.
         $institutionFilter = fn ($q) => !$request->user()->isSystemAdmin() && $request->user()->institution_id
             ? $q->where('institution_id', $request->user()->institution_id)
             : $q;
 
-        $mahasiswaList = $institutionFilter(MahasiswaTa::with('mahasiswa'))->get();
-        $dosenList = $institutionFilter(User::role('dosen'))->orderBy('name')->get();
+        $mahasiswaQuery = $institutionFilter(MahasiswaTa::with('mahasiswa'));
+        $dosenQuery = $institutionFilter(User::role('dosen'))->orderBy('name');
+
+        if (!$request->user()->isSystemAdmin()) {
+            $this->applyAdminScopeFilterToTa($mahasiswaQuery, $request->user());
+            $this->applyAdminScopeFilter($dosenQuery, $request->user());
+        }
+
+        $mahasiswaList = $mahasiswaQuery->get();
+        $dosenList = $dosenQuery->get();
 
         return view('admin.sidangs', compact('sidangs', 'mahasiswaList', 'dosenList'));
     }
@@ -750,6 +772,57 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', "Paket '{$user->name}' diperbarui.");
+    }
+
+    /**
+     * Halaman kuota dosen per institusi (admin institusi yang berlangganan).
+     * Hanya untuk dosen di institusi milik admin (bukan system admin).
+     */
+    public function dosenQuota(User $user): View
+    {
+        $admin = auth()->user();
+        abort_unless($admin->isSystemAdmin() || $admin->isAdmin(), 403);
+
+        // Non-system admin: hanya untuk dosen di institusi yang sama.
+        if (! $admin->isSystemAdmin()) {
+            abort_unless($user->isDosen() && $user->institution_id === $admin->institution_id, 403, 'Anda hanya dapat mengatur kuota dosen di institusi Anda.');
+        }
+
+        $institution = Institution::current();
+        $poolMb = Feature::institutionStorageLimitMb($user->institution_id ?: $admin->institution_id);
+
+        return view('admin.dosen-quota', compact('user', 'institution', 'poolMb'));
+    }
+
+    /**
+     * Simpan kuota per-user (dalam pool institusi) untuk dosen — oleh admin institusi.
+     * Hanya mengubah institution_storage_limit_mb (tidak menyentuh plan/override).
+     */
+    public function updateDosenQuota(Request $request, User $user): RedirectResponse
+    {
+        $admin = $request->user();
+        abort_unless($admin->isSystemAdmin() || $admin->isAdmin(), 403);
+
+        // Non-system admin: hanya untuk dosen di institusi yang sama.
+        if (! $admin->isSystemAdmin()) {
+            abort_unless($user->isDosen() && $user->institution_id === $admin->institution_id, 403, 'Anda hanya dapat mengatur kuota dosen di institusi Anda.');
+        }
+
+        $validated = $request->validate([
+            'institution_storage_limit_mb' => ['nullable', 'integer', 'min:0', 'max:1048576'],
+        ]);
+
+        $user->update([
+            'institution_storage_limit_mb' => $validated['institution_storage_limit_mb'] ?: null,
+        ]);
+
+        \App\Support\Audit::log('Admin institusi mengatur kuota dosen', [
+            'target_user_id' => $user->id,
+            'target_email' => $user->email,
+            'quota_mb' => $validated['institution_storage_limit_mb'] ?: null,
+        ]);
+
+        return back()->with('success', "Kuota dosen '{$user->name}' diperbarui.");
     }
 
     // ------------------------------------------------------- langganan direktori (system admin)
@@ -907,10 +980,23 @@ class AdminController extends Controller
         $user = $request->user();
         $institution = Institution::current();
 
-        // Semua universitas + hierarki (fakultas -> departemen -> prodi).
-        $universities = \App\Models\University::with('faculties.departments.studyPrograms')
-            ->orderBy('name')
-            ->get();
+        // Universitas + hierarki (fakultas -> departemen -> prodi), di-scope per role.
+        $universityQuery = \App\Models\University::with('faculties.departments.studyPrograms')
+            ->orderBy('name');
+
+        // Scoping: system admin lihat semua; admin non-system dibatasi ke
+        // universitas institusi miliknya (afiliasi pengguna di institusi sama),
+        // fallback ke universitas milik user itu sendiri bila tanpa institusi.
+        if (! $user->isSystemAdmin()) {
+            $universityQuery->where(function ($q) use ($user) {
+                if ($user->institution_id) {
+                    $q->orWhereHas('users', fn ($uq) => $uq->where('institution_id', $user->institution_id));
+                }
+                $q->orWhereHas('users', fn ($uq) => $uq->whereKey($user->id));
+            });
+        }
+
+        $universities = $universityQuery->get();
 
         // Admin dengan admin_scopes: batasi node yang bisa dikelola.
         $scopes = \App\Models\AdminScope::activeFor($user);
@@ -1148,11 +1234,14 @@ class AdminController extends Controller
         $query = \App\Models\LogbookEntry::with(['mahasiswaTa.mahasiswa']);
 
         // LogbookEntry tidak punya InstitutionScope — batasi via relasi ke MahasiswaTa.
-        if (!$request->user()->isSystemAdmin() && $request->user()->institution_id) {
+        if (!$request->user()->isSystemAdmin()) {
             $query->whereHas('mahasiswaTa', function ($q) use ($request) {
-                $q->where('institution_id', $request->user()->institution_id);
+                if ($request->user()->institution_id) {
+                    $q->where('institution_id', $request->user()->institution_id);
+                }
 
-                // Fase D: admin dengan admin_scopes aktif dibatasi ke scope-nya.
+                // Admin dengan admin_scopes dibatasi ke scope-nya (hierarkis);
+                // admin TANPA admin_scopes dikunci.
                 $this->applyAdminScopeFilterToTa($q, $request->user());
             });
         }
@@ -1313,18 +1402,18 @@ class AdminController extends Controller
             return true;
         }
 
-        if ($request->user()->institution_id === null) {
-            return true;
-        }
-
-        if ($target->institution_id !== $request->user()->institution_id) {
+        // Admin non-system selalu dibatasi: bila punya institusi, target harus
+        // di institusi yang sama; bila tidak punya institusi, tetap harus
+        // tercakup admin_scopes (di bawah).
+        if ($request->user()->institution_id !== null
+            && $target->institution_id !== $request->user()->institution_id) {
             return false;
         }
 
-        // Fase D: admin dengan admin_scopes aktif hanya boleh kelola user di scope-nya.
+        // Admin non-system TANPA admin_scopes dikunci (tidak bisa kelola siapa pun).
         $scopes = \App\Models\AdminScope::activeFor($request->user());
         if ($scopes->isEmpty()) {
-            return true; // institusi penuh
+            return false;
         }
 
         foreach ($scopes as $scope) {
@@ -1338,6 +1427,9 @@ class AdminController extends Controller
                         break;
                     case \App\Models\AdminScope::SCOPE_FACULTY:
                         $uq->where('user_university.faculty_id', $scope->scope_id);
+                        break;
+                    case \App\Models\AdminScope::SCOPE_UNIVERSITY:
+                        $uq->where('user_university.university_id', $scope->scope_id);
                         break;
                 }
             })->exists();
@@ -1361,11 +1453,8 @@ class AdminController extends Controller
             return true;
         }
 
-        if ($request->user()->institution_id === null) {
-            return true;
-        }
-
-        if ($target->institution_id !== $request->user()->institution_id) {
+        if ($request->user()->institution_id !== null
+            && $target->institution_id !== $request->user()->institution_id) {
             return false;
         }
 
@@ -1380,16 +1469,18 @@ class AdminController extends Controller
     }
 
     /**
-     * Fase D — Filter query User berdasarkan admin_scopes aktif milik admin.
-     * Admin tanpa admin_scopes = institusi penuh (tidak ada filter tambahan).
+     * Filter query User berdasarkan admin_scopes aktif milik admin (hierarkis).
+     * Admin tanpa admin_scopes DIKUNCI (query kosong — tidak melihat siapa pun).
      * Admin dengan admin_scopes = dibatasi ke user yang afiliasinya cocok
-     * dengan salah satu scope (OR).
+     * dengan salah satu scope (OR), termasuk scope universitas.
      */
     private function applyAdminScopeFilter($query, User $admin): void
     {
         $scopes = \App\Models\AdminScope::activeFor($admin);
+        // Admin tanpa admin_scopes DISEMBUNYIKAN akses (locked di level terendah).
         if ($scopes->isEmpty()) {
-            return; // institusi penuh
+            $query->whereRaw('1 = 0');
+            return;
         }
 
         $query->where(function ($q) use ($scopes) {
@@ -1400,10 +1491,16 @@ class AdminController extends Controller
                             $uq->where('user_university.study_program_id', $scope->scope_id);
                             break;
                         case \App\Models\AdminScope::SCOPE_DEPARTMENT:
+                            // Department mencakup semua prodi di bawahnya (sama dept_id).
                             $uq->where('user_university.department_id', $scope->scope_id);
                             break;
                         case \App\Models\AdminScope::SCOPE_FACULTY:
+                            // Faculty mencakup semua dept & prodi di bawahnya (sama faculty_id).
                             $uq->where('user_university.faculty_id', $scope->scope_id);
+                            break;
+                        case \App\Models\AdminScope::SCOPE_UNIVERSITY:
+                            // University mencakup seluruh fakultas/dept/prodi di dalamnya.
+                            $uq->where('user_university.university_id', $scope->scope_id);
                             break;
                     }
                 });
@@ -1421,8 +1518,10 @@ class AdminController extends Controller
     private function applyAdminScopeFilterToTa($query, User $admin, ?string $relation = null): void
     {
         $scopes = \App\Models\AdminScope::activeFor($admin);
+        // Admin tanpa admin_scopes DISEMBUNYIKAN akses (locked di level terendah).
         if ($scopes->isEmpty()) {
-            return; // institusi penuh
+            $query->whereRaw('1 = 0');
+            return;
         }
 
         $apply = function ($q) use ($scopes) {
@@ -1439,6 +1538,9 @@ class AdminController extends Controller
                                     break;
                                 case \App\Models\AdminScope::SCOPE_FACULTY:
                                     $uq->where('user_university.faculty_id', $scope->scope_id);
+                                    break;
+                                case \App\Models\AdminScope::SCOPE_UNIVERSITY:
+                                    $uq->where('user_university.university_id', $scope->scope_id);
                                     break;
                             }
                         });

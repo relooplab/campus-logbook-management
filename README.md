@@ -11,7 +11,7 @@
 
 ![Laravel](https://img.shields.io/badge/Laravel-11-red?logo=laravel&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-8.4-blue?logo=php&logoColor=white)
-![License](https://img.shields.io/github/license/relooplab/thesis-logbook-management)
+![License](https://img.shields.io/github/license/relooplab/campus-logbook-management)
 ![Docker](https://img.shields.io/badge/Docker%20Compose-Ready-blue?logo=docker&logoColor=white)
 
 A comprehensive web application for recording and monitoring undergraduate thesis mentoring sessions between students, supervisors, and examiners. Built to streamline the academic thesis process with modern tooling, real-time collaboration, and flexible deployment options.
@@ -490,7 +490,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for de
 
 Ways to contribute:
 
-- Report bugs or suggest features via [GitHub Issues](https://github.com/relooplab/thesis-logbook-management/issues)
+- Report bugs or suggest features via [GitHub Issues](https://github.com/relooplab/campus-logbook-management/issues)
 - Improve documentation
 - Submit bug fixes or new features via pull request
 
@@ -522,5 +522,5 @@ Built with [Laravel](https://laravel.com), [PDF.js](https://mozilla.github.io/pd
 
 ## Support
 
-- **Bug reports & feature requests:** [GitHub Issues](https://github.com/relooplab/thesis-logbook-management/issues)
-- **Questions & discussion:** [GitHub Discussions](https://github.com/relooplab/thesis-logbook-management/discussions)
+- **Bug reports & feature requests:** [GitHub Issues](https://github.com/relooplab/campus-logbook-management/issues)
+- **Questions & discussion:** [GitHub Discussions](https://github.com/relooplab/campus-logbook-management/discussions)

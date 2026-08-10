@@ -57,6 +57,11 @@
                                         </select>
                                     </form>
                                 @endif
+@if (auth()->user()->isAdmin())
+                                    @if ($u->isDosen())
+                                        <a href="{{ route('admin.dosen.kuota', $u) }}" class="text-brand hover:underline text-xs mr-2">Kuota</a>
+                                    @endif
+                                @endif
                                 @if (auth()->user()->isSystemAdmin() || (!$u->isAdmin() && !$u->isSystemAdmin()))
                                     <button type="button" data-reset="{{ $u->id }}"
                                         data-name="{{ $u->name }}"

@@ -48,7 +48,7 @@
     ];
 @endphp
 
-<div class="grid grid-cols-4 gap-3">
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
     @foreach ($defs as $code => [$icon, $name, $desc])
         @php
             $locked = !$unlockedCodes->contains($code);

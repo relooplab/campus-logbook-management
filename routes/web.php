@@ -313,6 +313,10 @@ Route::middleware(['auth', 'ensure.dosen.affiliation'])->group(function () {
             // Penamaan program (TA/KP) & label fase per prodi/departemen.
             Route::get('/program-naming', [AdminController::class, 'programNaming'])->name('program-naming');
             Route::post('/program-naming', [AdminController::class, 'updateProgramNaming'])->name('program-naming.update');
+
+            // Kuota dosen per institusi (admin institusi yang berlangganan).
+            Route::get('/dosen/{user}/kuota', [AdminController::class, 'dosenQuota'])->name('dosen.kuota');
+            Route::post('/dosen/{user}/kuota', [AdminController::class, 'updateDosenQuota'])->name('dosen.kuota.update');
         });
     });
 

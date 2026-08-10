@@ -99,8 +99,8 @@ class InstitutionWorkspaceController extends Controller
         abort_unless($workspace->canManage($user), 403, 'Anda tidak memiliki kewenangan untuk mengunggah file.');
 
         $validated = $request->validate([
-            'files' => ['required', 'array', 'max:5'],
-            'files.*' => ['file', 'max:25600'], // 25 MB
+            'files' => ['required', 'array'],
+            'files.*' => ['file', 'max:51200'], // 50 MB
             'description' => ['nullable', 'string', 'max:500'],
         ]);
 

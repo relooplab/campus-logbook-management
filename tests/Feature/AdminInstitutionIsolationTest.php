@@ -13,6 +13,10 @@ use Spatie\Permission\Models\Role;
  *
  * Dua admin dari institusi berbeda TIDAK boleh saling lihat/kelola user
  * satu sama lain. system_admin tetap bisa melihat semua (platform-level).
+ *
+ * CATATAN: sejak admin non-system tanpa admin_scopes DIKUNCI, admin pada test
+ * ini (tanpa scope) tidak dapat melihat/mengelola siapa pun, termasuk di
+ * institusinya sendiri.
  */
 class AdminInstitutionIsolationTest extends AuditSmokeTest
 {
@@ -85,22 +89,24 @@ class AdminInstitutionIsolationTest extends AuditSmokeTest
         parent::tearDown();
     }
 
-    public function test_admin_a_cannot_see_users_from_institution_b(): void
+    public function test_admin_a_cannot_see_any_user_locked_without_scope(): void
     {
+        // Admin non-system tanpa admin_scopes DIKUNCI — tidak melihat siapa pun
+        // (termasuk dosen di institusinya sendiri).
         $response = $this->actingAs($this->adminA)->get(route('admin.users'));
 
         $response->assertOk();
-        $response->assertSee('Dosen A');
+        $response->assertDontSee('Dosen A');
         $response->assertDontSee('Dosen B');
         $response->assertDontSee('Admin B');
     }
 
-    public function test_admin_b_cannot_see_users_from_institution_a(): void
+    public function test_admin_b_cannot_see_any_user_locked_without_scope(): void
     {
         $response = $this->actingAs($this->adminB)->get(route('admin.users'));
 
         $response->assertOk();
-        $response->assertSee('Dosen B');
+        $response->assertDontSee('Dosen B');
         $response->assertDontSee('Dosen A');
         $response->assertDontSee('Admin A');
     }
@@ -131,15 +137,17 @@ class AdminInstitutionIsolationTest extends AuditSmokeTest
         $this->assertNotEquals('newpassword123', $this->dosenB->fresh()->password);
     }
 
-    public function test_admin_a_can_delete_user_from_own_institution(): void
+    public function test_admin_tanpa_scope_tidak_bisa_hapus_user_sendiri(): void
     {
+        // Admin non-system tanpa admin_scopes DIKUNCI — tidak bisa mengelola siapa pun,
+        // termasuk user di institusinya sendiri.
         $response = $this->actingAs($this->adminA)
             ->delete(route('admin.users.destroy', $this->dosenA));
 
         $response->assertRedirect();
-        $response->assertSessionHas('success');
+        $response->assertSessionHas('error');
 
-        $this->assertDatabaseMissing('users', ['id' => $this->dosenA->id]);
+        $this->assertDatabaseHas('users', ['id' => $this->dosenA->id]);
     }
 
     public function test_admin_a_store_user_gets_own_institution_id(): void

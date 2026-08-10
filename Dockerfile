@@ -91,8 +91,9 @@ RUN rm -f bootstrap/cache/packages.php bootstrap/cache/services.php \
 # untuk data besar butuh waktu lebih dari default 30s. Nginx fastcgi_read_timeout
 # (nginx/default.conf) harus tetap selaras dengan nilai ini.
 RUN { \
-    echo 'upload_max_filesize=512M'; \
-    echo 'post_max_size=512M'; \
+    echo 'upload_max_filesize=1G'; \
+    echo 'post_max_size=1G'; \
+    echo 'max_file_uploads=100'; \
     echo 'max_execution_time=1800'; \
     echo 'memory_limit=256M'; \
     echo 'date.timezone=Asia/Jakarta'; \

@@ -1,200 +1,200 @@
-# [0.34.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.33.1...v0.34.0) (2026-08-10)
+# [0.34.0](https://github.com/relooplab/campus-logbook-management/compare/v0.33.1...v0.34.0) (2026-08-10)
 
 
 ### Features
 
-* rebrand to "Campus Logbook Management", free plan 3 GB, new "Mahasiswa Saya" page, relaxed dosen selection ([9b59f08](https://github.com/relooplab/thesis-logbook-management/commit/9b59f08467bd567601c9b2df61951476a211e4f5))
+* rebrand to "Campus Logbook Management", free plan 3 GB, new "Mahasiswa Saya" page, relaxed dosen selection ([9b59f08](https://github.com/relooplab/campus-logbook-management/commit/9b59f08467bd567601c9b2df61951476a211e4f5))
 
-## [0.33.1](https://github.com/relooplab/thesis-logbook-management/compare/v0.33.0...v0.33.1) (2026-08-09)
+## [0.33.1](https://github.com/relooplab/campus-logbook-management/compare/v0.33.0...v0.33.1) (2026-08-09)
 
 
 ### Bug Fixes
 
-* portable sesi_ke unique index, prioritise CHANGELOG for release version ([be58884](https://github.com/relooplab/thesis-logbook-management/commit/be58884756355bd9f92fe11826a1d9676027819e))
+* portable sesi_ke unique index, prioritise CHANGELOG for release version ([be58884](https://github.com/relooplab/campus-logbook-management/commit/be58884756355bd9f92fe11826a1d9676027819e))
 
-# [0.33.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.32.0...v0.33.0) (2026-08-09)
-
-
-### Features
-
-* dosen storage quota, atomic sesi_ke, stricter admin scope, richer release version ([c0516cc](https://github.com/relooplab/thesis-logbook-management/commit/c0516ccc6a8c02decc16a4f2f907be42b03e7aa1))
-
-# [0.32.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.31.0...v0.32.0) (2026-08-09)
+# [0.33.0](https://github.com/relooplab/campus-logbook-management/compare/v0.32.0...v0.33.0) (2026-08-09)
 
 
 ### Features
 
-* audit log for sensitive admin & auth actions, dynamic release version, duplicate-dosen guard ([13cc6f1](https://github.com/relooplab/thesis-logbook-management/commit/13cc6f13b8d8f4919629b8c2d5970df7bbbb6b02))
+* dosen storage quota, atomic sesi_ke, stricter admin scope, richer release version ([c0516cc](https://github.com/relooplab/campus-logbook-management/commit/c0516ccc6a8c02decc16a4f2f907be42b03e7aa1))
 
-# [0.31.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.30.0...v0.31.0) (2026-08-09)
+# [0.32.0](https://github.com/relooplab/campus-logbook-management/compare/v0.31.0...v0.32.0) (2026-08-09)
 
 
 ### Features
 
-* require mahasiswa university affiliation (to study program) before dosen selection ([3aa33f0](https://github.com/relooplab/thesis-logbook-management/commit/3aa33f0b1f2d49d10a39d44e624785e524a3d1f6))
+* audit log for sensitive admin & auth actions, dynamic release version, duplicate-dosen guard ([13cc6f1](https://github.com/relooplab/campus-logbook-management/commit/13cc6f13b8d8f4919629b8c2d5970df7bbbb6b02))
 
-# [0.30.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.29.1...v0.30.0) (2026-08-09)
+# [0.31.0](https://github.com/relooplab/campus-logbook-management/compare/v0.30.0...v0.31.0) (2026-08-09)
+
+
+### Features
+
+* require mahasiswa university affiliation (to study program) before dosen selection ([3aa33f0](https://github.com/relooplab/campus-logbook-management/commit/3aa33f0b1f2d49d10a39d44e624785e524a3d1f6))
+
+# [0.30.0](https://github.com/relooplab/campus-logbook-management/compare/v0.29.1...v0.30.0) (2026-08-09)
 
 
 ### Bug Fixes
 
-* close annotation modal after student marks as fixed ([21ce200](https://github.com/relooplab/thesis-logbook-management/commit/21ce200b7e2ebbc1d53caf9520d0af6c67a3ba4b))
+* close annotation modal after student marks as fixed ([21ce200](https://github.com/relooplab/campus-logbook-management/commit/21ce200b7e2ebbc1d53caf9520d0af6c67a3ba4b))
 
 
 ### Features
 
-* prefill revision cards from PDF comments and gate submission on upload ([689e6a3](https://github.com/relooplab/thesis-logbook-management/commit/689e6a37cdb64c6ca2a886901ede11c157e51e94))
+* prefill revision cards from PDF comments and gate submission on upload ([689e6a3](https://github.com/relooplab/campus-logbook-management/commit/689e6a37cdb64c6ca2a886901ede11c157e51e94))
 
-## [0.29.1](https://github.com/relooplab/thesis-logbook-management/compare/v0.29.0...v0.29.1) (2026-08-09)
+## [0.29.1](https://github.com/relooplab/campus-logbook-management/compare/v0.29.0...v0.29.1) (2026-08-09)
 
 
 ### Bug Fixes
 
-* null-safe logbook progres_kendala, nullable catatan_hardcopy, default hardcopy note accessor ([dff4e29](https://github.com/relooplab/thesis-logbook-management/commit/dff4e2963db4f81352e857b96db197fe38d374e1))
+* null-safe logbook progres_kendala, nullable catatan_hardcopy, default hardcopy note accessor ([dff4e29](https://github.com/relooplab/campus-logbook-management/commit/dff4e2963db4f81352e857b96db197fe38d374e1))
 
-# [0.29.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.28.0...v0.29.0) (2026-08-07)
-
-
-### Features
-
-* per-examiner grading for seminars/sidang with reminders ([4e7d9a7](https://github.com/relooplab/thesis-logbook-management/commit/4e7d9a7d373a6c6db1d0e766a6455bf8f648e6db))
-
-# [0.28.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.27.0...v0.28.0) (2026-08-07)
+# [0.29.0](https://github.com/relooplab/campus-logbook-management/compare/v0.28.0...v0.29.0) (2026-08-07)
 
 
 ### Features
 
-* allow external penguji and manual supervisor on sidang records ([f3b49ad](https://github.com/relooplab/thesis-logbook-management/commit/f3b49ad2dd1d4106ab668c1ae326b62af8cd53a9))
+* per-examiner grading for seminars/sidang with reminders ([4e7d9a7](https://github.com/relooplab/campus-logbook-management/commit/4e7d9a7d373a6c6db1d0e766a6455bf8f648e6db))
 
-# [0.27.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.26.1...v0.27.0) (2026-08-07)
+# [0.28.0](https://github.com/relooplab/campus-logbook-management/compare/v0.27.0...v0.28.0) (2026-08-07)
 
 
 ### Features
 
-* gate dosen on completing institution affiliation before using the app ([21f7f6c](https://github.com/relooplab/thesis-logbook-management/commit/21f7f6cf075cf5948d7baab8d20d0f47937732cd))
+* allow external penguji and manual supervisor on sidang records ([f3b49ad](https://github.com/relooplab/campus-logbook-management/commit/f3b49ad2dd1d4106ab668c1ae326b62af8cd53a9))
 
-## [0.26.1](https://github.com/relooplab/thesis-logbook-management/compare/v0.26.0...v0.26.1) (2026-08-07)
+# [0.27.0](https://github.com/relooplab/campus-logbook-management/compare/v0.26.1...v0.27.0) (2026-08-07)
+
+
+### Features
+
+* gate dosen on completing institution affiliation before using the app ([21f7f6c](https://github.com/relooplab/campus-logbook-management/commit/21f7f6cf075cf5948d7baab8d20d0f47937732cd))
+
+## [0.26.1](https://github.com/relooplab/campus-logbook-management/compare/v0.26.0...v0.26.1) (2026-08-07)
 
 
 ### Bug Fixes
 
-* force HTTPS behind proxy, sync frontend assets, and preserve demo data on reseed ([5586f86](https://github.com/relooplab/thesis-logbook-management/commit/5586f8687df992c070128dacf4af48d8de50f626))
+* force HTTPS behind proxy, sync frontend assets, and preserve demo data on reseed ([5586f86](https://github.com/relooplab/campus-logbook-management/commit/5586f8687df992c070128dacf4af48d8de50f626))
 
-# [0.26.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.25.0...v0.26.0) (2026-08-07)
-
-
-### Features
-
-* standardize UI terminology and add a baku glossary ([80e5a69](https://github.com/relooplab/thesis-logbook-management/commit/80e5a698c42ab09bdc3d880ca7e33c400c490376))
-
-# [0.25.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.24.0...v0.25.0) (2026-08-07)
+# [0.26.0](https://github.com/relooplab/campus-logbook-management/compare/v0.25.0...v0.26.0) (2026-08-07)
 
 
 ### Features
 
-* add logbook delete, extend review to pending programs, and unblock quick-review without PDF ([8da9c12](https://github.com/relooplab/thesis-logbook-management/commit/8da9c12d1eb921960140a83b6e27b7bf83e8cc2d))
+* standardize UI terminology and add a baku glossary ([80e5a69](https://github.com/relooplab/campus-logbook-management/commit/80e5a698c42ab09bdc3d880ca7e33c400c490376))
 
-# [0.24.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.23.0...v0.24.0) (2026-08-07)
-
-
-### Features
-
-* add branded error pages, smoother onboarding redirect, and open seminar access ([70d51cb](https://github.com/relooplab/thesis-logbook-management/commit/70d51cb0987f19513fd4608a306557343a60770c))
-
-# [0.23.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.22.0...v0.23.0) (2026-08-07)
+# [0.25.0](https://github.com/relooplab/campus-logbook-management/compare/v0.24.0...v0.25.0) (2026-08-07)
 
 
 ### Features
 
-* implement affiliation management for lecturers with approval workflow ([c4e7832](https://github.com/relooplab/thesis-logbook-management/commit/c4e783263c3144730a874cc9890d96f591098a32))
-* move institution data to profile onboarding and add dosen affiliation prompts ([4345539](https://github.com/relooplab/thesis-logbook-management/commit/43455392f3ca05d000e5317b190de7c8a127cfce))
+* add logbook delete, extend review to pending programs, and unblock quick-review without PDF ([8da9c12](https://github.com/relooplab/campus-logbook-management/commit/8da9c12d1eb921960140a83b6e27b7bf83e8cc2d))
 
-# [0.22.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.21.0...v0.22.0) (2026-08-07)
-
-
-### Features
-
-* simplify post-profile onboarding and gate seminar submission to approved students ([685c431](https://github.com/relooplab/thesis-logbook-management/commit/685c431b6b7133938d1c16e61956b305e49a9fb2))
-
-# [0.21.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.20.0...v0.21.0) (2026-08-07)
+# [0.24.0](https://github.com/relooplab/campus-logbook-management/compare/v0.23.0...v0.24.0) (2026-08-07)
 
 
 ### Features
 
-* let pending students use the app, hold storage at 100MB, and purge unapproved programs ([8050f75](https://github.com/relooplab/thesis-logbook-management/commit/8050f7593e975558111e3ef39967cad8c15d0650))
+* add branded error pages, smoother onboarding redirect, and open seminar access ([70d51cb](https://github.com/relooplab/campus-logbook-management/commit/70d51cb0987f19513fd4608a306557343a60770c))
 
-# [0.20.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.19.0...v0.20.0) (2026-08-07)
-
-
-### Features
-
-* **chat:** attach more student work types to messages and scope options to the conversation ([3ae5716](https://github.com/relooplab/thesis-logbook-management/commit/3ae57168a4d1c1d5ac7d5bfd9688953c2e001e03))
-
-# [0.19.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.18.1...v0.19.0) (2026-08-07)
+# [0.23.0](https://github.com/relooplab/campus-logbook-management/compare/v0.22.0...v0.23.0) (2026-08-07)
 
 
 ### Features
 
-* **seeders:** add demo accounts for all roles with a uniform password ([ea57a98](https://github.com/relooplab/thesis-logbook-management/commit/ea57a988fa250c85053eb2e1498ae512ee789ed2))
+* implement affiliation management for lecturers with approval workflow ([c4e7832](https://github.com/relooplab/campus-logbook-management/commit/c4e783263c3144730a874cc9890d96f591098a32))
+* move institution data to profile onboarding and add dosen affiliation prompts ([4345539](https://github.com/relooplab/campus-logbook-management/commit/43455392f3ca05d000e5317b190de7c8a127cfce))
 
-## [0.18.1](https://github.com/relooplab/thesis-logbook-management/compare/v0.18.0...v0.18.1) (2026-08-07)
+# [0.22.0](https://github.com/relooplab/campus-logbook-management/compare/v0.21.0...v0.22.0) (2026-08-07)
+
+
+### Features
+
+* simplify post-profile onboarding and gate seminar submission to approved students ([685c431](https://github.com/relooplab/campus-logbook-management/commit/685c431b6b7133938d1c16e61956b305e49a9fb2))
+
+# [0.21.0](https://github.com/relooplab/campus-logbook-management/compare/v0.20.0...v0.21.0) (2026-08-07)
+
+
+### Features
+
+* let pending students use the app, hold storage at 100MB, and purge unapproved programs ([8050f75](https://github.com/relooplab/campus-logbook-management/commit/8050f7593e975558111e3ef39967cad8c15d0650))
+
+# [0.20.0](https://github.com/relooplab/campus-logbook-management/compare/v0.19.0...v0.20.0) (2026-08-07)
+
+
+### Features
+
+* **chat:** attach more student work types to messages and scope options to the conversation ([3ae5716](https://github.com/relooplab/campus-logbook-management/commit/3ae57168a4d1c1d5ac7d5bfd9688953c2e001e03))
+
+# [0.19.0](https://github.com/relooplab/campus-logbook-management/compare/v0.18.1...v0.19.0) (2026-08-07)
+
+
+### Features
+
+* **seeders:** add demo accounts for all roles with a uniform password ([ea57a98](https://github.com/relooplab/campus-logbook-management/commit/ea57a988fa250c85053eb2e1498ae512ee789ed2))
+
+## [0.18.1](https://github.com/relooplab/campus-logbook-management/compare/v0.18.0...v0.18.1) (2026-08-07)
 
 
 ### Bug Fixes
 
-* **migrations:** shorten auto-generated constraint names to fit MySQL 64-char limit ([e7e034d](https://github.com/relooplab/thesis-logbook-management/commit/e7e034dde10a0579135be906d1b1a7c842172998))
+* **migrations:** shorten auto-generated constraint names to fit MySQL 64-char limit ([e7e034d](https://github.com/relooplab/campus-logbook-management/commit/e7e034dde10a0579135be906d1b1a7c842172998))
 
-# [0.18.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.17.0...v0.18.0) (2026-08-07)
-
-
-### Features
-
-* add supervised-student chat list, storage quota meter, and profile affiliation block ([d725ad1](https://github.com/relooplab/thesis-logbook-management/commit/d725ad1ad3395da0faa01ed9edec125ed6a3f5ca))
-
-# [0.17.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.16.0...v0.17.0) (2026-08-07)
+# [0.18.0](https://github.com/relooplab/campus-logbook-management/compare/v0.17.0...v0.18.0) (2026-08-07)
 
 
 ### Features
 
-* add reviewer action items, sidang results, mandatory rejection reason, and read indicator ([4bd1187](https://github.com/relooplab/thesis-logbook-management/commit/4bd1187f156de6def55f3827bdf691cfb7202ffa))
-* **pdf-comments:** add reply functionality to comments and update related views ([218756a](https://github.com/relooplab/thesis-logbook-management/commit/218756a4fb69889f5dbbbfbfb954271726674ba2))
-* update logbook feedback view with enhanced feedback and action item display ([ef429b1](https://github.com/relooplab/thesis-logbook-management/commit/ef429b1894e2ed613ba0e778e0223f0c69120896))
+* add supervised-student chat list, storage quota meter, and profile affiliation block ([d725ad1](https://github.com/relooplab/campus-logbook-management/commit/d725ad1ad3395da0faa01ed9edec125ed6a3f5ca))
 
-# [0.16.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.15.0...v0.16.0) (2026-08-06)
+# [0.17.0](https://github.com/relooplab/campus-logbook-management/compare/v0.16.0...v0.17.0) (2026-08-07)
 
 
 ### Features
 
-* implement custom program naming and phase labeling for TA/KP ([6f375d6](https://github.com/relooplab/thesis-logbook-management/commit/6f375d6b40563e2f4e704e77557e310b0f319fdd))
-* **logbook:** validasi file upload dan autosave draft per-user dengan tombol pulihkan/buang ([ac50a0c](https://github.com/relooplab/thesis-logbook-management/commit/ac50a0c4ea1c11f370a2781a2242d24989ea286b))
-* **profile:** add profile completeness check before selecting advisor ([d15e11a](https://github.com/relooplab/thesis-logbook-management/commit/d15e11af7ea424e6dd022cf91a588d83c1de2e4b))
-* **register:** enhance role selection UI and improve role handling logic ([55ca692](https://github.com/relooplab/thesis-logbook-management/commit/55ca6923a8cd81fa83bb3a8b789f5699cc41a10d))
+* add reviewer action items, sidang results, mandatory rejection reason, and read indicator ([4bd1187](https://github.com/relooplab/campus-logbook-management/commit/4bd1187f156de6def55f3827bdf691cfb7202ffa))
+* **pdf-comments:** add reply functionality to comments and update related views ([218756a](https://github.com/relooplab/campus-logbook-management/commit/218756a4fb69889f5dbbbfbfb954271726674ba2))
+* update logbook feedback view with enhanced feedback and action item display ([ef429b1](https://github.com/relooplab/campus-logbook-management/commit/ef429b1894e2ed613ba0e778e0223f0c69120896))
 
-# [0.15.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.14.0...v0.15.0) (2026-08-06)
+# [0.16.0](https://github.com/relooplab/campus-logbook-management/compare/v0.15.0...v0.16.0) (2026-08-06)
+
+
+### Features
+
+* implement custom program naming and phase labeling for TA/KP ([6f375d6](https://github.com/relooplab/campus-logbook-management/commit/6f375d6b40563e2f4e704e77557e310b0f319fdd))
+* **logbook:** validasi file upload dan autosave draft per-user dengan tombol pulihkan/buang ([ac50a0c](https://github.com/relooplab/campus-logbook-management/commit/ac50a0c4ea1c11f370a2781a2242d24989ea286b))
+* **profile:** add profile completeness check before selecting advisor ([d15e11a](https://github.com/relooplab/campus-logbook-management/commit/d15e11af7ea424e6dd022cf91a588d83c1de2e4b))
+* **register:** enhance role selection UI and improve role handling logic ([55ca692](https://github.com/relooplab/campus-logbook-management/commit/55ca6923a8cd81fa83bb3a8b789f5699cc41a10d))
+
+# [0.15.0](https://github.com/relooplab/campus-logbook-management/compare/v0.14.0...v0.15.0) (2026-08-06)
 
 
 ### Bug Fixes
 
-* **auth:** robust role toggle on register page with DOMContentLoaded and event delegation ([564d77d](https://github.com/relooplab/thesis-logbook-management/commit/564d77ddc4dc0fff165510fb2be8ec57c2eb48b8))
+* **auth:** robust role toggle on register page with DOMContentLoaded and event delegation ([564d77d](https://github.com/relooplab/campus-logbook-management/commit/564d77ddc4dc0fff165510fb2be8ec57c2eb48b8))
 
 
 ### Features
 
-* **program:** batasi aksi logbook, finalisasi, dan seminar hanya untuk program aktif ([105472e](https://github.com/relooplab/thesis-logbook-management/commit/105472ee100b57ee25fe348db1945e7601491bf9))
+* **program:** batasi aksi logbook, finalisasi, dan seminar hanya untuk program aktif ([105472e](https://github.com/relooplab/campus-logbook-management/commit/105472ee100b57ee25fe348db1945e7601491bf9))
 
-# [0.14.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.13.0...v0.14.0) (2026-08-06)
+# [0.14.0](https://github.com/relooplab/campus-logbook-management/compare/v0.13.0...v0.14.0) (2026-08-06)
 
 
 ### Bug Fixes
 
-* **register:** perbaiki tab dosen tidak dapat diklik di halaman registrasi ([92992dc](https://github.com/relooplab/thesis-logbook-management/commit/92992dcd930b835cb82f54d1789bcb2ced40fb6e))
+* **register:** perbaiki tab dosen tidak dapat diklik di halaman registrasi ([92992dc](https://github.com/relooplab/campus-logbook-management/commit/92992dcd930b835cb82f54d1789bcb2ced40fb6e))
 
 
 ### Features
 
-* **auth:** registrasi langsung aktif tanpa verifikasi email dan persetujuan admin ([a800703](https://github.com/relooplab/thesis-logbook-management/commit/a80070362d4d07f2094afee2fd15be44c9a08cc3))
+* **auth:** registrasi langsung aktif tanpa verifikasi email dan persetujuan admin ([a800703](https://github.com/relooplab/campus-logbook-management/commit/a80070362d4d07f2094afee2fd15be44c9a08cc3))
 
-# [0.13.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.12.0...v0.13.0) (2026-08-06)
+# [0.13.0](https://github.com/relooplab/campus-logbook-management/compare/v0.12.0...v0.13.0) (2026-08-06)
 
 
 ### Features
@@ -202,60 +202,60 @@
 * **action-items:** tampilkan checklist action items di detail logbook & halaman feedback
 * **program-context:** program selector TA/KP konsisten di dashboard, logbook, workspace, dan sidebar
 
-# [0.12.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.11.0...v0.12.0) (2026-08-06)
+# [0.12.0](https://github.com/relooplab/campus-logbook-management/compare/v0.11.0...v0.12.0) (2026-08-06)
 
 
 ### Features
 
 * **saas:** unified deployment — hapus APP_MODE gating, per-user institution_id gating, shared pool kuota institusi, alur adopsi data personal ke institusi
 
-# [0.11.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.10.0...v0.11.0) (2026-08-06)
+# [0.11.0](https://github.com/relooplab/campus-logbook-management/compare/v0.10.0...v0.11.0) (2026-08-06)
 
 
 ### Features
 
-* **logbook:** autosave draft forms and sort dosen student list by urgency ([030b695](https://github.com/relooplab/thesis-logbook-management/commit/030b6953a67cec857081fb88e1e1b377364fbb11))
+* **logbook:** autosave draft forms and sort dosen student list by urgency ([030b695](https://github.com/relooplab/campus-logbook-management/commit/030b6953a67cec857081fb88e1e1b377364fbb11))
 
-# [0.10.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.9.0...v0.10.0) (2026-08-06)
-
-
-### Features
-
-* **scheduling:** tambah jalur kontak bimbingan multi-kanal ([1bd56e4](https://github.com/relooplab/thesis-logbook-management/commit/1bd56e425d7f9e01dc8e5aba7e1c4f319db39f40))
-
-# [0.9.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.8.0...v0.9.0) (2026-08-05)
+# [0.10.0](https://github.com/relooplab/campus-logbook-management/compare/v0.9.0...v0.10.0) (2026-08-06)
 
 
 ### Features
 
-* proactive storage quota notifications at 80% and 95% thresholds ([6c4c377](https://github.com/relooplab/thesis-logbook-management/commit/6c4c3779636a4d252787b2a932649c2d356e90f9))
+* **scheduling:** tambah jalur kontak bimbingan multi-kanal ([1bd56e4](https://github.com/relooplab/campus-logbook-management/commit/1bd56e425d7f9e01dc8e5aba7e1c4f319db39f40))
 
-# [0.8.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.7.0...v0.8.0) (2026-08-05)
-
-
-### Features
-
-* separate admin and dosen roles, remove dual-role dashboard switch ([c13730d](https://github.com/relooplab/thesis-logbook-management/commit/c13730dbf28ecd46a1b0508e563ccbb80e3fae48))
-
-# [0.7.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.6.0...v0.7.0) (2026-08-05)
+# [0.9.0](https://github.com/relooplab/campus-logbook-management/compare/v0.8.0...v0.9.0) (2026-08-05)
 
 
 ### Features
 
-* institution workspace for sharing files per directory level ([76f35b4](https://github.com/relooplab/thesis-logbook-management/commit/76f35b42d29c82a56061537a524040a5470f57f0))
+* proactive storage quota notifications at 80% and 95% thresholds ([6c4c377](https://github.com/relooplab/campus-logbook-management/commit/6c4c3779636a4d252787b2a932649c2d356e90f9))
 
-# [0.6.0](https://github.com/relooplab/thesis-logbook-management/compare/v0.5.3...v0.6.0) (2026-08-05)
+# [0.8.0](https://github.com/relooplab/campus-logbook-management/compare/v0.7.0...v0.8.0) (2026-08-05)
+
+
+### Features
+
+* separate admin and dosen roles, remove dual-role dashboard switch ([c13730d](https://github.com/relooplab/campus-logbook-management/commit/c13730dbf28ecd46a1b0508e563ccbb80e3fae48))
+
+# [0.7.0](https://github.com/relooplab/campus-logbook-management/compare/v0.6.0...v0.7.0) (2026-08-05)
+
+
+### Features
+
+* institution workspace for sharing files per directory level ([76f35b4](https://github.com/relooplab/campus-logbook-management/commit/76f35b42d29c82a56061537a524040a5470f57f0))
+
+# [0.6.0](https://github.com/relooplab/campus-logbook-management/compare/v0.5.3...v0.6.0) (2026-08-05)
 
 
 ### Bug Fixes
 
-* remove demo account credentials from login page ([08bb3ec](https://github.com/relooplab/thesis-logbook-management/commit/08bb3ecb47e9d8123674c44a38721fd53579f812))
+* remove demo account credentials from login page ([08bb3ec](https://github.com/relooplab/campus-logbook-management/commit/08bb3ecb47e9d8123674c44a38721fd53579f812))
 
 
 ### Features
 
-* institution directory subscriptions, admin scopes, and storage top-ups (v0.5.4) ([231b3d0](https://github.com/relooplab/thesis-logbook-management/commit/231b3d0c337029cefc461ee332f081d434a73ad6))
-* single affiliation rule, per-context institution resolution, and sub-admin hierarchy ([6f610ec](https://github.com/relooplab/thesis-logbook-management/commit/6f610ec085f57c2eccafbb83f3aac0f9b16b0db4))
+* institution directory subscriptions, admin scopes, and storage top-ups (v0.5.4) ([231b3d0](https://github.com/relooplab/campus-logbook-management/commit/231b3d0c337029cefc461ee332f081d434a73ad6))
+* single affiliation rule, per-context institution resolution, and sub-admin hierarchy ([6f610ec](https://github.com/relooplab/campus-logbook-management/commit/6f610ec085f57c2eccafbb83f3aac0f9b16b0db4))
 
 # Changelog
 
@@ -776,12 +776,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `StudentApprovalTest` (invite by email, duplicate rejection, approve & assign role).
 - All 24 tests pass (65 assertions).
 
-[0.5.4]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.4
-[0.5.3]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.3
-[0.5.2]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.2
-[0.5.1]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.1
-[0.5.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.5.0
-[0.4.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.4.0
-[0.3.1]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.3.1
-[0.3.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.3
-[0.2.0]: https://github.com/relooplab/thesis-logbook-management/releases/tag/v0.2.0
+[0.5.4]: https://github.com/relooplab/campus-logbook-management/releases/tag/v0.5.4
+[0.5.3]: https://github.com/relooplab/campus-logbook-management/releases/tag/v0.5.3
+[0.5.2]: https://github.com/relooplab/campus-logbook-management/releases/tag/v0.5.2
+[0.5.1]: https://github.com/relooplab/campus-logbook-management/releases/tag/v0.5.1
+[0.5.0]: https://github.com/relooplab/campus-logbook-management/releases/tag/v0.5.0
+[0.4.0]: https://github.com/relooplab/campus-logbook-management/releases/tag/v0.4.0
+[0.3.1]: https://github.com/relooplab/campus-logbook-management/releases/tag/v0.3.1
+[0.3.0]: https://github.com/relooplab/campus-logbook-management/releases/tag/v0.3
+[0.2.0]: https://github.com/relooplab/campus-logbook-management/releases/tag/v0.2.0
