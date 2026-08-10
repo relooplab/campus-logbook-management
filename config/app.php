@@ -93,6 +93,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Enforce Email Verification Middleware
+    |--------------------------------------------------------------------------
+    |
+    | Bila true, middleware `ensure.email.verified` akan aktif. Otomatis
+    | mengikuti setting institusi `email_verification_required`, tapi
+    | flag ini memungkinkan force-disable di env testing atau untuk
+    | men-debug tanpa mematikan setting.
+    |
+    */
+
+    'enforce_email_verification' => env('APP_ENFORCE_EMAIL_VERIFICATION', env('APP_ENV', 'production') !== 'testing'),
+
+    /*
+    |--------------------------------------------------------------------------
     | External Links (configurable per-institution)
     |--------------------------------------------------------------------------
     | Tautan eksternal yang mungkin berbeda antar institusi. Isi di .env:

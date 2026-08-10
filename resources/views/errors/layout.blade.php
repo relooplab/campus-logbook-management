@@ -69,8 +69,9 @@
                     <span class="material-symbols-outlined icon-sm text-accent-blue">dashboard</span> Ke Dashboard
                 </a>
                 <a href="{{ url('/') }}"
+                    onclick="event.preventDefault(); if (window.history.length > 1) { window.history.back(); } else { window.location.href='{{ url('/') }}'; } return false;"
                     class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-bg-hover text-text-primary hover:bg-border text-sm font-medium">
-                    <span class="material-symbols-outlined icon-sm text-accent-teal">home</span> Ke Beranda
+                    <span class="material-symbols-outlined icon-sm text-accent-teal">arrow_back</span> Ke Halaman Sebelumnya
                 </a>
             </div>
         </div>

@@ -327,7 +327,15 @@
                         <span class="material-symbols-outlined icon-md text-accent-purple">lock</span>
                         <span class="sidebar-label">Kelola Hak Akses</span>
                     </a>
-                    <a href="{{ route('admin.system.directory-subscriptions') }}" class="{{ $navLink }} {{ $active('admin.system.directory-subscriptions') }}">
+                    <a href="{{ route('admin.system.settings') }}" class="{{ $navLink }} {{ $active('admin.system.settings*') }}">
+                        <span class="material-symbols-outlined icon-md text-accent-purple">settings</span>
+                        <span class="sidebar-label">Pengaturan</span>
+                    </a>
+                    <a href="{{ route('admin.system.directory') }}" class="{{ $navLink }} {{ $active('admin.system.directory*') }}">
+                        <span class="material-symbols-outlined icon-md text-accent-purple">account_tree</span>
+                        <span class="sidebar-label">Direktori</span>
+                    </a>
+                    <a href="{{ route('admin.system.directory-subscriptions') }}" class="{{ $navLink }} {{ $active('admin.system.directory-subscriptions*') }}">
                         <span class="material-symbols-outlined icon-md text-accent-purple">subscriptions</span>
                         <span class="sidebar-label">Langganan Direktori</span>
                     </a>

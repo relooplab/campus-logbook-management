@@ -8,6 +8,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\StudentApprovalController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\DashboardController;
@@ -59,10 +60,21 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [RegisterController::class, 'register'])->middleware('throttle:5,1')->name('register');
 });
 
-Route::middleware(['auth', 'ensure.dosen.affiliation'])->group(function () {
+Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::post('/dashboard/dismiss-instansi', [DashboardController::class, 'dismissInstansi'])->name('dashboard.dismiss-instansi');
+
+    // Verifikasi email (notice/verify/send). Halaman notice & send tidak
+    // dipasang middleware `ensure.email.verified` agar user yang belum
+    // verified tetap bisa melihat & mengirim ulang tautan verifikasi.
+    Route::get('/email/verify', [VerificationController::class, 'showNotice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+    Route::post('/email/send', [VerificationController::class, 'resend'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
 
     // Persetujuan attachment dosen (mahasiswa pilih dosen → dosen setujui/tolak).
     Route::middleware('role_or_permission:dosen|admin')->group(function () {
@@ -280,7 +292,11 @@ Route::middleware(['auth', 'ensure.dosen.affiliation'])->group(function () {
             Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
             Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
             Route::post('/users/{user}/reset-password', [AdminController::class, 'resetPassword'])->name('users.reset-password');
-            Route::post('/users/{user}/institution', [AdminController::class, 'updateUserInstitution'])->name('users.institution');
+
+            // Aksi massal: harus bisa diakses admin institusi (dalam scope) DAN system admin.
+            // Otorisasi per-user di-handle di controller via canManageUser().
+            Route::post('/users/bulk', [AdminController::class, 'bulkUsers'])->name('users.bulk');
+            Route::get('/users/export', [AdminController::class, 'exportUsers'])->name('users.export');
 
             // Admin hierarki: admin (dengan admin_scopes) bisa buat admin di bawahnya.
             Route::post('/sub-admins', [AdminController::class, 'storeSubAdmin'])->name('sub-admins.store');
@@ -308,7 +324,7 @@ Route::middleware(['auth', 'ensure.dosen.affiliation'])->group(function () {
         Route::middleware('permission:admin.institution')->group(function () {
             Route::get('/institusi', [AdminController::class, 'institution'])->name('institution');
             Route::post('/institusi', [AdminController::class, 'updateInstitution'])->name('institution.update');
-            Route::post('/institusi/test-mail', [AdminController::class, 'testMail'])->name('institution.test-mail');
+            // (test-mail dipindahkan ke panel system admin: admin.system.settings.test-mail)
 
             // Penamaan program (TA/KP) & label fase per prodi/departemen.
             Route::get('/program-naming', [AdminController::class, 'programNaming'])->name('program-naming');
@@ -335,6 +351,13 @@ Route::middleware(['auth', 'ensure.dosen.affiliation'])->group(function () {
             Route::get('/users/{user}/plan', [AdminController::class, 'planSettings'])->name('users.plan');
             Route::post('/users/{user}/plan', [AdminController::class, 'updatePlanSettings'])->name('users.plan.update');
             Route::post('/plans', [AdminController::class, 'updatePlanFeatures'])->name('plans.update');
+
+            // Ubah institusi user — aksi platform-level, hanya system admin.
+            // (Tadi route ini ada di grup `permission:admin.users` sehingga admin
+            //  institusi bisa memanggil endpoint-nya; controller sudah guard
+            //  isSystemAdmin(), tapi kita pindahkan ke sini untuk defense-in-depth
+            //  di lapisan route: 403 langsung dari middleware.)
+            Route::post('/users/{user}/institution', [AdminController::class, 'updateUserInstitution'])->name('users.institution');
         });
 
         // Kelola hak akses: sengaja hanya digerbangi role:system_admin (bukan
@@ -343,10 +366,24 @@ Route::middleware(['auth', 'ensure.dosen.affiliation'])->group(function () {
         Route::get('/permissions', [AdminController::class, 'permissions'])->name('permissions');
         Route::post('/permissions', [AdminController::class, 'updatePermissions'])->name('permissions.update');
 
+        // Pengaturan autentikasi (toggle verifikasi email + form SMTP).
+        Route::get('/settings', [AdminController::class, 'systemSettings'])->name('settings');
+        Route::post('/settings', [AdminController::class, 'updateSystemSettings'])->name('settings.update');
+        Route::post('/settings/test-mail', [AdminController::class, 'systemTestMail'])->name('settings.test-mail');
+
         // Langganan direktori (institusi) — assign plan ke node direktori.
         Route::get('/directory-subscriptions', [AdminController::class, 'directorySubscriptions'])->name('directory-subscriptions');
         Route::post('/directory-subscriptions', [AdminController::class, 'storeDirectorySubscription'])->name('directory-subscriptions.store');
+        Route::get('/directory-subscriptions/{subscription}/edit', [AdminController::class, 'editDirectorySubscription'])->name('directory-subscriptions.edit');
+        Route::put('/directory-subscriptions/{subscription}', [AdminController::class, 'updateDirectorySubscription'])->name('directory-subscriptions.update');
         Route::post('/directory-subscriptions/{subscription}/cancel', [AdminController::class, 'cancelDirectorySubscription'])->name('directory-subscriptions.cancel');
+
+        // Kelola struktur direktori (universitas/fakultas/departemen/prodi).
+        Route::get('/directory', [AdminController::class, 'directory'])->name('directory');
+        Route::post('/directory/universities', [AdminController::class, 'storeDirectoryUniversity'])->name('directory.universities.store');
+        Route::post('/directory/faculties', [AdminController::class, 'storeDirectoryFaculty'])->name('directory.faculties.store');
+        Route::post('/directory/departments', [AdminController::class, 'storeDirectoryDepartment'])->name('directory.departments.store');
+        Route::post('/directory/study-programs', [AdminController::class, 'storeDirectoryStudyProgram'])->name('directory.study-programs.store');
 
         // Backup & restore seluruh sistem: sengaja hanya digerbangi
         // role:system_admin (bukan permission tambahan) — alasan sama dengan

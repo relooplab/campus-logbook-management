@@ -23,26 +23,85 @@ class AdminController extends Controller
 
     public function users(Request $request): View
     {
+        $user = $request->user();
+        $isSystemAdmin = $user->isSystemAdmin();
+
+        // Admin tanpa admin_scopes DIKUNCI: tampilkan banner "locked",
+        // bukan tabel kosong (UX lebih jelas).
+        $isLockedNonSystemAdmin = ! $isSystemAdmin
+            && $user->institution_id !== null
+            && $user->adminScopes->isEmpty();
+
+        $query = $this->usersQuery($request);
+
+        // Tabs (konteks): tab "Pengguna" default. System admin bisa lihat
+        // tab "Semua" (termasuk user lintas institusi + admin/system_admin).
+        $tab = $request->query('tab', 'mine');
+        if (! $isSystemAdmin) {
+            $tab = 'mine';
+        } elseif (! in_array($tab, ['mine', 'all'], true)) {
+            $tab = 'mine';
+        }
+
+        // Tab "all" → longgarkan filter institusi (system admin boleh lintas).
+        // Tab "mine" → hanya user di institusi admin (kalau bukan system admin,
+        // sudah di-filter oleh usersQuery). Untuk system admin di tab "mine"
+        // kita tetap tampilkan semua (system admin tak punya "institusi sendiri"),
+        // jadi tab "all" dan "mine" sama untuknya. Tetap dukung untuk kelengkapan.
+        $sort = $request->query('sort', 'latest');
+        if ($sort === 'name') {
+            $query->orderBy('name');
+        } else {
+            $query->latest();
+        }
+
+        $users = $query->with('roles')->paginate(20)->withQueryString();
+
+        // Stat cards (counts) — clone query tanpa pagination/limit.
+        $baseQuery = $this->usersQuery($request);
+        $counts = [
+            'total' => (clone $baseQuery)->count(),
+            'dosen' => (clone $baseQuery)->whereHas('roles', fn ($q) => $q->where('name', 'dosen'))->count(),
+            'mahasiswa' => (clone $baseQuery)->whereHas('roles', fn ($q) => $q->where('name', 'mahasiswa'))->count(),
+            'ditolak' => (clone $baseQuery)->where('registration_status', 'rejected')->count(),
+        ];
+
+        $roles = $isSystemAdmin ? Role::all() : Role::where('name', '!=', 'system_admin')->get();
+        // Hanya system admin butuh daftar institusi (untuk filter & dropdown set-institusi).
+        $institutions = $isSystemAdmin
+            ? \App\Models\Institution::orderBy('institution_name')->get()
+            : collect();
+
+        return view('admin.users', compact('users', 'roles', 'institutions', 'counts', 'isLockedNonSystemAdmin', 'tab'));
+    }
+
+    /**
+     * Bangun query User sesuai filter & scope admin. Dipakai oleh users(),
+     * bulkUsers(), dan exportUsers() agar konsisten.
+     */
+    private function usersQuery(Request $request): \Illuminate\Database\Eloquent\Builder
+    {
+        $user = $request->user();
+        $isSystemAdmin = $user->isSystemAdmin();
+
         $query = User::query();
 
-        // Admin biasa tidak dapat melihat/memfilter user dengan role system_admin.
-        $isSystemAdmin = $request->user()->isSystemAdmin();
-        if (!$isSystemAdmin) {
+        // Admin biasa tidak dapat melihat user dengan role system_admin.
+        if (! $isSystemAdmin) {
             $query->whereDoesntHave('roles', fn ($q) => $q->where('name', 'system_admin'));
 
             // Admin biasa hanya melihat user di institusinya sendiri.
-            if ($request->user()->institution_id) {
-                $query->where('institution_id', $request->user()->institution_id);
+            if ($user->institution_id) {
+                $query->where('institution_id', $user->institution_id);
             }
 
             // Admin dengan admin_scopes dibatasi ke scope-nya (hierarkis);
-            // admin TANPA admin_scopes dikunci (tidak melihat data dosen/mahasiswa).
-            $this->applyAdminScopeFilter($query, $request->user());
+            // admin TANPA admin_scopes DIKUNCI (tidak melihat data).
+            $this->applyAdminScopeFilter($query, $user);
         }
 
         if ($role = $request->query('role')) {
-            // Admin biasa tidak dapat memfilter role system_admin.
-            if ($role === 'system_admin' && !$isSystemAdmin) {
+            if ($role === 'system_admin' && ! $isSystemAdmin) {
                 $role = null;
             }
             if ($role) {
@@ -58,18 +117,31 @@ class AdminController extends Controller
             });
         }
 
-        $sort = $request->query('sort', 'latest');
-        if ($sort === 'name') {
-            $query->orderBy('name');
-        } else {
-            $query->latest();
+        // Filter tambahan.
+        if ($status = $request->query('status')) {
+            $query->where('registration_status', $status);
         }
 
-        $users = $query->with('roles')->paginate(20)->withQueryString();
-        $roles = $isSystemAdmin ? Role::all() : Role::where('name', '!=', 'system_admin')->get();
-        $institutions = \App\Models\Institution::orderBy('institution_name')->get();
+        if ($institutionId = $request->query('institution_id')) {
+            // Hanya system admin boleh filter lintas institusi.
+            if ($isSystemAdmin) {
+                if ($institutionId === 'none') {
+                    $query->whereNull('institution_id');
+                } else {
+                    $query->where('institution_id', (int) $institutionId);
+                }
+            }
+        }
 
-        return view('admin.users', compact('users', 'roles', 'institutions'));
+        if (($verified = $request->query('verified')) !== null && $verified !== '') {
+            if ($verified === '1') {
+                $query->whereNotNull('email_verified_at');
+            } elseif ($verified === '0') {
+                $query->whereNull('email_verified_at');
+            }
+        }
+
+        return $query;
     }
 
     public function storeUser(Request $request): RedirectResponse
@@ -219,6 +291,141 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', "Password '{$user->name}' berhasil direset.");
+    }
+
+    // ------------------------------------------------------- aksi massal & export
+
+    /**
+     * Aksi massal atas user: delete / approve / reject.
+     * Otorisasi per-user di-handle via canManageUser(). Aksi yang menyentuh
+     * akun admin/system_admin DITOLAK kecuali aktor adalah system admin.
+     */
+    public function bulkUsers(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:users,id'],
+            'action' => ['required', 'in:delete,approve,reject'],
+        ]);
+
+        $actor = $request->user();
+        $isSystemAdmin = $actor->isSystemAdmin();
+        $ids = array_map('intval', $validated['ids']);
+        $action = $validated['action'];
+
+        // Kumpulkan user yang boleh dikelola.
+        $manageable = [];
+        $skipped = [];
+        foreach (User::whereIn('id', $ids)->get() as $user) {
+            // Lindungi akun admin/system_admin dari admin institusi.
+            if (! $isSystemAdmin && ($user->isAdmin() || $user->isSystemAdmin())) {
+                $skipped[] = $user->name.' (akun admin)';
+                continue;
+            }
+            // Tidak boleh memproses akun sendiri.
+            if ($user->id === $actor->id) {
+                $skipped[] = $user->name.' (diri sendiri)';
+                continue;
+            }
+            if (! $this->canManageUser($request, $user)) {
+                $skipped[] = $user->name.' (di luar wewenang)';
+                continue;
+            }
+            $manageable[] = $user;
+        }
+
+        $count = count($manageable);
+        if ($count === 0) {
+            return back()->with('error', 'Tidak ada user yang dapat diproses. Lewati: '.implode(', ', $skipped));
+        }
+
+        foreach ($manageable as $user) {
+            switch ($action) {
+                case 'delete':
+                    $user->delete();
+                    \App\Support\Audit::log('Admin menghapus user (massal)', [
+                        'target_user_id' => $user->id,
+                        'target_email' => $user->email,
+                        'target_name' => $user->name,
+                    ]);
+                    break;
+
+                case 'approve':
+                    // Hanya relevan untuk dosen/mahasiswa; setujui agar jadi verified.
+                    if ($user->isMahasiswa()) {
+                        $user->update(['registration_status' => 'verified']);
+                    } else {
+                        $user->update(['registration_status' => 'active']);
+                    }
+                    \App\Support\Audit::log('Admin menyetujui user (massal)', [
+                        'target_user_id' => $user->id,
+                        'target_email' => $user->email,
+                    ]);
+                    break;
+
+                case 'reject':
+                    $user->update(['registration_status' => 'rejected']);
+                    \App\Support\Audit::log('Admin menolak user (massal)', [
+                        'target_user_id' => $user->id,
+                        'target_email' => $user->email,
+                    ]);
+                    break;
+            }
+        }
+
+        $actionLabel = match ($action) {
+            'delete' => 'dihapus',
+            'approve' => 'disetujui',
+            'reject' => 'ditolak',
+        };
+        $msg = "{$count} user berhasil {$actionLabel}.";
+        if ($skipped) {
+            $msg .= ' Lewati: '.implode(', ', $skipped);
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    /**
+     * Export CSV daftar user (mengikuti filter & scope yang sama dengan users()).
+     * Untuk Excel-compatible: BOM + comma-separated.
+     */
+    public function exportUsers(Request $request)
+    {
+        $filename = 'users-'.now()->format('Y-m-d-His').'.csv';
+        $query = $this->usersQuery($request)->with('roles')->orderBy('name');
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($query) {
+            $out = fopen('php://output', 'w');
+            // BOM agar Excel detect UTF-8.
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, ['ID', 'Nama', 'Email', 'Identifier', 'Roles', 'Status', 'Institusi', 'Email Verified', 'Terdaftar'], ';');
+
+            // Streaming chunked untuk dataset besar.
+            $query->chunk(200, function ($users) use ($out) {
+                foreach ($users as $u) {
+                    fputcsv($out, [
+                        $u->id,
+                        $u->name,
+                        $u->email,
+                        $u->identifier ?? '',
+                        $u->roles->pluck('name')->implode(','),
+                        $u->registration_status ?? '',
+                        optional(\App\Models\Institution::find($u->institution_id))->institution_name ?? 'Personal',
+                        $u->email_verified_at ? 'Ya' : 'Tidak',
+                        $u->created_at?->format('Y-m-d H:i') ?? '',
+                    ], ';');
+                }
+            });
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     // ------------------------------------------------------- system admin
@@ -718,11 +925,18 @@ class AdminController extends Controller
      */
     public function planSettings(User $user): View
     {
+        // Defense-in-depth: route sudah di-gate `role:system_admin`, tapi
+        // pastikan juga di controller untuk berjaga-jaga.
+        abort_unless(auth()->user()->isSystemAdmin(), 403, 'Hanya System Admin yang dapat mengatur paket user.');
+
         $plans = Plan::where('is_active', true)->orderBy('price')->get();
         $activePlan = $user->activePlan();
         $override = $user->planOverride;
+        $institutionHasSubscription = $user->institution_id
+            ? Feature::institutionHasActiveDirectorySubscription($user->institution_id)
+            : false;
 
-        return view('admin.plan-settings', compact('user', 'plans', 'activePlan', 'override'));
+        return view('admin.plan-settings', compact('user', 'plans', 'activePlan', 'override', 'institutionHasSubscription'));
     }
 
     /**
@@ -730,6 +944,8 @@ class AdminController extends Controller
      */
     public function updatePlanSettings(Request $request, User $user): RedirectResponse
     {
+        abort_unless(auth()->user()->isSystemAdmin(), 403, 'Hanya System Admin yang dapat mengubah paket user.');
+
         $validated = $request->validate([
             'plan_id' => ['required', 'exists:plans,id'],
             'allow_export' => ['nullable', 'boolean'],
@@ -899,6 +1115,162 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', 'Langganan direktori dibatalkan.');
+    }
+
+    /**
+     * Form edit langganan direktori (ganti plan, ends_at, status).
+     */
+    public function editDirectorySubscription(\App\Models\DirectorySubscription $subscription): View
+    {
+        $subscription->loadMissing('plan', 'assignedBy');
+
+        $plans = Plan::where('is_active', true)->orderBy('price')->get();
+        $universities = \App\Models\University::with('faculties.departments.studyPrograms')->orderBy('name')->get();
+
+        return view('admin.system.directory-subscriptions-edit', compact('subscription', 'plans', 'universities'));
+    }
+
+    /**
+     * Simpan perubahan langganan direktori (plan, ends_at, status).
+     * Scope tidak bisa diubah; tetap jalankan validasi no-overlap utk integritas.
+     */
+    public function updateDirectorySubscription(Request $request, \App\Models\DirectorySubscription $subscription): RedirectResponse
+    {
+        $validated = $request->validate([
+            'plan_id' => ['required', 'exists:plans,id'],
+            'ends_at' => ['nullable', 'date', 'after:today'],
+            'status' => ['required', 'in:active,expired,cancelled'],
+        ]);
+
+        // No-overlap: scope tidak berubah, tapi pastikan tidak bertentangan
+        // dengan langganan lain (leluhur/turunan) saat status diaktifkan kembali.
+        $error = Feature::validateDirectorySubscriptionNoOverlap(
+            $subscription->scope_type,
+            (int) $subscription->scope_id
+        );
+
+        if ($error) {
+            return back()->with('error', $error);
+        }
+
+        $subscription->update([
+            'plan_id' => $validated['plan_id'],
+            'ends_at' => $validated['ends_at'] ?? null,
+            'status' => $validated['status'],
+        ]);
+
+        \App\Support\Audit::log('SysAdmin mengubah langganan direktori', [
+            'subscription_id' => $subscription->id,
+            'scope_type' => $subscription->scope_type,
+            'scope_id' => (int) $subscription->scope_id,
+            'plan_id' => (int) $validated['plan_id'],
+            'status' => $validated['status'],
+        ]);
+
+        return back()->with('success', 'Langganan direktori berhasil diperbarui.');
+    }
+
+    // ------------------------------------------------------- struktur direktori (system admin)
+
+    /**
+     * Halaman kelola struktur direktori (universitas/fakultas/departemen/prodi).
+     */
+    public function directory(): View
+    {
+        $universities = \App\Models\University::with('faculties.departments.studyPrograms')->orderBy('name')->get();
+
+        return view('admin.system.directory', compact('universities'));
+    }
+
+    /**
+     * Tambah universitas (dedup berdasarkan nama/NPSN).
+     */
+    public function storeDirectoryUniversity(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'npsn' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $university = app(\App\Services\OrganizationalDirectoryService::class)
+            ->findOrCreateUniversity($validated['name'], $validated['npsn'] ?? null);
+
+        \App\Support\Audit::log('SysAdmin menambah universitas', [
+            'university_id' => $university->id,
+            'name' => $university->name,
+        ]);
+
+        return back()->with('success', "Universitas '{$university->name}' ditambahkan/diduplikasi.");
+    }
+
+    /**
+     * Tambah fakultas di dalam universitas (dedup berdasarkan nama).
+     */
+    public function storeDirectoryFaculty(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'university_id' => ['required', 'exists:universities,id'],
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $university = \App\Models\University::findOrFail((int) $validated['university_id']);
+        $faculty = app(\App\Services\OrganizationalDirectoryService::class)
+            ->findOrCreateFaculty($university, $validated['name']);
+
+        \App\Support\Audit::log('SysAdmin menambah fakultas', [
+            'faculty_id' => $faculty->id,
+            'university_id' => $university->id,
+            'name' => $faculty->name,
+        ]);
+
+        return back()->with('success', "Fakultas '{$faculty->name}' ditambahkan.");
+    }
+
+    /**
+     * Tambah departemen di dalam fakultas (dedup berdasarkan nama).
+     */
+    public function storeDirectoryDepartment(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'faculty_id' => ['required', 'exists:faculties,id'],
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $faculty = \App\Models\Faculty::findOrFail((int) $validated['faculty_id']);
+        $department = app(\App\Services\OrganizationalDirectoryService::class)
+            ->findOrCreateDepartment($faculty, $validated['name']);
+
+        \App\Support\Audit::log('SysAdmin menambah departemen', [
+            'department_id' => $department->id,
+            'faculty_id' => $faculty->id,
+            'name' => $department->name,
+        ]);
+
+        return back()->with('success', "Departemen '{$department->name}' ditambahkan.");
+    }
+
+    /**
+     * Tambah prodi di dalam departemen (dedup berdasarkan nama).
+     */
+    public function storeDirectoryStudyProgram(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'department_id' => ['required', 'exists:departments,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $department = \App\Models\Department::findOrFail((int) $validated['department_id']);
+        $studyProgram = app(\App\Services\OrganizationalDirectoryService::class)
+            ->findOrCreateStudyProgram($department, $validated['name'], $validated['code'] ?? null);
+
+        \App\Support\Audit::log('SysAdmin menambah prodi', [
+            'study_program_id' => $studyProgram->id,
+            'department_id' => $department->id,
+            'name' => $studyProgram->name,
+        ]);
+
+        return back()->with('success', "Prodi '{$studyProgram->name}' ditambahkan.");
     }
 
     // ------------------------------------------------------- permissions (system admin)
@@ -1168,15 +1540,7 @@ class AdminController extends Controller
             'max_upload_size_mb' => ['required', 'integer', 'min:1', 'max:100'],
             'allowed_file_types' => ['required', 'string', 'max:255'],
             'seminar_hardcopy_note' => ['nullable', 'string'],
-            // Pengaturan email (SMTP) — bisa diisi admin.
-            'mail_mailer' => ['nullable', 'string', 'max:20', 'in:smtp,log,array,sendmail,mailgun,ses,postmark,resend'],
-            'mail_host' => ['nullable', 'string', 'max:255'],
-            'mail_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
-            'mail_username' => ['nullable', 'string', 'max:255'],
-            'mail_password' => ['nullable', 'string', 'max:255'],
-            'mail_encryption' => ['nullable', 'string', 'max:20', 'in:ssl,tls,null'],
-            'mail_from_address' => ['nullable', 'email', 'max:255'],
-            'mail_from_name' => ['nullable', 'string', 'max:255'],
+            // Pengaturan SMTP TIDAK lagi di sini — dipindahkan ke panel system admin.
         ]);
 
         $institution = Institution::current();
@@ -1196,16 +1560,86 @@ class AdminController extends Controller
         \App\Support\Audit::log('Admin mengubah profil institusi / pengaturan', [
             'institution_id' => $institution->id,
             'institution_name' => $institution->institution_name,
-            'field_berubah' => array_values(array_diff(array_keys($validated), ['mail_password'])),
+            'field_berubah' => array_values(array_diff(array_keys($validated), [])),
         ]);
 
-        return back()->with('success', 'Profil institusi & pengaturan email diperbarui.');
+        return back()->with('success', 'Profil institusi diperbarui.');
     }
 
     /**
-     * Kirim email uji untuk memverifikasi konfigurasi SMTP.
+     * Halaman pengaturan autentikasi + SMTP (system admin).
+     * Toggle "Wajib Verifikasi Email" + form SMTP (hanya tampil saat ON).
      */
-    public function testMail(Request $request): RedirectResponse
+    public function systemSettings(): View
+    {
+        $institution = Institution::current();
+
+        return view('admin.system.settings', compact('institution'));
+    }
+
+    /**
+     * Simpan pengaturan autentikasi + SMTP.
+     * - email_verification_required: boolean.
+     * - mail_*: hanya divalidasi/disimpan saat toggle ON (form tersembunyi
+     *   saat OFF di view, tapi user bisa POST manual — guard di sini).
+     */
+    public function updateSystemSettings(Request $request): RedirectResponse
+    {
+        $rules = [
+            'email_verification_required' => ['required', 'boolean'],
+        ];
+
+        $verificationOn = $request->boolean('email_verification_required');
+
+        if ($verificationOn) {
+            $rules += [
+                'mail_mailer' => ['required', 'string', 'max:20', 'in:smtp,log,array,sendmail,mailgun,ses,postmark,resend'],
+                'mail_host' => ['required', 'string', 'max:255'],
+                'mail_port' => ['required', 'integer', 'min:1', 'max:65535'],
+                'mail_username' => ['nullable', 'string', 'max:255'],
+                'mail_password' => ['nullable', 'string', 'max:255'],
+                'mail_encryption' => ['nullable', 'string', 'max:20', 'in:ssl,tls,null'],
+                'mail_from_address' => ['required', 'email', 'max:255'],
+                'mail_from_name' => ['required', 'string', 'max:255'],
+            ];
+        } else {
+            $rules += [
+                'mail_mailer' => ['nullable', 'string', 'max:20', 'in:smtp,log,array,sendmail,mailgun,ses,postmark,resend'],
+                'mail_host' => ['nullable', 'string', 'max:255'],
+                'mail_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
+                'mail_username' => ['nullable', 'string', 'max:255'],
+                'mail_password' => ['nullable', 'string', 'max:255'],
+                'mail_encryption' => ['nullable', 'string', 'max:20', 'in:ssl,tls,null'],
+                'mail_from_address' => ['nullable', 'email', 'max:255'],
+                'mail_from_name' => ['nullable', 'string', 'max:255'],
+            ];
+        }
+
+        $validated = $request->validate($rules);
+
+        $institution = Institution::current();
+        $institution->fill($validated);
+        $institution->email_verification_required = $verificationOn;
+        $institution->save();
+
+        Institution::flush($institution->id);
+        $institution->applyToConfig();
+
+        \App\Support\Audit::log('SysAdmin mengubah pengaturan autentikasi & SMTP', [
+            'institution_id' => $institution->id,
+            'email_verification_required' => $verificationOn,
+            'field_berubah' => array_values(array_diff(array_keys($validated), ['mail_password'])),
+        ]);
+
+        return back()->with('success', $verificationOn
+            ? 'Verifikasi email diaktifkan. Form SMTP tampil.'
+            : 'Verifikasi email dimatikan. Form SMTP disembunyikan.');
+    }
+
+    /**
+     * Kirim email uji untuk memverifikasi konfigurasi SMTP (system admin).
+     */
+    public function systemTestMail(Request $request): RedirectResponse
     {
         $institution = Institution::current();
         $institution->applyToConfig();

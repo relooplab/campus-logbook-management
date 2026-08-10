@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Institution;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,6 +40,15 @@ class LoginController extends Controller
             $request->session()->regenerate();
 
             \App\Support\Audit::log('Login berhasil', ['email' => $credentials['email'], 'user_id' => $user->id]);
+
+            // Query langsung (skip cache) — lihat komentar di RegisterController.
+            $verificationRequired = (bool) Institution::query()->value('email_verification_required');
+
+            // Jika system admin mengaktifkan verifikasi email wajib dan user
+            // belum verifikasi, arahkan ke halaman notice.
+            if ($verificationRequired && ! $user->hasVerifiedEmail()) {
+                return redirect()->route('verification.notice');
+            }
 
             return redirect()->intended(route('dashboard'));
         }

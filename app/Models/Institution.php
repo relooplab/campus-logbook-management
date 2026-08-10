@@ -25,6 +25,7 @@ class Institution extends Model
         'max_upload_size_mb',
         'allowed_file_types',
         'seminar_hardcopy_note',
+        'email_verification_required',
         'mail_mailer',
         'mail_host',
         'mail_port',
@@ -47,6 +48,9 @@ class Institution extends Model
                 'app_name' => 'Campus Logbook Management',
                 'institution_name' => 'Perguruan Tinggi',
                 'email' => 'no-reply@example.com',
+                // Default: user TIDAK wajib verifikasi email saat mendaftar.
+                // System admin dapat mengaktifkan di panel Pengaturan.
+                'email_verification_required' => false,
             ]);
         });
     }
@@ -136,6 +140,15 @@ class Institution extends Model
         if ($institutionId) {
             Cache::forget("institution.by-id.{$institutionId}");
         }
+    }
+
+    /**
+     * Apakah user yang baru registrasi WAJIB verifikasi email sebelum
+     * bisa masuk fitur aplikasi. Diset di panel system admin.
+     */
+    public function emailVerificationRequired(): bool
+    {
+        return (bool) $this->email_verification_required;
     }
 
     /**

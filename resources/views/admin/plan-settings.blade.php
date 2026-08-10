@@ -15,6 +15,22 @@
     <div class="card p-6 space-y-4">
         <h2 class="font-heading font-semibold text-text-primary">Paket & Fitur</h2>
 
+        @if ($user->institution_id)
+            @if (! empty($institutionHasSubscription))
+                <div class="px-4 py-3 rounded-xl bg-status-success/10 border border-status-success/30 text-sm text-status-success">
+                    ✅ Institusi user ini memiliki langganan direktori aktif. Kuota individu di bawah ini adalah <strong>override per-user</strong> di atas pool institusi.
+                </div>
+            @else
+                <div class="px-4 py-3 rounded-xl bg-status-pending/10 border border-status-pending/30 text-sm text-status-pending">
+                    ⚠️ Institusi user ini <strong>belum berlangganan</strong>. Anda tetap bisa mengatur kuota individu (override &ldquo;Batas Workspace&rdquo; di bawah) yang akan berlaku efektif. Kuota &ldquo;Batas Per-User dalam Pool Institusi&rdquo; tidak efektif tanpa langganan.
+                </div>
+            @endif
+        @else
+            <div class="px-4 py-3 rounded-xl bg-bg-panel border border-border text-sm text-text-secondary">
+                User ini adalah <strong>Personal</strong> (tanpa institusi). Kuota individu (override &ldquo;Batas Workspace&rdquo; di bawah) yang berlaku efektif.
+            </div>
+        @endif
+
         <form method="POST" action="{{ route('admin.users.plan.update', $user) }}" class="space-y-4">
             @csrf
 
