@@ -20,8 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'ensure.email.verified' => \App\Http\Middleware\EnsureEmailVerified::class,
         ]);
 
-        // Catat waktu terakhir aktif user pada setiap request.
-        $middleware->append(\App\Http\Middleware\UpdateLastActive::class);
+        // Catat waktu terakhir aktif user pada setiap request web.
+        // Dipasang di grup `web` (bukan global) karena butuh session untuk
+        // membaca Auth::user(); middleware global berjalan sebelum StartSession.
+        $middleware->appendToGroup('web', \App\Http\Middleware\UpdateLastActive::class);
 
         // Percaya reverse-proxy (bila dikonfigurasi via TRUSTED_PROXIES) agar
         // header X-Forwarded-Proto diteruskan -> Laravel tahu skema https.

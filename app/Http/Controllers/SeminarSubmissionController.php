@@ -17,17 +17,11 @@ use Illuminate\View\View;
 class SeminarSubmissionController extends Controller
 {
     /**
-     * Mapping fase aktif -> jenis seminar.
+     * Mapping fase aktif -> jenis seminar. (Delegasi ke model agar satu sumber.)
      */
     private function jenisFromFase(MahasiswaTa $ta): string
     {
-        return match ($ta->fase) {
-            'proposal' => SeminarSubmission::JENIS_PROPOSAL,
-            'seminar_hasil' => SeminarSubmission::JENIS_SEMINAR_HASIL,
-            'sidang' => SeminarSubmission::JENIS_SIDANG,
-            'seminar_kp' => SeminarSubmission::JENIS_SEMINAR_KP,
-            default => $ta->isKp() ? SeminarSubmission::JENIS_SEMINAR_KP : SeminarSubmission::JENIS_PROPOSAL,
-        };
+        return SeminarSubmission::jenisFromFase($ta);
     }
 
     /**
@@ -172,8 +166,9 @@ class SeminarSubmissionController extends Controller
     public function edit(Request $request, SeminarSubmission $submission): View
     {
         abort_unless($submission->mahasiswaTa->isMember($request->user()), 403);
-        // Submission yang sudah dikonversi ke riwayat sidang tidak bisa diedit lagi.
-        abort_unless($submission->sidang_id === null, 403, 'Submission sudah dikonversi ke riwayat sidang dan tidak dapat diubah.');
+        // Submission hanya bisa diubah selama belum dikonversi ke riwayat sidang
+        // DAN jadwal seminar/sidang belum lewat.
+        abort_unless($submission->isUpdatableByStudent(), 403, 'Submisi sudah lewat jadwal/dikonversi ke sidang dan tidak dapat diubah.');
 
         $institution = Institution::current();
         $maxMb = $institution->maxUploadSizeMb();
@@ -192,8 +187,9 @@ class SeminarSubmissionController extends Controller
     public function update(Request $request, SeminarSubmission $submission): RedirectResponse
     {
         abort_unless($submission->mahasiswaTa->isMember($request->user()), 403);
-        // Submission yang sudah dikonversi ke riwayat sidang tidak bisa diubah.
-        abort_unless($submission->sidang_id === null, 403, 'Submission sudah dikonversi ke riwayat sidang dan tidak dapat diubah.');
+        // Submission hanya bisa diubah selama belum dikonversi ke riwayat sidang
+        // DAN jadwal seminar/sidang belum lewat.
+        abort_unless($submission->isUpdatableByStudent(), 403, 'Submisi sudah lewat jadwal/dikonversi ke sidang dan tidak dapat diubah.');
 
         $institution = Institution::current();
         $maxMb = $institution->maxUploadSizeMb();

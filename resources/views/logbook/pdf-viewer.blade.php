@@ -38,6 +38,7 @@
             null
         @endif ,
         canReview: @json(auth()->user()->can('review', $logbook)),
+        returnUrl: @json(route("logbook.show", $logbook)),
     };
 </script>
 @endsection

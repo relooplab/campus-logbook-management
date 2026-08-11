@@ -113,6 +113,33 @@ class SeminarSubmission extends Model
     }
 
     /**
+     * Jenis submission yang sesuai dengan fase aktif program (proposal →
+     * seminar_proposal, seminar_hasil → seminar_hasil, sidang → sidang_akhir,
+     * seminar_kp → seminar_kp). Satu sumber agar controller & dashboard selaras.
+     */
+    public static function jenisFromFase(\App\Models\MahasiswaTa $ta): string
+    {
+        return match ($ta->fase) {
+            'proposal' => self::JENIS_PROPOSAL,
+            'seminar_hasil' => self::JENIS_SEMINAR_HASIL,
+            'sidang' => self::JENIS_SIDANG,
+            'seminar_kp' => self::JENIS_SEMINAR_KP,
+            default => $ta->isKp() ? self::JENIS_SEMINAR_KP : self::JENIS_PROPOSAL,
+        };
+    }
+
+    /**
+     * Apakah mahasiswa masih boleh memperbarui dokumen submission ini.
+     * Boleh selama belum dikonversi ke riwayat sidang DAN jadwal belum lewat.
+     */
+    public function isUpdatableByStudent(): bool
+    {
+        return $this->sidang_id === null
+            && $this->tanggal !== null
+            && $this->tanggal->startOfDay()->gte(now()->startOfDay());
+    }
+
+    /**
      * Label statis sebuah jenis submission (default di luar penamaan kustom prodi).
      */
     public static function staticLabel(string $jenis): string

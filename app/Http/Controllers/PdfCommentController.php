@@ -59,9 +59,29 @@ class PdfCommentController extends Controller
 
         $comment->update(['reply' => $validated['reply']]);
 
+        // Membalas komentar dosen = menandai "sudah diperbaiki" (addressed)
+        // secara otomatis, menunggu keputusan dosen untuk resolve.
+        $dosenAuthor = $comment->user && $comment->user->isDosen() ? $comment->user : null;
+        if ($dosenAuthor && $comment->resolution_status === PdfComment::STATUS_OPEN) {
+            $comment->setResolutionStatus(PdfComment::STATUS_ADDRESSED);
+            $comment->save();
+        }
+
+        // Notifikasi ke dosen penulis komentar bahwa mahasiswa sudah menanggapi.
+        if ($dosenAuthor && $comment->entry) {
+            $mahasiswa = $comment->entry->mahasiswaTa?->mahasiswa;
+            $this->bestEffort(fn () => $dosenAuthor->notify(new \App\Notifications\ActivityNotification(
+                ($mahasiswa?->name ?? 'Mahasiswa').' menanggapi komentar Anda pada '.
+                    ($comment->entry->jenis === 'revisi' ? 'revisi' : 'logbook sesi '.$comment->entry->sesi_ke).': "'.mb_strimwidth($validated['reply'], 0, 120, '…').'"',
+                route('logbook.pdf-viewer', $comment->entry),
+                'Komentar PDF Direspons',
+            )));
+        }
+
         return response()->json([
             'ok' => true,
             'reply' => $comment->reply,
+            'resolution_status' => $comment->resolution_status,
         ]);
     }
 

@@ -137,9 +137,16 @@ class StudentApprovalController extends Controller
         // Mahasiswa jadi verified.
         $mahasiswaTa->mahasiswa?->update(['registration_status' => 'verified']);
 
-        // Mahasiswa yang disetujui otomatis mengikuti institusi dosen.
-        if ($mahasiswaTa->mahasiswa) {
-            $this->copyUniversityToStudent($dosen, $mahasiswaTa->mahasiswa);
+        // Mahasiswa yang disetujui otomatis mengikuti institusi dosen,
+        // lalu diberi notifikasi bahwa programnya aktif.
+        if ($mahasiswa = $mahasiswaTa->mahasiswa) {
+            $this->copyUniversityToStudent($dosen, $mahasiswa);
+
+            $this->bestEffort(fn () => $mahasiswa->notify(new \App\Notifications\ActivityNotification(
+                "Program ".$mahasiswaTa->jenisLabel()." Anda telah disetujui oleh '{$dosen->name}'. Silakan mulai bimbingan.",
+                route('dashboard'),
+                'Program Disetujui',
+            )));
         }
 
         return redirect()->route('approval.index')

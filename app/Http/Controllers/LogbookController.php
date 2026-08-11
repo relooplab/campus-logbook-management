@@ -936,6 +936,8 @@ class LogbookController extends Controller
                     // Bangun ulang agar status terbaru tidak tertutup payload lama.
                     'payload' => $c->buildPayloadFromColumns(),
                     'resolution_status' => $c->resolution_status ?: ($c->is_resolved ? PdfComment::STATUS_RESOLVED : PdfComment::STATUS_OPEN),
+                    'reply' => $c->reply,
+                    'is_dosen' => (bool) ($c->user ? $c->user->isDosen() : false),
                     'created_at' => $c->created_at,
                 ];
             });

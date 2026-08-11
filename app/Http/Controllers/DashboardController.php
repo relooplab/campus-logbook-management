@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Group;
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\SeminarSubmission;
@@ -18,9 +17,16 @@ class DashboardController extends Controller
     {
     }
 
-    public function __invoke(Request $request): View
+    public function __invoke(Request $request): View|\Illuminate\Http\RedirectResponse
     {
         $user = $request->user();
+
+        // Arahkan dosen ke antrean review bila ada bahan mahasiswa yang belum
+        // ditinjau (logbook/revisi submitted, seminar belum dibaca), sebelum
+        // memakai dashboard.
+        if ($user->isDosen() && app(\App\Services\MaterialsReviewQueue::class)->countFor($user) > 0) {
+            return redirect()->route('materials-review.index');
+        }
 
         if ($user->isAdmin()) {
             return $this->adminDashboard($user);
@@ -31,18 +37,6 @@ class DashboardController extends Controller
         }
 
         return $this->mahasiswaDashboard($user);
-    }
-
-    /**
-     * Tutup (dismiss) kartu info institusi di dashboard dosen.
-     */
-    public function dismissInstansi(Request $request): RedirectResponse
-    {
-        abort_unless($request->user()->isDosen(), 403, 'Hanya dosen.');
-
-        session(['dosen_instansi_dismissed' => true]);
-
-        return back();
     }
 
     private function adminDashboard(User $user): View
@@ -138,18 +132,6 @@ class DashboardController extends Controller
             ->count();
         $needsAttention = $perTa->whereIn('regularity', ['yellow', 'red'])->count();
 
-        // Informasi institusi & grup untuk kartu dashboard.
-        $university = $user->primaryUniversity();
-        // Instansi dosen dianggap lengkap jika NIDN + hierarki direktori terisi.
-        $instansiComplete = false;
-        if ($user->nidn && $university && $university->pivot?->faculty_id
-            && $university->pivot?->department_id && $university->pivot?->study_program_id) {
-            $instansiComplete = true;
-        }
-
-        $groupCount = Group::whereHas('memberships', fn ($q) => $q->where('user_id', $user->id)->where('status', 'approved'))
-            ->count();
-
         // ---- Agenda terdekat: jadwal seminar/sidang mahasiswa bimbingan/pengujian ----
         $agendaTerdekat = SeminarSubmission::where('status', SeminarSubmission::STATUS_SUBMITTED)
             ->where('tanggal', '>=', now()->toDateString())
@@ -169,7 +151,7 @@ class DashboardController extends Controller
         return view('dashboard.dosen', compact(
             'tas', 'queue', 'perTa', 'healthCount', 'stats',
             'pendingRegistrations', 'needsAttention',
-            'university', 'instansiComplete', 'groupCount', 'agendaTerdekat', 'submissions'
+            'agendaTerdekat', 'submissions'
         ));
     }
 
@@ -362,9 +344,13 @@ class DashboardController extends Controller
                 ->get()
             : collect();
 
-        // ---- Submission terbaru untuk status tombol ----
+        // ---- Submission untuk fase aktif (agar tombol "Kirim Bahan" muncul
+        // lagi saat mahasiswa pindah ke milestone seminar berikutnya) ----
         $seminarSubmission = $ta
-            ? $ta->seminarSubmissions()->latest()->first()
+            ? $ta->seminarSubmissions()
+                ->where('jenis', \App\Models\SeminarSubmission::jenisFromFase($ta))
+                ->latest()
+                ->first()
             : null;
 
         // ---- Status mahasiswa (aktif/verified) untuk banner ----

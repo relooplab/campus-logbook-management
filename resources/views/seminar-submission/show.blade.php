@@ -12,7 +12,7 @@
             </p>
         </div>
         <div class="flex flex-wrap gap-2">
-            @if ($isMember && !$submission->sidang_id)
+            @if ($isMember && $submission->isUpdatableByStudent())
                 <a href="{{ route('seminar-submission.edit', $submission) }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Edit</a>
             @endif
             <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Dashboard</a>

@@ -18,7 +18,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.mjs?v=' + WORKER
  */
 
 const DATA = window.PDF_VIEWER_DATA || {};
-const { draftUrl, catatanUrl, hasCatatan, entryId, csrf, commentsUrl, storeUrl, resolveUrl, replyUrl, deleteUrl, burnUrl, buildFeedbackUrl, canReview, canReply } = DATA;
+const { draftUrl, catatanUrl, hasCatatan, entryId, csrf, commentsUrl, storeUrl, resolveUrl, replyUrl, deleteUrl, burnUrl, buildFeedbackUrl, canReview, canReply, returnUrl } = DATA;
 
 const TYPE_LABEL = { draft: 'File Perbaikan/Draft', catatan: 'Catatan Perbaikan' };
 
@@ -48,6 +48,7 @@ function toAnnotation(item) {
     reply: item.reply || '',
     resolved: resolutionStatus === 'resolved',
     resolutionStatus,
+    isDosen: !!item.is_dosen,
     user: item.user?.name || '',
     created: item.created_at,
   };
@@ -82,8 +83,11 @@ function PdfViewerApp() {
   const [drawing, setDrawing] = useState(null); // rect sedang digambar (pixel)
   const [modal, setModal] = useState(null); // { geometry, comment, saving }
   const [selected, setSelected] = useState(null);
+  const [allResponded, setAllResponded] = useState(false); // semua komentar dosen sudah ditanggapi
+  const [showOverview, setShowOverview] = useState(false); // daftar ringkas komentar dosen (overview)
 
   const pdfRef = useRef(null);
+  const redirectTimer = useRef(null); // timer auto-redirect ke halaman revisi (beri jeda feedback)
   const canvasRefs = useRef([]);
   const pageSizeRefs = useRef([]);
   const stageRef = useRef(null);
@@ -96,6 +100,7 @@ function PdfViewerApp() {
     setLoading(true);
     setError(null);
     setAnnotations([]);
+    setAllResponded(false);
     setNumPages(0);
     canvasRefs.current = [];
     pageSizeRefs.current = [];
@@ -154,6 +159,12 @@ function PdfViewerApp() {
       renderAllPages(pdfRef.current, scale);
     }
   }, [scale, numPages]);
+
+  // Bersihkan timer auto-redirect bila komponen dilepas (mencegah navigasi ganda).
+  useEffect(() => () => {
+    if (redirectTimer.current) clearTimeout(redirectTimer.current);
+  }, []);
+
 
   // ---------------------------------------------------------------- drag draw
   function canvasPoint(e, canvas) {
@@ -250,8 +261,22 @@ function PdfViewerApp() {
       alert('Gagal mengubah status anotasi.');
     }
   }
+  // --------------------------------------------- skip ke anotasi dosen berikutnya
+  function goToNext() {
+    const next = annotations
+      .filter((x) => x.isDosen && x.resolutionStatus === 'open' && !x.reply && x.id !== (selected?.id))
+      .sort((x, y) => (x.page - y.page) || (y.y1 - x.y1) || (y.x1 - x.x1))[0] || null;
+    if (next) {
+      setSelected(next);
+      scrollToAnnotation(next);
+    } else {
+      setSelected(null);
+    }
+  }
+
   async function saveReply(id, reply) {
     if (!replyUrl) return;
+    if (!reply.trim()) return;
     try {
       const res = await fetch(replyUrl.replace('{id}', id), {
         method: 'POST',
@@ -264,8 +289,36 @@ function PdfViewerApp() {
         return;
       }
       const d = await res.json();
-      setAnnotations((a) => a.map((x) => (x.id === id ? { ...x, reply: d.reply } : x)));
-      setSelected((s) => (s && s.id === id ? { ...s, reply: d.reply } : s));
+
+      // Perbarui anotasi ini (balasan + status from server, biasanya 'addressed').
+      setAnnotations((a) => a.map((x) => (x.id === id ? {
+        ...x,
+        reply: d.reply || reply,
+        resolutionStatus: d.resolution_status || x.resolutionStatus,
+        resolved: (d.resolution_status || x.resolutionStatus) === 'resolved',
+      } : x)));
+
+      // Lanjut otomatis ke anotasi dosen berikutnya yang belum ditanggapi.
+      const next = annotations
+        .filter((x) => x.id !== id)
+        .filter((x) => x.isDosen && x.resolutionStatus === 'open' && !x.reply)
+        .sort((x, y) => (x.page - y.page) || (y.y1 - x.y1) || (y.x1 - x.x1))[0] || null;
+
+      if (next) {
+        setSelected(next);
+        scrollToAnnotation(next);
+      } else {
+        setSelected(null);
+        setAllResponded(true);
+        // Feedback singkat dulu (~1 dtk) sebelum auto-redirect ke halaman revisi,
+        // agar mahasiswa sempat sadar "semua sudah beres".
+        if (redirectTimer.current) clearTimeout(redirectTimer.current);
+        if (returnUrl) {
+          redirectTimer.current = setTimeout(() => {
+            window.location.href = returnUrl;
+          }, 1000);
+        }
+      }
     } catch (e) {
       alert('Gagal menyimpan balasan.');
     }
@@ -292,6 +345,34 @@ function PdfViewerApp() {
     });
     return map;
   }, [annotations]);
+
+  // ---------------------------------------------------------------- antrean tanggapan
+  // Komentar milik dosen (terurut halaman lalu posisi) yang masih menunggu tanggapan
+  // mahasiswa = status 'open' dan belum ada balasan.
+  const unrespondedDosen = useMemo(() => (canReply
+    ? annotations
+        .filter((a) => a.isDosen && a.resolutionStatus === 'open' && !a.reply)
+        .sort((x, y) => (x.page - y.page) || (y.y1 - x.y1) || (y.x1 - x.x1))
+    : []), [annotations, canReply]);
+  const dosenCommentCount = canReply ? annotations.filter((a) => a.isDosen).length : annotations.length;
+
+  // Scroll halaman ke lokasi anotasi tertentu (continuous scroll).
+  function scrollToAnnotation(a) {
+    requestAnimationFrame(() => {
+      const el = document.getElementById('anno-' + a.id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
+  // Kembali ke halaman revisi. Bersihkan timer auto-redirect agar tidak bertabrakan
+  // (anti double-nav) bila pengguna menekan tombol manual sebelum jeda berakhir.
+  function goBackToRevision() {
+    if (redirectTimer.current) {
+      clearTimeout(redirectTimer.current);
+      redirectTimer.current = null;
+    }
+    if (returnUrl) window.location.href = returnUrl;
+  }
 
   // ---------------------------------------------------------------- build feedback
   // Tombol "Jadikan Feedback": kompilasi komentar yang belum resolve, simpan ke
@@ -362,6 +443,58 @@ function PdfViewerApp() {
         )}
       </div>
 
+      {/* Overview scope komentar dosen (hanya untuk mahasiswa pemilik TA) */}
+      {canReply && (
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="px-3 py-1.5 rounded-full bg-bg-panel dark:bg-bg-panel border border-border text-sm">
+            Komentar dosen: <span className="font-semibold text-text-primary">{dosenCommentCount}</span>
+            {' · '}belum ditanggapi <span className="font-semibold text-status-pending">{unrespondedDosen.length}</span>
+          </span>
+          {unrespondedDosen.length > 0 && (
+            <button onClick={() => setShowOverview((s) => !s)}
+              className="px-3 py-1.5 rounded-md bg-bg-panel dark:bg-bg-panel border border-border text-sm font-medium hover:bg-bg-hover">
+              {showOverview ? 'Sembunyikan daftar' : 'Lihat daftar komentar'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Daftar ringkas komentar dosen yang belum ditanggapi → klik untuk lompat */}
+      {canReply && showOverview && unrespondedDosen.length > 0 && (
+        <div className="rounded-lg border border-border bg-bg-panel p-3 max-h-64 overflow-y-auto">
+          <p className="text-xs font-semibold text-text-secondary mb-2">Komentar dosen yang menunggu tanggapan (urut hal. & posisi)</p>
+          <div className="space-y-1.5">
+            {unrespondedDosen.map((a) => (
+              <button key={a.id}
+                onClick={() => { setSelected(a); scrollToAnnotation(a); }}
+                className="w-full text-left rounded-md bg-bg-surface dark:bg-bg-surface border border-border px-3 py-2 text-sm hover:bg-bg-hover flex items-center gap-2">
+                <span className="text-xs text-text-secondary shrink-0">Hal. {a.page}</span>
+                <span className="flex-1 truncate">{a.comment}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded text-white shrink-0" style={{ backgroundColor: '#D97706' }}>Belum ditanggapi</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Selesai menanggapi: banner sukses + auto-redirect ke halaman revisi */}
+      {canReply && allResponded && (
+        <div className="rounded-lg border border-status-success/40 bg-status-success/10 p-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-semibold text-text-primary">Semua komentar dosen telah Anda tanggapi</p>
+            <p className="text-sm text-text-secondary mt-0.5">
+              {unrespondedDosen.length === 0
+                ? 'Tidak ada lagi komentar dosen yang menunggu tanggapan pada file ini. Anda akan dialihkan ke halaman revisi.'
+                : 'Anda dapat menanggapi sisa komentar atau menutup viewer ini.'}
+            </p>
+          </div>
+          <button onClick={goBackToRevision}
+            className="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-semibold hover:opacity-90">
+            Kembali ke Revisi
+          </button>
+        </div>
+      )}
+
       {/* Stage: continuous scroll, 2 halaman di layar besar */}
       <div ref={stageRef}
         className="bg-bg-surface dark:bg-bg-surface rounded-lg border border-border p-2 overflow-x-auto">
@@ -390,6 +523,7 @@ function PdfViewerApp() {
                   <div className="absolute inset-0">
                     {pageAnnotations.map((a) => (
                       <div key={a.id}
+                        id={'anno-' + a.id}
                         className="anno-box absolute border-2 cursor-pointer"
                         onClick={() => setSelected(a)}
                         style={{
@@ -400,9 +534,9 @@ function PdfViewerApp() {
                            borderColor: a.resolutionStatus === 'resolved' ? '#7C9473' : a.resolutionStatus === 'addressed' ? '#D97706' : '#C9A97E',
                            backgroundColor: (a.resolutionStatus === 'resolved' ? 'rgba(124,148,115,.15)' : a.resolutionStatus === 'addressed' ? 'rgba(217,119,6,.15)' : 'rgba(201,169,126,.15)'),
                         }}>
-                        <span className="absolute -top-3 -left-1 text-white text-[10px] px-1 rounded"
+                        <span className="absolute -top-3 -left-1 text-white text-[10px] px-1 rounded whitespace-nowrap"
                            style={{ backgroundColor: a.resolutionStatus === 'resolved' ? '#7C9473' : a.resolutionStatus === 'addressed' ? '#D97706' : '#C9A97E' }}>
-                          {a.id}
+                          {a.resolutionStatus === 'addressed' ? 'Diperbaiki' : a.resolutionStatus === 'resolved' ? 'Selesai' : '#' + a.id}
                         </span>
                       </div>
                     ))}
@@ -458,6 +592,12 @@ function PdfViewerApp() {
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-bg-surface dark:bg-bg-surface rounded-lg border border-border p-4 w-full max-w-md">
             <h3 className="font-semibold mb-2">Anotasi #{selected.id}</h3>
+            {canReply && selected.isDosen && (() => {
+              const i = unrespondedDosen.findIndex((a) => a.id === selected.id);
+              return i >= 0
+                ? <p className="text-xs text-text-secondary mb-1">Komentar dosen {i + 1}/{unrespondedDosen.length} · hal. {selected.page}</p>
+                : null;
+            })()}
             <p className="text-sm mb-1">{selected.user}</p>
             <p className="text-sm mb-3">{selected.comment}</p>
             {selected.reply && (
@@ -468,7 +608,7 @@ function PdfViewerApp() {
             )}
             {canReply && (
               <div className="mb-3">
-                <textarea rows="3" defaultValue={selected.reply}
+                <textarea key={selected.id} rows="3" defaultValue={selected.reply} autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
@@ -476,8 +616,14 @@ function PdfViewerApp() {
                     }
                   }}
                   className="w-full rounded-md border border-border bg-bg-surface dark:bg-bg-surface px-3 py-2 text-sm"
-                  placeholder="Tulis balasan / penjelasan perbaikan… (Enter untuk simpan)" />
-                <p className="text-xs text-text-secondary mt-1">Tekan Enter untuk menyimpan, Shift+Enter untuk baris baru.</p>
+                  placeholder="Tulis balasan / penjelasan perbaikan… lalu Enter" />
+                <p className="text-xs text-text-secondary mt-1">Enter = kirim balasan & lanjut ke anotasi berikutnya · Shift+Enter = baris baru.</p>
+                {unrespondedDosen.length > 0 && (
+                  <button onClick={goToNext}
+                    className="mt-2 px-3 py-1 rounded-md bg-bg-panel dark:bg-bg-panel text-xs font-medium hover:bg-border">
+                    Lewati → anotasi dosen berikutnya
+                  </button>
+                )}
               </div>
             )}
             <div className="flex items-center gap-2">

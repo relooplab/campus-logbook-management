@@ -19,6 +19,7 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\LogbookController;
 use App\Http\Controllers\LogbookHarianController;
 use App\Http\Controllers\MahasiswaTaController;
+use App\Http\Controllers\MaterialsReviewController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ActionItemController;
 use App\Http\Controllers\AffiliationApprovalController;
@@ -64,7 +65,6 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
-    Route::post('/dashboard/dismiss-instansi', [DashboardController::class, 'dismissInstansi'])->name('dashboard.dismiss-instansi');
 
     // Verifikasi email (notice/verify/send). Halaman notice & send tidak
     // dipasang middleware `ensure.email.verified` agar user yang belum
@@ -163,6 +163,9 @@ Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])
     Route::post('/quick-review/{logbook}/approve-next', [QuickReviewController::class, 'approveNext'])->name('quick-review.approve-next');
     Route::post('/quick-review/{logbook}/revisi-next', [QuickReviewController::class, 'revisiNext'])->name('quick-review.revisi-next');
     Route::post('/quick-review/{logbook}/build-feedback', [QuickReviewController::class, 'buildFeedbackFromComments'])->name('quick-review.build-feedback');
+
+    // ------------------------------------------------- antrean review bahan (gate dosen)
+    Route::get('/review-bahan', [MaterialsReviewController::class, 'index'])->name('materials-review.index');
     Route::post('/feedback-templates', [QuickReviewController::class, 'storeTemplate'])->name('feedback-templates.store');
     Route::delete('/feedback-templates/{template}', [QuickReviewController::class, 'destroyTemplate'])->name('feedback-templates.destroy');
 
