@@ -464,8 +464,9 @@ class AdminController extends Controller
             ->get();
 
         $institutions = \App\Models\Institution::orderBy('institution_name')->get();
+        $universities = \App\Models\University::with('faculties.departments.studyPrograms')->orderBy('name')->get();
 
-        return view('admin.system-admins', compact('admins', 'institutions'));
+        return view('admin.system-admins', compact('admins', 'institutions', 'universities'));
     }
 
     /**
@@ -1108,14 +1109,13 @@ class AdminController extends Controller
      */
     public function directorySubscriptions(): View
     {
-        $subscriptions = \App\Models\DirectorySubscription::with('plan', 'assignedBy')
+        $subscriptions = \App\Models\DirectorySubscription::with('assignedBy')
             ->orderByDesc('created_at')
             ->get();
 
-        $plans = Plan::where('is_active', true)->orderBy('price')->get();
         $universities = \App\Models\University::with('faculties.departments.studyPrograms')->orderBy('name')->get();
 
-        return view('admin.system.directory-subscriptions', compact('subscriptions', 'plans', 'universities'));
+        return view('admin.system.directory-subscriptions', compact('subscriptions', 'universities'));
     }
 
     /**
@@ -1127,7 +1127,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'scope_type' => ['required', 'in:study_program,department,faculty,university'],
             'scope_id' => ['required', 'integer'],
-            'plan_id' => ['required', 'exists:plans,id'],
+            'storage_limit_mb' => ['required', 'integer', 'min:1', 'max:1048576'],
             'ends_at' => ['nullable', 'date', 'after:today'],
         ]);
 
@@ -1144,7 +1144,7 @@ class AdminController extends Controller
         \App\Models\DirectorySubscription::create([
             'scope_type' => $validated['scope_type'],
             'scope_id' => (int) $validated['scope_id'],
-            'plan_id' => $validated['plan_id'],
+            'storage_limit_mb' => (int) $validated['storage_limit_mb'],
             'status' => \App\Models\DirectorySubscription::STATUS_ACTIVE,
             'starts_at' => now(),
             'ends_at' => $validated['ends_at'] ?? null,
@@ -1154,7 +1154,7 @@ class AdminController extends Controller
         \App\Support\Audit::log('SysAdmin assign langganan direktori', [
             'scope_type' => $validated['scope_type'],
             'scope_id' => (int) $validated['scope_id'],
-            'plan_id' => $validated['plan_id'],
+            'storage_limit_mb' => (int) $validated['storage_limit_mb'],
         ]);
 
         return back()->with('success', 'Langganan direktori berhasil di-assign.');
@@ -1181,22 +1181,21 @@ class AdminController extends Controller
      */
     public function editDirectorySubscription(\App\Models\DirectorySubscription $subscription): View
     {
-        $subscription->loadMissing('plan', 'assignedBy');
+        $subscription->loadMissing('assignedBy');
 
-        $plans = Plan::where('is_active', true)->orderBy('price')->get();
         $universities = \App\Models\University::with('faculties.departments.studyPrograms')->orderBy('name')->get();
 
-        return view('admin.system.directory-subscriptions-edit', compact('subscription', 'plans', 'universities'));
+        return view('admin.system.directory-subscriptions-edit', compact('subscription', 'universities'));
     }
 
     /**
-     * Simpan perubahan langganan direktori (plan, ends_at, status).
+     * Simpan perubahan langganan direktori (pool storage, ends_at, status).
      * Scope tidak bisa diubah; tetap jalankan validasi no-overlap utk integritas.
      */
     public function updateDirectorySubscription(Request $request, \App\Models\DirectorySubscription $subscription): RedirectResponse
     {
         $validated = $request->validate([
-            'plan_id' => ['required', 'exists:plans,id'],
+            'storage_limit_mb' => ['required', 'integer', 'min:1', 'max:1048576'],
             'ends_at' => ['nullable', 'date', 'after:today'],
             'status' => ['required', 'in:active,expired,cancelled'],
         ]);
@@ -1213,7 +1212,7 @@ class AdminController extends Controller
         }
 
         $subscription->update([
-            'plan_id' => $validated['plan_id'],
+            'storage_limit_mb' => (int) $validated['storage_limit_mb'],
             'ends_at' => $validated['ends_at'] ?? null,
             'status' => $validated['status'],
         ]);
@@ -1222,7 +1221,7 @@ class AdminController extends Controller
             'subscription_id' => $subscription->id,
             'scope_type' => $subscription->scope_type,
             'scope_id' => (int) $subscription->scope_id,
-            'plan_id' => (int) $validated['plan_id'],
+            'storage_limit_mb' => (int) $validated['storage_limit_mb'],
             'status' => $validated['status'],
         ]);
 
@@ -1362,6 +1361,123 @@ class AdminController extends Controller
     }
 
     /**
+     * Form edit nama fakultas.
+     */
+    public function editDirectoryFaculty(\App\Models\Faculty $faculty): View
+    {
+        return view('admin.system.directory-node-edit', [
+            'node' => $faculty,
+            'title' => 'Edit Fakultas',
+            'route' => 'admin.system.directory.faculties.update',
+        ]);
+    }
+
+    /**
+     * Simpan perubahan nama fakultas.
+     */
+    public function updateDirectoryFaculty(Request $request, \App\Models\Faculty $faculty): RedirectResponse
+    {
+        $validated = $request->validate(['name' => ['required', 'string', 'max:255']]);
+
+        $duplicate = $faculty->university->faculties()
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($validated['name']))])
+            ->where('id', '!=', $faculty->id)
+            ->exists();
+        if ($duplicate) {
+            return back()->with('error', 'Nama fakultas sudah dipakai di universitas ini.');
+        }
+
+        $faculty->update(['name' => trim($validated['name'])]);
+
+        \App\Support\Audit::log('SysAdmin mengubah nama fakultas', [
+            'faculty_id' => $faculty->id,
+            'name' => $faculty->name,
+        ]);
+
+        return redirect()->route('admin.system.directory')->with('success', "Nama fakultas diperbarui menjadi '{$faculty->name}'.");
+    }
+
+    /**
+     * Form edit nama departemen.
+     */
+    public function editDirectoryDepartment(\App\Models\Department $department): View
+    {
+        return view('admin.system.directory-node-edit', [
+            'node' => $department,
+            'title' => 'Edit Departemen',
+            'route' => 'admin.system.directory.departments.update',
+        ]);
+    }
+
+    /**
+     * Simpan perubahan nama departemen.
+     */
+    public function updateDirectoryDepartment(Request $request, \App\Models\Department $department): RedirectResponse
+    {
+        $validated = $request->validate(['name' => ['required', 'string', 'max:255']]);
+
+        $duplicate = $department->faculty->departments()
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($validated['name']))])
+            ->where('id', '!=', $department->id)
+            ->exists();
+        if ($duplicate) {
+            return back()->with('error', 'Nama departemen sudah dipakai di fakultas ini.');
+        }
+
+        $department->update(['name' => trim($validated['name'])]);
+
+        \App\Support\Audit::log('SysAdmin mengubah nama departemen', [
+            'department_id' => $department->id,
+            'name' => $department->name,
+        ]);
+
+        return redirect()->route('admin.system.directory')->with('success', "Nama departemen diperbarui menjadi '{$department->name}'.");
+    }
+
+    /**
+     * Form edit nama prodi (+ kode).
+     */
+    public function editDirectoryStudyProgram(\App\Models\StudyProgram $studyProgram): View
+    {
+        return view('admin.system.directory-node-edit', [
+            'node' => $studyProgram,
+            'title' => 'Edit Program Studi',
+            'route' => 'admin.system.directory.study-programs.update',
+        ]);
+    }
+
+    /**
+     * Simpan perubahan nama/kode prodi.
+     */
+    public function updateDirectoryStudyProgram(Request $request, \App\Models\StudyProgram $studyProgram): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $duplicate = $studyProgram->department->studyPrograms()
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($validated['name']))])
+            ->where('id', '!=', $studyProgram->id)
+            ->exists();
+        if ($duplicate) {
+            return back()->with('error', 'Nama prodi sudah dipakai di departemen ini.');
+        }
+
+        $studyProgram->update([
+            'name' => trim($validated['name']),
+            'code' => $validated['code'] ?? null,
+        ]);
+
+        \App\Support\Audit::log('SysAdmin mengubah nama prodi', [
+            'study_program_id' => $studyProgram->id,
+            'name' => $studyProgram->name,
+        ]);
+
+        return redirect()->route('admin.system.directory')->with('success', "Nama prodi diperbarui menjadi '{$studyProgram->name}'.");
+    }
+
+    /**
      * Tambah fakultas di dalam universitas (dedup berdasarkan nama).
      */
     public function storeDirectoryFaculty(Request $request): RedirectResponse
@@ -1497,6 +1613,60 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', 'Pengaturan paket berhasil diperbarui.');
+    }
+
+    /**
+     * Tambah paket (plan) baru — system admin. Tidak lagi terbatas gratis/donasi.
+     */
+    public function storePlan(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:100', 'unique:plans,name'],
+            'label' => ['required', 'string', 'max:255'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'period' => ['required', 'in:daily,weekly,monthly,yearly,once'],
+            'storage_mb' => ['required', 'integer', 'min:0'],
+            'export' => ['nullable', 'boolean'],
+            'import' => ['nullable', 'boolean'],
+        ]);
+
+        Plan::create([
+            'name' => $validated['name'],
+            'label' => $validated['label'],
+            'price' => $validated['price'],
+            'period' => $validated['period'],
+            'features' => [
+                'storage_mb' => (int) $validated['storage_mb'],
+                'export' => (bool) ($validated['export'] ?? false),
+                'import' => (bool) ($validated['import'] ?? false),
+            ],
+            'is_active' => true,
+        ]);
+
+        \App\Support\Audit::log('SysAdmin menambah paket baru', [
+            'name' => $validated['name'],
+            'label' => $validated['label'],
+            'storage_mb' => (int) $validated['storage_mb'],
+        ]);
+
+        return back()->with('success', "Paket '{$validated['label']}' ditambahkan.");
+    }
+
+    /**
+     * Hapus paket — hanya jika tidak dipakai subscription apa pun.
+     */
+    public function destroyPlan(Plan $plan): RedirectResponse
+    {
+        if ($plan->subscriptions()->exists() || $plan->directorySubscriptions()->exists()) {
+            return back()->with('error', 'Paket tidak dapat dihapus karena masih dipakai.');
+        }
+
+        $name = $plan->label;
+        $plan->delete();
+
+        \App\Support\Audit::log('SysAdmin menghapus paket', ['name' => $name]);
+
+        return back()->with('success', "Paket '{$name}' dihapus.");
     }
 
     // ------------------------------------------------------- penamaan program (TA/KP)
@@ -1731,8 +1901,9 @@ class AdminController extends Controller
     public function systemSettings(): View
     {
         $institution = Institution::current();
+        $plans = Plan::orderBy('price')->get();
 
-        return view('admin.system.settings', compact('institution'));
+        return view('admin.system.settings', compact('institution', 'plans'));
     }
 
     /**

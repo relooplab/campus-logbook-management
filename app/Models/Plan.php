@@ -33,6 +33,11 @@ class Plan extends Model
         return $this->hasMany(Subscription::class);
     }
 
+    public function directorySubscriptions(): HasMany
+    {
+        return $this->hasMany(DirectorySubscription::class);
+    }
+
     /**
      * Ambil fitur dari plan (array). Default: free.
      */

@@ -352,6 +352,8 @@ Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])
             Route::post('/users/{user}/plan', [AdminController::class, 'updatePlanSettings'])->name('users.plan.update');
             Route::post('/users/{user}/quota', [AdminController::class, 'updateUserQuota'])->name('users.quota');
             Route::post('/plans', [AdminController::class, 'updatePlanFeatures'])->name('plans.update');
+            Route::post('/plans/create', [AdminController::class, 'storePlan'])->name('plans.store');
+            Route::delete('/plans/{plan}', [AdminController::class, 'destroyPlan'])->name('plans.destroy');
 
             // Ubah institusi user — aksi platform-level, hanya system admin.
             // (Tadi route ini ada di grup `permission:admin.users` sehingga admin
@@ -385,8 +387,14 @@ Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])
         Route::get('/directory/universities/{university}/edit', [AdminController::class, 'editDirectoryUniversity'])->name('directory.universities.edit');
         Route::put('/directory/universities/{university}', [AdminController::class, 'updateDirectoryUniversity'])->name('directory.universities.update');
         Route::post('/directory/faculties', [AdminController::class, 'storeDirectoryFaculty'])->name('directory.faculties.store');
+        Route::get('/directory/faculties/{faculty}/edit', [AdminController::class, 'editDirectoryFaculty'])->name('directory.faculties.edit');
+        Route::put('/directory/faculties/{faculty}', [AdminController::class, 'updateDirectoryFaculty'])->name('directory.faculties.update');
         Route::post('/directory/departments', [AdminController::class, 'storeDirectoryDepartment'])->name('directory.departments.store');
+        Route::get('/directory/departments/{department}/edit', [AdminController::class, 'editDirectoryDepartment'])->name('directory.departments.edit');
+        Route::put('/directory/departments/{department}', [AdminController::class, 'updateDirectoryDepartment'])->name('directory.departments.update');
         Route::post('/directory/study-programs', [AdminController::class, 'storeDirectoryStudyProgram'])->name('directory.study-programs.store');
+        Route::get('/directory/study-programs/{studyProgram}/edit', [AdminController::class, 'editDirectoryStudyProgram'])->name('directory.study-programs.edit');
+        Route::put('/directory/study-programs/{studyProgram}', [AdminController::class, 'updateDirectoryStudyProgram'])->name('directory.study-programs.update');
 
         // Kuota storage langsung per institusi (system admin).
         Route::get('/institution-quotas', [AdminController::class, 'institutionQuotas'])->name('institution-quotas');

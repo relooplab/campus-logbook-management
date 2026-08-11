@@ -222,7 +222,7 @@ class Feature
                     // Dedup: kalau 2 afiliasi resolve ke subscription yang sama, jangan dobel hitung.
                     if (!in_array($sub->id, $resolvedSubscriptionIds, true)) {
                         $resolvedSubscriptionIds[] = $sub->id;
-                        $total += $sub->plan->storageLimitMb();
+                        $total += $sub->poolLimitMb();
                     }
                     break; // sudah ketemu di rantai ini, tidak perlu naik lebih tinggi
                 }
@@ -319,7 +319,7 @@ class Feature
                 if ($sub) {
                     if (!in_array($sub->id, $resolvedSubscriptionIds, true)) {
                         $resolvedSubscriptionIds[] = $sub->id;
-                        $total += $sub->plan->storageLimitMb();
+                        $total += $sub->poolLimitMb();
                     }
                     break;
                 }

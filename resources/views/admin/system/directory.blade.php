@@ -32,6 +32,7 @@
                                 <span class="inline-block px-2 py-0.5 rounded-full text-[10px] bg-bg-panel">Fakultas</span>
                                 <h3 class="font-medium text-text-primary">{{ $faculty->name }}</h3>
                                 <span class="text-xs text-text-secondary">#{{ $faculty->id }}</span>
+                                <a href="{{ route('admin.system.directory.faculties.edit', $faculty) }}" class="text-xs text-brand hover:underline ml-1">Edit</a>
                             </div>
 
                             @foreach ($faculty->departments as $dept)
@@ -40,6 +41,7 @@
                                         <span class="inline-block px-2 py-0.5 rounded-full text-[10px] bg-bg-panel">Departemen</span>
                                         <h4 class="text-sm font-semibold text-text-secondary">{{ $dept->name }}</h4>
                                         <span class="text-xs text-text-secondary">#{{ $dept->id }}</span>
+                                        <a href="{{ route('admin.system.directory.departments.edit', $dept) }}" class="text-xs text-brand hover:underline ml-1">Edit</a>
                                     </div>
 
                                     @if ($dept->studyPrograms->isNotEmpty())
@@ -52,6 +54,7 @@
                                                         <span class="text-xs text-text-secondary">({{ $prodi->code }})</span>
                                                     @endif
                                                     <span class="text-xs text-text-secondary">#{{ $prodi->id }}</span>
+                                                    <a href="{{ route('admin.system.directory.study-programs.edit', $prodi) }}" class="text-xs text-brand hover:underline">Edit</a>
                                                 </li>
                                             @endforeach
                                         </ul>

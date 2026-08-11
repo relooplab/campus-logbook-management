@@ -85,14 +85,14 @@
                     <label class="block text-sm mb-1">Scope Admin (opsional)</label>
                     <p class="text-xs text-text-secondary mb-2">Jika dikosongkan, admin TIDAK dapat melihat/mengelola data dosen & mahasiswa (locked). Pilih universitas/fakultas/departemen/prodi untuk membatasi cakupan.</p>
                     <div id="scope-list" class="space-y-2">
-                        <div class="flex gap-2">
-                            <select name="scopes[0][scope_type]" class="scope-type w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <div class="flex flex-wrap gap-2">
+                            <select name="scopes[0][scope_type]" class="scope-type w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                                 <option value="university">Universitas</option>
                                 <option value="faculty">Fakultas</option>
                                 <option value="department">Departemen</option>
                                 <option value="study_program">Prodi</option>
                             </select>
-                            <input type="number" name="scopes[0][scope_id]" placeholder="ID node" class="w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            <select name="scopes[0][scope_id]" class="scope-node w-full sm:flex-1 min-w-[220px] rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"></select>
                             <button type="button" class="remove-scope px-2 py-2 rounded-md bg-status-danger/10 text-status-danger text-xs">Hapus</button>
                         </div>
                     </div>
@@ -138,25 +138,59 @@
             if (e.target === modal) modal.classList.add('hidden');
         });
 
-        // Scope admin dynamic rows.
+        // Scope admin dynamic rows + hierarchy dropdown (universitas/fakultas/dept/prodi).
         var scopeList = document.getElementById('scope-list');
         var addScopeBtn = document.getElementById('add-scope');
         if (scopeList && addScopeBtn) {
+            var tree = @json($universities);
             var scopeIndex = 1;
-            addScopeBtn.addEventListener('click', function() {
+
+            function makeRow(index, type) {
                 var row = document.createElement('div');
-                row.className = 'flex gap-2';
-                row.innerHTML = '<select name="scopes[' + scopeIndex + '][scope_type]" class="scope-type w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">' +
+                row.className = 'flex flex-wrap gap-2 items-center';
+                row.innerHTML =
+                    '<select name="scopes[' + index + '][scope_type]" class="scope-type w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">' +
                     '<option value="university">Universitas</option>' +
                     '<option value="faculty">Fakultas</option>' +
                     '<option value="department">Departemen</option>' +
                     '<option value="study_program">Prodi</option></select>' +
-                    '<input type="number" name="scopes[' + scopeIndex + '][scope_id]" placeholder="ID node" class="w-1/3 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">' +
+                    '<select name="scopes[' + index + '][scope_id]" class="scope-node w-full sm:flex-1 min-w-[220px] rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"></select>' +
                     '<button type="button" class="remove-scope px-2 py-2 rounded-md bg-status-danger/10 text-status-danger text-xs">Hapus</button>';
                 scopeList.appendChild(row);
+
+                var typeEl = row.querySelector('.scope-type');
+                var nodeEl = row.querySelector('.scope-node');
+                if (type) { typeEl.value = type; }
+
+                function refreshNodes() {
+                    var t = typeEl.value;
+                    nodeEl.innerHTML = '';
+                    if (t === 'university') {
+                        tree.forEach(function (u) { var o = document.createElement('option'); o.value = u.id; o.textContent = u.name; nodeEl.appendChild(o); });
+                    } else if (t === 'faculty') {
+                        tree.forEach(function (u) { (u.faculties || []).forEach(function (f) { var o = document.createElement('option'); o.value = f.id; o.textContent = u.name + ' → ' + f.name; nodeEl.appendChild(o); }); });
+                    } else if (t === 'department') {
+                        tree.forEach(function (u) { (u.faculties || []).forEach(function (f) { (f.departments || []).forEach(function (d) { var o = document.createElement('option'); o.value = d.id; o.textContent = u.name + ' → ' + f.name + ' → ' + d.name; nodeEl.appendChild(o); }); }); });
+                    } else if (t === 'study_program') {
+                        tree.forEach(function (u) { (u.faculties || []).forEach(function (f) { (f.departments || []).forEach(function (d) { (d.study_programs || []).forEach(function (p) { var o = document.createElement('option'); o.value = p.id; o.textContent = u.name + ' → ' + f.name + ' → ' + d.name + ' → ' + p.name; nodeEl.appendChild(o); }); }); }); });
+                    }
+                }
+                typeEl.addEventListener('change', refreshNodes);
+                refreshNodes();
+
+                row.querySelector('.remove-scope').addEventListener('click', function () { row.remove(); });
+            }
+
+            // Render row awal (index 0) supaya dropdown otomatis terisi dari tree.
+            scopeList.innerHTML = '';
+            makeRow(0, 'university');
+
+            addScopeBtn.addEventListener('click', function () {
+                makeRow(scopeIndex, 'university');
                 scopeIndex++;
             });
-            scopeList.addEventListener('click', function(e) {
+
+            scopeList.addEventListener('click', function (e) {
                 if (e.target.classList.contains('remove-scope')) {
                     e.target.closest('.flex').remove();
                 }

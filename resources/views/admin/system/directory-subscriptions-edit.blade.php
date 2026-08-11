@@ -30,13 +30,11 @@
             @method('PUT')
 
             <div>
-                <label class="block text-sm mb-1">Plan</label>
-                <select name="plan_id" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                    @foreach ($plans as $plan)
-                        <option value="{{ $plan->id }}" @selected(old('plan_id', $subscription->plan_id) == $plan->id)>{{ $plan->label }} ({{ $plan->storageLimitMb() }} MB)</option>
-                    @endforeach
-                </select>
-                @error('plan_id')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
+                <label class="block text-sm mb-1">Pool Kuota (MB) — input bebas</label>
+                <input type="number" name="storage_limit_mb" min="1" max="1048576" required value="{{ old('storage_limit_mb', $subscription->storage_limit_mb) }}"
+                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                <p class="text-xs text-text-secondary mt-1">Nilai pool langsung, tidak terikat plan.</p>
+                @error('storage_limit_mb')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
             </div>
 
             <div>

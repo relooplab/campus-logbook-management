@@ -29,7 +29,7 @@
                 <thead>
                     <tr class="text-left text-text-secondary border-b border-border">
                         <th class="py-3 px-4">Scope</th>
-                        <th class="py-3 px-4">Plan</th>
+                        <th class="py-3 px-4">Pool Kuota</th>
                         <th class="py-3 px-4">Status</th>
                         <th class="py-3 px-4">Mulai &amp; Berakhir</th>
                         <th class="py-3 px-4">Dibuat oleh</th>
@@ -46,7 +46,9 @@
                                     <span class="text-xs text-text-secondary">#{{ $sub->scope_id }}</span>
                                 </div>
                             </td>
-                            <td class="py-3 px-4">{{ $sub->plan?->label ?? '—' }} ({{ $sub->plan?->storageLimitMb() ?? 0 }} MB)</td>
+                            <td class="py-3 px-4">
+                                <span class="text-text-primary font-medium">{{ number_format($sub->poolLimitMb()) }} MB</span>
+                            </td>
                             <td class="py-3 px-4">
                                 <span class="inline-block px-2 py-0.5 rounded-full text-xs {{ $sub->isActive() ? 'bg-status-success/10 text-status-success' : 'bg-status-danger/10 text-status-danger' }}">
                                     {{ ucfirst($sub->status) }}
@@ -120,12 +122,11 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm mb-1">Plan</label>
-                    <select name="plan_id" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                        @foreach ($plans as $plan)
-                            <option value="{{ $plan->id }}">{{ $plan->label }} ({{ $plan->storageLimitMb() }} MB)</option>
-                        @endforeach
-                    </select>
+                    <label class="block text-sm mb-1">Pool Kuota (MB) — input bebas</label>
+                    <input type="number" name="storage_limit_mb" min="1" max="1048576" required
+                        placeholder="mis. 5120"
+                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <p class="text-xs text-text-secondary mt-1">Nilai pool langsung, tidak terikat plan.</p>
                 </div>
 
                 <div>

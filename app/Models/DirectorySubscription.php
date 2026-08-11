@@ -29,6 +29,7 @@ class DirectorySubscription extends Model
         'scope_type',
         'scope_id',
         'plan_id',
+        'storage_limit_mb',
         'status',
         'starts_at',
         'ends_at',
@@ -46,6 +47,19 @@ class DirectorySubscription extends Model
     public function plan(): BelongsTo
     {
         return $this->belongsTo(Plan::class);
+    }
+
+    /**
+     * Pool kuota yang dikontribusikan subscription ini (MB).
+     * Prioritas: storage_limit_mb (input langsung) -> plan.storage_mb (fallback).
+     */
+    public function poolLimitMb(): int
+    {
+        if ($this->storage_limit_mb !== null) {
+            return (int) $this->storage_limit_mb;
+        }
+
+        return (int) ($this->plan?->storageLimitMb() ?? 0);
     }
 
     public function assignedBy(): BelongsTo

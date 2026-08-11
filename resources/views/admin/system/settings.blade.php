@@ -108,6 +108,98 @@
             </button>
         </form>
     </div>
+
+    {{-- ===== Pengaturan Fitur Paket (dipindah dari hak akses) ===== --}}
+    <div class="bg-bg-surface rounded-xl border border-border p-6">
+        <h2 class="font-semibold mb-1">Pengaturan Fitur Paket</h2>
+        <p class="text-sm text-text-secondary mb-4">Atur batas penyimpanan &amp; fitur export/import per paket, atau tambah paket baru.</p>
+
+        <div class="space-y-3 mb-6">
+            @foreach ($plans as $plan)
+                <div class="rounded-xl border border-border bg-bg-panel p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <span class="font-semibold text-text-primary">{{ $plan->name }}</span>
+                        <span class="text-xs text-text-secondary">{{ $plan->is_active ? 'Aktif' : 'Nonaktif' }}</span>
+                    </div>
+                    <form method="POST" action="{{ route('admin.system.plans.update') }}">
+                        @csrf
+                        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-xs text-text-secondary mb-1">Label</label>
+                                <input type="text" name="plans[{{ $plan->id }}][label]" value="{{ $plan->label }}"
+                                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-text-secondary mb-1">Harga (Rp)</label>
+                                <input type="number" name="plans[{{ $plan->id }}][price]" value="{{ $plan->price }}" min="0"
+                                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-text-secondary mb-1">Storage (MB)</label>
+                                <input type="number" name="plans[{{ $plan->id }}][storage_mb]" value="{{ $plan->storageLimitMb() }}" min="0"
+                                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                            </div>
+                            <div class="flex items-end justify-between gap-3 pb-1">
+                                <label class="flex items-center gap-2 text-sm">
+                                    <input type="checkbox" name="plans[{{ $plan->id }}][export]" value="1" @checked($plan->feature('export', false)) class="rounded bg-bg-surface border-border"> Export
+                                </label>
+                                <label class="flex items-center gap-2 text-sm">
+                                    <input type="checkbox" name="plans[{{ $plan->id }}][import]" value="1" @checked($plan->feature('import', false)) class="rounded bg-bg-surface border-border"> Import
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-center gap-3">
+                            <button type="submit" class="px-3 py-1.5 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan</button>
+                            <form method="POST" action="{{ route('admin.system.plans.destroy', $plan) }}" class="inline" onsubmit="return confirm('Hapus paket ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button class="text-status-danger hover:underline text-xs">Hapus</button>
+                            </form>
+                        </div>
+                    </form>
+                </div>
+            @endforeach
+        </div>
+
+        {{-- Form tambah paket --}}
+        <div class="border-t border-border pt-4">
+            <h3 class="text-sm font-semibold mb-3">Tambah Paket Baru</h3>
+            <form method="POST" action="{{ route('admin.system.plans.store') }}" class="space-y-3">
+                @csrf
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs text-text-secondary mb-1">Nama (slug)</label>
+                        <input type="text" name="name" placeholder="mis. pro" required class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-text-secondary mb-1">Label</label>
+                        <input type="text" name="label" placeholder="mis. Pro" required class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-text-secondary mb-1">Harga (Rp)</label>
+                        <input type="number" name="price" min="0" required class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-text-secondary mb-1">Periode</label>
+                        <select name="period" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                            @foreach (['monthly' => 'Bulanan', 'yearly' => 'Tahunan', 'daily' => 'Harian', 'weekly' => 'Mingguan', 'once' => 'Sekali'] as $val => $label)
+                                <option value="{{ $val }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-text-secondary mb-1">Storage (MB)</label>
+                        <input type="number" name="storage_mb" min="0" required class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                    </div>
+                    <div class="flex items-end gap-4 pb-1">
+                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="export" value="1" class="rounded bg-bg-surface border-border"> Export</label>
+                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="import" value="1" class="rounded bg-bg-surface border-border"> Import</label>
+                    </div>
+                </div>
+                <button type="submit" class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">+ Tambah Paket</button>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection
 

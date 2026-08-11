@@ -75,7 +75,7 @@ class DirectoryEditTest extends AuditSmokeTest
         $sub = DirectorySubscription::create([
             'scope_type' => DirectorySubscription::SCOPE_STUDY_PROGRAM,
             'scope_id' => $this->prodi->id,
-            'plan_id' => $this->planA->id,
+            'storage_limit_mb' => 5120,
             'status' => DirectorySubscription::STATUS_ACTIVE,
             'starts_at' => now(),
             'ends_at' => now()->addMonth(),
@@ -89,12 +89,12 @@ class DirectoryEditTest extends AuditSmokeTest
         $response->assertSee($this->prodi->name); // scope name rendered
     }
 
-    public function test_update_changes_plan_ends_at_and_status(): void
+    public function test_update_changes_pool_ends_at_and_status(): void
     {
         $sub = DirectorySubscription::create([
             'scope_type' => DirectorySubscription::SCOPE_STUDY_PROGRAM,
             'scope_id' => $this->prodi->id,
-            'plan_id' => $this->planA->id,
+            'storage_limit_mb' => 5120,
             'status' => DirectorySubscription::STATUS_ACTIVE,
             'starts_at' => now(),
             'ends_at' => now()->addMonth(),
@@ -104,7 +104,7 @@ class DirectoryEditTest extends AuditSmokeTest
 
         $response = $this->actingAs($this->systemAdmin())
             ->put(route('admin.system.directory-subscriptions.update', $sub), [
-                'plan_id' => $this->planB->id,
+                'storage_limit_mb' => 10240,
                 'ends_at' => $newEnd,
                 'status' => 'cancelled',
             ]);
@@ -113,30 +113,30 @@ class DirectoryEditTest extends AuditSmokeTest
         $response->assertSessionHas('success');
 
         $sub->refresh();
-        $this->assertSame((int) $this->planB->id, (int) $sub->plan_id);
+        $this->assertSame(10240, (int) $sub->storage_limit_mb);
         $this->assertSame('cancelled', $sub->status);
         $this->assertNotNull($sub->ends_at);
         $this->assertSame($newEnd, $sub->ends_at->format('Y-m-d'));
     }
 
-    public function test_update_with_invalid_plan_fails(): void
+    public function test_update_with_invalid_pool_fails(): void
     {
         $sub = DirectorySubscription::create([
             'scope_type' => DirectorySubscription::SCOPE_STUDY_PROGRAM,
             'scope_id' => $this->prodi->id,
-            'plan_id' => $this->planA->id,
+            'storage_limit_mb' => 5120,
             'status' => DirectorySubscription::STATUS_ACTIVE,
             'starts_at' => now(),
         ]);
 
         $response = $this->actingAs($this->systemAdmin())
             ->put(route('admin.system.directory-subscriptions.update', $sub), [
-                'plan_id' => 999999,
+                'storage_limit_mb' => 0,
                 'ends_at' => null,
                 'status' => 'active',
             ]);
 
-        $response->assertSessionHasErrors('plan_id');
+        $response->assertSessionHasErrors('storage_limit_mb');
     }
 
     public function test_update_rejected_when_no_overlap_conflict(): void
@@ -145,7 +145,7 @@ class DirectoryEditTest extends AuditSmokeTest
         $parentSub = DirectorySubscription::create([
             'scope_type' => DirectorySubscription::SCOPE_FACULTY,
             'scope_id' => $this->faculty->id,
-            'plan_id' => $this->planA->id,
+            'storage_limit_mb' => 5120,
             'status' => DirectorySubscription::STATUS_ACTIVE,
             'starts_at' => now(),
         ]);
@@ -154,14 +154,14 @@ class DirectoryEditTest extends AuditSmokeTest
         $childSub = DirectorySubscription::create([
             'scope_type' => DirectorySubscription::SCOPE_STUDY_PROGRAM,
             'scope_id' => $this->prodi->id,
-            'plan_id' => $this->planA->id,
+            'storage_limit_mb' => 5120,
             'status' => 'cancelled',
             'starts_at' => now(),
         ]);
 
         $response = $this->actingAs($this->systemAdmin())
             ->put(route('admin.system.directory-subscriptions.update', $childSub), [
-                'plan_id' => $this->planA->id,
+                'storage_limit_mb' => 5120,
                 'ends_at' => null,
                 'status' => 'active',
             ]);
@@ -176,7 +176,7 @@ class DirectoryEditTest extends AuditSmokeTest
         $sub = DirectorySubscription::create([
             'scope_type' => DirectorySubscription::SCOPE_STUDY_PROGRAM,
             'scope_id' => $this->prodi->id,
-            'plan_id' => $this->planA->id,
+            'storage_limit_mb' => 5120,
             'status' => DirectorySubscription::STATUS_ACTIVE,
             'starts_at' => now(),
         ]);
@@ -189,7 +189,7 @@ class DirectoryEditTest extends AuditSmokeTest
 
         $put = $this->actingAs($this->admin)
             ->put(route('admin.system.directory-subscriptions.update', $sub), [
-                'plan_id' => $this->planA->id,
+                'storage_limit_mb' => 5120,
                 'ends_at' => null,
                 'status' => 'cancelled',
             ]);
