@@ -1,3 +1,11 @@
+# [0.43.0](https://github.com/relooplab/campus-logbook-management/compare/v0.42.0...v0.43.0) (2026-08-11)
+
+
+### Features
+
+* antrean review bahan, alur seminar per fase, dan balasan komentar PDF dosen ([5a86161](https://github.com/relooplab/campus-logbook-management/commit/5a86161c41c6cb3cd1f262c85ac8524f11ce9f4a))
+* navigasi balik sesi & daftar komentar PDF dengan link lompat ke anotasi ([16bfdfb](https://github.com/relooplab/campus-logbook-management/commit/16bfdfb01f4c325ccf4f3a69d442337e7ee23ccc))
+
 # [0.42.0](https://github.com/relooplab/campus-logbook-management/compare/v0.41.0...v0.42.0) (2026-08-11)
 
 
