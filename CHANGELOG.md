@@ -1,3 +1,10 @@
+# [0.38.0](https://github.com/relooplab/campus-logbook-management/compare/v0.37.0...v0.38.0) (2026-08-11)
+
+
+### Features
+
+* rename users.identifier to nim with NIM/NIDN uniqueness, promote next primary affiliation ([2ecf7f6](https://github.com/relooplab/campus-logbook-management/commit/2ecf7f68a5a99ec60458f34b77c82900ddce8cb5))
+
 # [0.37.0](https://github.com/relooplab/campus-logbook-management/compare/v0.36.0...v0.37.0) (2026-08-11)
 
 
