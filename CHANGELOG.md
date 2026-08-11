@@ -1,3 +1,11 @@
+# [0.39.0](https://github.com/relooplab/campus-logbook-management/compare/v0.38.0...v0.39.0) (2026-08-11)
+
+
+### Features
+
+* login & password reset by NIM/NIDN, NIM required on register, affiliation autocomplete, drop legacy quota override ([6fbf3a2](https://github.com/relooplab/campus-logbook-management/commit/6fbf3a2ac0ea872bfc8903ca3668e706c6377242))
+* **system:** pool kuota institusi input langsung + plan CRUD + edit node direktori + dropdown hierarki admin ([ac1ed17](https://github.com/relooplab/campus-logbook-management/commit/ac1ed179e64b4ffb4535fb8f080f2f915d3342fb))
+
 # [0.38.0](https://github.com/relooplab/campus-logbook-management/compare/v0.37.0...v0.38.0) (2026-08-11)
 
 
