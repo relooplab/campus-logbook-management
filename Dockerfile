@@ -8,6 +8,8 @@ COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund
 # Fix #1: COPY file & direktori dipisah agar tidak ambigu.
 COPY vite.config.js ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
 COPY resources ./resources
 COPY public/pdfjs ./public/pdfjs
 RUN npm run build
