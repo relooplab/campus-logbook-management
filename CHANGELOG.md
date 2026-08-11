@@ -1,3 +1,10 @@
+# [0.44.0](https://github.com/relooplab/campus-logbook-management/compare/v0.43.0...v0.44.0) (2026-08-11)
+
+
+### Features
+
+* tampilkan rincian kuota terpakai / tersedia / sisa di halaman storage ([abdb2c7](https://github.com/relooplab/campus-logbook-management/commit/abdb2c7be58ac52586a6b77b8a739f6f14c9a216))
+
 # [0.43.0](https://github.com/relooplab/campus-logbook-management/compare/v0.42.0...v0.43.0) (2026-08-11)
 
 
