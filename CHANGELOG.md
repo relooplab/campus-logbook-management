@@ -1,3 +1,19 @@
+# [0.42.0](https://github.com/relooplab/campus-logbook-management/compare/v0.41.0...v0.42.0) (2026-08-11)
+
+
+### Bug Fixes
+
+* build stage assets menyalin tailwind.postcss.config.js ([a91d613](https://github.com/relooplab/campus-logbook-management/commit/a91d61346dbff7326b381709be0fb7318f2a2480))
+* cegah double-submit upload file workspace personal ([0a9f9e9](https://github.com/relooplab/campus-logbook-management/commit/0a9f9e9686eb3eb9f51643b09e1e62b2ebe16697))
+* gunakan [@isset](https://github.com/isset) untuk subtitle/actions di komponen page-header ([c0f6bec](https://github.com/relooplab/campus-logbook-management/commit/c0f6bec61144809a58b576d712efd84876026f5e))
+
+
+### Features
+
+* konsistensi layout halaman - komponen page-header, meta-grid, dosen at-a-glance, dua kolom ([f18d1c2](https://github.com/relooplab/campus-logbook-management/commit/f18d1c2a67fc9ec9960a7ceea1ea37b39f638ac5))
+* redesign sidebar - satu brand konteks, grouping, signature clock, tooltip collapse ([d92d17a](https://github.com/relooplab/campus-logbook-management/commit/d92d17a911742423f55d516fa1ff12d345041610))
+* UX overhaul - vite build CSS, konsistensi design system, peningkatan aksesibilitas ([fe44612](https://github.com/relooplab/campus-logbook-management/commit/fe44612ace80d2c8045daa363291f08c623bb067))
+
 # [0.41.0](https://github.com/relooplab/campus-logbook-management/compare/v0.40.0...v0.41.0) (2026-08-11)
 
 
