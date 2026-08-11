@@ -1241,71 +1241,6 @@ class AdminController extends Controller
     }
 
     /**
-     * Halaman kuota storage per institusi (system admin).
-     * Tampilkan semua institusi: nama, kuota efektif (override atau dari
-     * subscription), pemakaian aktual (MB, di-cache singkat), input override.
-     */
-    public function institutionQuotas(): View
-    {
-        $institutions = \App\Models\Institution::orderBy('institution_name')->get();
-
-        $rows = $institutions->map(function ($inst) {
-            $effectiveMb = Feature::institutionStorageLimitMb((int) $inst->id);
-            $usedMb = $this->cachedInstitutionUsedMb((int) $inst->id);
-
-            return [
-                'id' => $inst->id,
-                'name' => $inst->institution_name,
-                'storage_limit_mb' => $inst->storage_limit_mb,
-                'effective_mb' => $effectiveMb,
-                'used_mb' => $usedMb,
-            ];
-        });
-
-        return view('admin.system.institution-quotas', compact('rows'));
-    }
-
-    /**
-     * Simpan override kuota storage per institusi.
-     */
-    public function updateInstitutionQuota(Request $request, \App\Models\Institution $institution): RedirectResponse
-    {
-        abort_unless(auth()->user()->isSystemAdmin(), 403, 'Hanya System Admin yang dapat mengatur kuota institusi.');
-
-        $validated = $request->validate([
-            'storage_limit_mb' => ['nullable', 'integer', 'min:0', 'max:1048576'],
-        ]);
-
-        // null/0 = auto (ikuti subscription); > 0 = override pool langsung.
-        $institution->update([
-            'storage_limit_mb' => (! empty($validated['storage_limit_mb']) && $validated['storage_limit_mb'] > 0)
-                ? (int) $validated['storage_limit_mb']
-                : null,
-        ]);
-        \App\Models\Institution::flush($institution->id);
-
-        \App\Support\Audit::log('SysAdmin mengatur kuota storage institusi', [
-            'institution_id' => $institution->id,
-            'storage_limit_mb' => $validated['storage_limit_mb'] ?? null,
-        ]);
-
-        return back()->with('success', "Kuota institusi '{$institution->institution_name}' diperbarui.");
-    }
-
-    /**
-     * Pemakaian storage institusi (MB), di-cache singkat (5 menit) agar render
-     * tabel banyak institusi tidak melakukan loop N+1 per request.
-     */
-    private function cachedInstitutionUsedMb(int $institutionId): int
-    {
-        return \Illuminate\Support\Facades\Cache::remember(
-            'institution.used-mb.'.$institutionId,
-            now()->addMinutes(5),
-            fn () => Feature::institutionStorageUsedMb($institutionId)
-        );
-    }
-
-    /**
      * Tambah universitas (dedup berdasarkan nama).
      */
     public function storeDirectoryUniversity(Request $request): RedirectResponse
@@ -1657,6 +1592,10 @@ class AdminController extends Controller
      */
     public function destroyPlan(Plan $plan): RedirectResponse
     {
+        // Cek pemakaian nyata: (1) user menyandang plan ini sebagai langganan
+        // individu, (2) directory_subscriptions lawas yang mereferensikan plan_id.
+        // Subscription direktori baru memakai storage_limit_mb langsung (plan_id
+        // null) dan TIDAK bergantung pada plan, jadi tidak menghalangi penghapusan.
         if ($plan->subscriptions()->exists() || $plan->directorySubscriptions()->exists()) {
             return back()->with('error', 'Paket tidak dapat dihapus karena masih dipakai.');
         }

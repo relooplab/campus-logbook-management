@@ -36,7 +36,8 @@ class RegisterController extends Controller
             'password' => ['required', 'string', 'min:6', 'confirmed'],
             'role' => ['required', 'in:mahasiswa,dosen'],
             // Identitas: NIDN untuk dosen, NIM untuk mahasiswa (unik lintas kolom).
-            'nim' => ['nullable', 'string', 'max:30', function ($attr, $value, $fail) {
+            // NIM wajib untuk mahasiswa (konsisten dengan updateProfile).
+            'nim' => ['required_if:role,mahasiswa', 'string', 'max:30', function ($attr, $value, $fail) {
                 if ($value && User::identifierIsTaken($value)) {
                     $fail('NIM/NIDN ini sudah dipakai akun lain.');
                 }

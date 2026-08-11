@@ -396,10 +396,6 @@ Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])
         Route::get('/directory/study-programs/{studyProgram}/edit', [AdminController::class, 'editDirectoryStudyProgram'])->name('directory.study-programs.edit');
         Route::put('/directory/study-programs/{studyProgram}', [AdminController::class, 'updateDirectoryStudyProgram'])->name('directory.study-programs.update');
 
-        // Kuota storage langsung per institusi (system admin).
-        Route::get('/institution-quotas', [AdminController::class, 'institutionQuotas'])->name('institution-quotas');
-        Route::post('/institution-quotas/{institution}', [AdminController::class, 'updateInstitutionQuota'])->name('institution-quotas.update');
-
         // Backup & restore seluruh sistem: sengaja hanya digerbangi
         // role:system_admin (bukan permission tambahan) — alasan sama dengan
         // "Kelola Hak Akses" di atas, bahkan lebih kuat di sini karena aksi

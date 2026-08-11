@@ -21,6 +21,30 @@
 
     <form method="POST" action="{{ route("register") }}" class="space-y-4"> @csrf <input type="hidden" name="role"
             id="role-input" value="mahasiswa">
+        {{-- ===== Opsi khusus mahasiswa (NIM) — data instansi diisi di halaman profil ===== --}}
+        <div id="mahasiswa-nim-section" class="hidden space-y-2">
+            <div>
+                <label class="block text-sm font-medium mb-1" for="nim">NIM</label>
+                <input type="text" name="nim" id="nim" value="{{ old("nim") }}" placeholder="Nomor Induk Mahasiswa"
+                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                @error('nim')
+                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
+        {{-- ===== Opsi khusus dosen (NIDN) — data instansi diisi di halaman profil ===== --}}
+        <div id="dosen-directory-section" class="hidden space-y-2">
+            <div>
+                <label class="block text-sm font-medium mb-1" for="nidn">NIDN</label>
+                <input type="text" name="nidn" id="nidn" value="{{ old("nidn") }}" placeholder="Nomor Induk Dosen Nasional"
+                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                @error('nidn')
+                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
         <div> <label class="block text-sm font-medium mb-1" for="name">Nama</label> <input type="text" name="name"
                 id="name" required value="{{ old("name") }}"
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
@@ -33,33 +57,6 @@
         <div> <label class="block text-sm font-medium mb-1" for="password_confirmation">Konfirmasi Kata Sandi</label> <input
                 type="password" name="password_confirmation" id="password_confirmation" required minlength="6"
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
-
-        {{-- ===== Opsi khusus mahasiswa (NIM) — data instansi diisi di halaman profil ===== --}}
-        <div id="mahasiswa-nim-section" class="hidden space-y-2 border-t border-border pt-3">
-            <p class="text-sm font-medium text-text-primary">NIM</p>
-            <div>
-                <label class="block text-sm font-medium mb-1" for="nim">NIM</label>
-                <input type="text" name="nim" id="nim" value="{{ old("nim") }}" placeholder="Nomor Induk Mahasiswa"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                @error('nim')
-                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-        </div>
-
-        {{-- ===== Opsi khusus dosen (NIDN) — data instansi diisi di halaman profil ===== --}}
-        <div id="dosen-directory-section" class="hidden space-y-2 border-t border-border pt-3">
-            <p class="text-sm font-medium text-text-primary">NIDN</p>
-            <p class="text-xs text-text-secondary">Data institusi (perguruan tinggi / fakultas / departemen / program studi) akan Anda isi setelah aktif di halaman profil.</p>
-            <div>
-                <label class="block text-sm font-medium mb-1" for="nidn">NIDN</label>
-                <input type="text" name="nidn" id="nidn" value="{{ old("nidn") }}" placeholder="Nomor Induk Dosen Nasional"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                @error('nidn')
-                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-        </div>
 
         <button type="submit"
             class="w-full rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] py-2 text-sm font-semibold">Daftar</button>

@@ -346,7 +346,44 @@ class ProfileController extends Controller
             ];
         });
 
-        return view('profile.affiliation', ['user' => $user, 'affiliations' => $universities]);
+        // Direktori lengkap — sumber autocomplete pada form "Tambah / Ubah Afiliasi".
+        $directory = University::orderBy('name')->with('faculties.departments.studyPrograms')->get();
+
+        // Pohon autocomplete (nama saja) untuk JS — di-encode di PHP agar tidak
+        // bergantung pada parsing @json dengan closure di dalamnya.
+        $autocompleteTree = $directory->map(function ($u) {
+            return [
+                'name' => $u->name,
+                'faculties' => $u->faculties->map(function ($f) {
+                    return [
+                        'name' => $f->name,
+                        'departments' => $f->departments->map(function ($d) {
+                            return [
+                                'name' => $d->name,
+                                'prodis' => $d->studyPrograms->pluck('name')->values(),
+                            ];
+                        })->values(),
+                    ];
+                })->values(),
+            ];
+        })->values();
+
+        // Nilai afiliasi primer saat ini untuk pre-fill form (jika sudah ada).
+        $primary = $user->primaryUniversity();
+        $prefill = [
+            'university_name' => $primary?->name,
+            'faculty_name' => $primary?->pivot?->faculty_id ? \App\Models\Faculty::find($primary->pivot->faculty_id)?->name : null,
+            'department_name' => $primary?->pivot?->department_id ? \App\Models\Department::find($primary->pivot->department_id)?->name : null,
+            'study_program_name' => $primary?->pivot?->study_program_id ? \App\Models\StudyProgram::find($primary->pivot->study_program_id)?->name : null,
+        ];
+
+        return view('profile.affiliation', [
+            'user' => $user,
+            'affiliations' => $universities,
+            'directory' => $directory,
+            'autocompleteTree' => $autocompleteTree,
+            'prefill' => $prefill,
+        ]);
     }
 
     /**

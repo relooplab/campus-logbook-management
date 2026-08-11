@@ -17,11 +17,20 @@ class ForgotPasswordController extends Controller
 
     public function sendResetLink(Request $request): RedirectResponse
     {
-        $request->validate(['email' => ['required', 'email']]);
+        // Boleh berupa email, NIM (mahasiswa), atau NIDN (dosen).
+        $validated = $request->validate([
+            'email' => ['required', 'string', 'max:255'],
+        ]);
+
+        // Jika bukan email (berisi '@'), anggap NIM/NIDN → resolve ke email pemiliknya.
+        $login = trim($validated['email']);
+        $recipientEmail = str_contains($login, '@')
+            ? $login
+            : (\App\Models\User::findByIdentifier($login)?->email);
 
         // Pesan disamakan terlepas dari status pengiriman, agar endpoint ini
         // tidak bisa dipakai untuk menebak email mana saja yang terdaftar.
-        Password::sendResetLink($request->only('email'));
+        Password::sendResetLink(['email' => $recipientEmail]);
 
         return back()->with('status', 'Jika email terdaftar, tautan reset password telah dikirim.');
     }

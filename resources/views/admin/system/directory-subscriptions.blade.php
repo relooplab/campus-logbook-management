@@ -10,11 +10,6 @@
             <p class="text-sm text-text-secondary">Kelola langganan plan untuk node direktori (universitas/fakultas/departemen/prodi). Langganan di satu node otomatis meng-cover semua node di bawahnya.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <a href="{{ route('admin.system.institution-quotas') }}"
-                class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-bg-hover hover:bg-border text-text-primary text-sm font-medium transition-colors">
-                <span class="material-symbols-outlined icon-md">storage</span>
-                Kuota Institusi
-            </a>
             <a href="{{ route('admin.system.directory') }}"
                 class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-bg-hover hover:bg-border text-text-primary text-sm font-medium transition-colors">
                 <span class="material-symbols-outlined icon-md">account_tree</span>

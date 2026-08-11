@@ -7,8 +7,8 @@
             {{ $errors->first() }} </div>
     @endif
     <form method="POST" action="{{ route("login.attempt") }}" class="space-y-4"> @csrf <div> <label
-                class="block text-sm font-medium mb-1" for="email">Email</label> <input type="email" name="email"
-                id="email" required value="{{ old("email") }}" autofocus
+                class="block text-sm font-medium mb-1" for="email">Email / NIM / NIDN</label> <input type="text" name="email"
+                id="email" required value="{{ old("email") }}" autofocus placeholder="Email, NIM, atau NIDN"
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
         </div>
         <div> <label class="block text-sm font-medium mb-1" for="password">Kata Sandi</label> <input type="password"

@@ -339,10 +339,6 @@
                         <span class="material-symbols-outlined icon-md text-accent-purple">subscriptions</span>
                         <span class="sidebar-label">Langganan Direktori</span>
                     </a>
-                    <a href="{{ route('admin.system.institution-quotas') }}" class="{{ $navLink }} {{ $active('admin.system.institution-quotas*') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-purple">storage</span>
-                        <span class="sidebar-label">Kuota Institusi</span>
-                    </a>
                     <a href="{{ route('admin.system.backup') }}" class="{{ $navLink }} {{ $active('admin.system.backup*') }}">
                         <span class="material-symbols-outlined icon-md text-accent-orange">cloud_download</span>
                         <span class="sidebar-label">Backup &amp; Restore</span>

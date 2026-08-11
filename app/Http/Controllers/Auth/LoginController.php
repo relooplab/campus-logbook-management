@@ -19,11 +19,22 @@ class LoginController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            // Boleh berupa email, NIM (mahasiswa), atau NIDN (dosen).
+            'email' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        // Jika bukan email (berisi '@'), anggap NIM/NIDN → resolve ke email pemiliknya.
+        $login = trim($credentials['email']);
+        $attemptEmail = $login;
+        if (! str_contains($login, '@')) {
+            $owner = \App\Models\User::findByIdentifier($login);
+            if ($owner) {
+                $attemptEmail = $owner->email;
+            }
+        }
+
+        if (Auth::attempt(['email' => $attemptEmail, 'password' => $credentials['password']], $request->boolean('remember'))) {
             $user = $request->user();
 
             // Akun yang benar-benar ditolak/dinonaktifkan tidak boleh login.
