@@ -1,3 +1,10 @@
+# [0.41.0](https://github.com/relooplab/campus-logbook-management/compare/v0.40.0...v0.41.0) (2026-08-11)
+
+
+### Features
+
+* pembimbing/admin dapat langsung mengganti dosen penguji program ([628b7a8](https://github.com/relooplab/campus-logbook-management/commit/628b7a8ea7d206b5cfaac36a451b598c616ed58f))
+
 # [0.40.0](https://github.com/relooplab/campus-logbook-management/compare/v0.39.1...v0.40.0) (2026-08-11)
 
 
