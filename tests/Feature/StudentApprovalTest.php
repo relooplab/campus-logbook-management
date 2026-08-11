@@ -154,7 +154,7 @@ class StudentApprovalTest extends AuditSmokeTest
             'email' => 'budiman-reject3@mail.com',
             'password' => bcrypt('password'),
             'registration_status' => 'active',
-            'identifier' => '1234567890',
+            'nim' => '1234567890',
             'whatsapp' => '081234567890',
         ]);
         $mhs->syncRoles(['mahasiswa']);

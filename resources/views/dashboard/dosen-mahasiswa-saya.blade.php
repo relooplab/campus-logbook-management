@@ -57,7 +57,7 @@
                                         <div class="min-w-0">
                                             <p class="font-medium text-text-primary truncate">{{ $mhs?->name ?? '—' }}</p>
                                             @if ($mhs)
-                                                <p class="text-xs text-text-secondary font-mono">{{ $mhs->identifier }}</p>
+                                                <p class="text-xs text-text-secondary font-mono">{{ $mhs->nim }}</p>
                                             @endif
                                         </div>
                                     </div>
@@ -125,7 +125,7 @@
                                         <div class="min-w-0">
                                             <p class="font-medium text-text-primary truncate">{{ $mhs?->name ?? '—' }}</p>
                                             @if ($mhs)
-                                                <p class="text-xs text-text-secondary font-mono">{{ $mhs->identifier }}</p>
+                                                <p class="text-xs text-text-secondary font-mono">{{ $mhs->nim }}</p>
                                             @endif
                                         </div>
                                     </div>

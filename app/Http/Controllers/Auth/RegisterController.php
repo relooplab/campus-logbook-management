@@ -35,8 +35,17 @@ class RegisterController extends Controller
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
             'role' => ['required', 'in:mahasiswa,dosen'],
-            // Identitas dosen (NIDN) — data instansi diisi di halaman profil.
-            'nidn' => ['nullable', 'string', 'max:20', 'unique:users,nidn'],
+            // Identitas: NIDN untuk dosen, NIM untuk mahasiswa (unik lintas kolom).
+            'nim' => ['nullable', 'string', 'max:30', function ($attr, $value, $fail) {
+                if ($value && User::identifierIsTaken($value)) {
+                    $fail('NIM/NIDN ini sudah dipakai akun lain.');
+                }
+            }],
+            'nidn' => ['nullable', 'string', 'max:20', function ($attr, $value, $fail) {
+                if ($value && User::identifierIsTaken($value)) {
+                    $fail('NIM/NIDN ini sudah dipakai akun lain.');
+                }
+            }],
         ]);
 
         $role = $validated['role'] ?? 'mahasiswa';
@@ -49,6 +58,8 @@ class RegisterController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            // Mahasiswa -> NIM; Dosen -> NIDN. Masing-masing di kolomnya sendiri.
+            'nim' => $role === 'mahasiswa' ? ($validated['nim'] ?? null) : null,
             'nidn' => $role === 'dosen' ? ($validated['nidn'] ?? null) : null,
             'registration_status' => $registrationStatus,
             // Jika verifikasi email wajib, biarkan null agar user dipaksa

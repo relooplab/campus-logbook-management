@@ -350,7 +350,7 @@
                     <tbody>
                         @foreach ($tas as $ta)
                             <tr class="border-b border-border last:border-0">
-                                <td class="py-2.5 pr-4"><a href="{{ route($ta->isKp() ? 'mahasiswa-kp.show' : 'mahasiswa-ta.show', $ta) }}" class="hover:text-brand">{{ $ta->mahasiswa?->name }}</a> <span class="text-text-secondary text-xs">({{ $ta->mahasiswa?->identifier }})</span></td>
+                                <td class="py-2.5 pr-4"><a href="{{ route($ta->isKp() ? 'mahasiswa-kp.show' : 'mahasiswa-ta.show', $ta) }}" class="hover:text-brand">{{ $ta->mahasiswa?->name }}</a> <span class="text-text-secondary text-xs">({{ $ta->mahasiswa?->nim }})</span></td>
                                 <td class="py-2.5 pr-4 hidden md:table-cell">{{ $ta->isKp() ? ($ta->tempat_kp ?: '—') : $ta->judul_ta }}</td>
                                 <td class="py-2.5 pr-4 text-xs hidden lg:table-cell">{{ $ta->pembimbing1?->name }}{{ $ta->pembimbing2 ? ' & ' . $ta->pembimbing2->name : '' }}</td>
                                 <td class="py-2.5">

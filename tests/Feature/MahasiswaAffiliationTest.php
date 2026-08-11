@@ -43,19 +43,19 @@ class MahasiswaAffiliationTest extends TestCase
 
         $this->dosenA = User::create([
             'name' => 'Dosen Univ A', 'email' => 'dosenA@aff.test', 'password' => bcrypt('x'),
-            'registration_status' => 'active', 'identifier' => 'NIDN-A', 'nidn' => 'NIDN-A', 'whatsapp' => '6281',
+            'registration_status' => 'active', 'nim' => 'NIDN-A', 'nidn' => 'NIDN-A', 'whatsapp' => '6281',
         ]);
         $this->dosenA->assignRole('dosen');
 
         $this->dosenB = User::create([
             'name' => 'Dosen Univ B', 'email' => 'dosenB@aff.test', 'password' => bcrypt('x'),
-            'registration_status' => 'active', 'identifier' => 'NIDN-B', 'nidn' => 'NIDN-B', 'whatsapp' => '6282',
+            'registration_status' => 'active', 'nim' => 'NIDN-B', 'nidn' => 'NIDN-B', 'whatsapp' => '6282',
         ]);
         $this->dosenB->assignRole('dosen');
 
         $this->mhs = User::create([
             'name' => 'Mahasiswa Afiliasi', 'email' => 'mhs@aff.test', 'password' => bcrypt('x'),
-            'registration_status' => 'active', 'identifier' => 'NIM-AFF', 'whatsapp' => '6283',
+            'registration_status' => 'active', 'nim' => 'NIM-AFF', 'whatsapp' => '6283',
         ]);
         $this->mhs->assignRole('mahasiswa');
 

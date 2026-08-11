@@ -32,8 +32,8 @@
                     @endif
                 </div>
                 <p class="text-sm text-text-secondary">{{ $profile->email }}</p>
-                @if ($profile->identifier)
-                    <p class="text-xs text-text-secondary">{{ $profile->identifier }}</p>
+                @if ($profile->nim)
+                    <p class="text-xs text-text-secondary">{{ $profile->nim }}</p>
                 @endif
                 @if ($profile->nidn)
                     <p class="text-xs text-text-secondary">NIDN: {{ $profile->nidn }}</p>

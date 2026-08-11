@@ -24,7 +24,7 @@ class DirectoryCrudTest extends AuditSmokeTest
         $sys = User::create([
             'name' => 'Sys Admin CRUD', 'email' => "sys-crud-{$uid}@audit.test",
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => "SYS-CRUD-{$uid}", 'whatsapp' => '628',
+            'nim' => "SYS-CRUD-{$uid}", 'whatsapp' => '628',
         ]);
         $sys->assignRole('system_admin');
 

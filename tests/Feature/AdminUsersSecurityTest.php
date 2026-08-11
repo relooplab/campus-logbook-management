@@ -25,7 +25,7 @@ class AdminUsersSecurityTest extends AuditSmokeTest
         $sys = User::create([
             'name' => 'Sys Admin Security', 'email' => "sys-sec-{$uid}@audit.test",
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => "SYS-SEC-{$uid}", 'whatsapp' => '628',
+            'nim' => "SYS-SEC-{$uid}", 'whatsapp' => '628',
         ]);
         $sys->assignRole('system_admin');
         return $sys;
@@ -41,7 +41,7 @@ class AdminUsersSecurityTest extends AuditSmokeTest
         $a = User::create([
             'name' => 'Admin Inst '.$uid.$suffix, 'email' => "inst-admin-{$uid}{$suffix}@audit.test",
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => "ADM-{$uid}", 'whatsapp' => '628',
+            'nim' => "ADM-{$uid}", 'whatsapp' => '628',
             'institution_id' => $inst->id,
         ]);
         $a->assignRole('admin');
@@ -54,7 +54,7 @@ class AdminUsersSecurityTest extends AuditSmokeTest
         $d = User::create([
             'name' => 'Dosen Biasa', 'email' => "dosen-{$uid}@audit.test",
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => "DOS-{$uid}", 'whatsapp' => '628',
+            'nim' => "DOS-{$uid}", 'whatsapp' => '628',
         ]);
         $d->assignRole('dosen');
         return $d;
@@ -182,7 +182,7 @@ class AdminUsersSecurityTest extends AuditSmokeTest
         $own = User::create([
             'name' => 'User Sendiri', 'email' => 'own-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => 'OWN-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'OWN-'.uniqid(), 'whatsapp' => '628',
             'institution_id' => $admin->institution_id,
         ]);
         $own->assignRole('mahasiswa');
@@ -193,7 +193,7 @@ class AdminUsersSecurityTest extends AuditSmokeTest
         $other = User::create([
             'name' => 'User Lain', 'email' => 'other-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => 'OTH-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'OTH-'.uniqid(), 'whatsapp' => '628',
         ]);
         $other->assignRole('mahasiswa');
 

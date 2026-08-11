@@ -70,7 +70,7 @@ class AuditSmokeTest extends TestCase
         $this->dosen2 = User::firstOrCreate(['email' => 'audit-dosen2@test.com'], ['name' => 'Audit Dosen 2', 'password' => bcrypt('password')]);
         if (!$this->dosen2->hasRole('dosen')) $this->dosen2->assignRole('dosen');
 
-        $this->mhs = User::firstOrCreate(['email' => 'audit-mhs@test.com'], ['name' => 'Audit Mahasiswa', 'password' => bcrypt('password'), 'identifier' => 'A001']);
+        $this->mhs = User::firstOrCreate(['email' => 'audit-mhs@test.com'], ['name' => 'Audit Mahasiswa', 'password' => bcrypt('password'), 'nim' => 'A001']);
         if (!$this->mhs->hasRole('mahasiswa')) $this->mhs->assignRole('mahasiswa');
 
         $this->ta = MahasiswaTa::firstOrCreate(

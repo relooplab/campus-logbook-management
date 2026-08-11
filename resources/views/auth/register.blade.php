@@ -34,6 +34,19 @@
                 type="password" name="password_confirmation" id="password_confirmation" required minlength="6"
                 class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
 
+        {{-- ===== Opsi khusus mahasiswa (NIM) — data instansi diisi di halaman profil ===== --}}
+        <div id="mahasiswa-nim-section" class="hidden space-y-2 border-t border-border pt-3">
+            <p class="text-sm font-medium text-text-primary">NIM</p>
+            <div>
+                <label class="block text-sm font-medium mb-1" for="nim">NIM</label>
+                <input type="text" name="nim" id="nim" value="{{ old("nim") }}" placeholder="Nomor Induk Mahasiswa"
+                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                @error('nim')
+                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
         {{-- ===== Opsi khusus dosen (NIDN) — data instansi diisi di halaman profil ===== --}}
         <div id="dosen-directory-section" class="hidden space-y-2 border-t border-border pt-3">
             <p class="text-sm font-medium text-text-primary">NIDN</p>
@@ -59,6 +72,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             var roleInput = document.getElementById('role-input');
             var dosenDirectorySection = document.getElementById('dosen-directory-section');
+            var mahasiswaNimSection = document.getElementById('mahasiswa-nim-section');
             var roleHint = document.getElementById('role-hint');
             var roleTabs = document.getElementById('role-tabs');
 
@@ -76,8 +90,9 @@
                     btn.classList.toggle('text-text-secondary', !active);
                     btn.classList.toggle('font-medium', !active);
                 });
-                // Direktori organisasi hanya untuk dosen.
+                // Direktori organisasi & NIDN hanya untuk dosen; NIM hanya untuk mahasiswa.
                 if (dosenDirectorySection) dosenDirectorySection.classList.toggle('hidden', role !== 'dosen');
+                if (mahasiswaNimSection) mahasiswaNimSection.classList.toggle('hidden', role !== 'mahasiswa');
                 if (roleHint) {
                     roleHint.textContent = role === 'dosen'
                         ? 'Daftar sebagai dosen. Setelah mendaftar, lengkapi data institusi Anda di halaman profil.'

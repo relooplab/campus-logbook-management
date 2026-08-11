@@ -127,7 +127,7 @@
         }
         /* Tabel responsif: sembunyikan kolom kurang penting di layar kecil */
         @media (max-width: 639px) {
-            .table-col-email, .table-col-identifier, .table-col-tanggal, .table-col-jenis,
+            .table-col-email, .table-col-nim, .table-col-tanggal, .table-col-jenis,
             .table-col-pembimbing2, .table-col-penguji, .table-col-target { display: none; }
         }
         @media (max-width: 1023px) {
@@ -169,13 +169,13 @@
                 $showDosenMenu = $user->isDosen();
                 $showAdminMenu = $user->isAdmin();
             @endphp
-            @if ($primaryUniv || $user->nidn || $user->identifier)
+            @if ($primaryUniv || $user->nidn || $user->nim)
                 <div class="px-6 pb-2 sidebar-label space-y-1">
                     @if ($user->isDosen() && $user->nidn)
                         <span class="block text-[10px] text-text-secondary truncate font-mono">NIDN: {{ $user->nidn }}</span>
                     @endif
-                    @if ($user->isMahasiswa() && $user->identifier)
-                        <span class="block text-[10px] text-text-secondary truncate font-mono">NIM: {{ $user->identifier }}</span>
+                    @if ($user->isMahasiswa() && $user->nim)
+                        <span class="block text-[10px] text-text-secondary truncate font-mono">NIM: {{ $user->nim }}</span>
                     @endif
                     @if ($primaryUniv)
                         <span class="block text-[10px] px-2 py-0.5 rounded-full bg-bg-panel text-text-secondary truncate max-w-full" title="{{ $primaryUniv->name }}">
@@ -209,7 +209,7 @@
                     $hasTa = (bool) $user->mahasiswaTa;
                     $hasKp = (bool) $kp;
                     $hasProgram = $hasTa || $hasKp;
-                    $profileIncomplete = blank($user->identifier) || blank($user->whatsapp);
+                    $profileIncomplete = blank($user->nim) || blank($user->whatsapp);
                 @endphp
                 @if ($profileIncomplete)
                     <a href="{{ route('profile.index') }}" class="{{ $navLink }} {{ $active('profile.index') }}">
@@ -720,7 +720,7 @@
                         if (d.users.length) {
                             html += '<p class="px-4 py-1 text-[10px] uppercase tracking-wider text-text-secondary">Mahasiswa/Dosen</p>';
                             d.users.forEach(function (u) {
-                                html += '<a href="' + esc(u.url) + '" class="flex items-center gap-2 px-4 py-2 hover:bg-bg-hover text-sm"><span class="w-6 h-6 rounded-full bg-brand-light text-brand flex items-center justify-center text-[10px] font-bold">' + esc((u.name || '?').charAt(0)) + '</span><span class="min-w-0"><span class="block text-text-primary truncate">' + esc(u.name) + '</span><span class="block text-xs text-text-secondary">' + esc(u.identifier || '') + '</span></span></a>';
+                                html += '<a href="' + esc(u.url) + '" class="flex items-center gap-2 px-4 py-2 hover:bg-bg-hover text-sm"><span class="w-6 h-6 rounded-full bg-brand-light text-brand flex items-center justify-center text-[10px] font-bold">' + esc((u.name || '?').charAt(0)) + '</span><span class="min-w-0"><span class="block text-text-primary truncate">' + esc(u.name) + '</span><span class="block text-xs text-text-secondary">' + esc(u.nim || '') + '</span></span></a>';
                             });
                         }
                         if (d.entries.length) {

@@ -8,7 +8,7 @@
         $faculty = $pivot?->faculty_id ? \App\Models\Faculty::find($pivot->faculty_id) : null;
         $department = $pivot?->department_id ? \App\Models\Department::find($pivot->department_id) : null;
         $prodi = $pivot?->study_program_id ? \App\Models\StudyProgram::find($pivot->study_program_id) : null;
-        $hasAff = ($affUser->isDosen() && $affUser->nidn) || ($affUser->isMahasiswa() && $affUser->identifier) || $univ;
+        $hasAff = ($affUser->isDosen() && $affUser->nidn) || ($affUser->isMahasiswa() && $affUser->nim) || $univ;
     @endphp
     @if ($hasAff)
         <div class="mt-6 pt-4 border-t border-border">
@@ -17,8 +17,8 @@
                 @if ($affUser->isDosen() && $affUser->nidn)
                     <div class="flex items-center gap-2"><span class="material-symbols-outlined icon-sm text-accent-blue">badge</span> <span>NIDN: <span class="text-text-primary font-medium">{{ $affUser->nidn }}</span></span></div>
                 @endif
-                @if ($affUser->isMahasiswa() && $affUser->identifier)
-                    <div class="flex items-center gap-2"><span class="material-symbols-outlined icon-sm text-accent-purple">confirmation_number</span> <span>NIM: <span class="text-text-primary font-medium">{{ $affUser->identifier }}</span></span></div>
+                @if ($affUser->isMahasiswa() && $affUser->nim)
+                    <div class="flex items-center gap-2"><span class="material-symbols-outlined icon-sm text-accent-purple">confirmation_number</span> <span>NIM: <span class="text-text-primary font-medium">{{ $affUser->nim }}</span></span></div>
                 @endif
                 @if ($univ)
                     <div class="flex items-center gap-2"><span class="material-symbols-outlined icon-sm text-accent-teal">account_balance</span> <span>{{ $univ->name }}</span></div>

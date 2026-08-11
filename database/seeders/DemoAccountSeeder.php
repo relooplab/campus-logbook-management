@@ -10,7 +10,7 @@ use Spatie\Permission\Models\Role;
 /**
  * Akun demo ringkas untuk SEMUA role.
  *
- * Akun existing yang konflik (email / identifier / nidn) dihapus terlebih
+ * Akun existing yang konflik (email / nim / nidn) dihapus terlebih
  * dahulu agar tidak gagal karena constraint unique, lalu dibuat ulang dengan
  * password seragam: "password".
  */
@@ -26,26 +26,25 @@ class DemoAccountSeeder extends Seeder
             'system_admin' => [
                 'email' => 'systemadmin@example.com',
                 'name' => 'System Administrator',
-                'identifier' => 'DEMO-SYS',
+                'nim' => 'DEMO-SYS',
                 'status' => 'approved',
             ],
             'admin' => [
                 'email' => 'admin@example.com',
                 'name' => 'Admin Utama',
-                'identifier' => 'DEMO-ADM',
+                'nim' => 'DEMO-ADM',
                 'status' => 'approved',
             ],
             'dosen' => [
                 'email' => 'dosen@example.com',
                 'name' => 'Dosen Demo',
-                'identifier' => 'DEMO-DOS',
                 'nidn' => '0000000001',
                 'status' => 'approved',
             ],
             'mahasiswa' => [
                 'email' => 'mahasiswa@example.com',
                 'name' => 'Mahasiswa Demo',
-                'identifier' => 'DEMO-MHS',
+                'nim' => 'DEMO-MHS',
                 'whatsapp' => '628123456789',
                 'status' => 'active',
             ],
@@ -55,10 +54,10 @@ class DemoAccountSeeder extends Seeder
             $status = $attrs['status'] ?? 'approved';
             unset($attrs['status']);
 
-            // Hapus akun existing yang konflik (email / identifier / nidn).
+            // Hapus akun existing yang konflik (email / nim / nidn).
             $conflictQuery = User::where('email', $attrs['email']);
-            if (! empty($attrs['identifier'])) {
-                $conflictQuery->orWhere('identifier', $attrs['identifier']);
+            if (! empty($attrs['nim'])) {
+                $conflictQuery->orWhere('nim', $attrs['nim']);
             }
             if (! empty($attrs['nidn'])) {
                 $conflictQuery->orWhere('nidn', $attrs['nidn']);
@@ -71,7 +70,7 @@ class DemoAccountSeeder extends Seeder
                     $u->forceFill([
                         'name' => $attrs['name'],
                         'nidn' => $attrs['nidn'] ?? $u->nidn,
-                        'identifier' => $attrs['identifier'] ?? $u->identifier,
+                        'nim' => $attrs['nim'] ?? $u->nim,
                         'whatsapp' => $attrs['whatsapp'] ?? $u->whatsapp,
                         'registration_status' => $status,
                         'email_verified_at' => now(),

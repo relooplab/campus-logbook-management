@@ -134,7 +134,7 @@
                         <tr class="text-left text-text-secondary border-b border-border">
                             <th class="py-3 px-4 w-8"><input type="checkbox" id="bulk-all" class="rounded bg-bg-surface"></th>
                             <th class="py-3 px-4">Nama</th>
-                            <th class="py-3 px-4 table-col-identifier">Identifier</th>
+                            <th class="py-3 px-4 table-col-nim">NIM/NIDN</th>
                             <th class="py-3 px-4 table-col-email">Email</th>
                             <th class="py-3 px-4">Role</th>
                             <th class="py-3 px-4">Status</th>
@@ -159,7 +159,7 @@
                                         <span class="block text-[10px] text-text-secondary mt-0.5">{{ $uUniv->name }}</span>
                                     @endif
                                 </td>
-                                <td class="py-3 px-4 table-col-identifier font-mono">{{ $u->identifier ?? '—' }}</td>
+                                <td class="py-3 px-4 table-col-nim font-mono">{{ $u->nim ?? '—' }}</td>
                                 <td class="py-3 px-4 table-col-email">
                                     <div class="flex items-center gap-1.5">
                                         <span>{{ $u->email }}</span>
@@ -262,7 +262,7 @@
                 @csrf
                 <input type="text" name="name" required placeholder="Nama lengkap" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                 <input type="email" name="email" required placeholder="Email" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                <input type="text" name="identifier" placeholder="NIM / NIDN" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                <input type="text" name="nim" placeholder="NIM / NIDN" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                 <input type="password" name="password" required placeholder="Kata sandi" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                 <div>
                     <label class="block text-sm mb-1">Role</label>
@@ -289,7 +289,7 @@
                         @csrf
                         <input type="text" name="name" required placeholder="Nama lengkap" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                         <input type="email" name="email" required placeholder="Email" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                        <input type="text" name="identifier" placeholder="Identifier (opsional)" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <input type="text" name="nim" placeholder="Identifier (opsional)" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                         <input type="password" name="password" required placeholder="Kata sandi" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                         <div>
                             <label class="block text-sm mb-1">Scope Admin</label>

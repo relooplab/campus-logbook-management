@@ -24,7 +24,7 @@
 
     <div class="header">
         <table>
-            <tr><td style="width:180px"><strong>Nama Mahasiswa</strong></td><td>: {{ $mahasiswaTa->mahasiswa->name }} ({{ $mahasiswaTa->mahasiswa->identifier }})</td></tr>
+            <tr><td style="width:180px"><strong>Nama Mahasiswa</strong></td><td>: {{ $mahasiswaTa->mahasiswa->name }} ({{ $mahasiswaTa->mahasiswa->nim }})</td></tr>
             @if ($mahasiswaTa->isKp())
                 <tr><td><strong>Tempat KP</strong></td><td>: {{ $mahasiswaTa->tempat_kp ?? '—' }}</td></tr>
                 @if ($mahasiswaTa->periode_mulai)

@@ -34,7 +34,7 @@
                             onclick="window.location='{{ route($detailRoute, $ta) }}'">
                             <td class="py-3 px-4"><a href="{{ route($detailRoute, $ta) }}"
                                     class="hover:underline">{{ $ta->mahasiswa?->name }}</a> <span
-                                    class="text-text-secondary text-xs">({{ $ta->mahasiswa?->identifier }})</span></td>
+                                    class="text-text-secondary text-xs">({{ $ta->mahasiswa?->nim }})</span></td>
                             <td class="py-3 px-4"> <span
                                     class="badge {{ $ta->status_ta === "aktif" ? "badge-info" : "" }} {{ $ta->status_ta === "tamat" ? "badge-success" : "" }} {{ $ta->status_ta === "nonaktif" ? "badge-neutral" : "" }}">
                                     {{ ucfirst($ta->status_ta) }} </span> </td>

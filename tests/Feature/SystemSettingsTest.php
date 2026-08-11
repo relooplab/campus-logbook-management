@@ -22,7 +22,7 @@ class SystemSettingsTest extends AuditSmokeTest
         $sys = User::create([
             'name' => 'Sys Admin Settings', 'email' => "sys-settings-{$uid}@audit.test",
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => "SYS-SET-{$uid}", 'whatsapp' => '628',
+            'nim' => "SYS-SET-{$uid}", 'whatsapp' => '628',
         ]);
         $sys->assignRole('system_admin');
 

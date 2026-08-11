@@ -35,7 +35,7 @@ class PendingStudentWorkflowTest extends AuditSmokeTest
             'email' => $email,
             'password' => bcrypt('password'),
             'registration_status' => 'active',
-            'identifier' => 'NIM-'.substr($email, 4, 8),
+            'nim' => 'NIM-'.substr($email, 4, 8),
             'whatsapp' => '08123456789',
         ]);
         $mhs->syncRoles(['mahasiswa']);

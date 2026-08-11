@@ -762,7 +762,7 @@ class LogbookController extends Controller
         // Halaman daftar / legend komentar di akhir dokumen.
         $this->appendCommentList($pdf, $comments, $type);
 
-        $filename = 'anotasi-'.$logbook->mahasiswaTa?->mahasiswa?->identifier.'-'.now()->format('Ymd').'.pdf';
+        $filename = 'anotasi-'.$logbook->mahasiswaTa?->mahasiswa?->nim.'-'.now()->format('Ymd').'.pdf';
 
         return response($pdf->Output('S'), 200, [
             'Content-Type' => 'application/pdf',

@@ -79,7 +79,7 @@ class InstitutionQuotaTest extends AuditSmokeTest
         $sys = User::create([
             'name' => 'Sys Admin Quota', 'email' => "sys-q-{$uid}@audit.test",
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => "SYSQ-{$uid}", 'whatsapp' => '628',
+            'nim' => "SYSQ-{$uid}", 'whatsapp' => '628',
         ]);
         $sys->assignRole('system_admin');
         return $sys;

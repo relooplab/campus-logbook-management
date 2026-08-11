@@ -35,8 +35,8 @@
                         <div class="min-w-0 flex-1">
                             <h2 class="font-semibold text-text-primary truncate">{{ $d->name }}</h2>
                             <p class="text-xs text-text-secondary truncate">{{ $d->email }}</p>
-                            @if ($d->identifier)
-                                <p class="text-xs text-text-secondary">{{ $d->identifier }}</p>
+                            @if ($d->nim)
+                                <p class="text-xs text-text-secondary">{{ $d->nim }}</p>
                             @endif
                         </div>
                     </div>

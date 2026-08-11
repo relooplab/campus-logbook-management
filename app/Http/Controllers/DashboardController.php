@@ -376,7 +376,7 @@ class DashboardController extends Controller
 
         // Profil dianggap belum lengkap jika NIM (identifier), WhatsApp, atau afiliasi
         // perguruan tinggi (sampai prodi) belum diisi mahasiswa.
-        $profileIncomplete = blank($user->identifier) || blank($user->whatsapp) || ! $user->primaryUniversity()?->pivot?->study_program_id;
+        $profileIncomplete = blank($user->nim) || blank($user->whatsapp) || ! $user->primaryUniversity()?->pivot?->study_program_id;
 
         return view('dashboard.mahasiswa', compact(
             'programs', 'activeProgram', 'ta', 'entries', 'approved', 'target', 'progressPercent',

@@ -63,7 +63,7 @@ class DirectoryEditTest extends AuditSmokeTest
         $sys = User::create([
             'name' => 'Sys Admin Edit', 'email' => "sys-edit-{$uid}@audit.test",
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => "SYS-EDIT-{$uid}", 'whatsapp' => '628',
+            'nim' => "SYS-EDIT-{$uid}", 'whatsapp' => '628',
         ]);
         $sys->assignRole('system_admin');
 

@@ -31,7 +31,7 @@ class ExportController extends Controller
             'target' => $mahasiswaTa->target_sesi,
         ]);
 
-        $filename = 'rekap-bimbingan-'.$mahasiswaTa->mahasiswa->identifier.'-'.now()->format('Ymd').'.pdf';
+        $filename = 'rekap-bimbingan-'.$mahasiswaTa->mahasiswa->nim.'-'.now()->format('Ymd').'.pdf';
 
         return $pdf->download($filename);
     }
@@ -44,7 +44,7 @@ class ExportController extends Controller
         $this->authorizeExport($mahasiswaTa);
         $this->authorizePlanFeature('export');
 
-        $filename = 'bimbingan-'.$mahasiswaTa->mahasiswa->identifier.'-'.now()->format('Ymd').'.xlsx';
+        $filename = 'bimbingan-'.$mahasiswaTa->mahasiswa->nim.'-'.now()->format('Ymd').'.xlsx';
 
         return Excel::download(new MahasiswaTaExport($mahasiswaTa), $filename);
     }
@@ -74,7 +74,7 @@ class ExportController extends Controller
             'sidangs' => $sidangs,
         ]);
 
-        $filename = 'rekap-dosen-'.$dosen->identifier.'-'.now()->format('Ymd').'.pdf';
+        $filename = 'rekap-dosen-'.$dosen->nim.'-'.now()->format('Ymd').'.pdf';
 
         return $pdf->download($filename);
     }

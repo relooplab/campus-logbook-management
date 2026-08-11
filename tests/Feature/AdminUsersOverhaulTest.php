@@ -28,7 +28,7 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $sys = User::create([
             'name' => 'Sys Admin OH', 'email' => "sys-oh-{$uid}@audit.test",
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => "SYS-OH-{$uid}", 'whatsapp' => '628',
+            'nim' => "SYS-OH-{$uid}", 'whatsapp' => '628',
         ]);
         $sys->assignRole('system_admin');
         return $sys;
@@ -44,7 +44,7 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $a = User::create([
             'name' => 'Admin Inst', 'email' => "inst-oh-{$uid}@audit.test",
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => "ADM-{$uid}", 'whatsapp' => '628',
+            'nim' => "ADM-{$uid}", 'whatsapp' => '628',
             'institution_id' => $inst->id,
         ]);
         $a->assignRole('admin');
@@ -74,7 +74,7 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $u = new User([
             'name' => 'Verified User', 'email' => 'verif-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => 'V-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'V-'.uniqid(), 'whatsapp' => '628',
         ]);
         $u->email_verified_at = now();
         $u->save();
@@ -91,7 +91,7 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $u = User::create([
             'name' => 'Unverified User', 'email' => 'unv-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => 'U-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'U-'.uniqid(), 'whatsapp' => '628',
             'email_verified_at' => null,
         ]);
         $u->assignRole('mahasiswa');
@@ -104,7 +104,7 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $u = User::create([
             'name' => 'Rejected User', 'email' => 'rej-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'rejected',
-            'identifier' => 'R-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'R-'.uniqid(), 'whatsapp' => '628',
         ]);
         $u->assignRole('mahasiswa');
         $response = $this->actingAs($sys)->get(route('admin.users', ['status' => 'rejected']));
@@ -118,7 +118,7 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $u = new User([
             'name' => 'Verif Filter', 'email' => 'vf-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => 'VF-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'VF-'.uniqid(), 'whatsapp' => '628',
         ]);
         $u->email_verified_at = now(); // field tidak di $fillable, set langsung.
         $u->save();
@@ -140,7 +140,7 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $u = User::create([
             'name' => 'Export Me', 'email' => 'exp-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => 'EX-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'EX-'.uniqid(), 'whatsapp' => '628',
         ]);
         $u->assignRole('mahasiswa');
 
@@ -157,13 +157,13 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $u1 = User::create([
             'name' => 'Bulk1', 'email' => 'b1-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => 'B1-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'B1-'.uniqid(), 'whatsapp' => '628',
         ]);
         $u1->assignRole('mahasiswa');
         $u2 = User::create([
             'name' => 'Bulk2', 'email' => 'b2-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => 'B2-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'B2-'.uniqid(), 'whatsapp' => '628',
         ]);
         $u2->assignRole('mahasiswa');
 
@@ -182,7 +182,7 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $m = User::create([
             'name' => 'Mhs Approve', 'email' => 'map-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => 'MA-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'MA-'.uniqid(), 'whatsapp' => '628',
         ]);
         $m->assignRole('mahasiswa');
 
@@ -199,7 +199,7 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $u = User::create([
             'name' => 'To Delete', 'email' => 'td-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => 'TD-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'TD-'.uniqid(), 'whatsapp' => '628',
         ]);
         $u->assignRole('mahasiswa');
 
@@ -216,7 +216,7 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $u = User::create([
             'name' => 'Keep Me', 'email' => 'km-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => 'KM-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'KM-'.uniqid(), 'whatsapp' => '628',
         ]);
         $u->assignRole('mahasiswa');
 
@@ -236,7 +236,7 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $u = User::create([
             'name' => 'Inst User', 'email' => 'iu-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => 'IU-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'IU-'.uniqid(), 'whatsapp' => '628',
             'institution_id' => $inst->id,
         ]);
         $u->assignRole('mahasiswa');
@@ -252,7 +252,7 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $u = User::create([
             'name' => 'Quota User', 'email' => 'qu-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => 'QU-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'QU-'.uniqid(), 'whatsapp' => '628',
         ]);
         $u->assignRole('mahasiswa');
 
@@ -271,7 +271,7 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $u = User::create([
             'name' => 'Quota Clear', 'email' => 'qc-'.uniqid().'@audit.test',
             'password' => bcrypt('x'), 'registration_status' => 'active',
-            'identifier' => 'QC-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'QC-'.uniqid(), 'whatsapp' => '628',
         ]);
         $u->assignRole('mahasiswa');
         \App\Models\UserPlanOverride::create(['user_id' => $u->id, 'storage_limit_mb' => 512]);

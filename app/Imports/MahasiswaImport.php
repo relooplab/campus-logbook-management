@@ -38,16 +38,16 @@ class MahasiswaImport implements ToModel, WithChunkReading, WithHeadingRow
 
         // Kolom `identifier` dipakai bersama untuk NIM mahasiswa & NIDN dosen
         // (unique global) — jangan timpa role akun non-mahasiswa yang sudah ada
-        // bila NIM di spreadsheet kebetulan bentrok dengan identifier mereka.
-        $existing = User::where('identifier', $nim)->first();
+        // bila NIM di spreadsheet kebetulan bentrok dengan nim mereka.
+        $existing = User::where('nim', $nim)->first();
         if ($existing && $existing->hasAnyRole(['dosen', 'admin', 'system_admin'])) {
-            $this->errors[] = "Baris NIM {$nim} ({$nama}): identifier ini sudah dipakai akun non-mahasiswa ({$existing->name}), dilewati.";
+            $this->errors[] = "Baris NIM {$nim} ({$nama}): nim ini sudah dipakai akun non-mahasiswa ({$existing->name}), dilewati.";
 
             return null;
         }
 
         $user = $existing ?: User::create([
-            'identifier' => $nim,
+            'nim' => $nim,
             'name' => $nama,
             'email' => $email,
             'password' => Hash::make(Str::random(10)),
@@ -78,7 +78,8 @@ class MahasiswaImport implements ToModel, WithChunkReading, WithHeadingRow
     private function findDosen(string $nidn): ?int
     {
         if ($nidn === '') return null;
-        $dosen = User::where('identifier', $nidn)->role('dosen')->first();
+        // Dosen dicari lewat kolom NIDN (bukan nim/NIM mahasiswa).
+        $dosen = User::where('nidn', $nidn)->role('dosen')->first();
 
         return $dosen?->id;
     }

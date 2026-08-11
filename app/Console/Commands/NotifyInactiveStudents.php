@@ -65,7 +65,7 @@ class NotifyInactiveStudents extends Command
             // CC pembimbing 1 via Mail raw (agar satu email menyertakan CC).
             if ($ta->pembimbing1) {
                 Mail::raw(
-                    "Ini adalah salinan untuk pembimbing.\n\nMahasiswa {$ta->mahasiswa->name} ({$ta->mahasiswa->identifier}) tidak ada aktivitas bimbingan sejak {$lastDate} ({$inactiveDays} hari). Fase TA saat ini: {$ta->faseLabel()}.",
+                    "Ini adalah salinan untuk pembimbing.\n\nMahasiswa {$ta->mahasiswa->name} ({$ta->mahasiswa->nim}) tidak ada aktivitas bimbingan sejak {$lastDate} ({$inactiveDays} hari). Fase TA saat ini: {$ta->faseLabel()}.",
                     function ($message) use ($ta, $appUrl) {
                         $message->to($ta->pembimbing1->email)
                             ->subject('[Campus Logbook Management] Salinan: Mahasiswa tidak aktif bimbingan');

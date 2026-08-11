@@ -31,7 +31,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Perbarui data profil (nama, identifier, kontak, tautan akademik).
+     * Perbarui data profil (nama, nim, kontak, tautan akademik).
      */
     public function updateProfile(Request $request): RedirectResponse
     {
@@ -39,7 +39,11 @@ class ProfileController extends Controller
 
         $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'identifier' => ['nullable', 'string', 'max:30'],
+            'nim' => ['nullable', 'string', 'max:30', function ($attr, $value, $fail) use ($user) {
+                if ($value && \App\Models\User::identifierIsTaken($value, $user->id)) {
+                    $fail('NIM/NIDN ini sudah dipakai akun lain.');
+                }
+            }],
             'whatsapp' => ['nullable', 'string', 'max:30'],
             'telegram' => ['nullable', 'string', 'max:60'],
             'linkedin' => ['nullable', 'url', 'max:255'],
@@ -48,7 +52,7 @@ class ProfileController extends Controller
 
         // Identifier (NIM) & WhatsApp wajib untuk mahasiswa.
         if ($user->isMahasiswa()) {
-            $rules['identifier'] = ['required', 'string', 'max:30'];
+            $rules['nim'] = ['required', 'string', 'max:30'];
             $rules['whatsapp'] = ['required', 'string', 'max:30'];
         }
 
@@ -122,7 +126,7 @@ class ProfileController extends Controller
         abort_unless($user->isMahasiswa(), 403);
 
         // Wajib isi profil dulu (NIM & WhatsApp) sebelum memilih dosen.
-        if (blank($user->identifier) || blank($user->whatsapp)) {
+        if (blank($user->nim) || blank($user->whatsapp)) {
             return redirect()->route('profile.index')
                 ->with('warning', 'Lengkapi profil Anda (NIM & WhatsApp) terlebih dahulu sebelum memilih dosen.');
         }
@@ -182,7 +186,7 @@ class ProfileController extends Controller
         abort_unless($user->isMahasiswa(), 403);
 
         // Wajib isi profil dulu (NIM & WhatsApp) sebelum memilih dosen.
-        if (blank($user->identifier) || blank($user->whatsapp)) {
+        if (blank($user->nim) || blank($user->whatsapp)) {
             return redirect()->route('profile.index')
                 ->with('warning', 'Lengkapi profil Anda (NIM & WhatsApp) terlebih dahulu sebelum memilih dosen.');
         }

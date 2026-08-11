@@ -95,7 +95,7 @@ class DatabaseSeeder extends Seeder
         $this->call(DemoAccountSeeder::class);
 
         // Helper: buat user dengan status & email verified.
-        // Jika NIDN/identifier sudah dipakai user lain (email berbeda), update email user tsb.
+        // Jika NIDN/nim sudah dipakai user lain (email berbeda), update email user tsb.
         $makeUser = function (array $attrs, array $roles, string $status) use ($mahasiswaRole, $dosenRole, $adminRole, $systemAdminRole) {
             // Cari berdasarkan email dulu.
             $user = User::where('email', $attrs['email'])->first();
@@ -108,9 +108,9 @@ class DatabaseSeeder extends Seeder
                 }
             }
 
-            // Jika masih tidak ketemu, cari berdasarkan identifier (jika ada).
-            if (!$user && !empty($attrs['identifier'])) {
-                $user = User::where('identifier', $attrs['identifier'])->first();
+            // Jika masih tidak ketemu, cari berdasarkan nim (jika ada).
+            if (!$user && !empty($attrs['nim'])) {
+                $user = User::where('nim', $attrs['nim'])->first();
                 if ($user) {
                     $user->update(['email' => $attrs['email']]);
                 }
@@ -129,8 +129,8 @@ class DatabaseSeeder extends Seeder
                     'email_verified_at' => now(),
                 ]);
                 // Jangan overwrite identifier/nidn jika sudah dipakai user lain.
-                if (isset($update['identifier']) && User::where('identifier', $update['identifier'])->where('id', '!=', $user->id)->exists()) {
-                    unset($update['identifier']);
+                if (isset($update['nim']) && User::where('nim', $update['nim'])->where('id', '!=', $user->id)->exists()) {
+                    unset($update['nim']);
                 }
                 if (isset($update['nidn']) && User::where('nidn', $update['nidn'])->where('id', '!=', $user->id)->exists()) {
                     unset($update['nidn']);
@@ -146,48 +146,48 @@ class DatabaseSeeder extends Seeder
 
         // System Admin (role tertinggi — mengelola admin lain & konfigurasi sistem).
         $systemAdmin = $makeUser(
-            ['email' => 'systemadmin@example.com', 'name' => 'System Administrator', 'identifier' => 'SYS001'],
+            ['email' => 'systemadmin@example.com', 'name' => 'System Administrator', 'nim' => 'SYS001'],
             [$systemAdminRole],
             'approved'
         );
 
         // Admin utama (role admin SAJA — tidak dosen).
         $adminUser = $makeUser(
-            ['email' => 'admin@example.com', 'name' => 'Ir. Admin Utama, M.T.', 'identifier' => 'ADM001'],
+            ['email' => 'admin@example.com', 'name' => 'Ir. Admin Utama, M.T.', 'nim' => 'ADM001'],
             [$adminRole],
             'approved'
         );
 
         // Administrator khusus (role admin saja).
         $administrator = $makeUser(
-            ['email' => 'administrator@example.com', 'name' => 'Administrator Sistem', 'identifier' => 'ADM002'],
+            ['email' => 'administrator@example.com', 'name' => 'Administrator Sistem', 'nim' => 'ADM002'],
             [$adminRole],
             'approved'
         );
 
         // Dosen utama (role dosen SAJA — terpisah dari admin).
         $dosen1 = $makeUser(
-            ['email' => 'dosen1@example.com', 'name' => 'Dr. Dosen Satu, S.T., M.T.', 'identifier' => '0001010101', 'nidn' => '0001010101'],
+            ['email' => 'dosen1@example.com', 'name' => 'Dr. Dosen Satu, S.T., M.T.', 'nidn' => '0001010101'],
             [$dosenRole],
             'approved'
         );
 
         // Dosen pembimbing kedua (opsional).
         $dosen2 = $makeUser(
-            ['email' => 'dosen2@example.com', 'name' => 'Dr. Dosen Dua, S.T., M.T.', 'identifier' => '0002020202', 'nidn' => '0002020202'],
+            ['email' => 'dosen2@example.com', 'name' => 'Dr. Dosen Dua, S.T., M.T.', 'nidn' => '0002020202'],
             [$dosenRole],
             'approved'
         );
 
         // Dosen demo tambahan (untuk demo penguji & grup/cross-link).
         $dosen3 = $makeUser(
-            ['email' => 'dosen3@example.com', 'name' => 'Dr. Dosen Tiga, S.Kom., M.Kom.', 'identifier' => '0003030303', 'nidn' => '0003030303'],
+            ['email' => 'dosen3@example.com', 'name' => 'Dr. Dosen Tiga, S.Kom., M.Kom.', 'nidn' => '0003030303'],
             [$dosenRole],
             'approved'
         );
 
         $dosen4 = $makeUser(
-            ['email' => 'dosen4@example.com', 'name' => 'Dr. Dosen Empat, S.T., M.T.', 'identifier' => '0004040404', 'nidn' => '0004040404'],
+            ['email' => 'dosen4@example.com', 'name' => 'Dr. Dosen Empat, S.T., M.T.', 'nidn' => '0004040404'],
             [$dosenRole],
             'approved'
         );
@@ -196,7 +196,7 @@ class DatabaseSeeder extends Seeder
         // Mahasiswa TA (verified) — sudah punya program + dosen.
         // ===============================================================
         $mahasiswa = $makeUser(
-            ['email' => 'mahasiswa@example.com', 'name' => 'Mahasiswa Contoh', 'identifier' => '200401001', 'whatsapp' => '6281234567890'],
+            ['email' => 'mahasiswa@example.com', 'name' => 'Mahasiswa Contoh', 'nim' => '200401001', 'whatsapp' => '6281234567890'],
             [$mahasiswaRole],
             'verified'
         );
@@ -220,13 +220,13 @@ class DatabaseSeeder extends Seeder
         // Akun demo mahasiswa KP (Kerja Praktek) kelompok.
         // ===============================================================
         $mahasiswaKp1 = $makeUser(
-            ['email' => 'mahasiswa_kp@example.com', 'name' => 'Mahasiswa KP Satu', 'identifier' => '200401002', 'whatsapp' => '6281234567891'],
+            ['email' => 'mahasiswa_kp@example.com', 'name' => 'Mahasiswa KP Satu', 'nim' => '200401002', 'whatsapp' => '6281234567891'],
             [$mahasiswaRole],
             'verified'
         );
 
         $mahasiswaKp2 = $makeUser(
-            ['email' => 'mahasiswa_kp2@example.com', 'name' => 'Mahasiswa KP Dua', 'identifier' => '200401003', 'whatsapp' => '6281234567892'],
+            ['email' => 'mahasiswa_kp2@example.com', 'name' => 'Mahasiswa KP Dua', 'nim' => '200401003', 'whatsapp' => '6281234567892'],
             [$mahasiswaRole],
             'verified'
         );
@@ -266,7 +266,7 @@ class DatabaseSeeder extends Seeder
         // Mahasiswa active (belum pilih dosen) — demo alur baru.
         // ===============================================================
         $mahasiswaActive = $makeUser(
-            ['email' => 'mahasiswa_active@example.com', 'name' => 'Mahasiswa Aktif', 'identifier' => '200401004', 'whatsapp' => '6281234567893'],
+            ['email' => 'mahasiswa_active@example.com', 'name' => 'Mahasiswa Aktif', 'nim' => '200401004', 'whatsapp' => '6281234567893'],
             [$mahasiswaRole],
             'active'
         );

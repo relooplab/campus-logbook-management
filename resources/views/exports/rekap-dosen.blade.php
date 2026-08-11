@@ -16,7 +16,7 @@
 </head>
 <body>
     <h1>REKAP BIMBINGAN &amp; PENGUJIAN DOSEN</h1>
-    <h2>{{ $dosen->name }} ({{ $dosen->identifier }})</h2>
+    <h2>{{ $dosen->name }} ({{ $dosen->nim }})</h2>
 
     <h3>A. Bimbingan Mahasiswa ({{ $bimbingan->count() }})</h3>
     <table class="data">

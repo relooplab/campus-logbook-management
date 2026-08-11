@@ -21,7 +21,7 @@
         <div class="flex-1">
             <h2 class="font-semibold text-lg">{{ $mahasiswaTa->mahasiswa?->name }}</h2>
             <p class="text-sm text-text-secondary">{{ $mahasiswaTa->mahasiswa?->email }} ·
-                <span class="font-mono">{{ $mahasiswaTa->mahasiswa?->identifier }}</span></p>
+                <span class="font-mono">{{ $mahasiswaTa->mahasiswa?->nim }}</span></p>
             <p class="text-sm text-text-primary mt-1">{{ $mahasiswaTa->isKp() ? ($mahasiswaTa->tempat_kp ?: 'Tempat KP') : $mahasiswaTa->judul_ta }}</p>
             @if ($mahasiswaTa->isKp() && $mahasiswaTa->members->isNotEmpty())
                 <div class="mt-2">

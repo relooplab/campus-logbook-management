@@ -126,7 +126,7 @@ class AdminController extends Controller
             $query->where(function ($q) use ($keyword) {
                 $q->where('name', 'like', "%{$keyword}%")
                     ->orWhere('email', 'like', "%{$keyword}%")
-                    ->orWhere('identifier', 'like', "%{$keyword}%");
+                    ->orWhere('nim', 'like', "%{$keyword}%");
             });
         }
 
@@ -162,7 +162,16 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
-            'identifier' => ['nullable', 'string', 'max:30'],
+            'nim' => ['nullable', 'string', 'max:30', function ($attr, $value, $fail) {
+                if ($value && \App\Models\User::identifierIsTaken($value)) {
+                    $fail('NIM/NIDN ini sudah dipakai akun lain.');
+                }
+            }],
+            'nidn' => ['nullable', 'string', 'max:20', function ($attr, $value, $fail) {
+                if ($value && \App\Models\User::identifierIsTaken($value)) {
+                    $fail('NIM/NIDN ini sudah dipakai akun lain.');
+                }
+            }],
             'password' => ['required', 'string', 'min:6'],
             'roles' => ['required', 'array', 'min:1'],
             'roles.*' => ['in:admin,dosen,mahasiswa'],
@@ -182,7 +191,8 @@ class AdminController extends Controller
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'identifier' => $validated['identifier'] ?? null,
+            'nim' => $validated['nim'] ?? null,
+            'nidn' => $validated['nidn'] ?? null,
             'password' => $validated['password'],
             // system_admin pilih institusi tujuan secara eksplisit; admin biasa otomatis ikut institusinya.
             'institution_id' => $request->user()->isSystemAdmin()
@@ -426,7 +436,7 @@ class AdminController extends Controller
                         $u->id,
                         $u->name,
                         $u->email,
-                        $u->identifier ?? '',
+                        $u->nim ?? '',
                         $u->roles->pluck('name')->implode(','),
                         $u->registration_status ?? '',
                         optional(\App\Models\Institution::find($u->institution_id))->institution_name ?? 'Personal',
@@ -470,7 +480,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
-            'identifier' => ['nullable', 'string', 'max:30'],
+            'nim' => ['nullable', 'string', 'max:30'],
             'password' => ['required', 'string', 'min:6'],
             'institution_id' => ['nullable', 'exists:institutions,id'],
             'scopes' => ['nullable', 'array'],
@@ -497,7 +507,7 @@ class AdminController extends Controller
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'identifier' => $validated['identifier'] ?? null,
+            'nim' => $validated['nim'] ?? null,
             'password' => $validated['password'],
             'institution_id' => $validated['institution_id'] ?? null,
         ]);
@@ -548,7 +558,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
-            'identifier' => ['nullable', 'string', 'max:30'],
+            'nim' => ['nullable', 'string', 'max:30'],
             'password' => ['required', 'string', 'min:6'],
             'scopes' => ['required', 'array', 'min:1'],
             'scopes.*.scope_type' => ['required', 'in:university,faculty,department,study_program'],
@@ -592,7 +602,7 @@ class AdminController extends Controller
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'identifier' => $validated['identifier'] ?? null,
+            'nim' => $validated['nim'] ?? null,
             'password' => $validated['password'],
             'institution_id' => $creator->institution_id,
         ]);

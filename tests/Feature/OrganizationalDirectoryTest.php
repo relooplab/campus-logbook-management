@@ -164,6 +164,27 @@ class OrganizationalDirectoryTest extends AuditSmokeTest
         $this->assertSame($prodiB->id, $mhs->universities()->first()->pivot->study_program_id);
     }
 
+    public function test_revoking_primary_promotes_next_active_affiliation(): void
+    {
+        $univA = $this->service->findOrCreateUniversity('Univ A '.uniqid());
+        $univB = $this->service->findOrCreateUniversity('Univ B '.uniqid());
+        $facA = $this->service->findOrCreateFaculty($univA, 'Fak A');
+        $facB = $this->service->findOrCreateFaculty($univB, 'Fak B');
+        $deptA = $this->service->findOrCreateDepartment($facA, 'Dept A');
+        $deptB = $this->service->findOrCreateDepartment($facB, 'Dept B');
+        $prodiA = $this->service->findOrCreateStudyProgram($deptA, 'S1 A');
+        $prodiB = $this->service->findOrCreateStudyProgram($deptB, 'S1 B');
+
+        $this->service->attachUserToUniversity($this->dosen, $univA, $facA, $deptA, $prodiA, true);
+        $this->service->attachUserToUniversity($this->dosen, $univB, $facB, $deptB, $prodiB, true);
+        $this->service->setPrimaryUniversity($this->dosen, $univA);
+
+        // Revoke primer (univA) -> univB (aktif) harus naik jadi primer.
+        $this->service->revokeAffiliation($this->dosen, $univA);
+
+        $this->assertSame($univB->id, $this->dosen->primaryUniversity()->id);
+    }
+
     public function test_dosen_can_have_multiple_affiliations(): void
     {
         $univA = $this->service->findOrCreateUniversity('Universitas Multi A');

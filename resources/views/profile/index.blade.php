@@ -45,11 +45,11 @@
                         <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-                <div> <label class="block text-sm font-medium mb-1" for="identifier">NIM / NIDN @if ($user->isMahasiswa())<span class="text-status-danger">*</span>@endif</label> <input
-                        type="text" name="identifier" id="identifier" @if ($user->isMahasiswa()) required @endif
-                        value="{{ old("identifier", $user->identifier) }}"
+                <div> <label class="block text-sm font-medium mb-1" for="nim">NIM / NIDN @if ($user->isMahasiswa())<span class="text-status-danger">*</span>@endif</label> <input
+                        type="text" name="nim" id="nim" @if ($user->isMahasiswa()) required @endif
+                        value="{{ old("nim", $user->nim) }}"
                         class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                    @error("identifier")
+                    @error("nim")
                         <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>

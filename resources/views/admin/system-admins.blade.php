@@ -9,7 +9,7 @@
                 <thead>
                     <tr class="text-left text-text-secondary border-b border-border">
                         <th class="py-3 px-4">Nama</th>
-                        <th class="py-3 px-4 table-col-identifier">Identifier</th>
+                        <th class="py-3 px-4 table-col-nim">NIM/NIDN</th>
                         <th class="py-3 px-4 table-col-email">Email</th>
                         <th class="py-3 px-4">Role</th>
                         <th class="py-3 px-4">Aksi</th>
@@ -30,7 +30,7 @@
                                     <span class="block text-[10px] text-brand mt-0.5">{{ $u->adminScopes->count() }} scope</span>
                                 @endif
                             </td>
-                            <td class="py-3 px-4 table-col-identifier">{{ $u->identifier ?? "—" }}</td>
+                            <td class="py-3 px-4 table-col-nim">{{ $u->nim ?? "—" }}</td>
                             <td class="py-3 px-4 table-col-email">{{ $u->email }}</td>
                             <td class="py-3 px-4">
                                 @foreach ($u->roles as $role)
@@ -66,7 +66,7 @@
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <input
                     type="email" name="email" required placeholder="Email"
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <input
-                    type="text" name="identifier" placeholder="Identifier (opsional)"
+                    type="text" name="nim" placeholder="Identifier (opsional)"
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <input
                     type="password" name="password" required placeholder="Kata sandi"
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">

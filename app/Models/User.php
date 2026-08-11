@@ -27,7 +27,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
-        'identifier',
+        'nim',
         'nidn',
         'registration_status',
         'profile_photo_path',
@@ -75,6 +75,28 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification(): void
     {
         $this->notify(new \App\Notifications\VerifyEmail);
+    }
+
+    /**
+     * Cari user berdasarkan NIM atau NIDN (identitas unik lintas kolom).
+     * Dipakai untuk deteksi "akun sudah terdaftar".
+     */
+    public static function findByIdentifier(string $nimOrNidn): ?User
+    {
+        return static::where('nim', $nimOrNidn)
+            ->orWhere('nidn', $nimOrNidn)
+            ->first();
+    }
+
+    /**
+     * Apakah nilai NIM/NIDN sudah dipakai oleh user lain (lintas kolom nim & nidn)?
+     * Mencegah satu nilai dipakai mahasiswa (NIM) dan dosen (NIDN) sekaligus.
+     */
+    public static function identifierIsTaken(string $value, ?int $ignoreUserId = null): bool
+    {
+        return static::where(fn ($q) => $q->where('nim', $value)->orWhere('nidn', $value))
+            ->when($ignoreUserId, fn ($q) => $q->where('id', '!=', $ignoreUserId))
+            ->exists();
     }
 
     /**

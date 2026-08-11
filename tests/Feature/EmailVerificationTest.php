@@ -66,7 +66,7 @@ class EmailVerificationTest extends AuditSmokeTest
         $unverified = User::create([
             'name' => 'Unverif Login', 'email' => 'unverif-login@audit.test',
             'password' => Hash::make('secret123'), 'registration_status' => 'active',
-            'identifier' => 'NIM-UVL-'.uniqid(), 'whatsapp' => '628',
+            'nim' => 'NIM-UVL-'.uniqid(), 'whatsapp' => '628',
             'email_verified_at' => null,
         ]);
         Role::firstOrCreate(['name' => 'mahasiswa', 'guard_name' => 'web']);
@@ -91,7 +91,7 @@ class EmailVerificationTest extends AuditSmokeTest
         $user = User::create([
             'name' => 'To Verify', 'email' => 'to-verify@audit.test',
             'password' => Hash::make('secret123'), 'registration_status' => 'active',
-            'identifier' => 'NIM-TV', 'whatsapp' => '628',
+            'nim' => 'NIM-TV', 'whatsapp' => '628',
             'email_verified_at' => null,
         ]);
         Role::firstOrCreate(['name' => 'mahasiswa', 'guard_name' => 'web']);
@@ -116,7 +116,7 @@ class EmailVerificationTest extends AuditSmokeTest
         $user = User::create([
             'name' => 'Resend User', 'email' => 'resend@audit.test',
             'password' => Hash::make('secret123'), 'registration_status' => 'active',
-            'identifier' => 'NIM-RS', 'whatsapp' => '628',
+            'nim' => 'NIM-RS', 'whatsapp' => '628',
             'email_verified_at' => null,
         ]);
         Role::firstOrCreate(['name' => 'mahasiswa', 'guard_name' => 'web']);
@@ -138,7 +138,7 @@ class EmailVerificationTest extends AuditSmokeTest
         $user = User::create([
             'name' => 'NoGate', 'email' => 'nogate@audit.test',
             'password' => Hash::make('secret123'), 'registration_status' => 'active',
-            'identifier' => 'NIM-NG', 'whatsapp' => '628',
+            'nim' => 'NIM-NG', 'whatsapp' => '628',
             'email_verified_at' => null,
         ]);
         Role::firstOrCreate(['name' => 'mahasiswa', 'guard_name' => 'web']);
@@ -154,7 +154,7 @@ class EmailVerificationTest extends AuditSmokeTest
         $user = User::create([
             'name' => 'Notice User', 'email' => 'notice@audit.test',
             'password' => Hash::make('secret123'), 'registration_status' => 'active',
-            'identifier' => 'NIM-NT', 'whatsapp' => '628',
+            'nim' => 'NIM-NT', 'whatsapp' => '628',
             'email_verified_at' => null,
         ]);
         Role::firstOrCreate(['name' => 'mahasiswa', 'guard_name' => 'web']);

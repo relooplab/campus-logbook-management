@@ -42,7 +42,7 @@ class AuditAdminActionsTest extends AuditSmokeTest
         Role::firstOrCreate(['name' => 'system_admin', 'guard_name' => 'web']);
         $sys = User::create([
             'name' => 'Sys Admin Audit', 'email' => 'sys@audit.test', 'password' => bcrypt('x'),
-            'registration_status' => 'active', 'identifier' => 'SYS-A', 'whatsapp' => '628',
+            'registration_status' => 'active', 'nim' => 'SYS-A', 'whatsapp' => '628',
         ]);
         $sys->assignRole('system_admin');
         foreach (['admin.users', 'admin.institution'] as $p) {
@@ -57,7 +57,7 @@ class AuditAdminActionsTest extends AuditSmokeTest
     {
         User::create([
             'name' => 'Loginx', 'email' => 'loginx@audit.test', 'password' => bcrypt('secret'),
-            'registration_status' => 'active', 'identifier' => 'NIM-LX', 'whatsapp' => '6281',
+            'registration_status' => 'active', 'nim' => 'NIM-LX', 'whatsapp' => '6281',
         ]);
 
         $s1 = $this->auditSize();
@@ -75,7 +75,7 @@ class AuditAdminActionsTest extends AuditSmokeTest
         $s = $this->auditSize();
         $this->actingAs($sys)->post(route('admin.users.store'), [
             'name' => 'Budi', 'email' => 'budi@audit.test', 'password' => 'secret123',
-            'roles' => ['mahasiswa'], 'identifier' => 'NIM-B',
+            'roles' => ['mahasiswa'], 'nim' => 'NIM-B',
         ]);
         $this->assertAuditLogged($s, 'Admin membuat pengguna');
     }
@@ -83,7 +83,7 @@ class AuditAdminActionsTest extends AuditSmokeTest
     public function test_reset_password_is_logged(): void
     {
         $sys = $this->systemAdmin();
-        $u = User::create(['name' => 'R', 'email' => 'r@audit.test', 'password' => bcrypt('x'), 'identifier' => 'NIM-R', 'whatsapp' => '628']);
+        $u = User::create(['name' => 'R', 'email' => 'r@audit.test', 'password' => bcrypt('x'), 'nim' => 'NIM-R', 'whatsapp' => '628']);
         $s = $this->auditSize();
         $this->actingAs($sys)->post(route('admin.users.reset-password', $u), ['password' => 'newsecret']);
         $this->assertAuditLogged($s, 'Admin mereset password user');
@@ -92,7 +92,7 @@ class AuditAdminActionsTest extends AuditSmokeTest
     public function test_destroy_user_is_logged(): void
     {
         $sys = $this->systemAdmin();
-        $u = User::create(['name' => 'D', 'email' => 'd@audit.test', 'password' => bcrypt('x'), 'identifier' => 'NIM-D', 'whatsapp' => '628']);
+        $u = User::create(['name' => 'D', 'email' => 'd@audit.test', 'password' => bcrypt('x'), 'nim' => 'NIM-D', 'whatsapp' => '628']);
         $s = $this->auditSize();
         $this->actingAs($sys)->delete(route('admin.users.destroy', $u));
         $this->assertAuditLogged($s, 'Admin menghapus user');

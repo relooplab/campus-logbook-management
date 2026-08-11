@@ -97,7 +97,7 @@
                     class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                     <option value="">Pilih mahasiswa (tanpa {{ $jenis === "kp" ? "KP" : "TA" }})...</option>
                     @foreach ($mahasiswaList as $m)
-                        <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->identifier }})</option>
+                        <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->nim }})</option>
                     @endforeach
                 </select>
                 @if ($jenis === "kp")
@@ -109,7 +109,7 @@
                         class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                         <option value="" disabled>Anggota kelompok lainnya (opsional, Ctrl+klik untuk pilih banyak)...</option>
                         @foreach ($mahasiswaList as $m)
-                            <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->identifier }})</option>
+                            <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->nim }})</option>
                         @endforeach
                     </select>
                     <div class="grid grid-cols-2 gap-2">
@@ -174,7 +174,7 @@
                         <select name="member_ids[]" multiple size="3"
                             class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                             @foreach ($mahasiswaList as $m)
-                                <option value="{{ $m->id }}" @selected($ta->members->contains('id', $m->id))>{{ $m->name }} ({{ $m->identifier }})</option>
+                                <option value="{{ $m->id }}" @selected($ta->members->contains('id', $m->id))>{{ $m->name }} ({{ $m->nim }})</option>
                             @endforeach
                         </select>
                     </div>

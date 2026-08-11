@@ -211,6 +211,9 @@ class OrganizationalDirectoryService
     {
         $this->setAffiliationStatus($user, $university, self::STATUS_REVOKED);
         $user->universities()->updateExistingPivot($university->id, ['is_primary' => false]);
+
+        // Jika afiliasi yang di-revoke adalah primer, promosikan afiliasi aktif lain.
+        $this->promoteNextActivePrimary($user);
     }
 
     /**
@@ -220,6 +223,35 @@ class OrganizationalDirectoryService
     {
         $this->setAffiliationStatus($user, $university, self::STATUS_REVOKED, $rejector, $reason);
         $user->universities()->updateExistingPivot($university->id, ['is_primary' => false]);
+
+        // Jika afiliasi yang ditolak adalah primer, promosikan afiliasi aktif lain.
+        $this->promoteNextActivePrimary($user);
+    }
+
+    /**
+     * Pastikan user punya minimal satu afiliasi primer. Jika tidak ada yang
+     * ber-status is_primary, promosikan afiliasi ACTIVE pertama. Dipanggil
+     * setelah revoke/reject agar `primaryUniversity()` tetap konsisten.
+     */
+    private function promoteNextActivePrimary(User $user): void
+    {
+        $hasPrimary = $user->universities()
+            ->wherePivot('is_primary', true)
+            ->wherePivot('status', self::STATUS_ACTIVE)
+            ->exists();
+
+        if ($hasPrimary) {
+            return;
+        }
+
+        $next = $user->universities()
+            ->wherePivot('status', self::STATUS_ACTIVE)
+            ->orderBy('user_university.id')
+            ->first();
+
+        if ($next) {
+            $this->setPrimaryUniversity($user, $next);
+        }
     }
 
     /**

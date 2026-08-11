@@ -24,7 +24,7 @@
 <body>
     @php $inst = \App\Models\Institution::forUser($logbook->mahasiswaTa?->pembimbing1); @endphp
     <h1>CATATAN PERBAIKAN</h1>
-    <h2>{{ $logbook->mahasiswaTa?->mahasiswa?->name }} · {{ $logbook->mahasiswaTa?->mahasiswa?->identifier }}</h2>
+    <h2>{{ $logbook->mahasiswaTa?->mahasiswa?->name }} · {{ $logbook->mahasiswaTa?->mahasiswa?->nim }}</h2>
 
     <div class="info">
         <table>

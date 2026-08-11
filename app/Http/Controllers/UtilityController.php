@@ -30,10 +30,10 @@ class UtilityController extends Controller
         // Mahasiswa & dosen — hanya yang punya hubungan langsung dengan pencari.
         $users = User::where(function ($w) use ($q) {
             $w->where('name', 'like', "%{$q}%")
-                ->orWhere('identifier', 'like', "%{$q}%")
+                ->orWhere('nim', 'like', "%{$q}%")
                 ->orWhere('email', 'like', "%{$q}%");
         })
-        ->get(['id', 'name', 'identifier'])
+        ->get(['id', 'name', 'nim'])
         ->filter(fn ($u) => $user->isAdmin() || $user->id === $u->id || $user->hasDirectRelation($u))
         ->take(8)
         ->values();
@@ -120,7 +120,7 @@ class UtilityController extends Controller
             'users' => $users->map(fn ($u) => [
                 'id' => $u->id,
                 'name' => $u->name,
-                'identifier' => $u->identifier,
+                'nim' => $u->nim,
                 'url' => route('profile.show', $u),
             ]),
             'entries' => $entries->map(fn ($e) => [
