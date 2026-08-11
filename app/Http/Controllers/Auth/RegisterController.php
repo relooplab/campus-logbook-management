@@ -37,7 +37,10 @@ class RegisterController extends Controller
             'role' => ['required', 'in:mahasiswa,dosen'],
             // Identitas: NIDN untuk dosen, NIM untuk mahasiswa (unik lintas kolom).
             // NIM wajib untuk mahasiswa (konsisten dengan updateProfile).
-            'nim' => ['required_if:role,mahasiswa', 'string', 'max:30', function ($attr, $value, $fail) {
+            // `nullable` wajib ada: saat role=dosen, field nim tetap dikirim (input
+            // hidden) dan diubah '' -> null oleh middleware ConvertEmptyStringsToNull;
+            // tanpa nullable, rule `string` akan gagal pada nilai null.
+            'nim' => ['nullable', 'required_if:role,mahasiswa', 'string', 'max:30', function ($attr, $value, $fail) {
                 if ($value && User::identifierIsTaken($value)) {
                     $fail('NIM/NIDN ini sudah dipakai akun lain.');
                 }

@@ -127,4 +127,41 @@ class NimNidnUniquenessTest extends AuditSmokeTest
 
         $response->assertSessionHasErrors('nim');
     }
+
+    /**
+     * Regresi: form register selalu mengirim `nim=""` (input hidden walau tab
+     * "Dosen" aktif). Middleware ConvertEmptyStringsToNull mengubah '' -> null.
+     * Tanpa `nullable`, rule `string` pada nim akan gagal ("must be a string")
+     * untuk pendaftaran dosen. Dosen harus tetap bisa daftar.
+     */
+    public function test_dosen_register_accepts_empty_nim_field(): void
+    {
+        $response = $this->post(route('register'), [
+            'name' => 'Dosen EmptyNim',
+            'email' => 'dosen-empty-nim-'.uniqid().'@audit.test',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+            'role' => 'dosen',
+            'nim' => '', // dikirim sebagai string kosong (seperti browser)
+            'nidn' => 'NIDN-'.uniqid(),
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect();
+    }
+
+    /** Mahasiswa tetap wajib NIM — kalau dibiarkan kosong, harus error. */
+    public function test_mahasiswa_register_requires_nim(): void
+    {
+        $response = $this->post(route('register'), [
+            'name' => 'Mhs NoNim',
+            'email' => 'mhs-no-nim-'.uniqid().'@audit.test',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+            'role' => 'mahasiswa',
+            'nim' => '',
+        ]);
+
+        $response->assertSessionHasErrors('nim');
+    }
 }
