@@ -1,3 +1,10 @@
+# [0.40.0](https://github.com/relooplab/campus-logbook-management/compare/v0.39.1...v0.40.0) (2026-08-11)
+
+
+### Features
+
+* multi-approver dosen penguji change requests, seminar read tracking, akademik profile, dosen seminar agenda ([f340b4d](https://github.com/relooplab/campus-logbook-management/commit/f340b4d5a4065e6e2e282f656cb4c286659de672))
+
 ## [0.39.1](https://github.com/relooplab/campus-logbook-management/compare/v0.39.0...v0.39.1) (2026-08-11)
 
 
