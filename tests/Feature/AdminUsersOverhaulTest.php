@@ -246,6 +246,53 @@ class AdminUsersOverhaulTest extends AuditSmokeTest
         $response->assertSee('Inst User');
     }
 
+    public function test_system_admin_can_set_individual_quota(): void
+    {
+        $sys = $this->systemAdmin();
+        $u = User::create([
+            'name' => 'Quota User', 'email' => 'qu-'.uniqid().'@audit.test',
+            'password' => bcrypt('x'), 'registration_status' => 'active',
+            'identifier' => 'QU-'.uniqid(), 'whatsapp' => '628',
+        ]);
+        $u->assignRole('mahasiswa');
+
+        $response = $this->actingAs($sys)->post(route('admin.system.users.quota', $u), [
+            'storage_limit_mb' => 512,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertSame(512, (int) \App\Models\UserPlanOverride::where('user_id', $u->id)->first()->storage_limit_mb);
+    }
+
+    public function test_clear_individual_quota_resets_to_null(): void
+    {
+        $sys = $this->systemAdmin();
+        $u = User::create([
+            'name' => 'Quota Clear', 'email' => 'qc-'.uniqid().'@audit.test',
+            'password' => bcrypt('x'), 'registration_status' => 'active',
+            'identifier' => 'QC-'.uniqid(), 'whatsapp' => '628',
+        ]);
+        $u->assignRole('mahasiswa');
+        \App\Models\UserPlanOverride::create(['user_id' => $u->id, 'storage_limit_mb' => 512]);
+
+        $this->actingAs($sys)->post(route('admin.system.users.quota', $u), [
+            'storage_limit_mb' => 0,
+        ]);
+
+        $this->assertNull(\App\Models\UserPlanOverride::where('user_id', $u->id)->first()->storage_limit_mb);
+    }
+
+    public function test_institution_admin_cannot_set_individual_quota(): void
+    {
+        $admin = $this->institutionAdmin();
+        $u = $this->mhs;
+        $response = $this->actingAs($admin)->post(route('admin.system.users.quota', $u), [
+            'storage_limit_mb' => 512,
+        ]);
+        $response->assertForbidden();
+    }
+
     public function test_institution_filter_ignored_for_institution_admin(): void
     {
         $admin = $this->institutionAdmin();

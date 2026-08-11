@@ -23,9 +23,7 @@
                         <span class="inline-block px-2 py-0.5 rounded-full text-[10px] bg-brand-light text-brand">Universitas</span>
                         <h2 class="font-heading font-semibold text-text-primary">{{ $univ->name }}</h2>
                         <span class="text-xs text-text-secondary">#{{ $univ->id }}</span>
-                        @if ($univ->npsn)
-                            <span class="text-xs text-text-secondary">NPSN: {{ $univ->npsn }}</span>
-                        @endif
+                        <a href="{{ route('admin.system.directory.universities.edit', $univ) }}" class="text-xs text-brand hover:underline ml-1">Edit</a>
                     </div>
 
                     @forelse ($univ->faculties as $faculty)
@@ -106,16 +104,18 @@
 
                 <div>
                     <label class="block text-sm mb-1">Nama Universitas</label>
+                    {{-- Autocomplete: sisipkan nama universitas yang sudah ada agar
+                         system admin bisa memilih entri existing (mencegah double). --}}
                     <input type="text" name="name" value="{{ old('name') }}" maxlength="255" required
+                        list="existing-universities" placeholder="Mulai ketik atau pilih..."
                         class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                    <datalist id="existing-universities">
+                        @foreach ($universities as $u)
+                            <option value="{{ $u->name }}"></option>
+                        @endforeach
+                    </datalist>
+                    <p id="univ-duplicate-hint" class="hidden text-xs text-status-pending mt-1">Nama ini sudah ada — memilih akan menggunakan entri yang sudah terdaftar (tidak membuat duplikat).</p>
                     @error('name')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
-                </div>
-
-                <div>
-                    <label class="block text-sm mb-1">NPSN (opsional)</label>
-                    <input type="text" name="npsn" value="{{ old('npsn') }}" maxlength="50"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
-                    @error('npsn')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
                 </div>
 
                 <button class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-medium">+ Tambah Universitas</button>
@@ -125,4 +125,32 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    (function() {
+        var input = document.querySelector('input[name="name"][list="existing-universities"]');
+        var hint = document.getElementById('univ-duplicate-hint');
+        if (!input || !hint) return;
+
+        // Kumpulkan nama universitas yang sudah ada (dari datalist).
+        var existing = Array.from(document.querySelectorAll('#existing-universities option')).map(function(o) {
+            return o.value.trim().toLowerCase();
+        });
+
+        function checkDuplicate() {
+            var v = input.value.trim().toLowerCase();
+            if (v.length > 0 && existing.indexOf(v) !== -1) {
+                hint.classList.remove('hidden');
+            } else {
+                hint.classList.add('hidden');
+            }
+        }
+
+        input.addEventListener('input', checkDuplicate);
+        // Jalankan sekali saat halaman dimuat (mis. karena old() input setelah error).
+        checkDuplicate();
+    })();
+</script>
 @endsection

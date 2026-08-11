@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Department;
 use App\Models\DirectorySubscription;
 use App\Models\Faculty;
+use App\Models\Institution;
 use App\Models\Plan;
 use App\Models\StudyProgram;
 use App\Models\University;
@@ -277,6 +278,13 @@ class Feature
      */
     public static function institutionStorageLimitMb(int $institutionId): int
     {
+        // Prioritas 1: override kuota langsung per institusi (institutions.storage_limit_mb).
+        // Terisi (> 0) = pool institusi dipakai langsung; null/0 = fallback ke subscription.
+        $institution = Institution::find($institutionId);
+        if ($institution && $institution->storage_limit_mb !== null && $institution->storage_limit_mb > 0) {
+            return (int) $institution->storage_limit_mb;
+        }
+
         // Ambil semua user di institusi ini yang punya afiliasi universitas.
         $userIds = User::where('institution_id', $institutionId)
             ->whereHas('universities')

@@ -26,6 +26,7 @@ class Institution extends Model
         'allowed_file_types',
         'seminar_hardcopy_note',
         'email_verification_required',
+        'storage_limit_mb',
         'mail_mailer',
         'mail_host',
         'mail_port',
@@ -35,6 +36,14 @@ class Institution extends Model
         'mail_from_address',
         'mail_from_name',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'email_verification_required' => 'boolean',
+            'storage_limit_mb' => 'integer',
+        ];
+    }
 
     /**
      * Ambil profil institusi aktif (single-row), di-cache.

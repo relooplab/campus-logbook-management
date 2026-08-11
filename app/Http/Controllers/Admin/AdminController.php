@@ -55,7 +55,7 @@ class AdminController extends Controller
             $query->latest();
         }
 
-        $users = $query->with('roles')->paginate(20)->withQueryString();
+        $users = $query->with(['roles', 'planOverride'])->paginate(20)->withQueryString();
 
         // Stat cards (counts) — clone query tanpa pagination/limit.
         $baseQuery = $this->usersQuery($request);
@@ -72,7 +72,20 @@ class AdminController extends Controller
             ? \App\Models\Institution::orderBy('institution_name')->get()
             : collect();
 
-        return view('admin.users', compact('users', 'roles', 'institutions', 'counts', 'isLockedNonSystemAdmin', 'tab'));
+        // Map kuota efektif per user (halaman ini) — hanya untuk system admin
+        // agar tabel bisa menampilkan kolom "Kuota" tanpa N+1.
+        $quotaMap = collect();
+        if ($isSystemAdmin) {
+            $quotaMap = $users->getCollection()->mapWithKeys(function ($u) {
+                return [$u->id => [
+                    'effective_mb' => \App\Support\Feature::storageLimitMb($u),
+                    'has_override' => (bool) $u->planOverride?->storage_limit_mb,
+                    'override_mb' => $u->planOverride?->storage_limit_mb,
+                ]];
+            });
+        }
+
+        return view('admin.users', compact('users', 'roles', 'institutions', 'counts', 'isLockedNonSystemAdmin', 'tab', 'quotaMap'));
     }
 
     /**
@@ -991,6 +1004,42 @@ class AdminController extends Controller
     }
 
     /**
+     * Set kuota individu (override storage) untuk user — system admin.
+     * Jalur cepat dari halaman Kelola Pengguna (tanpa membuka halaman paket penuh).
+     */
+    public function updateUserQuota(Request $request, User $user): RedirectResponse
+    {
+        abort_unless(auth()->user()->isSystemAdmin(), 403, 'Hanya System Admin yang dapat mengatur kuota user.');
+
+        $validated = $request->validate([
+            'storage_limit_mb' => ['nullable', 'integer', 'min:0', 'max:1048576'],
+        ]);
+
+        // Kosongkan/0 = ikut paket/pool (hapus override).
+        UserPlanOverride::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'allow_export' => $user->planOverride?->allow_export ?? null,
+                'allow_import' => $user->planOverride?->allow_import ?? null,
+                'storage_limit_mb' => (! empty($validated['storage_limit_mb']) && $validated['storage_limit_mb'] > 0)
+                    ? (int) $validated['storage_limit_mb']
+                    : null,
+            ]
+        );
+
+        \App\Support\Audit::log('SysAdmin mengatur kuota individu user', [
+            'target_user_id' => $user->id,
+            'target_email' => $user->email,
+            'storage_limit_mb' => $validated['storage_limit_mb'] ?? null,
+        ]);
+
+        $mb = $validated['storage_limit_mb'] ?? null;
+        return back()->with('success', $mb && $mb > 0
+            ? "Kuota individu '{$user->name}' diatur ke {$mb} MB (override aktif)."
+            : "Override kuota '{$user->name}' dihapus — kini mengikuti paket/pool.");
+    }
+
+    /**
      * Halaman kuota dosen per institusi (admin institusi yang berlangganan).
      * Hanya untuk dosen di institusi milik admin (bukan system admin).
      */
@@ -1183,17 +1232,81 @@ class AdminController extends Controller
     }
 
     /**
-     * Tambah universitas (dedup berdasarkan nama/NPSN).
+     * Halaman kuota storage per institusi (system admin).
+     * Tampilkan semua institusi: nama, kuota efektif (override atau dari
+     * subscription), pemakaian aktual (MB, di-cache singkat), input override.
+     */
+    public function institutionQuotas(): View
+    {
+        $institutions = \App\Models\Institution::orderBy('institution_name')->get();
+
+        $rows = $institutions->map(function ($inst) {
+            $effectiveMb = Feature::institutionStorageLimitMb((int) $inst->id);
+            $usedMb = $this->cachedInstitutionUsedMb((int) $inst->id);
+
+            return [
+                'id' => $inst->id,
+                'name' => $inst->institution_name,
+                'storage_limit_mb' => $inst->storage_limit_mb,
+                'effective_mb' => $effectiveMb,
+                'used_mb' => $usedMb,
+            ];
+        });
+
+        return view('admin.system.institution-quotas', compact('rows'));
+    }
+
+    /**
+     * Simpan override kuota storage per institusi.
+     */
+    public function updateInstitutionQuota(Request $request, \App\Models\Institution $institution): RedirectResponse
+    {
+        abort_unless(auth()->user()->isSystemAdmin(), 403, 'Hanya System Admin yang dapat mengatur kuota institusi.');
+
+        $validated = $request->validate([
+            'storage_limit_mb' => ['nullable', 'integer', 'min:0', 'max:1048576'],
+        ]);
+
+        // null/0 = auto (ikuti subscription); > 0 = override pool langsung.
+        $institution->update([
+            'storage_limit_mb' => (! empty($validated['storage_limit_mb']) && $validated['storage_limit_mb'] > 0)
+                ? (int) $validated['storage_limit_mb']
+                : null,
+        ]);
+        \App\Models\Institution::flush($institution->id);
+
+        \App\Support\Audit::log('SysAdmin mengatur kuota storage institusi', [
+            'institution_id' => $institution->id,
+            'storage_limit_mb' => $validated['storage_limit_mb'] ?? null,
+        ]);
+
+        return back()->with('success', "Kuota institusi '{$institution->institution_name}' diperbarui.");
+    }
+
+    /**
+     * Pemakaian storage institusi (MB), di-cache singkat (5 menit) agar render
+     * tabel banyak institusi tidak melakukan loop N+1 per request.
+     */
+    private function cachedInstitutionUsedMb(int $institutionId): int
+    {
+        return \Illuminate\Support\Facades\Cache::remember(
+            'institution.used-mb.'.$institutionId,
+            now()->addMinutes(5),
+            fn () => Feature::institutionStorageUsedMb($institutionId)
+        );
+    }
+
+    /**
+     * Tambah universitas (dedup berdasarkan nama).
      */
     public function storeDirectoryUniversity(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'npsn' => ['nullable', 'string', 'max:50'],
         ]);
 
         $university = app(\App\Services\OrganizationalDirectoryService::class)
-            ->findOrCreateUniversity($validated['name'], $validated['npsn'] ?? null);
+            ->findOrCreateUniversity($validated['name']);
 
         \App\Support\Audit::log('SysAdmin menambah universitas', [
             'university_id' => $university->id,
@@ -1201,6 +1314,41 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', "Universitas '{$university->name}' ditambahkan/diduplikasi.");
+    }
+
+    /**
+     * Form edit nama universitas (perbaiki nama yang salah).
+     */
+    public function editDirectoryUniversity(\App\Models\University $university): View
+    {
+        return view('admin.system.directory-university-edit', compact('university'));
+    }
+
+    /**
+     * Simpan perubahan nama universitas.
+     */
+    public function updateDirectoryUniversity(Request $request, \App\Models\University $university): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        // Cegah duplikat nama dengan universitas lain.
+        $duplicate = \App\Models\University::whereRaw('LOWER(name) = ?', [mb_strtolower(trim($validated['name']))])
+            ->where('id', '!=', $university->id)
+            ->exists();
+        if ($duplicate) {
+            return back()->with('error', 'Nama universitas sudah dipakai universitas lain.');
+        }
+
+        $university->update(['name' => trim($validated['name'])]);
+
+        \App\Support\Audit::log('SysAdmin mengubah nama universitas', [
+            'university_id' => $university->id,
+            'name' => $university->name,
+        ]);
+
+        return redirect()->route('admin.system.directory')->with('success', "Nama universitas diperbarui menjadi '{$university->name}'.");
     }
 
     /**

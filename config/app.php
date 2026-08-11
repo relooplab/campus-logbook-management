@@ -80,6 +80,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | Daftar IP/nilai proxy yang dipercaya untuk header X-Forwarded-* (mis.
+    | `X-Forwarded-Proto`, `X-Forwarded-For`). Dipakai oleh trustProxies() agar
+    | Laravel tahu skema https saat di belakang reverse-proxy.
+    |
+    | WAJIB berupa CIDR/nilai yang valid. Default kosong = tidak mempercayai
+    | header forwarded apa pun (aman), sehingga mencegah TypeError di
+    | Symfony\IpUtils saat `X-Forwarded-For` kosong/null.
+    |
+    */
+
+    'trusted_proxies' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('TRUSTED_PROXIES', ''))
+    ))),
+
+    /*
+    |--------------------------------------------------------------------------
     | Enforce Dosen Affiliation Onboarding
     |--------------------------------------------------------------------------
     |

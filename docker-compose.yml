@@ -6,10 +6,15 @@ name: logbook-ta
 # ============================================================================
 x-app-env: &app-env
   APP_ENV: production
-  APP_DEBUG: "false"
+  APP_DEBUG: "${APP_DEBUG:-false}"
   APP_URL: "${APP_URL:-http://localhost:8280}"
-  # Versi rilis (override opsional; default 0.0.0 -> ReleaseVersion pakai CHANGELOG).
-  APP_VERSION: "${APP_VERSION:-0.0.0}"
+  # Versi rilis (override opsional). Default kosong -> ReleaseVersion pakai CHANGELOG.
+  # JANGAN set default "0.0.0" di sini: config('app.version') jadi truthy dan
+  # ReleaseVersion::get() selalu return "0.0.0" (bukan versi CHANGELOG).
+  APP_VERSION: "${APP_VERSION:-}"
+  # Proxy/ingress IP (CIDR) yang dipercaya untuk header X-Forwarded-* (pisahkan koma).
+  # Kosongkan (default) = tidak memercayai header forwarded (aman). Contoh: 10.0.0.0/8
+  TRUSTED_PROXIES: "${TRUSTED_PROXIES:-}"
   # Fix #3: APP_KEY wajib di-set (di-generate manual) agar Laravel boot.
   APP_KEY: "${APP_KEY:?APP_KEY must be set in the deployment environment}"
   # Fix #5: DB_CONNECTION di-set di semua worker (default sqlite jika kosong).
@@ -29,9 +34,9 @@ x-app-env: &app-env
   REVERB_APP_ID: "${REVERB_APP_ID:?REVERB_APP_ID must be set in the deployment environment}"
   REVERB_APP_KEY: "${REVERB_APP_KEY:?REVERB_APP_KEY must be set in the deployment environment}"
   REVERB_APP_SECRET: "${REVERB_APP_SECRET:?REVERB_APP_SECRET must be set in the deployment environment}"
-  REVERB_HOST: logbook-ta-reverb
+  REVERB_HOST: "${REVERB_HOST:-logbook-ta-reverb}"
   REVERB_PORT: 8080
-  REVERB_SCHEME: http
+  REVERB_SCHEME: "${REVERB_SCHEME:-http}"
   REVERB_SERVER_HOST: 0.0.0.0
   REVERB_SERVER_PORT: 8080
   MAIL_MAILER: smtp
@@ -143,6 +148,8 @@ services:
         condition: service_started
       logbook-ta-mailpit:
         condition: service_started
+      logbook-ta-reverb:
+        condition: service_started
     volumes:
       - app_storage:/var/www/storage
       - public_pp:/var/www/public
@@ -157,6 +164,8 @@ services:
     environment: *app-env
     depends_on:
       logbook-ta-app:
+        condition: service_started
+      logbook-ta-reverb:
         condition: service_started
     volumes:
       - app_storage:/var/www/storage

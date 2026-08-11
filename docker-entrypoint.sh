@@ -14,9 +14,33 @@ set -e
 rm -rf /var/www/public/build /var/www/public/pdfjs /var/www/public/css
 cp -a /public-dist/. /var/www/public/
 
+# Pastikan struktur storage ada walau named/bind volume kosong saat first deploy.
+# Folder-folder ini dibuat di image saat build (Dockerfile), tapi volume kosong
+# menimpa isinya -> view compiler crash ("Please provide a valid cache path"),
+# session/cache gagal, dan upload ke storage/app/public error.
+mkdir -p \
+    /var/www/storage/framework/views \
+    /var/www/storage/framework/sessions \
+    /var/www/storage/framework/cache/data \
+    /var/www/storage/logs \
+    /var/www/storage/app/public \
+    /var/www/bootstrap/cache
+chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache 2>/dev/null || true
+chmod -R ug+rw /var/www/storage /var/www/bootstrap/cache 2>/dev/null || true
+
 # Pastikan storage:link selalu ada.
 if [ ! -L /var/www/public/storage ]; then
     php artisan storage:link || true
+fi
+
+# Auto-migrate saat first deploy (idempoten — hanya jalankan migration yang belum).
+# DB (MySQL) sudah dijadwalkan healthy via depends_on pada service app, tapi queue/
+# scheduler/reverb juga memakai entrypoint ini; guard di sini agar tidak gagal
+# ketika DB belum dapat diakses (mis. saat container lain boot lebih dulu).
+if [ -n "$APP_ENV" ] && [ "$APP_ENV" != "testing" ]; then
+    if php artisan migrate:status >/dev/null 2>&1; then
+        php artisan migrate --force --no-interaction || true
+    fi
 fi
 
 # Teruskan ke perintah utama (php-fpm / queue / scheduler / reverb).

@@ -25,19 +25,10 @@ class OrganizationalDirectoryService
     public const STATUS_REVOKED = 'revoked';
 
     /**
-     * Cari perguruan tinggi berdasarkan nama (case-insensitive) atau NPSN.
+     * Cari perguruan tinggi berdasarkan nama (case-insensitive).
      */
-    public function findUniversity(string $name, ?string $npsn = null): ?University
+    public function findUniversity(string $name): ?University
     {
-        // Prioritaskan pencarian berdasarkan NPSN jika diberikan.
-        if ($npsn) {
-            $byNpsn = University::where('npsn', $npsn)->first();
-            if ($byNpsn) {
-                return $byNpsn;
-            }
-        }
-
-        // Fallback: cari berdasarkan nama (case-insensitive).
         return University::whereRaw('LOWER(name) = ?', [mb_strtolower(trim($name))])->first();
     }
 
@@ -74,16 +65,15 @@ class OrganizationalDirectoryService
     /**
      * Pilih atau buat perguruan tinggi (dedup).
      */
-    public function findOrCreateUniversity(string $name, ?string $npsn = null): University
+    public function findOrCreateUniversity(string $name): University
     {
-        $existing = $this->findUniversity($name, $npsn);
+        $existing = $this->findUniversity($name);
         if ($existing) {
             return $existing;
         }
 
         return University::create([
             'name' => trim($name),
-            'npsn' => $npsn ?: null,
         ]);
     }
 

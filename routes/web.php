@@ -350,6 +350,7 @@ Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])
         Route::middleware('permission:system.plans')->group(function () {
             Route::get('/users/{user}/plan', [AdminController::class, 'planSettings'])->name('users.plan');
             Route::post('/users/{user}/plan', [AdminController::class, 'updatePlanSettings'])->name('users.plan.update');
+            Route::post('/users/{user}/quota', [AdminController::class, 'updateUserQuota'])->name('users.quota');
             Route::post('/plans', [AdminController::class, 'updatePlanFeatures'])->name('plans.update');
 
             // Ubah institusi user — aksi platform-level, hanya system admin.
@@ -381,9 +382,15 @@ Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])
         // Kelola struktur direktori (universitas/fakultas/departemen/prodi).
         Route::get('/directory', [AdminController::class, 'directory'])->name('directory');
         Route::post('/directory/universities', [AdminController::class, 'storeDirectoryUniversity'])->name('directory.universities.store');
+        Route::get('/directory/universities/{university}/edit', [AdminController::class, 'editDirectoryUniversity'])->name('directory.universities.edit');
+        Route::put('/directory/universities/{university}', [AdminController::class, 'updateDirectoryUniversity'])->name('directory.universities.update');
         Route::post('/directory/faculties', [AdminController::class, 'storeDirectoryFaculty'])->name('directory.faculties.store');
         Route::post('/directory/departments', [AdminController::class, 'storeDirectoryDepartment'])->name('directory.departments.store');
         Route::post('/directory/study-programs', [AdminController::class, 'storeDirectoryStudyProgram'])->name('directory.study-programs.store');
+
+        // Kuota storage langsung per institusi (system admin).
+        Route::get('/institution-quotas', [AdminController::class, 'institutionQuotas'])->name('institution-quotas');
+        Route::post('/institution-quotas/{institution}', [AdminController::class, 'updateInstitutionQuota'])->name('institution-quotas.update');
 
         // Backup & restore seluruh sistem: sengaja hanya digerbangi
         // role:system_admin (bukan permission tambahan) — alasan sama dengan

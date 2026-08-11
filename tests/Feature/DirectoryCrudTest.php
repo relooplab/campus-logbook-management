@@ -55,13 +55,12 @@ class DirectoryCrudTest extends AuditSmokeTest
         $response = $this->actingAs($this->systemAdmin())
             ->post(route('admin.system.directory.universities.store'), [
                 'name' => $name,
-                'npsn' => '12345',
             ]);
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
 
-        $this->assertDatabaseHas('universities', ['name' => $name, 'npsn' => '12345']);
+        $this->assertDatabaseHas('universities', ['name' => $name]);
     }
 
     public function test_university_dedup_on_duplicate_name(): void
@@ -151,6 +150,46 @@ class DirectoryCrudTest extends AuditSmokeTest
             ]);
 
         $response->assertSessionHasErrors('name');
+    }
+
+    public function test_can_edit_university_name(): void
+    {
+        $univ = University::create(['name' => 'Univ Edit Test '.uniqid()]);
+        $newName = 'Universitas Ganti Nama '.uniqid();
+
+        $response = $this->actingAs($this->systemAdmin())
+            ->put(route('admin.system.directory.universities.update', $univ), [
+                'name' => $newName,
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertSame($newName, $univ->fresh()->name);
+    }
+
+    public function test_university_edit_rejects_duplicate_name(): void
+    {
+        $univA = University::create(['name' => 'Univ A '.uniqid()]);
+        $univB = University::create(['name' => 'Univ B '.uniqid()]);
+        $nameB = $univB->name;
+
+        $response = $this->actingAs($this->systemAdmin())
+            ->put(route('admin.system.directory.universities.update', $univA), [
+                'name' => $nameB,
+            ]);
+
+        $response->assertSessionHas('error');
+        $this->assertSame($univA->name, $univA->fresh()->name, 'Nama tidak boleh bentrok dengan universitas lain.');
+    }
+
+    public function test_edit_page_loads(): void
+    {
+        $univ = University::create(['name' => 'Univ Edit Page '.uniqid()]);
+        $response = $this->actingAs($this->systemAdmin())
+            ->get(route('admin.system.directory.universities.edit', $univ));
+        $response->assertOk();
+        $response->assertSee('Edit Universitas');
+        $response->assertSee($univ->name);
     }
 
     public function test_faculty_validation_fails_when_university_invalid(): void

@@ -139,6 +139,7 @@
                             <th class="py-3 px-4">Role</th>
                             <th class="py-3 px-4">Status</th>
                             @if ($showInstitutionCol)
+                                <th class="py-3 px-4">Kuota</th>
                                 <th class="py-3 px-4">Institusi</th>
                             @endif
                             <th class="py-3 px-4">Terdaftar</th>
@@ -187,6 +188,16 @@
                                     <span class="inline-block px-2 py-0.5 rounded-full text-xs {{ $statusColor }}">{{ ucfirst($status) }}</span>
                                 </td>
                                 @if ($showInstitutionCol)
+                                    <td class="py-3 px-4 text-xs">
+                                        @php $q = $quotaMap->get($u->id); @endphp
+                                        @if ($q && $q['has_override'])
+                                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] bg-accent-purple/10 text-accent-purple">override</span>
+                                            <span class="text-text-primary">{{ $q['override_mb'] }} MB</span>
+                                        @else
+                                            <span class="text-text-secondary">{{ $q ? $q['effective_mb'] : '—' }} MB</span>
+                                            <span class="block text-[10px] text-text-secondary/70">ikut paket/pool</span>
+                                        @endif
+                                    </td>
                                     <td class="py-3 px-4 text-xs text-text-secondary">
                                         @if ($u->institution_id)
                                             {{ optional($institutions->firstWhere('id', $u->institution_id))->institution_name ?? '—' }}
@@ -201,7 +212,8 @@
                                 <td class="py-3 px-4">
                                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
                                         @if ($isSystemAdmin)
-                                            <a href="{{ route('admin.system.users.plan', $u) }}" class="text-brand hover:underline text-xs">Paket</a>
+                                            <a href="{{ route('admin.system.users.plan', $u) }}" class="text-brand hover:underline text-xs">Paket &amp; Kuota</a>
+                                            <button type="button" data-quota="{{ $u->id }}" data-name="{{ $u->name }}" data-mb="{{ $quotaMap->get($u->id)['override_mb'] ?? '' }}" class="quota-btn text-brand hover:underline text-xs">Set Kuota</button>
                                             <form method="POST" action="{{ route('admin.system.users.institution', $u) }}" class="inline-flex items-center gap-1">
                                                 @csrf
                                                 <select name="institution_id" onchange="if(confirm('Ubah institusi user ini?')){this.form.submit()}else{this.value='{{ $u->institution_id ?? '' }}'}" class="text-xs rounded border border-border bg-bg-surface px-1 py-0.5">
@@ -229,7 +241,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $showInstitutionCol ? 9 : 8 }}" class="py-4 px-4 text-text-secondary">
+                                <td colspan="{{ $showInstitutionCol ? 10 : 8 }}" class="py-4 px-4 text-text-secondary">
                                     @if (! empty($isLockedNonSystemAdmin))
                                         Tidak dapat menampilkan pengguna — scope admin belum diatur.
                                     @else
@@ -309,6 +321,26 @@
         </form>
     </div>
 </div>
+
+{{-- Modal set kuota (system admin) --}}
+<div id="quota-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-bg-surface rounded-lg border border-border p-4 w-full max-w-sm">
+        <h3 class="font-semibold mb-1">Set Kuota Individu — <span id="quota-name"></span></h3>
+        <p class="text-xs text-text-secondary mb-3">Override kuota workspace (MB) yang menggantikan paket/pool. Kosongkan atau 0 untuk mengikuti paket/pool.</p>
+        <form method="POST" action="" id="quota-form">
+            @csrf
+            <div>
+                <label class="block text-sm font-medium mb-1">Batas Workspace (MB)</label>
+                <input type="number" name="storage_limit_mb" min="0" max="1048576" id="quota-mb"
+                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm" placeholder="Kosongkan = ikut paket/pool">
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" id="quota-cancel" class="px-3 py-2 rounded-md bg-status-danger hover:status-danger/90 text-white text-sm">Batal</button>
+                <button class="px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Simpan Kuota</button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -329,6 +361,26 @@
         });
     });
     if (cancelBtn) cancelBtn.addEventListener('click', function() { modal.classList.add('hidden'); });
+
+    // ---------- Set Kuota modal (system admin) ----------
+    var quotaModal = document.getElementById('quota-modal');
+    var quotaForm = document.getElementById('quota-form');
+    var quotaName = document.getElementById('quota-name');
+    var quotaMb = document.getElementById('quota-mb');
+    var quotaCancel = document.getElementById('quota-cancel');
+    if (quotaForm && quotaModal) {
+        document.querySelectorAll('.quota-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var id = btn.getAttribute('data-quota');
+                var name = btn.getAttribute('data-name');
+                quotaForm.action = "{{ url('admin/system/users') }}/" + id + "/quota";
+                quotaName.textContent = name;
+                quotaMb.value = btn.getAttribute('data-mb') || '';
+                quotaModal.classList.remove('hidden');
+            });
+        });
+        if (quotaCancel) quotaCancel.addEventListener('click', function() { quotaModal.classList.add('hidden'); });
+    }
 
     // ---------- Bulk action toolbar ----------
     var toolbar = document.getElementById('bulk-toolbar');
