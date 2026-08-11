@@ -107,6 +107,36 @@
                     class="font-medium block">@include("partials.user-link", ["user" => $mahasiswaTa->penguji1])</span> </div>
             <div class="px-3 py-2 rounded-md bg-bg-panel"> <span class="text-text-secondary">Penguji 2:</span> <span
                     class="font-medium block">@include("partials.user-link", ["user" => $mahasiswaTa->penguji2])</span> </div>
+            @php $canManagePenguji = auth()->user()->isAdmin() || (auth()->user()->isDosen() && $mahasiswaTa->isPembimbing(auth()->user())); @endphp
+            @if ($canManagePenguji)
+                <div class="px-3 py-2 rounded-md bg-bg-panel sm:col-span-2 border border-border/60">
+                    <span class="text-text-secondary text-xs font-medium">Ganti Dosen Penguji (oleh pembimbing)</span>
+                    <form method="POST" action="{{ route('mahasiswa-ta.penguji', $mahasiswaTa) }}" class="mt-2 grid sm:grid-cols-2 gap-2 items-center" onsubmit="return confirm('Ubah dosen penguji program ini? Perubahan langsung diterapkan.')">
+                        @csrf
+                        <label class="flex flex-col gap-1 text-xs text-text-secondary">
+                            Penguji 1
+                            <select name="penguji_1_id" class="rounded-md border border-border bg-bg-surface px-2 py-1 text-xs text-text-primary">
+                                <option value="">— Tidak ada —</option>
+                                @foreach ($dosenList as $d)
+                                    <option value="{{ $d->id }}" @selected($mahasiswaTa->penguji_1_id === $d->id)>{{ $d->name }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+                        <label class="flex flex-col gap-1 text-xs text-text-secondary">
+                            Penguji 2
+                            <select name="penguji_2_id" class="rounded-md border border-border bg-bg-surface px-2 py-1 text-xs text-text-primary">
+                                <option value="">— Tidak ada —</option>
+                                @foreach ($dosenList as $d)
+                                    <option value="{{ $d->id }}" @selected($mahasiswaTa->penguji_2_id === $d->id)>{{ $d->name }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+                        <div class="sm:col-span-2">
+                            <button class="px-3 py-1.5 rounded-md bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Simpan Penguji</button>
+                        </div>
+                    </form>
+                </div>
+            @endif
         @endif
         <div class="px-3 py-2 rounded-md bg-bg-panel sm:col-span-2"> <span class="text-text-secondary">Fase:</span>
             <span class="font-medium block">{{ $mahasiswaTa->faseLabel() }}</span>

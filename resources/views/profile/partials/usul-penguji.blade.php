@@ -41,6 +41,6 @@
             <p class="text-xs text-text-secondary">Perlu persetujuan semua dosen terkait sebelum ditetapkan.</p>
         </form>
     @elseif ($pengujiPenuh && ! $reqPending)
-        <p class="text-xs text-text-secondary">Penguji 1 & 2 sudah terisi. Untuk mengganti, hubungi admin.</p>
+        <p class="text-xs text-text-secondary">Penguji 1 & 2 sudah terisi. Untuk mengganti, silakan hubungi pembimbing Anda.</p>
     @endif
 </div>

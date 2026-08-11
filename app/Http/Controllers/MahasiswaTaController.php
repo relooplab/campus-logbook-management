@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
+use App\Models\User;
 use App\Services\MahasiswaDashboardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -88,12 +89,18 @@ class MahasiswaTaController extends Controller
         $regularity = $mahasiswaTa->regularity_status;
         $regularityTooltip = $mahasiswaTa->regularity_tooltip;
 
+        // Daftar dosen aktif untuk dropdown ganti penguji (pembimbing).
+        $dosenList = User::role('dosen')
+            ->whereIn('registration_status', ['active', 'approved'])
+            ->orderBy('name')
+            ->get();
+
         return view('mahasiswa.show', compact(
             'mahasiswaTa', 'entries', 'approved', 'target', 'percent',
             'faseKeys', 'faseIndex', 'faseLabels',
             'unlockedAchievements', 'unlockedCodes', 'totalAchievements',
             'stats', 'timeline', 'heatmap', 'regularity', 'regularityTooltip',
-            'logbookHarian'
+            'logbookHarian', 'dosenList'
         ));
     }
 
@@ -135,5 +142,79 @@ class MahasiswaTaController extends Controller
         ]);
 
         return back()->with('success', "Fase diperbarui: {$old} → {$new}.");
+    }
+
+    /**
+     * Ganti dosen penguji langsung oleh pembimbing (atau admin), tanpa alur
+     * persetujuan multi-approver. Digunakan saat slot penguji sudah terisi atau
+     * pembimbing perlu menyesuaikan penguji program — otoritas mirip admin.
+     */
+    public function updatePenguji(Request $request, MahasiswaTa $mahasiswaTa): RedirectResponse
+    {
+        $user = $request->user();
+
+        abort_unless($user->isDosen() || $user->isAdmin(), 403, 'Hanya dosen yang dapat mengubah penguji.');
+        abort_unless($user->isAdmin() || $mahasiswaTa->isPembimbing($user), 403, 'Anda bukan pembimbing program ini.');
+
+        $validated = $request->validate([
+            'penguji_1_id' => ['nullable', 'exists:users,id'],
+            'penguji_2_id' => ['nullable', 'exists:users,id'],
+        ]);
+
+        // Normalisasi string kosong (dari form) menjadi null.
+        $penguji1 = !empty($validated['penguji_1_id']) ? $validated['penguji_1_id'] : null;
+        $penguji2 = !empty($validated['penguji_2_id']) ? $validated['penguji_2_id'] : null;
+
+        // Cegah dosen yang sama dipakai di dua peran penguji, atau sebagai
+        // pembimbing sekaligus penguji dalam program yang sama.
+        if ($penguji1 && $penguji2 && (int) $penguji1 === (int) $penguji2) {
+            abort(422, 'Satu dosen tidak boleh dipakai di lebih dari satu peran penguji.');
+        }
+
+        $dipakaiPembimbing = array_values(array_filter(array_unique([
+            $mahasiswaTa->pembimbing_1_id,
+            $mahasiswaTa->pembimbing_2_id,
+        ])));
+        foreach (array_filter([$penguji1, $penguji2]) as $id) {
+            abort_if(in_array($id, $dipakaiPembimbing, true), 422, 'Dosen tidak boleh menjadi pembimbing sekaligus penguji dalam program yang sama.');
+        }
+
+        // Pastikan dosen yang dipilih benar-benar ber-role dosen.
+        $pengujiIds = array_values(array_filter([$penguji1, $penguji2]));
+        if ($pengujiIds) {
+            $validDosen = User::role('dosen')->whereIn('id', $pengujiIds)->count();
+            abort_if($validDosen !== count($pengujiIds), 422, 'Penguji yang dipilih tidak valid (bukan dosen).');
+        }
+
+        $old1 = $mahasiswaTa->penguji1?->name;
+        $old2 = $mahasiswaTa->penguji2?->name;
+
+        $mahasiswaTa->update([
+            'penguji_1_id' => $penguji1,
+            'penguji_2_id' => $penguji2,
+        ]);
+        $mahasiswaTa->load(['penguji1', 'penguji2']);
+
+        // Audit log.
+        Log::channel('audit')->info('Penguji diubah oleh pembimbing', [
+            'mahasiswa_ta_id' => $mahasiswaTa->id,
+            'jenis' => $mahasiswaTa->jenis,
+            'mahasiswa' => $mahasiswaTa->mahasiswa?->name,
+            'oleh' => $user->name.' ('.$user->id.')',
+            'penguji_1' => ($old1 ?: '—').' → '.($mahasiswaTa->penguji1?->name ?? '—'),
+            'penguji_2' => ($old2 ?: '—').' → '.($mahasiswaTa->penguji2?->name ?? '—'),
+            'waktu' => now()->toDateTimeString(),
+        ]);
+
+        // Notifikasi mahasiswa.
+        if ($mahasiswa = $mahasiswaTa->mahasiswa) {
+            $this->bestEffort(fn () => $mahasiswa->notify(new \App\Notifications\ActivityNotification(
+                "Dosen penguji untuk program ".$mahasiswaTa->jenisLabel()." Anda telah diperbarui oleh pembimbing.",
+                route('profile.profil-akademik'),
+                'Penguji Diperbarui',
+            )));
+        }
+
+        return back()->with('success', 'Dosen penguji berhasil diperbarui.');
     }
 }

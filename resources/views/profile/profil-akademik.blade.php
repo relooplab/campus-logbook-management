@@ -47,13 +47,24 @@
             </div>
 
             @include('profile.partials.usul-penguji', ['program' => $ta])
+        @elseif ($ta && $ta->status_ta === 'pending_approval')
+            <p class="text-sm text-text-secondary bg-bg-panel border border-border rounded-xl px-4 py-3">
+                Permintaan Anda sedang menunggu persetujuan dosen pembimbing. Sementara itu, Anda tetap bisa mengirim bahan seminar/sidang.
+            </p>
+        @elseif ($ta && $ta->status_ta === 'ditolak')
+            <p class="text-sm text-text-secondary bg-bg-panel border border-border rounded-xl px-4 py-3">
+                Permintaan Anda ditolak dosen{{ $ta->alasan_ditolak ? ': "'.$ta->alasan_ditolak.'"' : '' }}. Silakan pilih dosen lain.
+            </p>
+            <a href="{{ route('profile.select-dosen') }}" class="inline-block mt-3 px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Pilih Dosen</a>
+        @elseif ($ta)
+            <p class="text-sm text-text-secondary bg-bg-panel border border-border rounded-xl px-4 py-3">
+                Program TA Anda berstatus <span class="font-medium">{{ ucfirst($ta->status_ta) }}</span>.
+            </p>
         @else
             <p class="text-sm text-text-secondary bg-bg-panel border border-border rounded-xl px-4 py-3">
-                Program TA Anda tidak aktif / belum ada. Mulai dengan memilih dosen pembimbing untuk program TA Anda.
+                Belum ada program TA. Mulai dengan memilih dosen pembimbing untuk program TA Anda.
             </p>
-            @if (!$ta || $ta->status_ta !== 'aktif')
-                <a href="{{ route('profile.select-dosen') }}" class="inline-block mt-3 px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Pilih Dosen</a>
-            @endif
+            <a href="{{ route('profile.select-dosen') }}" class="inline-block mt-3 px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Pilih Dosen</a>
         @endif
     </div>
 
@@ -85,13 +96,24 @@
             </div>
 
             @include('profile.partials.usul-penguji', ['program' => $kp])
+        @elseif ($kp && $kp->status_ta === 'pending_approval')
+            <p class="text-sm text-text-secondary bg-bg-panel border border-border rounded-xl px-4 py-3">
+                Permintaan Anda sedang menunggu persetujuan dosen pembimbing.
+            </p>
+        @elseif ($kp && $kp->status_ta === 'ditolak')
+            <p class="text-sm text-text-secondary bg-bg-panel border border-border rounded-xl px-4 py-3">
+                Permintaan Anda ditolak dosen{{ $kp->alasan_ditolak ? ': "'.$kp->alasan_ditolak.'"' : '' }}. Silakan pilih dosen lain.
+            </p>
+            <a href="{{ route('profile.select-dosen') }}" class="inline-block mt-3 px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Pilih Dosen</a>
+        @elseif ($kp)
+            <p class="text-sm text-text-secondary bg-bg-panel border border-border rounded-xl px-4 py-3">
+                Program KP Anda berstatus <span class="font-medium">{{ ucfirst($kp->status_ta) }}</span>.
+            </p>
         @else
             <p class="text-sm text-text-secondary bg-bg-panel border border-border rounded-xl px-4 py-3">
-                Program KP Anda tidak aktif / belum ada. Mulai dengan memilih dosen pembimbing untuk program KP Anda.
+                Belum ada program KP. Mulai dengan memilih dosen pembimbing untuk program KP Anda.
             </p>
-            @if (!$kp || $kp->status_ta !== 'aktif')
-                <a href="{{ route('profile.select-dosen') }}" class="inline-block mt-3 px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Pilih Dosen</a>
-            @endif
+            <a href="{{ route('profile.select-dosen') }}" class="inline-block mt-3 px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Pilih Dosen</a>
         @endif
     </div>
 </div>

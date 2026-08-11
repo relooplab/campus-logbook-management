@@ -133,6 +133,10 @@ Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])
     Route::post('/mahasiswa-ta/{mahasiswaTa}/fase', [MahasiswaTaController::class, 'updateFase'])
         ->name('mahasiswa-ta.fase');
 
+    // Ganti dosen penguji langsung (oleh pembimbing / admin).
+    Route::post('/mahasiswa-ta/{mahasiswaTa}/penguji', [MahasiswaTaController::class, 'updatePenguji'])
+        ->name('mahasiswa-ta.penguji');
+
     // ------------------------------------------------------ detail & fase KP
     Route::get('/mahasiswa-kp/{mahasiswaTa}', [MahasiswaTaController::class, 'show'])->name('mahasiswa-kp.show');
     Route::post('/mahasiswa-kp/{mahasiswaTa}/fase', [MahasiswaTaController::class, 'updateFase'])

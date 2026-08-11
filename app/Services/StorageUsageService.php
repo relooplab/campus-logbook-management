@@ -125,15 +125,19 @@ class StorageUsageService
     {
         return MahasiswaTa::where(function ($q) use ($dosen) {
             $q->where('pembimbing_1_id', $dosen->id)
-              ->whereHas('pembimbing1', fn ($u) => $u->where('registration_status', 'approved'))
+              ->whereHas('pembimbing1', fn ($u) => $u->whereIn('registration_status', ['active', 'approved']))
               ->orWhere(function ($q2) use ($dosen) {
                   $q2->where('pembimbing_2_id', $dosen->id)
                      ->where(function ($q3) {
                          $q3->whereNull('pembimbing_1_id')
-                            ->orWhereDoesntHave('pembimbing1', fn ($u) => $u->where('registration_status', 'approved'));
+                            ->orWhereDoesntHave('pembimbing1', fn ($u) => $u->whereIn('registration_status', ['active', 'approved']));
                      });
               });
             })
+            // Dosen valid = registration_status 'active' (self-register) atau 'approved'
+            // (dosen demo/seeded). Sebelumnya hanya 'approved' sehingga dosen yang
+            // mendaftar lewat aplikasi (status 'active') tidak pernah dibebani
+            // penyimpanan mahasiswa bimbingannya.
             // Hanya program yang sudah DISETUJUI yang dibebankan ke dosen.
             // Program yang masih pending/ditolak dibebankan ke mahasiswa (kuota 100 MB),
             // jadi file-nya tidak boleh ikut terhitung di kuota dosen sebelum disetujui.

@@ -17,6 +17,25 @@
         <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Dashboard</a>
     </div>
 
+    {{-- Ringkasan kuota penyimpanan dosen --}}
+    <div class="card p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div>
+                <h2 class="font-heading font-semibold text-text-primary">Kuota Penyimpanan</h2>
+                <p class="text-sm text-text-secondary mt-0.5">Total pemakaian yang dibebankan ke kuota Anda (workspace pribadi + data mahasiswa bimbingan)</p>
+            </div>
+            <span class="text-sm text-text-secondary font-medium">{{ $usedLabel }} {{ $limitLabel !== 'Tak terbatas' ? '/ ' . $limitLabel : '' }} terpakai</span>
+        </div>
+        @if ($limitBytes > 0)
+            <div class="h-3 rounded-full bg-bg-panel overflow-hidden">
+                <div class="h-full rounded-full {{ $pct >= 90 ? 'bg-status-danger' : ($pct >= 70 ? 'bg-status-pending' : 'bg-brand') }}" style="width: {{ $pct }}%"></div>
+            </div>
+            <p class="text-xs text-text-secondary mt-2">{{ $pct }}% kuota terpakai</p>
+        @else
+            <p class="text-xs text-text-secondary">Kuota Anda tak terbatas.</p>
+        @endif
+    </div>
+
     {{-- Workspace files --}}
     <div class="card p-6">
         <h2 class="font-heading font-semibold text-text-primary mb-3">File Workspace Mahasiswa</h2>
