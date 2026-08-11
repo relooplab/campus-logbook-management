@@ -200,7 +200,19 @@
                 return;
             }
             e.preventDefault();
-            var fd = new FormData(this);
+            // Cegah double-submit (double-click / tekan Enter berulang).
+            if (this.dataset.uploading === '1') {
+                return;
+            }
+            this.dataset.uploading = '1';
+            var submitBtn = document.getElementById('upload-btn');
+            if (submitBtn) submitBtn.disabled = true;
+
+            // Bangun FormData manual agar file tidak terkirim dobel
+            // (jangan pakai `new FormData(this)` lalu append files[] lagi).
+            var fd = new FormData();
+            fd.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+            fd.append('bab', this.querySelector('input[name="bab"]')?.value || '');
             selectedFiles.forEach(function (f) { fd.append('files[]', f); });
             var xhr = new XMLHttpRequest();
             document.getElementById('progress-wrap').classList.remove('hidden');
@@ -215,6 +227,8 @@
             xhr.onerror = function () {
                 alert('Upload gagal.');
                 document.getElementById('progress-wrap').classList.add('hidden');
+                if (submitBtn) submitBtn.disabled = false;
+                document.getElementById('upload-form').dataset.uploading = '0';
             };
             xhr.open('POST', this.action);
             xhr.send(fd);
