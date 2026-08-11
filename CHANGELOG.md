@@ -1,3 +1,10 @@
+# [0.37.0](https://github.com/relooplab/campus-logbook-management/compare/v0.36.0...v0.37.0) (2026-08-11)
+
+
+### Features
+
+* per-institution storage quota override, university edit, deploy hardening, release version bump ([2982b90](https://github.com/relooplab/campus-logbook-management/commit/2982b907e44e518c730ab2e8e279575c1b92e04f))
+
 # [0.36.0](https://github.com/relooplab/campus-logbook-management/compare/v0.35.0...v0.36.0) (2026-08-10)
 
 
