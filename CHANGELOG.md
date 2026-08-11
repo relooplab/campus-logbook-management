@@ -1,3 +1,10 @@
+## [0.39.1](https://github.com/relooplab/campus-logbook-management/compare/v0.39.0...v0.39.1) (2026-08-11)
+
+
+### Bug Fixes
+
+* allow empty nim field on dosen registration (nullable + required_if) ([d03664b](https://github.com/relooplab/campus-logbook-management/commit/d03664b48f73d737746770cdb4c665b4a9fcab72))
+
 # [0.39.0](https://github.com/relooplab/campus-logbook-management/compare/v0.38.0...v0.39.0) (2026-08-11)
 
 
