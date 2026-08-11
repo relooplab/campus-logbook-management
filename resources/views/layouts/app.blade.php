@@ -1,9 +1,13 @@
 @php
     $user = auth()->user();
+    // Desain sidebar: satu warna brand konteks (--brand) untuk state aktif,
+    // ikon netral untuk non-aktif. Pill aktif + batang kiri = penanda "di sini".
     $active = fn ($name) => request()->routeIs($name)
-        ? 'bg-bg-hover text-text-primary font-semibold'
+        ? 'bg-brand/10 text-brand font-semibold before:content-[""] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-1 before:rounded-full before:bg-brand'
         : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary';
-    $navLink = 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors';
+    $navLink = 'relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors';
+    // Label grup sidebar (dipakai dengan pola text-[10px] uppercase tracking-widest).
+    $groupLabel = 'px-3 pt-4 pb-1 text-[10px] uppercase tracking-widest text-text-secondary sidebar-label';
     // Badge "belum dibaca" untuk dosen pada menu Agenda Seminar/Sidang.
     $unreadSeminarCount = 0;
     if ($user?->isDosen()) {
@@ -117,8 +121,9 @@
             <span id="sidebar-collapse-icon" class="material-symbols-outlined icon-sm">chevron_left</span>
         </button>
         <div id="sidebar-logo-row" class="px-4 py-5 flex flex-col items-center gap-2.5">
-            <div id="sidebar-clock" class="sidebar-label flex flex-col items-center">
-                <div class="text-sm font-semibold text-text-primary font-mono" id="clock-date">Memuat…</div>
+            <div id="sidebar-clock" class="sidebar-label flex flex-col items-center gap-0.5">
+                <div class="text-base font-semibold tracking-wide text-text-primary font-mono leading-none" id="clock-date">Memuat…</div>
+                <div class="text-[10px] text-text-secondary font-medium" id="clock-sub">Tanggal bimbingan</div>
             </div>
             <button type="button" id="sidebar-close-btn" title="Tutup menu" class="md:hidden p-1.5 rounded-lg text-text-secondary hover:bg-bg-hover hover:text-text-primary">
                 <span class="material-symbols-outlined icon-md">close</span>
@@ -150,16 +155,17 @@
         @endauth
 
         <nav class="flex-1 px-3 space-y-1 overflow-y-auto mt-1">
+            <div class="{{ $groupLabel }}">Ringkasan</div>
             <a href="{{ route('dashboard') }}" class="{{ $navLink }} {{ $active('dashboard') }}">
-                <span class="material-symbols-outlined icon-md text-accent-blue">dashboard</span>
+                <span class="material-symbols-outlined icon-md">dashboard</span>
                 <span class="sidebar-label">Dashboard</span>
             </a>
             <a href="{{ route('chat.index') }}" class="{{ $navLink }} {{ $active('chat.*') }}">
-                <span class="material-symbols-outlined icon-md text-accent-teal">chat</span>
+                <span class="material-symbols-outlined icon-md">chat</span>
                 <span class="sidebar-label">Chat</span>
             </a>
             <a href="{{ route('announcements.index') }}" class="{{ $navLink }} {{ $active('announcements.*') }}">
-                <span class="material-symbols-outlined icon-md text-accent-orange">campaign</span>
+                <span class="material-symbols-outlined icon-md">campaign</span>
                 <span class="sidebar-label">Pengumuman</span>
             </a>
 
@@ -173,17 +179,19 @@
                     $hasProgram = $hasTa || $hasKp;
                     $profileIncomplete = blank($user->nim) || blank($user->whatsapp);
                 @endphp
+                <div class="{{ $groupLabel }}">Profil</div>
                 @if ($profileIncomplete)
                     <a href="{{ route('profile.index') }}" class="{{ $navLink }} {{ $active('profile.index') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-blue">badge</span>
+                        <span class="material-symbols-outlined icon-md">badge</span>
                         <span class="sidebar-label">Lengkapi Profil</span>
                     </a>
                 @endif
                 <a href="{{ route('profile.profil-akademik') }}" class="{{ $navLink }} {{ $active('profile.profil-akademik*') }}">
-                    <span class="material-symbols-outlined icon-md text-accent-teal">school</span>
+                    <span class="material-symbols-outlined icon-md">school</span>
                     <span class="sidebar-label">Profil Akademik</span>
                 </a>
                 @if ($hasProgram)
+                    <div class="{{ $groupLabel }}">Program</div>
                     @if ($programs->count() > 1)
                         <div class="px-3 pt-2 pb-1 sidebar-label">
                             <div class="flex gap-1">
@@ -198,40 +206,41 @@
                         </div>
                     @endif
                     <a href="{{ route('logbook.index') }}" class="{{ $navLink }} {{ $active('logbook.index') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-blue">menu_book</span>
+                        <span class="material-symbols-outlined icon-md">menu_book</span>
                         <span class="sidebar-label">Logbook</span>
                     </a>
                     <a href="{{ route('logbook.create') }}" class="{{ $navLink }} {{ $active('logbook.create') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-orange">add</span>
+                        <span class="material-symbols-outlined icon-md">add</span>
                         <span class="sidebar-label">Tambah Logbook</span>
                     </a>
                     <a href="{{ route('logbook.create-revisi') }}" class="{{ $navLink }} {{ $active('logbook.create-revisi') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-orange">edit_note</span>
+                        <span class="material-symbols-outlined icon-md">edit_note</span>
                         <span class="sidebar-label">Entri Revisi</span>
                     </a>
                     <a href="{{ route('logbook.feedback') }}" class="{{ $navLink }} {{ $active('logbook.feedback') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-teal">forum</span>
+                        <span class="material-symbols-outlined icon-md">forum</span>
                         <span class="sidebar-label">Riwayat Umpan Balik</span>
                     </a>
                     @if ($hasKp)
                         <a href="{{ route('logbook-harian.index', $kp) }}" class="{{ $navLink }} {{ $active('logbook-harian.*') }}">
-                            <span class="material-symbols-outlined icon-md text-accent-blue">event_note</span>
+                            <span class="material-symbols-outlined icon-md">event_note</span>
                             <span class="sidebar-label">Logbook Harian KP</span>
                         </a>
                         <a href="{{ route('profil-perusahaan.index', $kp) }}" class="{{ $navLink }} {{ $active('profil-perusahaan.*') }}">
-                            <span class="material-symbols-outlined icon-md text-accent-teal">business</span>
+                            <span class="material-symbols-outlined icon-md">business</span>
                             <span class="sidebar-label">Profil Perusahaan</span>
                         </a>
                     @endif
                     @php $workspaceTa = $user->mahasiswaTa ?: $kp; @endphp
                     <a href="{{ route('workspace.index', $workspaceTa) }}" class="{{ $navLink }} {{ $active('workspace.*') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-purple">workspaces</span>
+                        <span class="material-symbols-outlined icon-md">workspaces</span>
                         <span class="sidebar-label">Workspace</span>
                     </a>
                 @endif
             @elseif ($showDosenMenu)
+                <div class="{{ $groupLabel }}">Bimbingan</div>
 <a href="{{ route('dosen.mahasiswa-saya') }}" class="{{ $navLink }} {{ $active('dosen.mahasiswa-saya') }}">
-                    <span class="material-symbols-outlined icon-md text-accent-blue">group</span>
+                    <span class="material-symbols-outlined icon-md">group</span>
                     <span class="sidebar-label">Mahasiswa Saya</span>
                 </a>
                 <a href="{{ route('logbook.index') }}" class="{{ $navLink }} {{ $active('logbook.index') }}">
@@ -239,45 +248,47 @@
                     <span class="sidebar-label">Antrean Review</span>
                 </a>
                 <a href="{{ route('dosen.seminar-jadwal') }}" class="{{ $navLink }} {{ $active('dosen.seminar-jadwal') }}">
-                    <span class="material-symbols-outlined icon-md text-accent-orange">event_note</span>
+                    <span class="material-symbols-outlined icon-md">event_note</span>
                     <span class="sidebar-label">Agenda Seminar/Sidang</span>
                     @if (!empty($unreadSeminarCount))
                         <span class="ml-auto rounded-full bg-status-danger text-[#0b1420] text-[10px] font-bold px-1.5 py-0.5">{{ $unreadSeminarCount }}</span>
                     @endif
                 </a>
                 <a href="{{ route('quick-review.index') }}" class="{{ $navLink }} {{ $active('quick-review.*') }}">
-                    <span class="material-symbols-outlined icon-md text-accent-orange">bolt</span>
+                    <span class="material-symbols-outlined icon-md">bolt</span>
                     <span class="sidebar-label">Quick Review</span>
-                </a>
-                <a href="{{ route('workspace.role') }}" class="{{ $navLink }} {{ $active('workspace.role') }}">
-                    <span class="material-symbols-outlined icon-md text-accent-purple">folder</span>
-                    <span class="sidebar-label">Workspace</span>
-                </a>
-                <a href="{{ route('storage.index') }}" class="{{ $navLink }} {{ $active('storage.*') }}">
-                    <span class="material-symbols-outlined icon-md text-accent-purple">database</span>
-                    <span class="sidebar-label">Workspace Mahasiswa</span>
-                </a>
-                <a href="{{ route('workspace-institusi.index') }}" class="{{ $navLink }} {{ $active('workspace-institusi.*') }}">
-                    <span class="material-symbols-outlined icon-md text-accent-purple">folder_shared</span>
-                    <span class="sidebar-label">Workspace Institusi</span>
-                </a>
-                @if ($user->isDosen())
-                    <a href="{{ route('profile.affiliation') }}" class="{{ $navLink }} {{ $active('profile.affiliation*') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-teal">account_balance</span>
-                        <span class="sidebar-label">Afiliasi Institusi</span>
-                    </a>
-                @endif
-                <a href="{{ route('groups.index') }}" class="{{ $navLink }} {{ $active('groups.*') }}">
-                    <span class="material-symbols-outlined icon-md text-accent-teal">groups</span>
-                    <span class="sidebar-label">Grup Dosen</span>
-                </a>
-                <a href="{{ route('dosen-sidang.index') }}" class="{{ $navLink }} {{ $active('dosen-sidang.*') }}">
-                    <span class="material-symbols-outlined icon-md text-accent-purple">verified</span>
-                    <span class="sidebar-label">Riwayat Sidang</span>
                 </a>
                 <a href="{{ route('approval.index') }}" class="{{ $navLink }} {{ $active('approval.*') }}">
                     <span class="material-symbols-outlined icon-md text-status-success">check_circle</span>
                     <span class="sidebar-label">Persetujuan</span>
+                </a>
+                <div class="{{ $groupLabel }}">Workspace &amp; Data</div>
+                <a href="{{ route('workspace.role') }}" class="{{ $navLink }} {{ $active('workspace.role') }}">
+                    <span class="material-symbols-outlined icon-md">folder</span>
+                    <span class="sidebar-label">Workspace</span>
+                </a>
+                <a href="{{ route('storage.index') }}" class="{{ $navLink }} {{ $active('storage.*') }}">
+                    <span class="material-symbols-outlined icon-md">database</span>
+                    <span class="sidebar-label">Workspace Mahasiswa</span>
+                </a>
+                <a href="{{ route('workspace-institusi.index') }}" class="{{ $navLink }} {{ $active('workspace-institusi.*') }}">
+                    <span class="material-symbols-outlined icon-md">folder_shared</span>
+                    <span class="sidebar-label">Workspace Institusi</span>
+                </a>
+                <div class="{{ $groupLabel }}">Profil &amp; Komunitas</div>
+                @if ($user->isDosen())
+                    <a href="{{ route('profile.affiliation') }}" class="{{ $navLink }} {{ $active('profile.affiliation*') }}">
+                        <span class="material-symbols-outlined icon-md">account_balance</span>
+                        <span class="sidebar-label">Afiliasi Institusi</span>
+                    </a>
+                @endif
+                <a href="{{ route('groups.index') }}" class="{{ $navLink }} {{ $active('groups.*') }}">
+                    <span class="material-symbols-outlined icon-md">groups</span>
+                    <span class="sidebar-label">Grup Dosen</span>
+                </a>
+                <a href="{{ route('dosen-sidang.index') }}" class="{{ $navLink }} {{ $active('dosen-sidang.*') }}">
+                    <span class="material-symbols-outlined icon-md">verified</span>
+                    <span class="sidebar-label">Riwayat Sidang</span>
                 </a>
             @endif
 
@@ -285,69 +296,69 @@
                 <div class="px-3 pt-4 pb-1 text-[10px] uppercase tracking-widest text-text-secondary sidebar-label">Administrasi</div>
                 @if ($user->isAdmin())
                     <a href="{{ route('affiliation-approval.index') }}" class="{{ $navLink }} {{ $active('affiliation-approval.*') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-teal">person_add</span>
+                        <span class="material-symbols-outlined icon-md">person_add</span>
                         <span class="sidebar-label">Persetujuan Afiliasi</span>
                     </a>
                 @endif
                 @if ($user->isSystemAdmin())
                     @can('system.admins')
                         <a href="{{ route('admin.system.admins') }}" class="{{ $navLink }} {{ $active('admin.system.admins') }}">
-                            <span class="material-symbols-outlined icon-md text-accent-purple">admin_panel_settings</span>
+                            <span class="material-symbols-outlined icon-md">admin_panel_settings</span>
                             <span class="sidebar-label">Kelola Admin</span>
                         </a>
                     @endcan
                     <a href="{{ route('admin.system.permissions') }}" class="{{ $navLink }} {{ $active('admin.system.permissions') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-purple">lock</span>
+                        <span class="material-symbols-outlined icon-md">lock</span>
                         <span class="sidebar-label">Kelola Hak Akses</span>
                     </a>
                     <a href="{{ route('admin.system.settings') }}" class="{{ $navLink }} {{ $active('admin.system.settings*') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-purple">settings</span>
+                        <span class="material-symbols-outlined icon-md">settings</span>
                         <span class="sidebar-label">Pengaturan</span>
                     </a>
                     <a href="{{ route('admin.system.directory') }}" class="{{ $navLink }} {{ $active('admin.system.directory*') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-purple">account_tree</span>
+                        <span class="material-symbols-outlined icon-md">account_tree</span>
                         <span class="sidebar-label">Direktori</span>
                     </a>
                     <a href="{{ route('admin.system.directory-subscriptions') }}" class="{{ $navLink }} {{ $active('admin.system.directory-subscriptions*') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-purple">subscriptions</span>
+                        <span class="material-symbols-outlined icon-md">subscriptions</span>
                         <span class="sidebar-label">Langganan Direktori</span>
                     </a>
                     <a href="{{ route('admin.system.backup') }}" class="{{ $navLink }} {{ $active('admin.system.backup*') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-orange">cloud_download</span>
+                        <span class="material-symbols-outlined icon-md">cloud_download</span>
                         <span class="sidebar-label">Backup &amp; Restore</span>
                     </a>
                 @endif
                 @can('admin.users')
                     <a href="{{ route('admin.users') }}" class="{{ $navLink }} {{ $active('admin.users') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-blue">group</span>
+                        <span class="material-symbols-outlined icon-md">group</span>
                         <span class="sidebar-label">Pengguna</span>
                     </a>
                 @endcan
                 @can('admin.tas')
                     <a href="{{ route('admin.tas') }}" class="{{ $navLink }} {{ $active('admin.tas') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-purple">archive</span>
+                        <span class="material-symbols-outlined icon-md">archive</span>
                         <span class="sidebar-label">Data TA</span>
                     </a>
                 @endcan
                 @can('admin.bulk-review')
                     <a href="{{ route('admin.entries') }}" class="{{ $navLink }} {{ $active('admin.entries') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-blue">fact_check</span>
+                        <span class="material-symbols-outlined icon-md">fact_check</span>
                         <span class="sidebar-label">Review Massal</span>
                     </a>
                 @endcan
                 @can('admin.sidangs')
                     <a href="{{ route('admin.sidangs') }}" class="{{ $navLink }} {{ $active('admin.sidangs') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-purple">gavel</span>
+                        <span class="material-symbols-outlined icon-md">gavel</span>
                         <span class="sidebar-label">Sidang</span>
                     </a>
                 @endcan
                 @can('admin.institution')
                     <a href="{{ route('admin.institution') }}" class="{{ $navLink }} {{ $active('admin.institution') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-teal">apartment</span>
+                        <span class="material-symbols-outlined icon-md">apartment</span>
                         <span class="sidebar-label">Institusi</span>
                     </a>
                     <a href="{{ route('admin.program-naming') }}" class="{{ $navLink }} {{ $active('admin.program-naming') }}">
-                        <span class="material-symbols-outlined icon-md text-accent-orange">edit_note</span>
+                        <span class="material-symbols-outlined icon-md">edit_note</span>
                         <span class="sidebar-label">Penamaan Program</span>
                     </a>
                 @endcan
@@ -369,7 +380,7 @@
             <a href="https://github.com/relooplab/campus-logbook-management" target="_blank" rel="noopener"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-text-secondary hover:bg-bg-hover hover:text-text-primary"
                 title="Lihat kode sumber aplikasi di GitHub">
-                <span class="material-symbols-outlined icon-sm text-accent-purple">code</span>
+                <span class="material-symbols-outlined icon-sm">code</span>
                 <span class="sidebar-label">GitHub</span>
             </a>
             <p class="sidebar-label px-3 pt-1.5 text-[10px] uppercase tracking-wide text-text-secondary/60" title="Versi rilis perangkat lunak">
@@ -445,7 +456,7 @@
                             <div class="text-xs text-text-secondary truncate">{{ $user->email }}</div>
                         </div>
                         <a href="{{ route('profile.index') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-hover hover:text-text-primary">
-                            <span class="material-symbols-outlined icon-sm text-accent-blue">person</span>
+                            <span class="material-symbols-outlined icon-sm">person</span>
                             Profil
                         </a>
                         <form method="POST" action="{{ route('logout') }}">
@@ -643,10 +654,26 @@
     (function () {
         var collapseBtn = document.getElementById('sidebar-collapse-btn');
         if (!collapseBtn) return;
+        var root = document.documentElement;
+        // Saat collapsed (ikon saja), jadikan label sebagai tooltip via title.
+        function syncTitles() {
+            var collapsed = root.classList.contains('sidebar-collapsed');
+            document.querySelectorAll('#sidebar nav a').forEach(function (a) {
+                var label = a.querySelector('.sidebar-label');
+                if (!label) return;
+                if (collapsed) {
+                    if (!a.getAttribute('title')) a.setAttribute('title', label.textContent.trim());
+                } else {
+                    a.removeAttribute('title');
+                }
+            });
+        }
         collapseBtn.addEventListener('click', function () {
-            var collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+            var collapsed = root.classList.toggle('sidebar-collapsed');
             localStorage.setItem('lbta-sidebar-collapsed', collapsed ? '1' : '0');
+            syncTitles();
         });
+        syncTitles();
     })();
 
     // ---- Profile dropdown ----
@@ -722,18 +749,24 @@
     })();
 </script>
 <script>
-    // ---- Tanggal di sidebar (format DD/Bulan/YYYY) ----
+    // ---- Tanggal di sidebar (format Senin, 11/Agustus) ----
     (function () {
         var dateEl = document.getElementById('clock-date');
+        var subEl = document.getElementById('clock-sub');
         if (!dateEl) return;
-        var MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        var DAYS = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        var MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        var MONTHS_FULL = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
         function format(date) {
             var dd = String(date.getDate()).padStart(2, '0');
-            return dd + '/' + MONTHS[date.getMonth()] + '/' + date.getFullYear();
+            return DAYS[date.getDay()] + ', ' + dd + '/' + MONTHS[date.getMonth()];
         }
 
         dateEl.textContent = format(new Date());
+        if (subEl) {
+            subEl.textContent = MONTHS_FULL[new Date().getMonth()] + ' ' + new Date().getFullYear();
+        }
         // Perbarui sekali sehari (cek tiap 60 detik, ganti hanya jika harinya berubah)
         var last = new Date().toDateString();
         setInterval(function () {
@@ -741,6 +774,7 @@
             if (now.toDateString() !== last) {
                 last = now.toDateString();
                 dateEl.textContent = format(now);
+                if (subEl) subEl.textContent = MONTHS_FULL[now.getMonth()] + ' ' + now.getFullYear();
             }
         }, 60000);
     })();
