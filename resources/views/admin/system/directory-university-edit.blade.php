@@ -23,15 +23,15 @@
             <div>
                 <label class="block text-sm mb-1">Nama Universitas</label>
                 <input type="text" name="name" value="{{ old('name', $university->name) }}" maxlength="255" required
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
                 @error('name')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
             </div>
 
             <p class="text-xs text-text-secondary">Mengubah nama universitas berlaku untuk seluruh fakultas/departemen/prodi di bawahnya.</p>
 
             <div class="flex items-center gap-3 pt-2">
-                <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan</button>
-                <a href="{{ route('admin.system.directory') }}" class="px-4 py-2 rounded-md bg-bg-hover hover:bg-border text-text-primary text-sm">Batal</a>
+                <button class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan</button>
+                <a href="{{ route('admin.system.directory') }}" class="px-4 py-2 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-sm">Batal</a>
             </div>
         </form>
     </div>

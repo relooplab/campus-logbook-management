@@ -21,32 +21,16 @@
         .icon-md { font-size: 20px; }
         .icon-lg { font-size: 24px; }
     </style>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ asset('css/global.css') }}?v={{ @filemtime(public_path('css/global.css')) }}">
+    @if (file_exists(public_path("build/manifest.json")) || file_exists(public_path("hot")))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @endif
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'], heading: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'], mono: ['IBM Plex Mono', 'ui-monospace', 'monospace'] },
-                    colors: {
-                        bg: { base: 'rgb(var(--bg-base) / <alpha-value>)', surface: 'rgb(var(--bg-surface) / <alpha-value>)', panel: 'rgb(var(--bg-panel) / <alpha-value>)', hover: 'rgb(var(--bg-hover) / <alpha-value>)' },
-                        border: { DEFAULT: 'rgb(var(--border) / <alpha-value>)' },
-                        text: { primary: 'rgb(var(--text-primary) / <alpha-value>)', secondary: 'rgb(var(--text-secondary) / <alpha-value>)' },
-                        brand: { DEFAULT: 'rgb(var(--brand) / <alpha-value>)', hover: 'rgb(var(--brand-hover) / <alpha-value>)', light: 'rgb(var(--brand-light) / <alpha-value>)', fill: 'rgb(var(--brand-fill) / <alpha-value>)', 'fill-hover': 'rgb(var(--brand-fill-hover) / <alpha-value>)' },
-                        accent: { blue: 'rgb(var(--accent-blue) / <alpha-value>)', orange: 'rgb(var(--accent-orange) / <alpha-value>)', teal: 'rgb(var(--accent-teal) / <alpha-value>)', purple: 'rgb(var(--accent-purple) / <alpha-value>)' },
-                        sand: { DEFAULT: 'rgb(var(--sand) / <alpha-value>)', light: 'rgb(var(--sand-light) / <alpha-value>)' },
-                        status: { success: 'rgb(var(--status-success) / <alpha-value>)', danger: 'rgb(var(--status-danger) / <alpha-value>)', info: 'rgb(var(--status-info) / <alpha-value>)', pending: 'rgb(var(--status-pending) / <alpha-value>)' },
-                    },
-                    borderRadius: { card: '20px', control: '10px' },
-                },
-            },
-        };
         (function () {
             var saved = localStorage.getItem('lbta-theme');
             if (saved === 'light') document.documentElement.classList.remove('dark');
         })();
     </script>
-    <link rel="stylesheet" href="{{ asset('css/global.css') }}?v={{ @filemtime(public_path('css/global.css')) }}">
 </head>
 <body class="bg-bg-base text-text-primary min-h-screen flex items-center justify-center p-4 font-sans antialiased ctx-mahasiswa">
     <div class="w-full max-w-md">

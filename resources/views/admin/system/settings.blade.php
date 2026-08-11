@@ -32,7 +32,7 @@
                 <div class="grid sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">Mailer</label>
-                        <select name="mail_mailer" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <select name="mail_mailer" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                             @foreach (["smtp", "log", "array", "sendmail", "mailgun", "ses", "postmark", "resend"] as $m)
                                 <option value="{{ $m }}" @selected(old("mail_mailer", $institution->mail_mailer ?? "smtp") === $m)>{{ strtoupper($m) }}</option>
                             @endforeach
@@ -42,18 +42,18 @@
                     <div>
                         <label class="block text-sm font-medium mb-1">Host SMTP</label>
                         <input type="text" name="mail_host" value="{{ old("mail_host", $institution->mail_host) }}" placeholder="smtp.gmail.com"
-                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         @error('mail_host')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Port</label>
                         <input type="number" name="mail_port" min="1" max="65535" value="{{ old("mail_port", $institution->mail_port) }}" placeholder="587"
-                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         @error('mail_port')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Enkripsi</label>
-                        <select name="mail_encryption" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <select name="mail_encryption" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                             <option value="">Tanpa enkripsi</option>
                             <option value="tls" @selected(old("mail_encryption", $institution->mail_encryption) === "tls")>TLS</option>
                             <option value="ssl" @selected(old("mail_encryption", $institution->mail_encryption) === "ssl")>SSL</option>
@@ -63,32 +63,32 @@
                     <div>
                         <label class="block text-sm font-medium mb-1">Username</label>
                         <input type="text" name="mail_username" value="{{ old("mail_username", $institution->mail_username) }}" placeholder="email@domain.com"
-                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         @error('mail_username')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Password</label>
                         <input type="password" name="mail_password" value="{{ old("mail_password", $institution->mail_password) }}" placeholder="••••••••"
-                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         @error('mail_password')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">From Address</label>
                         <input type="email" name="mail_from_address" value="{{ old("mail_from_address", $institution->mail_from_address) }}" placeholder="no-reply@domain.com"
-                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         @error('mail_from_address')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">From Name</label>
                         <input type="text" name="mail_from_name" value="{{ old("mail_from_name", $institution->mail_from_name) }}" placeholder="Campus Logbook Management"
-                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         @error('mail_from_name')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
                     </div>
                 </div>
             </div>
 
             <div class="flex items-center gap-3 pt-2">
-                <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan</button>
+                <button class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan</button>
             </div>
         </form>
     </div>
@@ -101,9 +101,9 @@
             <div class="flex-1 min-w-[200px]">
                 <label class="block text-sm font-medium mb-1" for="test-mail-to">Alamat Email Tujuan</label>
                 <input type="email" name="to" id="test-mail-to" required value="{{ old("to", auth()->user()->email) }}"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
             </div>
-            <button type="submit" class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">
+            <button type="submit" class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">
                 <span class="material-symbols-outlined icon-sm align-text-bottom">send</span> Kirim Email Uji
             </button>
         </form>
@@ -149,7 +149,7 @@
                             </div>
                         </div>
                         <div class="mt-3 flex items-center gap-3">
-                            <button type="submit" class="px-3 py-1.5 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan</button>
+                            <button type="submit" class="px-3 py-1.5 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan</button>
                             <form method="POST" action="{{ route('admin.system.plans.destroy', $plan) }}" class="inline" onsubmit="return confirm('Hapus paket ini?')">
                                 @csrf
                                 @method('DELETE')
@@ -196,7 +196,7 @@
                         <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="import" value="1" class="rounded bg-bg-surface border-border"> Import</label>
                     </div>
                 </div>
-                <button type="submit" class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">+ Tambah Paket</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">+ Tambah Paket</button>
             </form>
         </div>
     </div>

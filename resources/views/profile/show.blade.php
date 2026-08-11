@@ -2,7 +2,7 @@
 <div class="max-w-2xl space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Profil</h1> <a href="{{ url()->previous() }}"
-            class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Kembali</a>
+            class="px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Kembali</a>
     </div>
     <div class="bg-bg-surface rounded-xl border border-border p-6">
         <div class="flex items-center gap-4">
@@ -57,24 +57,24 @@
         </div> {{-- Kontak --}} <div class="mt-6 grid sm:grid-cols-2 gap-3 text-sm">
             @if ($profile->whatsapp)
                 <a href="{{ $profile->whatsappUrl() }}" target="_blank" rel="noopener"
-                    class="px-3 py-2 rounded-md bg-bg-panel hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">chat</span> WhatsApp:
+                    class="px-3 py-2 rounded-xl bg-bg-panel hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">chat</span> WhatsApp:
                     {{ $profile->whatsapp }}
                     @if ($profile->bimbingan_via_whatsapp)
                         <span class="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-brand/10 text-brand"><span class="material-symbols-outlined icon-xs align-text-bottom">calendar_month</span> Bimbingan</span>
                     @endif
                 </a>
                 @endif @if ($profile->telegram)
-                    <span class="px-3 py-2 rounded-md bg-bg-panel"><span class="material-symbols-outlined icon-sm align-text-bottom">send</span> Telegram: {{ $profile->telegram }}
+                    <span class="px-3 py-2 rounded-xl bg-bg-panel"><span class="material-symbols-outlined icon-sm align-text-bottom">send</span> Telegram: {{ $profile->telegram }}
                         @if ($profile->bimbingan_via_telegram)
                             <span class="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-brand/10 text-brand"><span class="material-symbols-outlined icon-xs align-text-bottom">calendar_month</span> Bimbingan</span>
                         @endif
                     </span>
                     @endif @if ($profile->linkedin)
                         <a href="{{ $profile->linkedin }}" target="_blank" rel="noopener"
-                            class="px-3 py-2 rounded-md bg-bg-panel hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">link</span>
+                            class="px-3 py-2 rounded-xl bg-bg-panel hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">link</span>
                             LinkedIn: {{ $profile->linkedin }}</a>
                         @endif @if ($profile->mahasiswaTa)
-                            <span class="px-3 py-2 rounded-md bg-bg-panel"> TA:
+                            <span class="px-3 py-2 rounded-xl bg-bg-panel"> TA:
                                 {{ \Illuminate\Support\Str::limit($profile->mahasiswaTa->judul_ta, 60) }} </span>
                         @endif
         </div>
@@ -85,24 +85,24 @@
                 <div class="flex flex-wrap gap-2 text-sm">
                     @if ($profile->google_scholar)
                         <a href="{{ $profile->google_scholar }}" target="_blank" rel="noopener"
-                            class="px-3 py-1.5 rounded-md bg-brand/10 text-brand hover:bg-brand/10 hover:bg-brand-light"><span class="material-symbols-outlined icon-sm align-text-bottom">school</span>
+                            class="px-3 py-1.5 rounded-xl bg-brand/10 text-brand hover:bg-brand/10 hover:bg-brand-light"><span class="material-symbols-outlined icon-sm align-text-bottom">school</span>
                             Google Scholar</a>
                         @endif @if ($profile->orcid)
                             <a href="https://orcid.org/{{ $profile->orcid }}" target="_blank" rel="noopener"
-                                class="px-3 py-1.5 rounded-md bg-brand/10 text-brand hover:bg-brand/10"><span class="material-symbols-outlined icon-sm align-text-bottom">badge</span>
+                                class="px-3 py-1.5 rounded-xl bg-brand/10 text-brand hover:bg-brand/10"><span class="material-symbols-outlined icon-sm align-text-bottom">badge</span>
                                 ORCID</a>
                             @endif @if ($profile->sinta)
                                 <a href="https://sinta.kemdikbud.go.id/authors/profile/{{ $profile->sinta }}"
                                     target="_blank" rel="noopener"
-                                    class="px-3 py-1.5 rounded-md bg-status-pending/10 text-status-pending"><span class="material-symbols-outlined icon-sm align-text-bottom">bar_chart</span>
+                                    class="px-3 py-1.5 rounded-xl bg-status-pending/10 text-status-pending"><span class="material-symbols-outlined icon-sm align-text-bottom">bar_chart</span>
                                     SINTA</a>
                                  @endif @if ($profile->researchgate)
                                      <a href="{{ $profile->researchgate }}" target="_blank" rel="noopener"
-                                         class="px-3 py-1.5 rounded-md bg-bg-hover hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">science</span>
+                                         class="px-3 py-1.5 rounded-xl bg-bg-hover hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-sm align-text-bottom">science</span>
                                          ResearchGate</a>
                                  @endif @if ($profile->jadwal_bimbingan_url)
                                      <a href="{{ $profile->jadwal_bimbingan_url }}" target="_blank" rel="noopener"
-                                         class="px-3 py-1.5 rounded-md bg-brand/10 text-brand"><span class="material-symbols-outlined icon-sm align-text-bottom">calendar_month</span>
+                                         class="px-3 py-1.5 rounded-xl bg-brand/10 text-brand"><span class="material-symbols-outlined icon-sm align-text-bottom">calendar_month</span>
                                          Jadwalkan Bimbingan</a>
                                  @endif
                 </div>

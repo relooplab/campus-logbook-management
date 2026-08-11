@@ -45,58 +45,8 @@
         #sidebar-collapse-icon { transition: transform .2s ease; }
         html.sidebar-collapsed #sidebar-collapse-icon { transform: rotate(180deg); }
     </style>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-                        heading: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-                        mono: ['IBM Plex Mono', 'ui-monospace', 'monospace'],
-                    },
-                    colors: {
-                        bg: {
-                            base: 'rgb(var(--bg-base) / <alpha-value>)',
-                            surface: 'rgb(var(--bg-surface) / <alpha-value>)',
-                            panel: 'rgb(var(--bg-panel) / <alpha-value>)',
-                            hover: 'rgb(var(--bg-hover) / <alpha-value>)',
-                        },
-                        border: { DEFAULT: 'rgb(var(--border) / <alpha-value>)' },
-                        text: {
-                            primary: 'rgb(var(--text-primary) / <alpha-value>)',
-                            secondary: 'rgb(var(--text-secondary) / <alpha-value>)',
-                        },
-                        brand: {
-                            DEFAULT: 'rgb(var(--brand) / <alpha-value>)',
-                            hover: 'rgb(var(--brand-hover) / <alpha-value>)',
-                            light: 'rgb(var(--brand-light) / <alpha-value>)',
-                            fill: 'rgb(var(--brand-fill) / <alpha-value>)',
-                            'fill-hover': 'rgb(var(--brand-fill-hover) / <alpha-value>)',
-                        },
-                        accent: {
-                            blue: 'rgb(var(--accent-blue) / <alpha-value>)',
-                            orange: 'rgb(var(--accent-orange) / <alpha-value>)',
-                            teal: 'rgb(var(--accent-teal) / <alpha-value>)',
-                            purple: 'rgb(var(--accent-purple) / <alpha-value>)',
-                        },
-                        sand: {
-                            DEFAULT: 'rgb(var(--sand) / <alpha-value>)',
-                            light: 'rgb(var(--sand-light) / <alpha-value>)',
-                        },
-                        status: {
-                            success: 'rgb(var(--status-success) / <alpha-value>)',
-                            danger: 'rgb(var(--status-danger) / <alpha-value>)',
-                            info: 'rgb(var(--status-info) / <alpha-value>)',
-                            pending: 'rgb(var(--status-pending) / <alpha-value>)',
-                        },
-                    },
-                    borderRadius: { card: '20px', control: '10px' },
-                    spacing: { card: '24px' },
-                },
-            },
-        };
         // Default dark; persist toggle via localStorage.
         (function () {
             var saved = localStorage.getItem('lbta-theme');
@@ -454,13 +404,13 @@
             </a>
             <div class="flex items-center justify-end gap-3">
                 <div class="relative hidden md:block">
-                    <input type="text" id="global-search-input" placeholder="Cari (Cmd+K)…"
+                    <input type="text" id="global-search-input" placeholder="Cari (Ctrl+K)…" aria-label="Pencarian global"
                         class="w-56 rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand/40">
                     <div id="global-search-results" class="hidden absolute right-0 mt-2 w-80 bg-bg-surface rounded-card shadow-lg border border-border overflow-hidden"></div>
                 </div>
 
                 <div class="relative">
-                    <button type="button" id="notif-bell" class="relative p-2.5 rounded-xl bg-bg-hover text-text-secondary hover:text-text-primary" title="Notifikasi">
+                    <button type="button" id="notif-bell" class="relative p-2.5 rounded-xl bg-bg-hover text-text-secondary hover:text-text-primary" title="Notifikasi" aria-label="Notifikasi" aria-expanded="false">
                         <span class="material-symbols-outlined icon-md text-status-info">notifications</span>
                         <span id="notif-badge" class="hidden absolute -top-1 -right-1 h-4 w-4 rounded-full bg-status-danger text-[10px] text-white items-center justify-center"></span>
                     </button>
@@ -475,14 +425,14 @@
                     </div>
                 </div>
 
-                <button type="button" id="theme-toggle" class="p-2.5 rounded-xl bg-bg-hover text-text-secondary hover:text-text-primary" title="Mode gelap/terang">
+                <button type="button" id="theme-toggle" class="p-2.5 rounded-xl bg-bg-hover text-text-secondary hover:text-text-primary" title="Mode gelap/terang" aria-label="Ganti mode gelap atau terang">
                     <span id="icon-dark" class="material-symbols-outlined icon-md">dark_mode</span>
                     <span id="icon-light" class="material-symbols-outlined icon-md hidden">light_mode</span>
                 </button>
 
                 @auth
                 <div class="relative" id="profile-menu-wrap">
-                    <button type="button" id="profile-menu-btn" title="{{ $user->name }}" class="avatar w-9 h-9 text-xs overflow-hidden hover:ring-2 hover:ring-brand/40 transition shrink-0">
+                    <button type="button" id="profile-menu-btn" title="{{ $user->name }}" aria-label="Menu profil" aria-haspopup="menu" aria-expanded="false" class="avatar w-9 h-9 text-xs overflow-hidden hover:ring-2 hover:ring-brand/40 transition shrink-0">
                         @if ($user->photoUrl())
                             <img src="{{ $user->photoUrl() }}" class="h-full w-full object-cover" alt="Foto profil">
                         @else
@@ -648,6 +598,7 @@
             e.stopPropagation();
             var open = !drop.classList.contains('hidden');
             drop.classList.toggle('hidden');
+            bell.setAttribute('aria-expanded', open ? 'false' : 'true');
             if (!open) load();
         });
         document.addEventListener('click', function () { drop.classList.add('hidden'); });
@@ -705,12 +656,17 @@
         if (!btn || !drop) return;
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
+            var open = !drop.classList.contains('hidden');
             drop.classList.toggle('hidden');
+            btn.setAttribute('aria-expanded', open ? 'false' : 'true');
         });
-        document.addEventListener('click', function () { drop.classList.add('hidden'); });
+        document.addEventListener('click', function () {
+            drop.classList.add('hidden');
+            btn.setAttribute('aria-expanded', 'false');
+        });
     })();
 
-    // ---- Global search (Cmd+K) ----
+    // ---- Global search (Ctrl+K) ----
     (function () {
         var input = document.getElementById('global-search-input');
         if (!input) return;

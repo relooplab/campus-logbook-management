@@ -21,7 +21,7 @@
                 @csrf
                 <div>
                     <label class="block text-sm mb-1">Level / Simpul</label>
-                    <select name="scope_type" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <select name="scope_type" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         <option value="university">Universitas</option>
                         <option value="faculty">Fakultas</option>
                         <option value="department">Departemen</option>
@@ -30,21 +30,21 @@
                 </div>
                 <div>
                     <label class="block text-sm mb-1">ID Simpul</label>
-                    <input type="number" name="scope_id" required class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <input type="number" name="scope_id" required class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <p class="text-xs text-text-secondary mt-1">ID universitas/fakultas/departemen/prodi di direktori.</p>
                 </div>
                 <div>
                     <label class="block text-sm mb-1">Nama Workspace</label>
-                    <input type="text" name="name" required class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <input type="text" name="name" required class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                 </div>
                 <div>
                     <label class="block text-sm mb-1">Mode Akses</label>
-                    <select name="access_mode" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <select name="access_mode" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         <option value="hierarchical">Sesama prodi (default)</option>
                         <option value="custom">Custom (dosen tertentu)</option>
                     </select>
                 </div>
-                <button class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Buat</button>
+                <button class="w-full px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Buat</button>
             </form>
         </div>
     @endif

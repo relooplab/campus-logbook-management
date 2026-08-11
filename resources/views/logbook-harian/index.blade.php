@@ -19,7 +19,7 @@
     </div>
 
     @if (session("success"))
-        <div class="mb-4 rounded-md bg-status-success/10 border border-status-success/30 px-4 py-3 text-sm text-status-success">
+        <div class="mb-4 rounded-xl bg-status-success/10 border border-status-success/30 px-4 py-3 text-sm text-status-success">
             {{ session("success") }}
         </div>
     @endif

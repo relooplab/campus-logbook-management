@@ -40,7 +40,7 @@
             @csrf @method("PUT") <div class="grid sm:grid-cols-2 gap-4">
                 <div> <label class="block text-sm font-medium mb-1" for="name">Nama Lengkap</label> <input
                         type="text" name="name" id="name" required value="{{ old("name", $user->name) }}"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm focus:ring-2 focus:ring-brand focus:outline-none">
                     @error("name")
                         <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -49,7 +49,7 @@
                 <div> <label class="block text-sm font-medium mb-1" for="nim">NIM <span class="text-status-danger">*</span></label> <input
                         type="text" name="nim" id="nim" required
                         value="{{ old("nim", $user->nim) }}"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     @error("nim")
                         <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -63,7 +63,7 @@
                 <div> <label class="block text-sm font-medium mb-1" for="whatsapp">Nomor WhatsApp @if ($user->isMahasiswa())<span class="text-status-danger">*</span>@endif</label> <input
                         type="text" name="whatsapp" id="whatsapp" @if ($user->isMahasiswa()) required @endif value="{{ old("whatsapp", $user->whatsapp) }}"
                         placeholder="6281xxxxxx"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     @if ($user->isDosen())
                         <label class="mt-2 flex items-center gap-2 text-xs text-text-secondary cursor-pointer">
                             <input type="checkbox" name="bimbingan_via_whatsapp" value="1"
@@ -76,7 +76,7 @@
                 <div> <label class="block text-sm font-medium mb-1" for="telegram">Telegram</label> <input
                         type="text" name="telegram" id="telegram" value="{{ old("telegram", $user->telegram) }}"
                         placeholder="@username"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     @if ($user->isDosen())
                         <label class="mt-2 flex items-center gap-2 text-xs text-text-secondary cursor-pointer">
                             <input type="checkbox" name="bimbingan_via_telegram" value="1"
@@ -89,7 +89,7 @@
                 <div> <label class="block text-sm font-medium mb-1" for="linkedin">LinkedIn</label> <input
                         type="url" name="linkedin" id="linkedin" value="{{ old("linkedin", $user->linkedin) }}"
                         placeholder="https://linkedin.com/in/..."
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
             </div>
             @if ($user->isDosen())
                 <div class="pt-2 border-t border-border">
@@ -98,33 +98,33 @@
                         <div> <label class="block text-sm font-medium mb-1" for="google_scholar">Google Scholar</label>
                             <input type="url" name="google_scholar" id="google_scholar"
                                 value="{{ old("google_scholar", $user->google_scholar) }}"
-                                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                                class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         </div>
                         <div> <label class="block text-sm font-medium mb-1" for="orcid">ORCID</label> <input
                                 type="text" name="orcid" id="orcid" value="{{ old("orcid", $user->orcid) }}"
                                 placeholder="0000-0000-0000-0000"
-                                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
+                                class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
                         <div> <label class="block text-sm font-medium mb-1" for="sinta">SINTA ID</label> <input
                                 type="text" name="sinta" id="sinta" value="{{ old("sinta", $user->sinta) }}"
-                                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
+                                class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
                         <div> <label class="block text-sm font-medium mb-1" for="researchgate">ResearchGate</label>
                             <input type="url" name="researchgate" id="researchgate"
                                 value="{{ old("researchgate", $user->researchgate) }}"
-                                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                                class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         </div>
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-medium mb-1" for="jadwal_bimbingan_url">Link Jadwalkan Bimbingan</label>
                             <input type="url" name="jadwal_bimbingan_url" id="jadwal_bimbingan_url"
                                 value="{{ old("jadwal_bimbingan_url", $user->jadwal_bimbingan_url) }}"
                                 placeholder="https://cal.com/... atau https://forms.gle/..."
-                                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                                class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                             <p class="text-xs text-text-secondary mt-1">Link ini akan ditampilkan sebagai card di halaman Jadwalkan Bimbingan agar mahasiswa dapat memesan/bergabung sesi bimbingan Anda. Kosongkan jika belum tersedia.</p>
                         </div>
                     </div>
                 </div>
             @endif
             <div class="flex items-center gap-3 pt-2"> <button
-                    class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan
+                    class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan
                     Profil</button> </div>
         </form>
         @include('partials.profile-affiliation', ['affUser' => $user])
@@ -152,25 +152,25 @@
                 <div class="grid sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs text-text-secondary mb-1">Perguruan Tinggi <span class="text-status-danger">*</span></label>
-                        <select name="university_id" id="aff-university" required class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <select name="university_id" id="aff-university" required class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                             <option value="">— Pilih perguruan tinggi —</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs text-text-secondary mb-1">Fakultas <span class="text-status-danger">*</span></label>
-                        <select name="faculty_id" id="aff-faculty" required disabled class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <select name="faculty_id" id="aff-faculty" required disabled class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                             <option value="">— Pilih fakultas —</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs text-text-secondary mb-1">Departemen <span class="text-status-danger">*</span></label>
-                        <select name="department_id" id="aff-department" required disabled class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <select name="department_id" id="aff-department" required disabled class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                             <option value="">— Pilih departemen —</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs text-text-secondary mb-1">Program Studi <span class="text-status-danger">*</span></label>
-                        <select name="study_program_id" id="aff-prodi" required disabled class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <select name="study_program_id" id="aff-prodi" required disabled class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                             <option value="">— Pilih prodi —</option>
                         </select>
                     </div>
@@ -178,7 +178,7 @@
                 @error('university_id')
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
-                <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan Afiliasi</button>
+                <button class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan Afiliasi</button>
             </form>
         </div>
     @endif
@@ -191,7 +191,7 @@
                     <p class="text-sm text-text-secondary mt-0.5">Perguruan tinggi, fakultas, departemen, dan program studi Anda.</p>
                 </div>
                 <a href="{{ route('profile.affiliation') }}"
-                    class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Kelola</a>
+                    class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Kelola</a>
             </div>
         </div>
     @endif
@@ -214,17 +214,17 @@
                     @if ($prog->isKp())
                         <div>
                             <label class="block text-xs text-text-secondary mb-1">Tempat Kerja Praktek <span class="text-status-danger">*</span></label>
-                            <input type="text" name="tempat_kp" required value="{{ old('tempat_kp', $prog->tempat_kp) }}" placeholder="Contoh: PT Teknologi Indonesia" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            <input type="text" name="tempat_kp" required value="{{ old('tempat_kp', $prog->tempat_kp) }}" placeholder="Contoh: PT Teknologi Indonesia" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                             @error('tempat_kp') <p class="text-status-danger text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                     @else
                         <div>
                             <label class="block text-xs text-text-secondary mb-1">Judul Tugas Akhir <span class="text-status-danger">*</span></label>
-                            <input type="text" name="judul_ta" required value="{{ old('judul_ta', $prog->judul_ta) }}" placeholder="Contoh: Rancang Bangun Sistem ..." class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            <input type="text" name="judul_ta" required value="{{ old('judul_ta', $prog->judul_ta) }}" placeholder="Contoh: Rancang Bangun Sistem ..." class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                             @error('judul_ta') <p class="text-status-danger text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                     @endif
-                    <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan {{ $prog->isKp() ? 'Tempat KP' : 'Judul' }}</button>
+                    <button class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan {{ $prog->isKp() ? 'Tempat KP' : 'Judul' }}</button>
                 </form>
                 @if ($prog->isKp() && in_array($prog->fase, ['laporan', 'seminar_kp', 'selesai'], true)
                     && $programs->where('jenis', 'ta')->isEmpty())
@@ -244,7 +244,7 @@
         <form method="POST" action="{{ route("profile.password") }}" class="space-y-4"> @csrf @method("PUT") <div>
                 <label class="block text-sm font-medium mb-1" for="current_password">Kata Sandi Saat Ini</label>
                 <input type="password" name="current_password" id="current_password" required
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                 @error("current_password")
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
@@ -252,16 +252,16 @@
             <div class="grid sm:grid-cols-2 gap-4">
                 <div> <label class="block text-sm font-medium mb-1" for="password">Kata Sandi Baru</label> <input
                         type="password" name="password" id="password" required minlength="6"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     @error("password")
                         <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
                 <div> <label class="block text-sm font-medium mb-1" for="password_confirmation">Konfirmasi</label>
                     <input type="password" name="password_confirmation" id="password_confirmation" required
-                        minlength="6" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        minlength="6" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                 </div>
-            </div> <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Ubah
+            </div> <button class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Ubah
                 Kata
                 Sandi</button>
         </form>

@@ -3,8 +3,8 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Riwayat Sidang ({{ $sidangs->count() }})</h1>
         <div class="flex flex-wrap gap-2"> <a href="{{ route("dashboard.dosen.sidang-list.export") }}"
-                class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">download</span> Export PDF</a>
-            <a href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-bg-hover hover:bg-border text-text-primary text-sm">← Dashboard</a> </div>
+                class="px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">download</span> Export PDF</a>
+            <a href="{{ route("dashboard") }}" class="px-3 py-2 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-sm">← Dashboard</a> </div>
     </div>
 
     {{-- ===== Nilai yang perlu diisi ===== --}}
@@ -29,14 +29,14 @@
                             @csrf
                             <div>
                                 <label class="block text-xs text-text-secondary mb-1">Nilai (0–100) <span class="text-status-danger">*</span></label>
-                                <input type="number" name="nilai" min="0" max="100" step="0.01" required value="{{ $g->nilai }}" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                                <input type="number" name="nilai" min="0" max="100" step="0.01" required value="{{ $g->nilai }}" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                             </div>
                             <div>
                                 <label class="block text-xs text-text-secondary mb-1">Catatan (opsional)</label>
-                                <input type="text" name="catatan" value="{{ $g->catatan }}" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                                <input type="text" name="catatan" value="{{ $g->catatan }}" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                             </div>
                             <div class="sm:col-span-2">
-                                <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">{{ $g->filled_at ? 'Perbarui Nilai' : 'Simpan Nilai' }}</button>
+                                <button class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">{{ $g->filled_at ? 'Perbarui Nilai' : 'Simpan Nilai' }}</button>
                             </div>
                         </form>
                     </div>
@@ -57,7 +57,7 @@
             <div>
                 <label class="block text-xs text-text-secondary mb-1">Mahasiswa (dari bimbingan)</label>
                 <select name="mahasiswa_ta_id" @if ($preselect) disabled @endif
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm @if ($preselect) opacity-60 @endif">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm @if ($preselect) opacity-60 @endif">
                     <option value="">— Pilih mahasiswa bimbingan / atau isi manual —</option>
                     @foreach ($bimbingan as $ta)
                         <option value="{{ $ta->id }}" @selected($preselect && $preselect->mahasiswa_ta_id === $ta->id)>{{ $ta->mahasiswa?->name }}</option>
@@ -70,12 +70,12 @@
             <div>
                 <label class="block text-xs text-text-secondary mb-1">Atau nama mahasiswa (di luar sistem)</label>
                 <input type="text" name="mahasiswa_name" placeholder="Nama mahasiswa yang diuji"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
             </div>
             @error("mahasiswa") <p class="text-status-danger text-xs sm:col-span-2">{{ $message }}</p> @enderror
             <div>
                 <label class="block text-xs text-text-secondary mb-1">Jenis</label>
-                <select name="jenis" required class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                <select name="jenis" required class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <option value="seminar_proposal" @selected($preselect && $preselect->jenis === 'seminar_proposal')>Seminar Proposal</option>
                     <option value="seminar_hasil" @selected($preselect && $preselect->jenis === 'seminar_hasil')>Seminar Hasil</option>
                     <option value="seminar_kp" @selected($preselect && $preselect->jenis === 'seminar_kp')>Seminar KP</option>
@@ -86,11 +86,11 @@
                 <label class="block text-xs text-text-secondary mb-1">Tanggal</label>
                 <input type="date" name="tanggal" required
                     value="{{ $preselect && $preselect->tanggal ? $preselect->tanggal->format('Y-m-d') : now()->format('Y-m-d') }}"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="block text-xs text-text-secondary mb-1">Hasil</label>
-                <select name="hasil" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                <select name="hasil" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <option value="">—</option>
                     <option value="lulus">Lulus</option>
                     <option value="lulus_revisi">Lulus + Revisi</option>
@@ -100,7 +100,7 @@
             <div>
                 <label class="block text-xs text-text-secondary mb-1">Penguji <span class="text-status-danger">*</span></label>
                 <input type="text" name="penguji_name" required list="dosen-penguji-list" placeholder="Nama penguji (bisa di luar sistem)"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                 <datalist id="dosen-penguji-list">
                     @foreach ($dosenList as $d) <option value="{{ $d->name }}"></option> @endforeach
                 </datalist>
@@ -108,13 +108,13 @@
             <div class="sm:col-span-2">
                 <p class="text-xs text-text-secondary mb-1">Pembimbing yang diuji (maks 3, opsional)</p>
                 <div class="grid sm:grid-cols-3 gap-2">
-                    <input type="text" name="supervisor_1" placeholder="Pembimbing 1" class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                    <input type="text" name="supervisor_2" placeholder="Pembimbing 2" class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                    <input type="text" name="supervisor_3" placeholder="Pembimbing 3" class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <input type="text" name="supervisor_1" placeholder="Pembimbing 1" class="rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <input type="text" name="supervisor_2" placeholder="Pembimbing 2" class="rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <input type="text" name="supervisor_3" placeholder="Pembimbing 3" class="rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                 </div>
             </div>
             <div class="sm:col-span-2">
-                <button type="submit" class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan Riwayat</button>
+                <button type="submit" class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan Riwayat</button>
             </div>
         </form>
     </div>

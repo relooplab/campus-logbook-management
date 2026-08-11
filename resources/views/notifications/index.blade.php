@@ -3,7 +3,7 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Notifikasi</h1>
         <form method="POST" action="{{ route("notifications.mark-all-read") }}"> @csrf <button
-                class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Tandai semua
+                class="px-3 py-2 rounded-xl bg-bg-hover hover:bg-bg-hover text-sm">Tandai semua
                 sudah dibaca</button> </form>
     </div>
     @if ($notifications->isEmpty())

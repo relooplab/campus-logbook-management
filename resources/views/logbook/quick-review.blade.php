@@ -1,16 +1,16 @@
 @extends("layouts.app") @section("title", "Quick Review") @section("content")
 @if (!$entry)
     <div class="max-w-2xl mx-auto text-center py-16">
-        <h1 class="text-2xl font-bold">Quick Review</h1>
+        <h1 class="font-heading font-bold text-2xl text-text-primary">Quick Review</h1>
         <p class="text-text-secondary mt-2">Tidak ada entri menunggu review. <span class="material-symbols-outlined icon-sm align-text-bottom">celebration</span></p> <a href="{{ route("dashboard") }}"
-            class="inline-block mt-4 px-4 py-2 rounded-md bg-brand text-[#0b1420] text-sm">← Dashboard</a>
+            class="inline-block mt-4 px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">← Dashboard</a>
     </div>
 @else
     <div class="space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <h1 class="text-xl font-bold">Quick Review (1 dari {{ $queueCount }}) —
+            <h1 class="font-heading font-bold text-2xl text-text-primary">Quick Review <span class="text-text-secondary">(1 dari {{ $queueCount }})</span> —
                 {{ $entry->jenis === "revisi" ? "Revisi" : "Sesi " . $entry->sesi_ke }}</h1> <a
-                href="{{ route("dashboard") }}" class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">←
+                href="{{ route("dashboard") }}" class="px-3 py-2 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-sm font-medium">←
                 Dashboard</a>
         </div> {{-- Ringkasan entry --}} <div class="bg-bg-surface rounded-xl border border-border p-5 space-y-3">
             <div class="flex items-center justify-between">
@@ -20,21 +20,21 @@
                 </div> @include("partials.status-badge", ["status" => $entry->status])
             </div>
             <dl class="grid sm:grid-cols-2 gap-2 text-sm">
-                <div class="px-3 py-2 rounded-md bg-bg-panel">
+                <div class="px-3 py-2 rounded-xl bg-bg-panel">
                     <dt class="text-text-secondary">Tanggal</dt>
                     <dd>{{ ($entry->jenis === "revisi" ? $entry->tanggal_pengiriman : $entry->tanggal_bimbingan)?->format("d M Y") ?? "—" }}</dd>
                 </div>
-                <div class="px-3 py-2 rounded-md bg-bg-panel">
+                <div class="px-3 py-2 rounded-xl bg-bg-panel">
                     <dt class="text-text-secondary">Menunggu review</dt>
                     <dd>{{ $entry->submitted_at?->diffForHumans() ?? "—" }} ({{ $entry->submitted_at?->diffInDays(now()) ?? 0 }} hari)</dd>
                 </div>
-                <div class="px-3 py-2 rounded-md bg-bg-panel">
+                <div class="px-3 py-2 rounded-xl bg-bg-panel">
                     <dt class="text-text-secondary">Topik</dt>
                     <dd>{{ $entry->topik ?? "Revisi" }}</dd>
                 </div>
             </dl>
             @if ($entry->parentEntry)
-                <div class="px-3 py-2 rounded-md bg-brand/10 border border-brand/20 text-sm">
+                <div class="px-3 py-2 rounded-xl bg-brand/10 border border-brand/20 text-sm">
                     <p class="font-semibold">Revisi ke-{{ $entry->revision_round }} dari entri #{{ $entry->parentEntry->id }}</p>
                     <p class="whitespace-pre-wrap mt-1">{{ $entry->parentEntry->feedback_dosen }}</p>
                     <p class="text-xs text-text-secondary mt-2">Anotasi ronde sebelumnya: {{ $entry->parentEntry->comments->count() }} · ronde ini: {{ $entry->comments->count() }}</p>
@@ -54,7 +54,7 @@
             </div>
             @if ($entry->lampiran_path || $entry->catatan_perbaikan_path)
                 <a href="{{ route("logbook.pdf-viewer", $entry) }}" target="_blank"
-                    class="inline-block px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Lihat PDF &
+                    class="inline-block px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Lihat PDF &
                     Anotasi</a>
             @endif
             @if ($entry->exceedsRevisionRoundLimit())
@@ -84,25 +84,25 @@
             </div>
         </div> {{-- Form review --}} <div class="bg-bg-surface rounded-xl border border-border p-5 space-y-3">
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold">Umpan Balik</h2> <button type="button" id="build-feedback"
-                    class="text-xs px-3 py-1.5 rounded-md bg-brand/10 text-brand">
+                <h2 class="font-heading font-semibold text-text-primary" id="feedback-dosen-label">Umpan Balik</h2> <button type="button" id="build-feedback"
+                    class="px-4 py-2 rounded-xl bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20 transition-colors">
                     <span class="material-symbols-outlined icon-sm align-text-bottom">bolt</span> Jadikan dari Komentar </button>
             </div>
-            <textarea name="feedback_dosen" id="feedback_dosen" rows="4" required minlength="20"
+            <textarea name="feedback_dosen" id="feedback_dosen" rows="4" required minlength="20" aria-labelledby="feedback-dosen-label"
                 placeholder="Tulis feedback / alasan revisi..."
-                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">{{ old("feedback_dosen", $feedbackDraft ?? "") }}</textarea>
+                class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">{{ old("feedback_dosen", $feedbackDraft ?? "") }}</textarea>
             <p id="revisi-error" class="hidden text-xs text-status-danger mt-1">Umpan Balik wajib diisi minimal 20 karakter.</p>
             <div class="flex flex-wrap gap-2">
                 <form method="POST" action="{{ route("quick-review.approve-next", $entry) }}" id="approve-form" data-pdf-opened="{{ $entry->review_opened_at || (!$entry->lampiran_path && !$entry->catatan_perbaikan_path) ? "1" : "0" }}"> @csrf <button type="submit" id="approve-btn"
-                        class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">check</span>
+                        class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">check</span>
                         Setujui & Next</button> </form>
                 <form method="POST" action="{{ route("quick-review.revisi-next", $entry) }}" id="revisi-form" data-pdf-opened="{{ $entry->review_opened_at || (!$entry->lampiran_path && !$entry->catatan_perbaikan_path) ? "1" : "0" }}">
                     @csrf <input type="hidden" name="feedback_dosen" id="revisi-feedback">
                     <button type="submit" id="revisi-btn"
-                        class="px-4 py-2 rounded-md bg-status-pending hover:bg-status-pending/90 text-white text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">autorenew</span>
+                        class="px-4 py-2 rounded-xl bg-status-pending hover:bg-status-pending/90 text-[#0b1420] text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">autorenew</span>
                         Revisi & Next</button>
                 </form> <a href="{{ route("logbook.show", $entry) }}"
-                    class="px-4 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Detail
+                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-sm font-medium">Detail
                     penuh</a>
             </div>
         </div>
@@ -110,15 +110,15 @@
 @endif {{-- Modal simpan template --}}
 <div id="tpl-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
     <div class="bg-bg-surface rounded-lg border border-border p-4 w-full max-w-md">
-        <h3 class="font-semibold mb-3">Simpan sebagai Template Umpan Balik</h3>
+        <h3 class="font-heading font-semibold text-text-primary mb-3">Simpan sebagai Template Umpan Balik</h3>
         <div class="space-y-3"> <input type="text" id="tpl-title" placeholder="Judul (opsional)"
-                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-            <textarea id="tpl-body" rows="3" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"
+                class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+            <textarea id="tpl-body" rows="3" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40"
                 placeholder="Isi feedback..."></textarea>
         </div>
         <div class="flex justify-end gap-2 mt-4"> <button type="button" id="tpl-cancel"
-                class="px-3 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</button> <button type="button" id="tpl-save"
-                class="px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Simpan</button> </div>
+                class="px-4 py-2 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-sm font-medium">Batal</button> <button type="button" id="tpl-save"
+                class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan</button> </div>
     </div>
 </div>
 @endsection @section("scripts")

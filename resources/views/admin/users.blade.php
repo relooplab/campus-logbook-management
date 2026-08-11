@@ -20,7 +20,7 @@
                 @endif
             </p>
         </div>
-        <a href="{{ route('admin.system.settings') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-bg-hover hover:bg-border text-text-primary text-sm font-medium">
+        <a href="{{ route('admin.system.settings') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-sm font-medium">
             <span class="material-symbols-outlined icon-md">settings</span>
             Pengaturan Autentikasi
         </a>
@@ -74,14 +74,14 @@
             <input type="hidden" name="tab" value="{{ $tab }}">
         @endif
         <input type="text" name="keyword" value="{{ request('keyword') }}" placeholder="Nama / email / identifier"
-            class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-        <select name="role" class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+            class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+        <select name="role" class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
             <option value="">Semua role</option>
             @foreach ($roles as $r)
                 <option value="{{ $r->name }}" @selected(request('role') === $r->name)>{{ ucfirst($r->name) }}</option>
             @endforeach
         </select>
-        <select name="status" class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+        <select name="status" class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
             <option value="">Semua status</option>
             <option value="active" @selected(request('status') === 'active')>Active</option>
             <option value="verified" @selected(request('status') === 'verified')>Verified</option>
@@ -89,7 +89,7 @@
             <option value="pending" @selected(request('status') === 'pending')>Pending</option>
         </select>
         @if ($isSystemAdmin)
-            <select name="institution_id" class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+            <select name="institution_id" class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                 <option value="">Semua institusi</option>
                 <option value="none" @selected(request('institution_id') === 'none')>— Personal —</option>
                 @foreach ($institutions as $inst)
@@ -97,18 +97,18 @@
                 @endforeach
             </select>
         @endif
-        <select name="verified" class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+        <select name="verified" class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
             <option value="">Email semua</option>
             <option value="1" @selected(request('verified') === '1')>Terverifikasi</option>
             <option value="0" @selected(request('verified') === '0')>Belum</option>
         </select>
-        <select name="sort" class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+        <select name="sort" class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
             <option value="latest" @selected(request('sort', 'latest') === 'latest')>Terbaru</option>
             <option value="name" @selected(request('sort') === 'name')>Nama (A-Z)</option>
         </select>
-        <button class="w-full sm:w-auto px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm font-semibold">Cari</button>
-        <a href="{{ route('admin.users', request()->only('tab')) }}" class="w-full sm:w-auto px-3 py-2 rounded-md bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Reset</a>
-        <a href="{{ route('admin.users.export', request()->query()) }}" class="w-full sm:w-auto px-3 py-2 rounded-md bg-bg-hover text-text-primary text-sm font-medium hover:bg-border inline-flex items-center gap-1.5">
+        <button class="w-full sm:w-auto px-3 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-semibold">Cari</button>
+        <a href="{{ route('admin.users', request()->only('tab')) }}" class="w-full sm:w-auto px-3 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Reset</a>
+        <a href="{{ route('admin.users.export', request()->query()) }}" class="w-full sm:w-auto px-3 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border inline-flex items-center gap-1.5">
             <span class="material-symbols-outlined icon-sm">download</span> Export CSV
         </a>
     </form>
@@ -118,13 +118,13 @@
             {{-- Bulk action toolbar (muncul saat ada checkbox dipilih via JS) --}}
             <div id="bulk-toolbar" class="hidden px-4 py-2 border-b border-border bg-bg-panel flex flex-wrap items-center gap-3 text-sm">
                 <span class="text-text-secondary"><span id="bulk-count">0</span> dipilih</span>
-                <select id="bulk-action" class="rounded-md border border-border bg-bg-surface px-2 py-1 text-sm">
+                <select id="bulk-action" class="rounded-xl border border-border bg-bg-surface px-2 py-1 text-sm">
                     <option value="approve">Setujui</option>
                     <option value="reject">Tolak</option>
                     <option value="delete">Hapus</option>
                 </select>
-                <button type="button" id="bulk-apply" class="px-3 py-1.5 rounded-md bg-brand text-[#0b1420] text-sm font-semibold">Terapkan</button>
-                <button type="button" id="bulk-cancel" class="px-3 py-1.5 rounded-md bg-bg-hover text-text-primary text-sm">Batal</button>
+                <button type="button" id="bulk-apply" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-sm font-semibold">Terapkan</button>
+                <button type="button" id="bulk-cancel" class="px-3 py-1.5 rounded-xl bg-bg-hover text-text-primary text-sm">Batal</button>
             </div>
             <form id="bulk-form" method="POST" action="{{ route('admin.users.bulk') }}">
                 @csrf
@@ -260,10 +260,10 @@
             <h2 class="font-semibold">Tambah Pengguna</h2>
             <form method="POST" action="{{ route('admin.users.store') }}" class="space-y-3">
                 @csrf
-                <input type="text" name="name" required placeholder="Nama lengkap" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                <input type="email" name="email" required placeholder="Email" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                <input type="text" name="nim" placeholder="NIM / NIDN" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                <input type="password" name="password" required placeholder="Kata sandi" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                <input type="text" name="name" required placeholder="Nama lengkap" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                <input type="email" name="email" required placeholder="Email" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                <input type="text" name="nim" placeholder="NIM / NIDN" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                <input type="password" name="password" required placeholder="Kata sandi" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                 <div>
                     <label class="block text-sm mb-1">Role</label>
                     <div class="flex gap-3">
@@ -278,7 +278,7 @@
                         @endforeach
                     </div>
                 </div>
-                <button class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan</button>
+                <button class="w-full px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan</button>
             </form>
 
             @if ($me->hasRole('admin') && ! $isSystemAdmin && $me->adminScopes->isNotEmpty())
@@ -287,16 +287,16 @@
                     <p class="text-xs text-text-secondary mb-3">Buat admin di bawah cakupan scope Anda. Pilih universitas → fakultas → departemen → prodi.</p>
                     <form method="POST" action="{{ route('admin.sub-admins.store') }}" class="space-y-3">
                         @csrf
-                        <input type="text" name="name" required placeholder="Nama lengkap" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                        <input type="email" name="email" required placeholder="Email" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                        <input type="text" name="nim" placeholder="Identifier (opsional)" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                        <input type="password" name="password" required placeholder="Kata sandi" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <input type="text" name="name" required placeholder="Nama lengkap" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <input type="email" name="email" required placeholder="Email" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <input type="text" name="nim" placeholder="Identifier (opsional)" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <input type="password" name="password" required placeholder="Kata sandi" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         <div>
                             <label class="block text-sm mb-1">Scope Admin</label>
                             <div id="sub-scope-list" class="space-y-2"></div>
                             <button type="button" id="add-sub-scope" class="mt-2 text-xs text-brand hover:underline">+ Tambah scope</button>
                         </div>
-                        <button class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan Admin</button>
+                        <button class="w-full px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan Admin</button>
                     </form>
                 </div>
             @endif
@@ -312,11 +312,11 @@
             @csrf
             <div>
                 <label class="block text-sm font-medium mb-1">Kata Sandi Baru</label>
-                <input type="password" name="password" required minlength="6" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                <input type="password" name="password" required minlength="6" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
             </div>
             <div class="flex justify-end gap-2 mt-4">
-                <button type="button" id="reset-cancel" class="px-3 py-2 rounded-md bg-status-danger hover:status-danger/90 text-white text-sm">Batal</button>
-                <button class="px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Reset</button>
+                <button type="button" id="reset-cancel" class="px-3 py-2 rounded-xl bg-status-danger hover:status-danger/90 text-white text-sm">Batal</button>
+                <button class="px-3 py-2 rounded-xl bg-brand text-[#0b1420] text-sm">Reset</button>
             </div>
         </form>
     </div>
@@ -332,11 +332,11 @@
             <div>
                 <label class="block text-sm font-medium mb-1">Batas Workspace (MB)</label>
                 <input type="number" name="storage_limit_mb" min="0" max="1048576" id="quota-mb"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm" placeholder="Kosongkan = ikut paket/pool">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm" placeholder="Kosongkan = ikut paket/pool">
             </div>
             <div class="flex justify-end gap-2 mt-4">
-                <button type="button" id="quota-cancel" class="px-3 py-2 rounded-md bg-status-danger hover:status-danger/90 text-white text-sm">Batal</button>
-                <button class="px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Simpan Kuota</button>
+                <button type="button" id="quota-cancel" class="px-3 py-2 rounded-xl bg-status-danger hover:status-danger/90 text-white text-sm">Batal</button>
+                <button class="px-3 py-2 rounded-xl bg-brand text-[#0b1420] text-sm">Simpan Kuota</button>
             </div>
         </form>
     </div>
@@ -436,14 +436,14 @@
             var row = document.createElement('div');
             row.className = 'flex flex-wrap gap-2 items-center';
             row.innerHTML = ''
-                + '<select name="scopes[' + scopeIdx + '][scope_type]" class="sub-type w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">'
+                + '<select name="scopes[' + scopeIdx + '][scope_type]" class="sub-type w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">'
                 + '  <option value="university">Universitas</option>'
                 + '  <option value="faculty">Fakultas</option>'
                 + '  <option value="department">Departemen</option>'
                 + '  <option value="study_program">Prodi</option>'
                 + '</select>'
-                + '<select name="scopes[' + scopeIdx + '][scope_id]" class="sub-node w-full sm:flex-1 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"></select>'
-                + '<button type="button" class="remove-scope px-2 py-2 rounded-md bg-status-danger/10 text-status-danger text-xs">Hapus</button>';
+                + '<select name="scopes[' + scopeIdx + '][scope_id]" class="sub-node w-full sm:flex-1 rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"></select>'
+                + '<button type="button" class="remove-scope px-2 py-2 rounded-xl bg-status-danger/10 text-status-danger text-xs">Hapus</button>';
             subList.appendChild(row);
             scopeIdx++;
 

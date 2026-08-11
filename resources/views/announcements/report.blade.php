@@ -2,7 +2,7 @@
 <div class="max-w-3xl space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Laporan Baca — {{ $announcement->title }}</h1> <a
-            href="{{ route("announcements.index") }}" class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">←
+            href="{{ route("announcements.index") }}" class="px-3 py-2 rounded-xl bg-bg-hover hover:bg-bg-hover text-sm">←
             Kembali</a>
     </div>
     <div class="bg-bg-surface rounded-xl border border-border p-5">

@@ -32,20 +32,20 @@
             <div>
                 <label class="block text-sm mb-1">Pool Kuota (MB) — input bebas</label>
                 <input type="number" name="storage_limit_mb" min="1" max="1048576" required value="{{ old('storage_limit_mb', $subscription->storage_limit_mb) }}"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                 <p class="text-xs text-text-secondary mt-1">Nilai pool langsung, tidak terikat plan.</p>
                 @error('storage_limit_mb')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
             </div>
 
             <div>
                 <label class="block text-sm mb-1">Berakhir (opsional)</label>
-                <input type="date" name="ends_at" value="{{ old('ends_at', $subscription->ends_at?->format('Y-m-d')) }}" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                <input type="date" name="ends_at" value="{{ old('ends_at', $subscription->ends_at?->format('Y-m-d')) }}" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                 @error('ends_at')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
             </div>
 
             <div>
                 <label class="block text-sm mb-1">Status</label>
-                <select name="status" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                <select name="status" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     @foreach (['active' => 'Active', 'expired' => 'Expired', 'cancelled' => 'Cancelled'] as $value => $label)
                         <option value="{{ $value }}" @selected(old('status', $subscription->status) === $value)>{{ $label }}</option>
                     @endforeach
@@ -54,8 +54,8 @@
             </div>
 
             <div class="flex items-center gap-3 pt-2">
-                <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan</button>
-                <a href="{{ route('admin.system.directory-subscriptions') }}" class="px-4 py-2 rounded-md bg-bg-hover hover:bg-border text-text-primary text-sm">Batal</a>
+                <button class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan</button>
+                <a href="{{ route('admin.system.directory-subscriptions') }}" class="px-4 py-2 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-sm">Batal</a>
             </div>
         </form>
     </div>

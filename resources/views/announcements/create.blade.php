@@ -4,11 +4,11 @@
     <form method="POST" action="{{ route("announcements.store") }}"
         class="bg-bg-surface rounded-xl border border-border p-6 space-y-4"> @csrf <div> <label
                 class="block text-sm font-medium mb-1" for="title">Judul</label> <input type="text" name="title"
-                id="title" required class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                id="title" required class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
         </div>
         <div> <label class="block text-sm font-medium mb-1" for="body">Isi Pengumuman</label>
             <textarea name="body" id="body" rows="4" required
-                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"></textarea>
+                class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"></textarea>
         </div>
         <div>
             <p class="text-sm font-medium mb-2">Target</p> <label class="flex items-center gap-2 text-sm mb-2"> <input
@@ -27,7 +27,7 @@
                 @endforeach
             </div>
         </div> <button
-            class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Kirim
+            class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Kirim
             Pengumuman</button>
     </form>
 </div>

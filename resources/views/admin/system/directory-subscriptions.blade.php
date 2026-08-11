@@ -11,7 +11,7 @@
         </div>
         <div class="flex flex-wrap items-center gap-2">
             <a href="{{ route('admin.system.directory') }}"
-                class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-bg-hover hover:bg-border text-text-primary text-sm font-medium transition-colors">
+                class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-sm font-medium transition-colors">
                 <span class="material-symbols-outlined icon-md">account_tree</span>
                 Kelola Struktur Direktori
             </a>
@@ -98,7 +98,7 @@
 
                 <div>
                     <label class="block text-sm mb-1">Node</label>
-                    <select name="scope_id" id="scope-id" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <select name="scope_id" id="scope-id" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         @foreach ($universities as $univ)
                             <optgroup label="{{ $univ->name }}">
                                 <option value="{{ $univ->id }}" data-type="university">{{ $univ->name }}</option>
@@ -120,16 +120,16 @@
                     <label class="block text-sm mb-1">Pool Kuota (MB) — input bebas</label>
                     <input type="number" name="storage_limit_mb" min="1" max="1048576" required
                         placeholder="mis. 5120"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <p class="text-xs text-text-secondary mt-1">Nilai pool langsung, tidak terikat plan.</p>
                 </div>
 
                 <div>
                     <label class="block text-sm mb-1">Berakhir (opsional)</label>
-                    <input type="date" name="ends_at" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <input type="date" name="ends_at" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                 </div>
 
-                <button class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Assign</button>
+                <button class="w-full px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Assign</button>
             </form>
         </div>
     </div>

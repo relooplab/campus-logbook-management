@@ -2,7 +2,7 @@
 <div class="max-w-3xl mx-auto">
     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h1 class="text-xl font-bold">Chat dengan {{ $conversation->other_user?->name }}</h1> <a
-            href="{{ route("chat.index") }}" class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">←
+            href="{{ route("chat.index") }}" class="px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">←
             Daftar</a>
     </div>
     <div class="bg-bg-surface rounded-xl border border-border overflow-hidden">
@@ -49,10 +49,10 @@
         <form method="POST" action="{{ route("chat.store", $conversation) }}"
             class="border-t border-border p-3 flex gap-2 items-end"> @csrf <input type="hidden" name="attachable_type"
                 id="attach-type"> <input type="hidden" name="attachable_id" id="attach-id"> <button type="button"
-                id="attach-btn" class="p-2 rounded-md hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-md text-accent-teal">attach_file</span></button>
+                id="attach-btn" class="p-2 rounded-xl hover:bg-bg-hover hover:bg-bg-hover"><span class="material-symbols-outlined icon-md text-accent-teal">attach_file</span></button>
             <textarea name="body" id="msg-body" rows="1" required placeholder="Tulis pesan..."
-                class="flex-1 rounded-md border border-border bg-bg-surface px-3 py-2 text-sm resize-none"></textarea> <button
-                class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Kirim</button>
+                class="flex-1 rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm resize-none"></textarea> <button
+                class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Kirim</button>
         </form> {{-- Panel attach --}} <div id="attach-panel" class="hidden border-t border-border p-3">
             <div class="flex items-center justify-between mb-2">
                 <p class="text-sm font-semibold">Lampirkan referensi</p> <button type="button" id="attach-close"
@@ -67,10 +67,10 @@
         <h3 class="font-semibold mb-2">Edit Pesan</h3>
         <form method="POST" action="" id="edit-form"> @csrf @method("PUT")
             <textarea name="body" id="edit-body" rows="3"
-                class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"></textarea>
+                class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"></textarea>
             <div class="flex justify-end gap-2 mt-3"> <button type="button" id="edit-cancel"
-                    class="px-3 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</button> <button
-                    class="px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Simpan</button> </div>
+                    class="px-3 py-2 rounded-xl bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</button> <button
+                    class="px-3 py-2 rounded-xl bg-brand text-[#0b1420] text-sm">Simpan</button> </div>
         </form>
     </div>
 </div>

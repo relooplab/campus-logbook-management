@@ -18,8 +18,8 @@
             <form method="POST" action="{{ route('workspace-institusi.upload', $workspace) }}" enctype="multipart/form-data" class="space-y-3">
                 @csrf
                 <input type="file" name="files[]" multiple required class="w-full text-sm">
-                <input type="text" name="description" placeholder="Deskripsi (opsional)" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
-                <button class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Upload</button>
+                <input type="text" name="description" placeholder="Deskripsi (opsional)" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                <button class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Upload</button>
             </form>
         </div>
 
@@ -30,21 +30,21 @@
                 @method('PUT')
                 <div>
                     <label class="block text-sm mb-1">Mode Akses</label>
-                    <select name="access_mode" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <select name="access_mode" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         <option value="hierarchical" @selected($workspace->access_mode === 'hierarchical')>Sesama prodi (default)</option>
                         <option value="custom" @selected($workspace->access_mode === 'custom')>Custom (dosen tertentu)</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm mb-1">Dosen yang boleh akses (custom)</label>
-                    <select name="allowed_user_ids[]" multiple class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <select name="allowed_user_ids[]" multiple class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         @foreach (\App\Models\User::role('dosen')->orderBy('name')->get() as $d)
                             <option value="{{ $d->id }}" @selected($workspace->allowedUsers->contains('id', $d->id))>{{ $d->name }}</option>
                         @endforeach
                     </select>
                     <p class="text-xs text-text-secondary mt-1">Kosongkan jika mode sesama prodi. Multi-select untuk custom.</p>
                 </div>
-                <button class="px-4 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Simpan Akses</button>
+                <button class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm">Simpan Akses</button>
             </form>
         </div>
     @endif

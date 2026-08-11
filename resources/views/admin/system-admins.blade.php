@@ -63,17 +63,17 @@
             <h2 class="font-semibold mb-3">Tambah Admin</h2>
             <form method="POST" action="{{ route("admin.system.admins.store") }}" class="space-y-3"> @csrf <input
                     type="text" name="name" required placeholder="Nama lengkap"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <input
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"> <input
                     type="email" name="email" required placeholder="Email"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <input
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"> <input
                     type="text" name="nim" placeholder="Identifier (opsional)"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <input
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"> <input
                     type="password" name="password" required placeholder="Kata sandi"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
 
                 <div>
                     <label class="block text-sm mb-1">Institusi</label>
-                    <select name="institution_id" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <select name="institution_id" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         <option value="">— Personal (tanpa institusi) —</option>
                         @foreach ($institutions as $inst)
                             <option value="{{ $inst->id }}">{{ $inst->institution_name }}</option>
@@ -86,21 +86,21 @@
                     <p class="text-xs text-text-secondary mb-2">Jika dikosongkan, admin TIDAK dapat melihat/mengelola data dosen & mahasiswa (locked). Pilih universitas/fakultas/departemen/prodi untuk membatasi cakupan.</p>
                     <div id="scope-list" class="space-y-2">
                         <div class="flex flex-wrap gap-2">
-                            <select name="scopes[0][scope_type]" class="scope-type w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            <select name="scopes[0][scope_type]" class="scope-type w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                                 <option value="university">Universitas</option>
                                 <option value="faculty">Fakultas</option>
                                 <option value="department">Departemen</option>
                                 <option value="study_program">Prodi</option>
                             </select>
-                            <select name="scopes[0][scope_id]" class="scope-node w-full sm:flex-1 min-w-[220px] rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"></select>
-                            <button type="button" class="remove-scope px-2 py-2 rounded-md bg-status-danger/10 text-status-danger text-xs">Hapus</button>
+                            <select name="scopes[0][scope_id]" class="scope-node w-full sm:flex-1 min-w-[220px] rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"></select>
+                            <button type="button" class="remove-scope px-2 py-2 rounded-xl bg-status-danger/10 text-status-danger text-xs">Hapus</button>
                         </div>
                     </div>
                     <button type="button" id="add-scope" class="mt-2 text-xs text-brand hover:underline">+ Tambah scope</button>
                 </div>
 
                 <button
-                    class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan</button>
+                    class="w-full px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan</button>
             </form>
         </div>
     </div>
@@ -111,10 +111,10 @@
         <form method="POST" action="" id="reset-form"> @csrf <div> <label
                     class="block text-sm font-medium mb-1">Kata Sandi Baru</label> <input type="password"
                     name="password" required minlength="6"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
             <div class="flex justify-end gap-2 mt-4"> <button type="button" id="reset-cancel"
-                    class="px-3 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</button> <button
-                    class="px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Reset</button> </div>
+                    class="px-3 py-2 rounded-xl bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</button> <button
+                    class="px-3 py-2 rounded-xl bg-brand text-[#0b1420] text-sm">Reset</button> </div>
         </form>
     </div>
 </div>
@@ -149,13 +149,13 @@
                 var row = document.createElement('div');
                 row.className = 'flex flex-wrap gap-2 items-center';
                 row.innerHTML =
-                    '<select name="scopes[' + index + '][scope_type]" class="scope-type w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">' +
+                    '<select name="scopes[' + index + '][scope_type]" class="scope-type w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">' +
                     '<option value="university">Universitas</option>' +
                     '<option value="faculty">Fakultas</option>' +
                     '<option value="department">Departemen</option>' +
                     '<option value="study_program">Prodi</option></select>' +
-                    '<select name="scopes[' + index + '][scope_id]" class="scope-node w-full sm:flex-1 min-w-[220px] rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"></select>' +
-                    '<button type="button" class="remove-scope px-2 py-2 rounded-md bg-status-danger/10 text-status-danger text-xs">Hapus</button>';
+                    '<select name="scopes[' + index + '][scope_id]" class="scope-node w-full sm:flex-1 min-w-[220px] rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"></select>' +
+                    '<button type="button" class="remove-scope px-2 py-2 rounded-xl bg-status-danger/10 text-status-danger text-xs">Hapus</button>';
                 scopeList.appendChild(row);
 
                 var typeEl = row.querySelector('.scope-type');

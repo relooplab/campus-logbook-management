@@ -41,30 +41,30 @@
             <h2 class="font-semibold mb-3">Tambah Data Sidang</h2>
             <form method="POST" action="{{ route("admin.sidangs.store") }}" class="space-y-3"> @csrf <select
                     name="mahasiswa_ta_id" required
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <option value="">Pilih mahasiswa...</option>
                     @foreach ($mahasiswaList as $m)
                         <option value="{{ $m->id }}">{{ $m->mahasiswa?->name }}</option>
                     @endforeach
                 </select> <select name="penguji_id" required
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <option value="">Pilih dosen penguji...</option>
                     @foreach ($dosenList as $d)
                         <option value="{{ $d->id }}">{{ $d->name }}</option>
                     @endforeach
                 </select> <select name="jenis" required
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <option value="seminar_proposal">Seminar Proposal</option>
                     <option value="sidang_akhir">Sidang Akhir</option>
                 </select> <input type="date" name="tanggal" required
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <select
-                    name="hasil" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"> <select
+                    name="hasil" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <option value="">Hasil (opsional)</option>
                     <option value="lulus">Lulus</option>
                     <option value="lulus_revisi">Lulus + Revisi</option>
                     <option value="mengulang">Mengulang</option>
                 </select> <button
-                    class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan</button>
+                    class="w-full px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan</button>
                 <p class="text-xs text-text-secondary">Sidang Akhir dengan hasil Lulus/Lulus+Revisi otomatis menandai
                     mahasiswa <b>tamat</b>.</p>
             </form>

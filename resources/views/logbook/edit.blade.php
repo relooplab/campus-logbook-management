@@ -52,7 +52,7 @@
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <label class="block text-sm font-medium">Catatan Perbaikan</label>
-                    <button type="button" id="tambah-baris" class="px-3 py-1.5 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-xs font-semibold">+ Tambah Baris</button>
+                    <button type="button" id="tambah-baris" class="px-3 py-1.5 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-xs font-semibold">+ Tambah Baris</button>
                 </div>
                 <p class="text-xs text-text-secondary mb-2">PDF catatan perbaikan dibuat otomatis oleh sistem dari tabel ini.</p>
                 <div class="overflow-x-auto">
@@ -136,15 +136,15 @@
                             MB · {{ $logbook->updated_at->format("d M") }}</p>
                     </div>
                     <div class="flex items-center gap-1"> <a href="{{ route("logbook.pdf", $logbook) }}"
-                            target="_blank" class="px-2 py-1 rounded-md bg-bg-panel hover:bg-bg-hover text-xs">Lihat</a>
+                            target="_blank" class="px-2 py-1 rounded-xl bg-bg-panel hover:bg-bg-hover text-xs">Lihat</a>
                         <label
-                            class="px-2 py-1 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-xs cursor-pointer">
+                            class="px-2 py-1 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-xs cursor-pointer">
                             Ganti <input type="file" name="lampiran" accept="{{ $accept }}" class="hidden">
                         </label>
                         <form method="POST" action="{{ route("logbook.remove-lampiran", $logbook) }}"
                             onsubmit="return confirm('Hapus lampiran ini? File tidak bisa dikembalikan.')"> @csrf
                             @method("DELETE") <button
-                                class="px-2 py-1 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-xs">Hapus</button>
+                                class="px-2 py-1 rounded-xl bg-status-danger hover:bg-status-danger/90 text-white text-xs">Hapus</button>
                         </form>
                     </div>
                 </div>
@@ -155,7 +155,7 @@
             @enderror
     </div>
     <div
-        class="px-3 py-2 rounded-md bg-status-pending/10 border border-status-pending/20 text-xs text-status-pending">
+        class="px-3 py-2 rounded-xl bg-status-pending/10 border border-status-pending/20 text-xs text-status-pending">
         <span class="material-symbols-outlined icon-sm align-text-bottom">warning</span> Mengganti atau menghapus file akan mengarsipkan versi lama dan tidak bisa dikembalikan. Komentar PDF
         pada file yang diganti akan otomatis ditandai selesai (resolve). </div>
     <div class="flex flex-wrap gap-2 pt-2">

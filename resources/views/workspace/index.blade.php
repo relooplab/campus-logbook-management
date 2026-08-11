@@ -158,15 +158,15 @@
         <form method="POST" action="" id="edit-form"> @csrf @method("PATCH") <div class="space-y-3">
                 <div> <label class="block text-sm font-medium mb-1">Label Bab</label> <input type="text"
                         name="bab" id="edit-bab"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
                 <div> <label class="block text-sm font-medium mb-1">Catatan</label>
                     <textarea name="description" id="edit-desc" rows="3"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"></textarea>
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"></textarea>
                 </div>
             </div>
             <div class="flex justify-end gap-2 mt-4"> <button type="button" id="edit-cancel"
-                    class="px-3 py-2 rounded-md bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</button> <button
-                    class="px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Simpan</button> </div>
+                    class="px-3 py-2 rounded-xl bg-status-danger hover:bg-status-danger/90 text-white text-sm">Batal</button> <button
+                    class="px-3 py-2 rounded-xl bg-brand text-[#0b1420] text-sm">Simpan</button> </div>
         </form>
     </div>
 </div>

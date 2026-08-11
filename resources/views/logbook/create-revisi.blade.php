@@ -170,7 +170,7 @@
             </div>
 
             <div class="mt-3">
-                <button type="button" id="tambah-kartu" class="px-3 py-1.5 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-xs font-semibold">+ Tambah Kartu</button>
+                <button type="button" id="tambah-kartu" class="px-3 py-1.5 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-xs font-semibold">+ Tambah Kartu</button>
             </div>
             @error("riwayat_perbaikan")
                 <p class="text-status-danger text-xs mt-1">{{ $message }}</p>

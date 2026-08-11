@@ -7,7 +7,7 @@
 <div class="space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Detail Mahasiswa</h1> <a href="{{ url()->previous() }}"
-            class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Kembali</a>
+            class="px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Kembali</a>
     </div> {{-- Kartu profil mahasiswa --}} <div
         class="bg-bg-surface rounded-xl border border-border p-6 flex flex-wrap items-center gap-4">
         <div
@@ -40,20 +40,20 @@
         </div>
         <div class="flex flex-wrap gap-2"> <a
                 href="{{ route("chat.start", ["user" => $mahasiswaTa->user_id, "ta" => $mahasiswaTa->id]) }}"
-                class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">chat</span> Chat</a> <a
+                class="px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom">chat</span> Chat</a> <a
                 href="{{ route("workspace.index", $mahasiswaTa) }}"
-                class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom text-accent-teal">folder</span>
+                class="px-3 py-2 rounded-xl bg-bg-hover hover:bg-bg-hover text-sm"><span class="material-symbols-outlined icon-sm align-text-bottom text-accent-teal">folder</span>
                 Workspace</a>
             @if ($mahasiswaTa->pembimbing1 || $mahasiswaTa->pembimbing2)
                 <a href="{{ route("logbook.export.pdf", $mahasiswaTa) }}"
-                    class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Rekap
+                    class="px-3 py-2 rounded-xl bg-bg-hover hover:bg-bg-hover text-sm">Rekap
                     PDF</a>
             @endif
             @if ($mahasiswaTa->isKp())
                 <a href="{{ route("logbook-harian.index", $mahasiswaTa) }}"
-                    class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Logbook Harian</a>
+                    class="px-3 py-2 rounded-xl bg-bg-hover hover:bg-bg-hover text-sm">Logbook Harian</a>
                 <a href="{{ route("profil-perusahaan.index", $mahasiswaTa) }}"
-                    class="px-3 py-2 rounded-md bg-bg-hover hover:bg-bg-hover text-sm">Profil Perusahaan</a>
+                    class="px-3 py-2 rounded-xl bg-bg-hover hover:bg-bg-hover text-sm">Profil Perusahaan</a>
             @endif
         </div>
     </div> {{-- Kontak mahasiswa (hanya untuk dosen) --}} @php $mhs = $mahasiswaTa->mahasiswa; @endphp
@@ -63,7 +63,7 @@
             <div class="grid sm:grid-cols-3 gap-3 text-sm">
                 @if ($mhs->whatsapp)
                     <a href="{{ $mhs->whatsappUrl() }}" target="_blank" rel="noopener"
-                        class="px-3 py-2.5 rounded-md bg-bg-panel hover:bg-bg-hover flex items-start gap-2 min-w-0">
+                        class="px-3 py-2.5 rounded-xl bg-bg-panel hover:bg-bg-hover flex items-start gap-2 min-w-0">
                         <span class="material-symbols-outlined icon-sm flex-shrink-0 mt-0.5 text-accent-teal">chat</span>
                         <span class="min-w-0">
                             <span class="block text-xs text-text-secondary">WhatsApp</span>
@@ -72,7 +72,7 @@
                     </a>
                 @endif
                 @if ($mhs->telegram)
-                    <div class="px-3 py-2.5 rounded-md bg-bg-panel flex items-start gap-2 min-w-0">
+                    <div class="px-3 py-2.5 rounded-xl bg-bg-panel flex items-start gap-2 min-w-0">
                         <span class="material-symbols-outlined icon-sm flex-shrink-0 mt-0.5 text-accent-teal">send</span>
                         <span class="min-w-0">
                             <span class="block text-xs text-text-secondary">Telegram</span>
@@ -82,7 +82,7 @@
                 @endif
                 @if ($mhs->linkedin)
                     <a href="{{ $mhs->linkedin }}" target="_blank" rel="noopener"
-                        class="px-3 py-2.5 rounded-md bg-bg-panel hover:bg-bg-hover flex items-start gap-2 min-w-0">
+                        class="px-3 py-2.5 rounded-xl bg-bg-panel hover:bg-bg-hover flex items-start gap-2 min-w-0">
                         <span class="material-symbols-outlined icon-sm flex-shrink-0 mt-0.5 text-accent-teal">link</span>
                         <span class="min-w-0">
                             <span class="block text-xs text-text-secondary">LinkedIn</span>
@@ -95,27 +95,27 @@
     @endif
     {{-- Info pembimbing + penguji + fase --}} <div
         class="bg-bg-surface rounded-xl border border-border p-5 grid sm:grid-cols-2 gap-4 text-sm">
-        <div class="px-3 py-2 rounded-md bg-bg-panel"> <span class="text-text-secondary">Pembimbing 1:</span> <span
+        <div class="px-3 py-2 rounded-xl bg-bg-panel"> <span class="text-text-secondary">Pembimbing 1:</span> <span
                 class="font-medium block">@include("partials.user-link", ["user" => $mahasiswaTa->pembimbing1])</span> </div>
-        <div class="px-3 py-2 rounded-md bg-bg-panel"> <span class="text-text-secondary">Pembimbing 2:</span> <span
+        <div class="px-3 py-2 rounded-xl bg-bg-panel"> <span class="text-text-secondary">Pembimbing 2:</span> <span
                 class="font-medium block">@include("partials.user-link", ["user" => $mahasiswaTa->pembimbing2])</span> </div>
         @if ($mahasiswaTa->isKp())
-            <div class="px-3 py-2 rounded-md bg-bg-panel"> <span class="text-text-secondary">Pembimbing Lapangan:</span>
+            <div class="px-3 py-2 rounded-xl bg-bg-panel"> <span class="text-text-secondary">Pembimbing Lapangan:</span>
                 <span class="font-medium block">{{ $mahasiswaTa->pembimbing_lapangan ?: 'Belum ditentukan' }}</span> </div>
         @else
-            <div class="px-3 py-2 rounded-md bg-bg-panel"> <span class="text-text-secondary">Penguji 1:</span> <span
+            <div class="px-3 py-2 rounded-xl bg-bg-panel"> <span class="text-text-secondary">Penguji 1:</span> <span
                     class="font-medium block">@include("partials.user-link", ["user" => $mahasiswaTa->penguji1])</span> </div>
-            <div class="px-3 py-2 rounded-md bg-bg-panel"> <span class="text-text-secondary">Penguji 2:</span> <span
+            <div class="px-3 py-2 rounded-xl bg-bg-panel"> <span class="text-text-secondary">Penguji 2:</span> <span
                     class="font-medium block">@include("partials.user-link", ["user" => $mahasiswaTa->penguji2])</span> </div>
             @php $canManagePenguji = auth()->user()->isAdmin() || (auth()->user()->isDosen() && $mahasiswaTa->isPembimbing(auth()->user())); @endphp
             @if ($canManagePenguji)
-                <div class="px-3 py-2 rounded-md bg-bg-panel sm:col-span-2 border border-border/60">
+                <div class="px-3 py-2 rounded-xl bg-bg-panel sm:col-span-2 border border-border/60">
                     <span class="text-text-secondary text-xs font-medium">Ganti Dosen Penguji (oleh pembimbing)</span>
                     <form method="POST" action="{{ route('mahasiswa-ta.penguji', $mahasiswaTa) }}" class="mt-2 grid sm:grid-cols-2 gap-2 items-center" onsubmit="return confirm('Ubah dosen penguji program ini? Perubahan langsung diterapkan.')">
                         @csrf
                         <label class="flex flex-col gap-1 text-xs text-text-secondary">
                             Penguji 1
-                            <select name="penguji_1_id" class="rounded-md border border-border bg-bg-surface px-2 py-1 text-xs text-text-primary">
+                            <select name="penguji_1_id" class="rounded-xl border border-border bg-bg-surface px-2 py-1 text-xs text-text-primary">
                                 <option value="">— Tidak ada —</option>
                                 @foreach ($dosenList as $d)
                                     <option value="{{ $d->id }}" @selected($mahasiswaTa->penguji_1_id === $d->id)>{{ $d->name }}</option>
@@ -124,7 +124,7 @@
                         </label>
                         <label class="flex flex-col gap-1 text-xs text-text-secondary">
                             Penguji 2
-                            <select name="penguji_2_id" class="rounded-md border border-border bg-bg-surface px-2 py-1 text-xs text-text-primary">
+                            <select name="penguji_2_id" class="rounded-xl border border-border bg-bg-surface px-2 py-1 text-xs text-text-primary">
                                 <option value="">— Tidak ada —</option>
                                 @foreach ($dosenList as $d)
                                     <option value="{{ $d->id }}" @selected($mahasiswaTa->penguji_2_id === $d->id)>{{ $d->name }}</option>
@@ -132,23 +132,23 @@
                             </select>
                         </label>
                         <div class="sm:col-span-2">
-                            <button class="px-3 py-1.5 rounded-md bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Simpan Penguji</button>
+                            <button class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Simpan Penguji</button>
                         </div>
                     </form>
                 </div>
             @endif
         @endif
-        <div class="px-3 py-2 rounded-md bg-bg-panel sm:col-span-2"> <span class="text-text-secondary">Fase:</span>
+        <div class="px-3 py-2 rounded-xl bg-bg-panel sm:col-span-2"> <span class="text-text-secondary">Fase:</span>
             <span class="font-medium block">{{ $mahasiswaTa->faseLabel() }}</span>
             @if ($isDosen && $mahasiswaTa->isPembimbing(auth()->user()))
                 <form method="POST" action="{{ route($mahasiswaTa->isKp() ? "mahasiswa-kp.fase" : "mahasiswa-ta.fase", $mahasiswaTa) }}" class="mt-2 flex gap-1" onsubmit="return confirm('Ubah fase {{ $mahasiswaTa->jenisLabel() }} mahasiswa ini? Pastikan perubahan sudah benar.')">
                     @csrf <select name="fase"
-                        class="rounded-md border border-border bg-bg-surface px-2 py-1 text-xs">
+                        class="rounded-xl border border-border bg-bg-surface px-2 py-1 text-xs">
                         @foreach ($faseKeys as $key)
                             <option value="{{ $key }}" @selected($mahasiswaTa->fase === $key)>{{ $faseLabels[$key] ?? $key }}
                             </option>
                         @endforeach
-                    </select> <button class="px-2 py-1 rounded-md bg-brand text-[#0b1420] text-xs">Update</button>
+                    </select> <button class="px-2 py-1 rounded-xl bg-brand text-[#0b1420] text-xs">Update</button>
                 </form>
             @endif
         </div>

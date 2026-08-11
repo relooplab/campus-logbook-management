@@ -9,7 +9,7 @@
             <h1 class="text-xl font-bold">Kelola Struktur Direktori</h1>
             <p class="text-sm text-text-secondary">Tambah universitas, fakultas, departemen, dan prodi. Struktur ini dipakai untuk afiliasi dosen/mahasiswa & langganan direktori.</p>
         </div>
-        <a href="{{ route('admin.system.directory-subscriptions') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-bg-hover hover:bg-border text-text-primary text-sm font-medium transition-colors">
+        <a href="{{ route('admin.system.directory-subscriptions') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-sm font-medium transition-colors">
             <span class="material-symbols-outlined icon-md">workspace_premium</span>
             Langganan Direktori
         </a>
@@ -64,10 +64,10 @@
                                         @csrf
                                         <input type="hidden" name="department_id" value="{{ $dept->id }}">
                                         <input type="text" name="name" placeholder="Tambah prodi..." maxlength="255" required
-                                            class="flex-1 min-w-[200px] rounded-md border border-border bg-bg-surface px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                                            class="flex-1 min-w-[200px] rounded-xl border border-border bg-bg-surface px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
                                         <input type="text" name="code" placeholder="Kode (opsional)" maxlength="50"
-                                            class="w-32 rounded-md border border-border bg-bg-surface px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
-                                        <button class="px-3 py-1.5 rounded-md bg-bg-hover hover:bg-border text-text-primary text-xs font-medium">+ Prodi</button>
+                                            class="w-32 rounded-xl border border-border bg-bg-surface px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                                        <button class="px-3 py-1.5 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-xs font-medium">+ Prodi</button>
                                     </form>
                                 </div>
                             @endforeach
@@ -76,8 +76,8 @@
                                 @csrf
                                 <input type="hidden" name="faculty_id" value="{{ $faculty->id }}">
                                 <input type="text" name="name" placeholder="Tambah departemen..." maxlength="255" required
-                                    class="flex-1 min-w-[200px] rounded-md border border-border bg-bg-surface px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
-                                <button class="px-3 py-1.5 rounded-md bg-bg-hover hover:bg-border text-text-primary text-xs font-medium">+ Departemen</button>
+                                    class="flex-1 min-w-[200px] rounded-xl border border-border bg-bg-surface px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                                <button class="px-3 py-1.5 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-xs font-medium">+ Departemen</button>
                             </form>
                         </div>
                     @empty
@@ -88,8 +88,8 @@
                         @csrf
                         <input type="hidden" name="university_id" value="{{ $univ->id }}">
                         <input type="text" name="name" placeholder="Tambah fakultas..." maxlength="255" required
-                            class="flex-1 min-w-[200px] rounded-md border border-border bg-bg-surface px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
-                        <button class="px-3 py-1.5 rounded-md bg-bg-hover hover:bg-border text-text-primary text-xs font-medium">+ Fakultas</button>
+                            class="flex-1 min-w-[200px] rounded-xl border border-border bg-bg-surface px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                        <button class="px-3 py-1.5 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-xs font-medium">+ Fakultas</button>
                     </form>
                 </div>
             @empty
@@ -111,7 +111,7 @@
                          system admin bisa memilih entri existing (mencegah double). --}}
                     <input type="text" name="name" value="{{ old('name') }}" maxlength="255" required
                         list="existing-universities" placeholder="Mulai ketik atau pilih..."
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
                     <datalist id="existing-universities">
                         @foreach ($universities as $u)
                             <option value="{{ $u->name }}"></option>
@@ -121,7 +121,7 @@
                     @error('name')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
                 </div>
 
-                <button class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-medium">+ Tambah Universitas</button>
+                <button class="w-full px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-medium">+ Tambah Universitas</button>
 
                 <p class="text-xs text-text-secondary">Nama duplikat akan otomatis di-merge (mengikuti entri yang sudah ada).</p>
             </form>

@@ -14,13 +14,13 @@
         action="{{ route("admin.tas") }}" class="bg-bg-surface rounded-xl border border-border p-4 flex flex-wrap gap-3">
         <input type="hidden" name="jenis" value="{{ $jenis }}">
         <input type="text" name="keyword" value="{{ request("keyword") }}" placeholder="{{ $jenis === "kp" ? "Tempat KP" : "Judul TA" }}"
-            class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <select name="pembimbing"
-            class="w-full sm:w-auto rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+            class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"> <select name="pembimbing"
+            class="w-full sm:w-auto rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
             <option value="">Semua pembimbing</option>
             @foreach ($dosenList as $d)
                 <option value="{{ $d->id }}" @selected((string) request("pembimbing") === (string) $d->id)>{{ $d->name }}</option>
             @endforeach
-        </select> <button class="w-full sm:w-auto px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Cari</button>
+        </select> <button class="w-full sm:w-auto px-3 py-2 rounded-xl bg-brand text-[#0b1420] text-sm">Cari</button>
     </form>
     <div class="grid lg:grid-cols-3 gap-4">
         <div class="lg:col-span-2 bg-bg-surface rounded-xl border border-border overflow-x-auto">
@@ -79,12 +79,12 @@
                 </table>
                 <div class="p-3 flex flex-wrap items-center gap-2 border-t border-border"> <span
                         class="text-sm text-text-secondary">Aksi massal:</span> <select name="dosen_id"
-                        class="rounded-md border border-border bg-bg-surface px-3 py-1.5 text-sm">
+                        class="rounded-xl border border-border bg-bg-surface px-3 py-1.5 text-sm">
                         <option value="">Pilih dosen...</option>
                         @foreach ($dosenList as $d)
                             <option value="{{ $d->id }}">{{ $d->name }}</option>
                         @endforeach
-                    </select> <button class="px-3 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Assign Pembimbing
+                    </select> <button class="px-3 py-2 rounded-xl bg-brand text-[#0b1420] text-sm">Assign Pembimbing
                         1</button> </div>
             </form>
             <div class="p-3">{{ $tas->links() }}</div>
@@ -94,7 +94,7 @@
             <form method="POST" action="{{ route("admin.tas.store") }}" class="space-y-3"> @csrf
                 <input type="hidden" name="jenis" value="{{ $jenis }}">
                 <select name="user_id" required
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <option value="">Pilih mahasiswa (tanpa {{ $jenis === "kp" ? "KP" : "TA" }})...</option>
                     @foreach ($mahasiswaList as $m)
                         <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->nim }})</option>
@@ -102,11 +102,11 @@
                 </select>
                 @if ($jenis === "kp")
                     <input type="text" name="tempat_kp" placeholder="Tempat KP (nama perusahaan/instansi)"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <input type="text" name="pembimbing_lapangan" placeholder="Pembimbing Lapangan (opsional)"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <select name="member_ids[]" multiple size="3"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         <option value="" disabled>Anggota kelompok lainnya (opsional, Ctrl+klik untuk pilih banyak)...</option>
                         @foreach ($mahasiswaList as $m)
                             <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->nim }})</option>
@@ -114,22 +114,22 @@
                     </select>
                     <div class="grid grid-cols-2 gap-2">
                         <input type="date" name="periode_mulai" placeholder="Periode mulai"
-                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         <input type="date" name="periode_selesai" placeholder="Periode selesai"
-                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     </div>
                 @else
                     <textarea name="judul_ta" placeholder="Judul TA"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"></textarea>
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"></textarea>
                 @endif
                 <select name="pembimbing_1_id"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <option value="">Pembimbing 1...</option>
                     @foreach ($dosenList as $d)
                         <option value="{{ $d->id }}">{{ $d->name }}</option>
                     @endforeach
                 </select> <select name="pembimbing_2_id"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <option value="">Pembimbing 2...</option>
                     @foreach ($dosenList as $d)
                         <option value="{{ $d->id }}">{{ $d->name }}</option>
@@ -137,13 +137,13 @@
                 </select>
                 @if ($jenis === "ta")
                     <select name="penguji_1_id"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         <option value="">Penguji 1...</option>
                         @foreach ($dosenList as $d)
                             <option value="{{ $d->id }}">{{ $d->name }}</option>
                         @endforeach
                     </select> <select name="penguji_2_id"
-                        class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         <option value="">Penguji 2...</option>
                         @foreach ($dosenList as $d)
                             <option value="{{ $d->id }}">{{ $d->name }}</option>
@@ -151,8 +151,8 @@
                     </select>
                 @endif
                 <input type="number" name="target_sesi" value="7" min="1"
-                    class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <button
-                    class="w-full px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan</button>
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"> <button
+                    class="w-full px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">Simpan</button>
             </form>
         </div>
     </div> {{-- Inline edit forms --}} @foreach ($tas as $ta)
@@ -163,38 +163,38 @@
                 @if ($ta->isKp())
                     <div class="sm:col-span-2">
                         <input type="text" name="tempat_kp" value="{{ $ta->tempat_kp }}" placeholder="Tempat KP"
-                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     </div>
                     <div class="sm:col-span-2">
                         <input type="text" name="pembimbing_lapangan" value="{{ $ta->pembimbing_lapangan }}" placeholder="Pembimbing Lapangan"
-                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     </div>
                     <div class="sm:col-span-2">
                         <label class="block text-xs text-text-secondary mb-1">Anggota Kelompok Lainnya</label>
                         <select name="member_ids[]" multiple size="3"
-                            class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                             @foreach ($mahasiswaList as $m)
                                 <option value="{{ $m->id }}" @selected($ta->members->contains('id', $m->id))>{{ $m->name }} ({{ $m->nim }})</option>
                             @endforeach
                         </select>
                     </div>
                     <input type="date" name="periode_mulai" value="{{ $ta->periode_mulai?->format("Y-m-d") }}"
-                        class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        class="rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <input type="date" name="periode_selesai" value="{{ $ta->periode_selesai?->format("Y-m-d") }}"
-                        class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        class="rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                 @else
                     <div class="sm:col-span-2">
-                        <textarea name="judul_ta" class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">{{ $ta->judul_ta }}</textarea>
+                        <textarea name="judul_ta" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">{{ $ta->judul_ta }}</textarea>
                     </div>
                 @endif
                 <select name="pembimbing_1_id"
-                    class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <option value="">Pembimbing 1...</option>
                     @foreach ($dosenList as $d)
                         <option value="{{ $d->id }}" @selected($ta->pembimbing_1_id === $d->id)>{{ $d->name }}</option>
                     @endforeach
                 </select> <select name="pembimbing_2_id"
-                    class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <option value="">Pembimbing 2...</option>
                     @foreach ($dosenList as $d)
                         <option value="{{ $d->id }}" @selected($ta->pembimbing_2_id === $d->id)>{{ $d->name }}</option>
@@ -202,13 +202,13 @@
                 </select>
                 @if ($ta->isTa())
                     <select name="penguji_1_id"
-                        class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        class="rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         <option value="">Penguji 1...</option>
                         @foreach ($dosenList as $d)
                             <option value="{{ $d->id }}" @selected($ta->penguji_1_id === $d->id)>{{ $d->name }}</option>
                         @endforeach
                     </select> <select name="penguji_2_id"
-                        class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                        class="rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         <option value="">Penguji 2...</option>
                         @foreach ($dosenList as $d)
                             <option value="{{ $d->id }}" @selected($ta->penguji_2_id === $d->id)>{{ $d->name }}</option>
@@ -216,12 +216,12 @@
                     </select>
                 @endif
                 <input type="number" name="target_sesi" value="{{ $ta->target_sesi }}" min="1"
-                    class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm"> <select name="status_ta"
-                    class="rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
+                    class="rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"> <select name="status_ta"
+                    class="rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                     <option value="aktif" @selected($ta->status_ta === "aktif")>Aktif</option>
                     <option value="tamat" @selected($ta->status_ta === "tamat")>Tamat</option>
                     <option value="nonaktif" @selected($ta->status_ta === "nonaktif")>Nonaktif</option>
-                </select> <button class="px-4 py-2 rounded-md bg-brand text-[#0b1420] text-sm">Simpan
+                </select> <button class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm">Simpan
                     Perubahan</button> </form>
         </div>
     @endforeach

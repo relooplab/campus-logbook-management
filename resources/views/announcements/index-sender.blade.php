@@ -2,7 +2,7 @@
 <div class="space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold">Pengumuman</h1> <a href="{{ route("announcements.create") }}"
-            class="px-4 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">+ Buat Pengumuman</a>
+            class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">+ Buat Pengumuman</a>
     </div>
     @if ($announcements->isEmpty())
         <div class="px-4 py-10 rounded-lg bg-bg-surface border border-border text-center text-text-secondary"> Belum ada
@@ -21,9 +21,9 @@
                         mahasiswa</span> <span>· Sudah baca: <b
                             class="text-brand">{{ $a->recipients_count - $a->unreadRecipientsCount() }}</b></span>
                     <span class="ml-auto flex flex-wrap gap-2"> <a href="{{ route("announcements.report", $a) }}"
-                            class="px-3 py-1.5 rounded-md bg-bg-hover hover:bg-bg-hover text-xs">Lihat Detail</a>
+                            class="px-3 py-1.5 rounded-xl bg-bg-hover hover:bg-bg-hover text-xs">Lihat Detail</a>
                         <form method="POST" action="{{ route("announcements.remind", $a) }}"> @csrf <button
-                                class="px-3 py-1.5 rounded-md bg-status-pending hover:bg-status-pending/90 text-white text-xs">Ingatkan
+                                class="px-3 py-1.5 rounded-xl bg-status-pending hover:bg-status-pending/90 text-white text-xs">Ingatkan
                                 yang belum baca</button> </form>
                     </span>
                 </div>

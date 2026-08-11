@@ -2,7 +2,7 @@
 <div class="max-w-4xl mx-auto space-y-4">
     <div class="flex items-center justify-between">
         <h1 class="text-xl font-bold">Chat</h1> <a href="{{ route("dashboard") }}"
-            class="px-3 py-2 rounded-md bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Dashboard</a>
+            class="px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Dashboard</a>
     </div>
     @if ($user->isDosen() && $supervised->isNotEmpty())
         <div class="bg-bg-surface rounded-xl border border-border p-4">
