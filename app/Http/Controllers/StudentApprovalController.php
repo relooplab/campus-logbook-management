@@ -47,7 +47,14 @@ class StudentApprovalController extends Controller
             return $ta;
         });
 
-        return view('approval.index', compact('pending'));
+        // Permintaan penguji baru/ubah yang menunggu persetujuan dosen ini.
+        $pengujiRequests = \App\Models\DosenChangeRequest::where('status', \App\Models\DosenChangeRequest::STATUS_PENDING)
+            ->whereHas('approvals', fn ($q) => $q->where('dosen_id', $user->id)->where('status', \App\Models\DosenChangeApproval::STATUS_PENDING))
+            ->with(['mahasiswaTa.mahasiswa', 'proposedDosen', 'requester', 'approvals'])
+            ->orderBy('created_at')
+            ->get();
+
+        return view('approval.index', compact('pending', 'pengujiRequests'));
     }
 
     /**
@@ -193,5 +200,118 @@ class StudentApprovalController extends Controller
             true,
             true // $replaceAll — mahasiswa hanya 1 afiliasi
         );
+    }
+
+    // ------------------------------------------------------- persetujuan penguji baru
+
+    /**
+     * Approve permintaan penguji (dosen_change_requests) oleh salah satu dosen.
+     * Setelah SEMUA approver menyetujui, penguji diterapkan ke mahasiswa_ta.
+     */
+    public function approvePengujiRequest(Request $request, \App\Models\DosenChangeRequest $change): RedirectResponse
+    {
+        $dosen = $request->user();
+        $approval = $change->approvals()->where('dosen_id', $dosen->id)->first();
+
+        abort_unless($approval, 403, 'Anda bukan approver permintaan ini.');
+        abort_unless($change->status === \App\Models\DosenChangeRequest::STATUS_PENDING, 400, 'Permintaan sudah tidak aktif.');
+
+        $approval->update([
+            'status' => \App\Models\DosenChangeApproval::STATUS_APPROVED,
+            'responded_at' => now(),
+        ]);
+
+        \App\Support\Audit::log('Dosen menyetujui permintaan penguji', [
+            'request_id' => $change->id,
+            'dosen_id' => $dosen->id,
+        ]);
+
+        // Jika semua menyetujui -> terapkan.
+        if ($change->isFullyApproved()) {
+            $this->applyPengujiChange($change);
+        }
+
+        return back()->with('success', 'Persetujuan Anda dicatat.');
+    }
+
+    /**
+     * Reject permintaan penguji oleh salah satu dosen -> seluruh request ditolak.
+     */
+    public function rejectPengujiRequest(Request $request, \App\Models\DosenChangeRequest $change): RedirectResponse
+    {
+        $dosen = $request->user();
+        $approval = $change->approvals()->where('dosen_id', $dosen->id)->first();
+
+        abort_unless($approval, 403, 'Anda bukan approver permintaan ini.');
+        abort_unless($change->status === \App\Models\DosenChangeRequest::STATUS_PENDING, 400, 'Permintaan sudah tidak aktif.');
+
+        $validated = $request->validate([
+            'alasan_tolak' => ['required', 'string', 'max:255'],
+        ]);
+
+        $approval->update([
+            'status' => \App\Models\DosenChangeApproval::STATUS_REJECTED,
+            'note' => $validated['alasan_tolak'],
+            'responded_at' => now(),
+        ]);
+
+        $change->update([
+            'status' => \App\Models\DosenChangeRequest::STATUS_REJECTED,
+            'alasan_tolak' => $validated['alasan_tolak'],
+        ]);
+
+        \App\Support\Audit::log('Dosen menolak permintaan penguji', [
+            'request_id' => $change->id,
+            'dosen_id' => $dosen->id,
+            'alasan' => $validated['alasan_tolak'],
+        ]);
+
+        // Info mahasiswa.
+        $mahasiswa = $change->mahasiswaTa?->mahasiswa;
+        if ($mahasiswa) {
+            $this->bestEffort(fn () => $mahasiswa->notify(new \App\Notifications\ActivityNotification(
+                "Usulan penguji Anda ditolak: {$validated['alasan_tolak']}",
+                route('profile.profil-akademik'),
+                'Usulan Penguji Ditolak',
+            )));
+        }
+
+        return back()->with('success', 'Permintaan penguji ditolak.');
+    }
+
+    /**
+     * Terapkan penguji baru ke mahasiswa_ta setelah semua dosen menyetujui.
+     */
+    private function applyPengujiChange(\App\Models\DosenChangeRequest $change): void
+    {
+        $program = $change->mahasiswaTa;
+        $column = $change->proposed_role === \App\Models\DosenChangeRequest::ROLE_PENGUJI_1
+            ? 'penguji_1_id'
+            : 'penguji_2_id';
+
+        $program->update([$column => $change->proposed_dosen_id]);
+        $change->update(['status' => \App\Models\DosenChangeRequest::STATUS_APPROVED]);
+
+        \App\Support\Audit::log('Penguji diterapkan', [
+            'mahasiswa_ta_id' => $program->id,
+            'column' => $column,
+            'dosen_id' => $change->proposed_dosen_id,
+        ]);
+
+        // Notifikasi mahasiswa & penguji baru.
+        if ($mahasiswa = $program->mahasiswa) {
+            $this->bestEffort(fn () => $mahasiswa->notify(new \App\Notifications\ActivityNotification(
+                "Penguji Anda untuk program ".$program->jenisLabel()." diubah ke '{$change->proposedDosen?->name}'.",
+                route('profile.profil-akademik'),
+                'Penguji Diperbarui',
+            )));
+        }
+        if ($newPenguji = \App\Models\User::find($change->proposed_dosen_id)) {
+            $this->bestEffort(fn () => $newPenguji->notify(new \App\Notifications\ActivityNotification(
+                "Anda ditetapkan sebagai penguji untuk mahasiswa '".($program->mahasiswa?->name ?? '—')."'.",
+                route('dashboard'),
+                'Ditetapkan sebagai Penguji',
+            )));
+        }
     }
 }

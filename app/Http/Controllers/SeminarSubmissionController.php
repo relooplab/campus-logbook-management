@@ -158,6 +158,11 @@ class SeminarSubmissionController extends Controller
         $isDosen = $request->user()->isDosen();
         $isMember = $submission->mahasiswaTa->isMember($request->user());
 
+        // Tandai sudah dibaca oleh dosen (untuk badge "Baru" di Agenda Seminar/Sidang).
+        if ($isDosen) {
+            $submission->markReadBy($request->user());
+        }
+
         return view('seminar-submission.show', compact('submission', 'isDosen', 'isMember'));
     }
 

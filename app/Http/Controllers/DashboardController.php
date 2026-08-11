@@ -391,4 +391,58 @@ class DashboardController extends Controller
         ));
     }
 
+    /**
+     * Agenda Seminar/Sidang (dosen): daftar submission bahan + jadwal untuk
+     * semua mahasiswa yang dosen ini bimbing/puji, diurutkan dari jadwal
+     * terdekat. Menyertakan semua jenis (termasuk Seminar KP).
+     */
+    public function dosenSeminarJadwal(Request $request): View
+    {
+        $user = $request->user();
+        abort_unless($user->isDosen(), 403);
+
+        $taIds = \App\Models\MahasiswaTa::where(fn ($q) => $q->where('pembimbing_1_id', $user->id)
+            ->orWhere('pembimbing_2_id', $user->id)
+            ->orWhere('penguji_1_id', $user->id)
+            ->orWhere('penguji_2_id', $user->id))
+            ->pluck('id');
+
+        $tab = $request->query('tab', 'upcoming');
+        $jenis = $request->query('jenis');
+
+        $query = \App\Models\SeminarSubmission::whereIn('mahasiswa_ta_id', $taIds)
+            ->with(['mahasiswaTa.mahasiswa'])
+            ->orderBy('tanggal')
+            ->orderBy('waktu');
+
+        if ($jenis && in_array($jenis, \App\Models\SeminarSubmission::JENISES, true)) {
+            $query->where('jenis', $jenis);
+        }
+
+        $today = now()->toDateString();
+        $nowTime = now()->format('H:i');
+        if ($tab === 'past') {
+            $query->where(fn ($q) => $q->where('tanggal', '<', $today)
+                ->orWhere(fn ($q2) => $q2->where('tanggal', $today)->where('waktu', '<', $nowTime)));
+        } else { // upcoming
+            $query->where(fn ($q) => $q->where('tanggal', '>', $today)
+                ->orWhere(fn ($q2) => $q2->where('tanggal', $today)->where('waktu', '>=', $nowTime)));
+        }
+
+        $submissions = $query->paginate(15)->withQueryString();
+
+        // Status "dibaca" untuk dosen ini.
+        $readIds = \App\Models\SeminarSubmissionRead::where('user_id', $user->id)
+            ->whereIn('seminar_submission_id', $submissions->pluck('id'))
+            ->pluck('seminar_submission_id')
+            ->all();
+
+        $unreadCount = \App\Models\SeminarSubmission::whereIn('mahasiswa_ta_id', $taIds)
+            ->where('status', \App\Models\SeminarSubmission::STATUS_SUBMITTED)
+            ->whereDoesntHave('reads', fn ($q) => $q->where('user_id', $user->id))
+            ->count();
+
+        return view('dashboard.dosen-seminar-jadwal', compact('submissions', 'readIds', 'unreadCount', 'tab', 'jenis'));
+    }
+
 }

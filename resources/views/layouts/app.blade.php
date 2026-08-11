@@ -4,6 +4,18 @@
         ? 'bg-bg-hover text-text-primary font-semibold'
         : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary';
     $navLink = 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors';
+    // Badge "belum dibaca" untuk dosen pada menu Agenda Seminar/Sidang.
+    $unreadSeminarCount = 0;
+    if ($user?->isDosen()) {
+        $dosenTaIds = \App\Models\MahasiswaTa::where(fn ($q) => $q->where('pembimbing_1_id', $user->id)
+            ->orWhere('pembimbing_2_id', $user->id)
+            ->orWhere('penguji_1_id', $user->id)
+            ->orWhere('penguji_2_id', $user->id))->pluck('id');
+        $unreadSeminarCount = \App\Models\SeminarSubmission::whereIn('mahasiswa_ta_id', $dosenTaIds)
+            ->where('status', \App\Models\SeminarSubmission::STATUS_SUBMITTED)
+            ->whereDoesntHave('reads', fn ($q) => $q->where('user_id', $user->id))
+            ->count();
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="id" class="dark">
@@ -217,6 +229,10 @@
                         <span class="sidebar-label">Lengkapi Profil</span>
                     </a>
                 @endif
+                <a href="{{ route('profile.profil-akademik') }}" class="{{ $navLink }} {{ $active('profile.profil-akademik*') }}">
+                    <span class="material-symbols-outlined icon-md text-accent-teal">school</span>
+                    <span class="sidebar-label">Profil Akademik</span>
+                </a>
                 @if ($hasProgram)
                     @if ($programs->count() > 1)
                         <div class="px-3 pt-2 pb-1 sidebar-label">
@@ -271,6 +287,13 @@
                 <a href="{{ route('logbook.index') }}" class="{{ $navLink }} {{ $active('logbook.index') }}">
                     <span class="material-symbols-outlined icon-md text-status-pending">inbox</span>
                     <span class="sidebar-label">Antrean Review</span>
+                </a>
+                <a href="{{ route('dosen.seminar-jadwal') }}" class="{{ $navLink }} {{ $active('dosen.seminar-jadwal') }}">
+                    <span class="material-symbols-outlined icon-md text-accent-orange">event_note</span>
+                    <span class="sidebar-label">Agenda Seminar/Sidang</span>
+                    @if (!empty($unreadSeminarCount))
+                        <span class="ml-auto rounded-full bg-status-danger text-[#0b1420] text-[10px] font-bold px-1.5 py-0.5">{{ $unreadSeminarCount }}</span>
+                    @endif
                 </a>
                 <a href="{{ route('quick-review.index') }}" class="{{ $navLink }} {{ $active('quick-review.*') }}">
                     <span class="material-symbols-outlined icon-md text-accent-orange">bolt</span>

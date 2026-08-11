@@ -66,6 +66,30 @@ class SeminarSubmission extends Model
         return $this->belongsTo(Sidang::class, 'sidang_id');
     }
 
+    public function reads(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SeminarSubmissionRead::class, 'seminar_submission_id');
+    }
+
+    /**
+     * Apakah dosen tertentu sudah membaca submission ini.
+     */
+    public function isReadBy(User $user): bool
+    {
+        return $this->reads()->where('user_id', $user->id)->exists();
+    }
+
+    /**
+     * Tandai submission ini sudah dibaca oleh dosen tertentu.
+     */
+    public function markReadBy(User $user): void
+    {
+        $this->reads()->updateOrCreate(
+            ['user_id' => $user->id],
+            ['read_at' => now()]
+        );
+    }
+
     public function jenisLabel(): string
     {
         // Label fase kustom dari prodi/departemen (jika ada).
@@ -85,12 +109,20 @@ class SeminarSubmission extends Model
             }
         }
 
-        return match ($this->jenis) {
+        return self::staticLabel($this->jenis);
+    }
+
+    /**
+     * Label statis sebuah jenis submission (default di luar penamaan kustom prodi).
+     */
+    public static function staticLabel(string $jenis): string
+    {
+        return match ($jenis) {
             self::JENIS_PROPOSAL => 'Seminar Proposal',
             self::JENIS_SEMINAR_HASIL => 'Seminar Hasil',
             self::JENIS_SIDANG => 'Sidang Akhir',
             self::JENIS_SEMINAR_KP => 'Seminar KP',
-            default => ucfirst(str_replace('_', ' ', $this->jenis)),
+            default => ucfirst(str_replace('_', ' ', $jenis)),
         };
     }
 

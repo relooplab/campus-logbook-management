@@ -24,6 +24,7 @@ use App\Http\Controllers\ActionItemController;
 use App\Http\Controllers\AffiliationApprovalController;
 use App\Http\Controllers\PdfCommentController;
 use App\Http\Controllers\ProfilPerusahaanController;
+use App\Http\Controllers\ProfilAkademikController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuickReviewController;
 use App\Http\Controllers\SchedulingController;
@@ -82,6 +83,8 @@ Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])
         Route::post('/approval/invite', [StudentApprovalController::class, 'invite'])->name('approval.invite');
         Route::post('/approval/{mahasiswaTa}/approve', [StudentApprovalController::class, 'approve'])->name('approval.approve');
         Route::post('/approval/{mahasiswaTa}/reject', [StudentApprovalController::class, 'reject'])->name('approval.reject');
+        Route::post('/approval/penguji/{change}/approve', [StudentApprovalController::class, 'approvePengujiRequest'])->name('approval.penguji.approve');
+        Route::post('/approval/penguji/{change}/reject', [StudentApprovalController::class, 'rejectPengujiRequest'])->name('approval.penguji.reject');
     });
 
     // Fase D: dosen mencatat sidang / riwayat menguji (termasuk mahasiswa orang lain).
@@ -96,6 +99,7 @@ Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])
     Route::post('/dashboard/lanjut-ta/dismiss', [DashboardController::class, 'dismissLanjutTa'])->name('dashboard.lanjut-ta.dismiss');
     Route::get('/dashboard/dosen/sidang-list', [DashboardController::class, 'dosenSidangList'])->name('dashboard.dosen.sidang-list');
     Route::get('/dashboard/dosen/sidang-list/export', [ExportController::class, 'exportSidangPdf'])->name('dashboard.dosen.sidang-list.export');
+    Route::get('/dosen/jadwal-seminar', [DashboardController::class, 'dosenSeminarJadwal'])->name('dosen.seminar-jadwal');
 
     // ----------------------------------------- persetujuan afiliasi dosen (admin)
     Route::middleware('role_or_permission:admin|system_admin')->group(function () {
@@ -112,6 +116,10 @@ Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])
     Route::get('/profil/pilih-dosen', [ProfileController::class, 'selectDosen'])->name('profile.select-dosen');
     Route::post('/profil/pilih-dosen', [ProfileController::class, 'storeDosen'])->name('profile.store-dosen');
     Route::post('/profil/afiliasi-mahasiswa', [ProfileController::class, 'updateMahasiswaAffiliation'])->name('profile.affiliation-mahasiswa.update');
+
+    // ------------------------------------------------------- profil akademik (mahasiswa)
+    Route::get('/profil-akademik', [ProfilAkademikController::class, 'index'])->name('profile.profil-akademik');
+    Route::post('/profil-akademik/penguji', [ProfilAkademikController::class, 'proposePenguji'])->name('profile.profil-akademik.penguji');
 
     // ------------------------------------------------------- afiliasi (dosen)
     Route::get('/profil/afiliasi', [ProfileController::class, 'affiliation'])->name('profile.affiliation');

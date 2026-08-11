@@ -143,5 +143,62 @@
             </div>
         @endif
     </div>
+
+    {{-- Permintaan Penguji Baru/Ubah (butuh persetujuan semua dosen) --}}
+    <div class="card p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="font-heading font-semibold text-text-primary">Permintaan Penguji ({{ $pengujiRequests->count() }})</h2>
+        </div>
+
+        @if ($pengujiRequests->isEmpty())
+            <div class="px-4 py-10 rounded-xl bg-bg-panel border border-border text-center text-text-secondary">
+                <span class="material-symbols-outlined icon-lg mb-2 text-text-secondary/50">group</span>
+                <p>Tidak ada permintaan penguji yang menunggu Anda.</p>
+            </div>
+        @else
+            <div class="space-y-4">
+                @foreach ($pengujiRequests as $change)
+                    @php $m = $change->mahasiswaTa?->mahasiswa; @endphp
+                    <div class="bg-bg-panel rounded-xl border border-border p-5">
+                        <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+                            <div>
+                                <p class="font-semibold text-text-primary">{{ $m?->name ?? 'Mahasiswa' }}</p>
+                                <p class="text-sm text-text-secondary mt-0.5">
+                                    Mengusulkan <span class="font-medium text-text-primary">{{ $change->proposedDosen?->name }}</span>
+                                    sebagai {{ $change->proposed_role === 'penguji_1' ? 'Penguji 1' : 'Penguji 2' }}
+                                    untuk program {{ $change->mahasiswaTa?->jenisLabel() }}.
+                                </p>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-status-pending/10 text-status-pending">
+                                <span class="w-1.5 h-1.5 rounded-full bg-status-pending"></span> Pending
+                            </span>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <form method="POST" action="{{ route('approval.penguji.approve', $change) }}">
+                                @csrf
+                                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 inline-flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined icon-sm text-status-success">check_circle</span> Setujui
+                                </button>
+                            </form>
+
+                            <form method="POST" action="{{ route('approval.penguji.reject', $change) }}" class="flex flex-wrap items-end gap-2">
+                                @csrf
+                                <div>
+                                    <label for="alasan-{{ $change->id }}" class="block text-xs text-text-secondary mb-1">Alasan Penolakan <span class="text-status-danger">*</span></label>
+                                    <textarea name="alasan_tolak" id="alasan-{{ $change->id }}" required maxlength="255" rows="1"
+                                        placeholder="Wajib diisi"
+                                        class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40"></textarea>
+                                </div>
+                                <button type="submit" class="px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20 inline-flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined icon-sm text-status-danger">close</span> Tolak
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
 </div>
 @endsection

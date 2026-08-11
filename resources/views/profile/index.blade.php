@@ -45,14 +45,16 @@
                         <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-                <div> <label class="block text-sm font-medium mb-1" for="nim">NIM / NIDN @if ($user->isMahasiswa())<span class="text-status-danger">*</span>@endif</label> <input
-                        type="text" name="nim" id="nim" @if ($user->isMahasiswa()) required @endif
+                @if ($user->isMahasiswa())
+                <div> <label class="block text-sm font-medium mb-1" for="nim">NIM <span class="text-status-danger">*</span></label> <input
+                        type="text" name="nim" id="nim" required
                         value="{{ old("nim", $user->nim) }}"
                         class="w-full rounded-md border border-border bg-bg-surface px-3 py-2 text-sm">
                     @error("nim")
                         <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
+                @endif
                 <div> <label class="block text-sm font-medium mb-1">Foto Profil</label> <input type="file"
                         name="photo" accept="image/*" class="w-full text-sm"> @error("photo")
                         <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
