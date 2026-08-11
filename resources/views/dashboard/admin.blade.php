@@ -4,12 +4,7 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <h1 class="font-heading font-bold text-2xl text-text-primary">Dashboard Admin</h1>
-            <p class="text-sm text-text-secondary mt-0.5">Ringkasan aktivitas bimbingan TA</p>
-        </div>
-    </div>
+    <x-page-header subtitle="Administrasi" title="Dashboard Admin" />
 
     {{-- ===== Stat cards (icon-circle + delta badge) ===== --}}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-5">

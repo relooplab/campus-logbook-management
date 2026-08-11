@@ -10,38 +10,27 @@
     $canManageActionItems = $user->can('manageActionItems', $logbook);
 @endphp
 
-<div class="max-w-3xl space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <h1 class="font-heading font-bold text-2xl text-text-primary">
-                {{ $logbook->jenis === 'revisi' ? 'Entri Revisi' . ($logbook->revision_round ? ' ke-' . $logbook->revision_round : '') : 'Logbook Sesi ' . $logbook->sesi_ke }}
-            </h1>
-            <p class="text-sm text-text-secondary mt-0.5">{{ $logbook->mahasiswaTa?->mahasiswa?->name }}</p>
-        </div>
-        @include('partials.status-badge', ['status' => $logbook->status])
-    </div>
+<div class="max-w-5xl space-y-6">
+    <x-page-header
+        :subtitle="$logbook->jenis === 'revisi' ? 'Entri Revisi' : 'Logbook Bimbingan'"
+        :title="$logbook->jenis === 'revisi' ? 'Revisi' . ($logbook->revision_round ? ' ke-' . $logbook->revision_round : '') : 'Sesi ' . $logbook->sesi_ke" />
 
+    <div class="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
+    <div class="space-y-4 min-w-0">
     <div class="card p-6 space-y-4">
-        <dl class="grid sm:grid-cols-2 gap-3 text-sm">
-            <div class="px-3 py-2 rounded-xl bg-bg-panel">
-                <dt class="text-text-secondary">Mahasiswa</dt>
-                <dd class="font-medium">{{ $logbook->mahasiswaTa?->mahasiswa?->name }}</dd>
-            </div>
-            <div class="px-3 py-2 rounded-xl bg-bg-panel">
-                <dt class="text-text-secondary">
-                    {{ $logbook->jenis === 'revisi' ? 'Tanggal Pengiriman Revisi' : 'Tanggal Bimbingan' }}</dt>
-                <dd class="font-medium">{{ $logbook->tanggal_tampil?->format('d M Y') ?? '—' }}</dd>
-            </div>
-            <div class="px-3 py-2 rounded-xl bg-bg-panel">
-                <dt class="text-text-secondary">Topik</dt>
-                <dd class="font-medium">{{ $logbook->topik ?? 'Revisi' }}</dd>
-            </div>
-            <div class="px-3 py-2 rounded-xl bg-bg-panel">
-                <dt class="text-text-secondary">Dosen</dt>
-                <dd class="font-medium">
-                    {{ $logbook->dosen?->name ?? ($logbook->mahasiswaTa?->pembimbing1?->name ?? '—') }}</dd>
-            </div>
-        </dl>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <p class="text-sm text-text-secondary">{{ $logbook->mahasiswaTa?->mahasiswa?->name }}</p>
+            @include('partials.status-badge', ['status' => $logbook->status])
+        </div>
+
+        @include('partials.meta-grid', [
+            'items' => [
+                ['label' => 'Mahasiswa', 'value' => $logbook->mahasiswaTa?->mahasiswa?->name],
+                ['label' => $logbook->jenis === 'revisi' ? 'Tanggal Pengiriman Revisi' : 'Tanggal Bimbingan', 'value' => $logbook->tanggal_tampil?->format('d M Y') ?? '—'],
+                ['label' => 'Topik', 'value' => $logbook->topik ?? 'Revisi'],
+                ['label' => 'Dosen', 'value' => $logbook->dosen?->name ?? ($logbook->mahasiswaTa?->pembimbing1?->name ?? '—')],
+            ],
+        ])
 
         @if ($owner && $logbook->status === 'submitted')
             <div class="px-4 py-3 rounded-xl bg-bg-panel border border-border text-sm flex flex-wrap items-center gap-2">
@@ -176,65 +165,70 @@
             @endif
         </div>
     </div>
+    </div>
 
-    {{-- Actions berdasarkan role & status --}}
-    @if ($owner && $logbook->isEditable())
-        <div class="flex flex-wrap gap-2">
-            <a href="{{ route('logbook.edit', $logbook) }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Edit</a>
-            <form method="POST" action="{{ route('logbook.submit', $logbook) }}">
-                @csrf
-                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Kirim ke dosen</button>
-            </form>
+    {{-- ===== Kolom kanan: aksi (sticky) ===== --}}
+    <div class="space-y-4 lg:sticky lg:top-20">
+        @if ($owner && $logbook->isEditable())
+            <div class="card p-5 space-y-2">
+                <h2 class="font-heading font-semibold text-text-primary mb-1">Tindakan</h2>
+                <a href="{{ route('logbook.edit', $logbook) }}" class="block text-center px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Edit</a>
+                <form method="POST" action="{{ route('logbook.submit', $logbook) }}">
+                    @csrf
+                    <button type="submit" class="w-full px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Kirim ke dosen</button>
+                </form>
                 <form method="POST" action="{{ route('logbook.destroy', $logbook) }}"
-                    onsubmit="return confirm('Hapus entri ini? Tindakan tidak dapat dibatalkan.');" class="inline">
+                    onsubmit="return confirm('Hapus entri ini? Tindakan tidak dapat dibatalkan.');">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20">Hapus</button>
-                </form>
-        </div>
-    @endif
-
-    @if ($owner && $logbook->status === 'revisi' && !$logbook->isLockedByActiveRevision())
-        <a href="{{ route('logbook.create-revisi', ['parent_entry_id' => $logbook->id]) }}" class="inline-block px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Buat Revisi dari Umpan Balik Ini</a>
-    @endif
-
-    @if ($canReview && $logbook->status === 'submitted')
-        <div class="card p-6 space-y-4">
-            <h2 class="font-heading font-semibold text-text-primary">Review</h2>
-            @if ($logbook->lampiran_path || $logbook->catatan_perbaikan_path)
-                <div class="px-4 py-3 rounded-xl bg-brand/10 border border-brand/20">
-                    <p class="text-sm mb-2">Buka PDF, seret untuk menandai area, dan beri komentar sebelum memutuskan.</p>
-                    <a href="{{ route('logbook.pdf-viewer', $logbook) }}" class="inline-block px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Buka PDF & Anotasi</a>
-                </div>
-            @else
-                <p class="text-xs text-text-secondary">Tidak ada file PDF pada entri ini untuk dianotasi.</p>
-            @endif
-            <div class="px-4 py-3 rounded-xl bg-bg-panel border border-border">
-                <label class="block text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Tambah Action Item (checklist revisi)</label>
-                <form method="POST" action="{{ route('action-items.store', $logbook) }}" class="flex gap-2">
-                    @csrf
-                    <input type="text" name="text" maxlength="500" required placeholder="Checklist dari feedback Anda untuk mahasiswa..."
-                        class="flex-1 rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Tambah</button>
+                    <button type="submit" class="w-full px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20">Hapus</button>
                 </form>
             </div>
-            <form method="POST" action="{{ route('logbook.approve', $logbook) }}" id="review-approve-form" class="mb-3"
-                data-pdf-opened="{{ $logbook->review_opened_at ? '1' : '0' }}"
-                data-has-pdf="{{ $logbook->lampiran_path || $logbook->catatan_perbaikan_path ? '1' : '0' }}">
-                @csrf
-                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Setujui</button>
-            </form>
-            <form method="POST" action="{{ route('logbook.request-revisi', $logbook) }}" class="space-y-2">
-                @csrf
-                <textarea name="feedback_dosen" rows="3" required minlength="20" placeholder="Alasan revisi / feedback wajib diisi (minimal 20 karakter)..."
-                    class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">{{ old('feedback_dosen') }}</textarea>
-                @error('feedback_dosen')
-                    <p class="text-status-danger text-xs">{{ $message }}</p>
-                @enderror
-                <button type="submit" class="px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20">Minta Revisi</button>
-            </form>
-        </div>
-    @endif
+        @endif
+
+        @if ($owner && $logbook->status === 'revisi' && !$logbook->isLockedByActiveRevision())
+            <a href="{{ route('logbook.create-revisi', ['parent_entry_id' => $logbook->id]) }}" class="block text-center px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Buat Revisi dari Umpan Balik Ini</a>
+        @endif
+
+        @if ($canReview && $logbook->status === 'submitted')
+            <div class="card p-5 space-y-4">
+                <h2 class="font-heading font-semibold text-text-primary">Review</h2>
+                @if ($logbook->lampiran_path || $logbook->catatan_perbaikan_path)
+                    <div class="px-4 py-3 rounded-xl bg-brand/10 border border-brand/20">
+                        <p class="text-sm mb-2">Buka PDF, seret untuk menandai area, dan beri komentar sebelum memutuskan.</p>
+                        <a href="{{ route('logbook.pdf-viewer', $logbook) }}" class="inline-block px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Buka PDF & Anotasi</a>
+                    </div>
+                @else
+                    <p class="text-xs text-text-secondary">Tidak ada file PDF pada entri ini untuk dianotasi.</p>
+                @endif
+                <div class="px-4 py-3 rounded-xl bg-bg-panel border border-border">
+                    <label class="block text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">Tambah Action Item (checklist revisi)</label>
+                    <form method="POST" action="{{ route('action-items.store', $logbook) }}" class="flex gap-2">
+                        @csrf
+                        <input type="text" name="text" maxlength="500" required placeholder="Checklist dari feedback Anda untuk mahasiswa..."
+                            class="flex-1 rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Tambah</button>
+                    </form>
+                </div>
+                <form method="POST" action="{{ route('logbook.approve', $logbook) }}" id="review-approve-form"
+                    data-pdf-opened="{{ $logbook->review_opened_at ? '1' : '0' }}"
+                    data-has-pdf="{{ $logbook->lampiran_path || $logbook->catatan_perbaikan_path ? '1' : '0' }}">
+                    @csrf
+                    <button type="submit" class="w-full px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Setujui</button>
+                </form>
+                <form method="POST" action="{{ route('logbook.request-revisi', $logbook) }}" class="space-y-2">
+                    @csrf
+                    <textarea name="feedback_dosen" rows="3" required minlength="20" placeholder="Alasan revisi / feedback wajib diisi (minimal 20 karakter)..."
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">{{ old('feedback_dosen') }}</textarea>
+                    @error('feedback_dosen')
+                        <p class="text-status-danger text-xs">{{ $message }}</p>
+                    @enderror
+                    <button type="submit" class="w-full px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20">Minta Revisi</button>
+                </form>
+            </div>
+        @endif
+    </div>
+    </div>
 </div>
 @endsection
 

@@ -4,22 +4,17 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <h1 class="font-heading font-bold text-2xl text-text-primary">Logbook Bimbingan</h1>
-            <p class="text-sm text-text-secondary mt-0.5">Daftar entri logbook & revisi</p>
-        </div>
-        @auth
-            @if (auth()->user()->isMahasiswa())
-                <div class="flex flex-wrap gap-2">
-                    <a href="{{ route('logbook.create') }}" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 inline-flex items-center gap-1.5">
-                        <span class="material-symbols-outlined icon-sm text-accent-orange">add</span> + Logbook
-                    </a>
-                    <a href="{{ route('logbook.create-revisi') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">+ Entri Revisi</a>
-                </div>
-            @endif
-        @endauth
-    </div>
+    @php $actionLinks = '';
+    if (auth()->user()?->isMahasiswa()) {
+        $actionLinks = '
+        <a href="' . route('logbook.create') . '" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 inline-flex items-center gap-1.5">
+            <span class="material-symbols-outlined icon-sm text-accent-orange">add</span> + Logbook
+        </a>
+        <a href="' . route('logbook.create-revisi') . '" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">+ Entri Revisi</a>';
+    } @endphp
+<x-page-header subtitle="Bimbingan" title="Logbook Bimbingan">
+    <x-slot:actions>{!! $actionLinks !!}</x-slot:actions>
+</x-page-header>
 
     {{-- Filter kombinasi --}}
     <form method="GET" action="{{ route('logbook.index') }}" class="card p-4 flex flex-wrap gap-3 items-end">

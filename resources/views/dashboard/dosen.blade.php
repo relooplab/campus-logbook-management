@@ -4,20 +4,16 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <h1 class="font-heading font-bold text-2xl text-text-primary">Dashboard Dosen</h1>
-            <p class="text-sm text-text-secondary mt-0.5">Ringkasan aktivitas bimbingan & pengujian TA</p>
-        </div>
-        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-            <a href="{{ route('approval.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 inline-flex items-center justify-center gap-1.5">
-                <span class="material-symbols-outlined icon-sm text-accent-teal">person_add</span> Tambah Mahasiswa
-            </a>
-            <a href="{{ route('dosen-sidang.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border inline-flex items-center justify-center gap-1.5">
-                <span class="material-symbols-outlined icon-sm text-accent-purple">verified</span> Catat Sidang
-            </a>
-        </div>
-    </div>
+@php $actionLinks = '
+    <a href="' . route('approval.index') . '" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 inline-flex items-center justify-center gap-1.5">
+        <span class="material-symbols-outlined icon-sm text-accent-teal">person_add</span> Tambah Mahasiswa
+    </a>
+    <a href="' . route('dosen-sidang.index') . '" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border inline-flex items-center justify-center gap-1.5">
+        <span class="material-symbols-outlined icon-sm text-accent-purple">verified</span> Catat Sidang
+    </a>'; @endphp
+<x-page-header subtitle="Bimbingan & Pengujian" title="Dashboard Dosen">
+    <x-slot:actions>{!! $actionLinks !!}</x-slot:actions>
+</x-page-header>
 
     {{-- ===== Institusi & Grup ===== --}}
     @if (! session('dosen_instansi_dismissed'))
@@ -129,6 +125,50 @@
             </a>
         </div>
     </div>
+
+    {{-- ===== Mahasiswa Sekali Pandang (butuh perhatian dulu) ===== --}}
+    @if ($perTa->isNotEmpty())
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="font-heading font-semibold text-text-primary">Mahasiswa Sekali Pandang</h2>
+                    <p class="text-sm text-text-secondary mt-0.5">Status bimbingan tiap mahasiswa, yang butuh perhatian tampil lebih dulu</p>
+                </div>
+                <div class="hidden sm:flex items-center gap-3 text-xs text-text-secondary">
+                    <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-status-danger"></span> Kritis</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-status-pending"></span> Perhatian</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-status-success"></span> Sehat</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                @foreach ($perTa as $row)
+                    @php
+                        $ta = $row['ta'];
+                        $hl = $row['regularity'] === 'red' ? 'border-l-status-danger' : ($row['regularity'] === 'yellow' ? 'border-l-status-pending' : 'border-l-status-success');
+                        $hc = $row['regularity'] === 'red' ? 'text-status-danger' : ($row['regularity'] === 'yellow' ? 'text-status-pending' : 'text-status-success');
+                        $route = $ta->isKp() ? 'mahasiswa-kp.show' : 'mahasiswa-ta.show';
+                    @endphp
+                    <a href="{{ route($route, $ta) }}"
+                        class="block p-4 rounded-xl bg-bg-panel border border-border border-l-4 {{ $hl }} hover:border-brand/30 hover:bg-bg-surface transition-colors">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <span class="font-medium text-text-primary truncate">{{ $ta->mahasiswa?->name }}</span>
+                            <span class="text-xs font-medium {{ $hc }}">{{ ucfirst($row['regularity']) }}</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-2 mb-1.5">
+                            <span class="text-xs text-text-secondary">{{ $ta->faseLabel() }}</span>
+                            @if ($row['menunggu'] > 0)
+                                <span class="text-xs font-semibold text-status-pending">{{ $row['menunggu'] }} menunggu</span>
+                            @endif
+                        </div>
+                        <div class="h-1.5 rounded-full bg-bg-hover overflow-hidden">
+                            <div class="h-full rounded-full bg-brand" style="width: {{ min(100, $row['percent']) }}%"></div>
+                        </div>
+                        <div class="mt-1 text-[10px] text-text-secondary tabular-nums">{{ $row['approved'] }}/{{ $row['target'] }} sesi</div>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     {{-- ===== Stat cards (icon-circle + delta badge) ===== --}}
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">

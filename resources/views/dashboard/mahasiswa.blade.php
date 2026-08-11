@@ -4,17 +4,13 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <h1 class="font-heading font-bold text-2xl text-text-primary">Dashboard Mahasiswa</h1>
-            <p class="text-sm text-text-secondary mt-0.5">Pantau progres bimbingan {{ $ta?->jenisLabel() ?? 'TA/KP' }} Anda</p>
-        </div>
-        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-            <a href="{{ route('logbook.create') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-control bg-brand text-[#0b1420] text-sm font-semibold hover:bg-brand-hover transition-colors text-center" title="Tambah entri logbook bimbingan baru (aksi utama)">+ Logbook</a>
-            <a href="{{ route('logbook.create-revisi') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border text-center">+ Entri Revisi</a>
-            <a href="{{ route('logbook.index') }}" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-transparent border border-border text-text-secondary text-sm font-medium hover:bg-bg-hover hover:text-text-primary text-center">Semua Entri</a>
-        </div>
-    </div>
+    @php $actionLinks = '
+    <a href="' . route('logbook.create') . '" class="flex-1 sm:flex-none px-4 py-2 rounded-control bg-brand text-[#0b1420] text-sm font-semibold hover:bg-brand-hover transition-colors text-center" title="Tambah entri logbook bimbingan baru (aksi utama)">+ Logbook</a>
+    <a href="' . route('logbook.create-revisi') . '" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border text-center">+ Entri Revisi</a>
+    <a href="' . route('logbook.index') . '" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-transparent border border-border text-text-secondary text-sm font-medium hover:bg-bg-hover hover:text-text-primary text-center">Semua Entri</a>'; @endphp
+<x-page-header subtitle="Bimbingan TA/KP" title="Dashboard Mahasiswa">
+    <x-slot:actions>{!! $actionLinks !!}</x-slot:actions>
+</x-page-header>
 
     {{-- ===== Banner profil belum lengkap ===== --}}
     @if ($profileIncomplete)

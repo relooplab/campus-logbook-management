@@ -9,13 +9,11 @@
 @endphp
 
 <div class="space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <h1 class="font-heading font-bold text-2xl text-text-primary"><span class="material-symbols-outlined icon-md align-text-bottom">folder</span> Workspace</h1>
-            <p class="text-sm text-text-secondary mt-0.5">{{ $mahasiswaTa->mahasiswa?->name ?? 'Mahasiswa' }}</p>
-        </div>
-        <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Dashboard</a>
-    </div>
+    <x-page-header subtitle="Bimbingan" title="Workspace">
+        <x-slot:actions>
+            <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Dashboard</a>
+        </x-slot:actions>
+    </x-page-header>
     {{-- Info: dapat dilihat dosen --}}
     <div class="flex items-start gap-3 rounded-xl border border-brand/20 bg-brand/5 px-4 py-3 text-sm text-text-secondary">
         <span class="material-symbols-outlined icon-md text-brand flex-shrink-0">visibility</span>
@@ -229,7 +227,21 @@
                 return;
             }
             e.preventDefault();
-            var fd = new FormData(this);
+            // Cegah double-submit (double-click / tekan Enter berulang).
+            if (this.dataset.uploading === '1') {
+                return;
+            }
+            this.dataset.uploading = '1';
+            var submitBtn = document.getElementById('upload-btn');
+            if (submitBtn) submitBtn.disabled = true;
+
+            // Bangun FormData manual agar file tidak dikirim dobel.
+            // PENTING: jangan `new FormData(this)` lalu append files[] lagi,
+            // karena <input type="file" name="files[]"> ikut ter-serialize
+            // sehingga setiap file terkirim dua kali (double upload).
+            var fd = new FormData();
+            fd.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+            fd.append('bab', this.querySelector('input[name="bab"]')?.value || '');
             selectedFiles.forEach(function (f) {
                 fd.append('files[]', f);
             });
@@ -248,6 +260,8 @@
             xhr.onerror = function () {
                 alert('Upload gagal.');
                 document.getElementById('progress-wrap').classList.add('hidden');
+                if (submitBtn) submitBtn.disabled = false;
+                document.getElementById('upload-form').dataset.uploading = '0';
             };
             xhr.open('POST', this.action);
             xhr.send(fd);

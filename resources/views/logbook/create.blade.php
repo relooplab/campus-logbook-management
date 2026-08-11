@@ -13,10 +13,11 @@
     $programId = $ta->id ?? 0;
 @endphp
 <div class="max-w-2xl">
-    <div class="flex items-center justify-between mb-5">
-        <h1 class="font-heading font-bold text-2xl text-text-primary">Tambah Entri Logbook</h1>
-        <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali</a>
-    </div>
+    <x-page-header subtitle="Bimbingan" title="Tambah Entri Logbook" class="mb-5">
+        <x-slot:actions>
+            <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali</a>
+        </x-slot:actions>
+    </x-page-header>
     <form method="POST" action="{{ route('logbook.store') }}" enctype="multipart/form-data"
         class="card p-6 space-y-4" id="logbook-form">
         @csrf

@@ -5,10 +5,12 @@
 @endphp
 
 <div class="space-y-4">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="text-xl font-bold">Detail Mahasiswa</h1> <a href="{{ url()->previous() }}"
-            class="px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Kembali</a>
-    </div> {{-- Kartu profil mahasiswa --}} <div
+    <x-page-header subtitle="Detail Mahasiswa" :title="$mahasiswaTa->mahasiswa?->name ?? 'Mahasiswa'">
+        <x-slot:actions>
+            <a href="{{ url()->previous() }}" class="px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Kembali</a>
+        </x-slot:actions>
+    </x-page-header>
+    {{-- Kartu profil mahasiswa --}} <div
         class="bg-bg-surface rounded-xl border border-border p-6 flex flex-wrap items-center gap-4">
         <div
             class="h-16 w-16 rounded-full overflow-hidden bg-brand text-[#0b1420] flex items-center justify-center text-xl font-bold flex-shrink-0">
