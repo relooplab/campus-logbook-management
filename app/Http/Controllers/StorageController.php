@@ -48,11 +48,14 @@ class StorageController extends Controller
         $limitBytes = Feature::storageLimitMb($user) * 1048576;
         $usedLabel = $usageService->formatBytes($totalBytes);
         $limitLabel = $limitBytes > 0 ? $usageService->formatBytes($limitBytes) : 'Tak terbatas';
+        $remainingLabel = $limitBytes > 0
+            ? $usageService->formatBytes(max(0, $limitBytes - $totalBytes))
+            : null;
         $pct = $limitBytes > 0 ? min(100, round($totalBytes / $limitBytes * 100)) : 0;
 
         return view('storage.index', compact(
             'programs', 'workspaceFiles', 'logbookHarian',
-            'totalBytes', 'limitBytes', 'usedLabel', 'limitLabel', 'pct'
+            'totalBytes', 'limitBytes', 'usedLabel', 'limitLabel', 'remainingLabel', 'pct'
         ));
     }
 

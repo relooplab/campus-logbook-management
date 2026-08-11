@@ -24,15 +24,28 @@
                 <h2 class="font-heading font-semibold text-text-primary">Kuota Penyimpanan</h2>
                 <p class="text-sm text-text-secondary mt-0.5">Total pemakaian yang dibebankan ke kuota Anda (workspace pribadi + data mahasiswa bimbingan)</p>
             </div>
-            <span class="text-sm text-text-secondary font-medium">{{ $usedLabel }} {{ $limitLabel !== 'Tak terbatas' ? '/ ' . $limitLabel : '' }} terpakai</span>
         </div>
         @if ($limitBytes > 0)
+            <div class="grid grid-cols-3 gap-3 mb-3">
+                <div>
+                    <p class="text-xs text-text-secondary">Terpakai</p>
+                    <p class="text-lg font-semibold text-text-primary">{{ $usedLabel }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-text-secondary">Kuota tersedia</p>
+                    <p class="text-lg font-semibold text-text-primary">{{ $limitLabel }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-text-secondary">Sisa kuota</p>
+                    <p class="text-lg font-semibold text-text-primary">{{ $remainingLabel }}</p>
+                </div>
+            </div>
             <div class="h-3 rounded-full bg-bg-panel overflow-hidden">
                 <div class="h-full rounded-full {{ $pct >= 90 ? 'bg-status-danger' : ($pct >= 70 ? 'bg-status-pending' : 'bg-brand') }}" style="width: {{ $pct }}%"></div>
             </div>
-            <p class="text-xs text-text-secondary mt-2">{{ $pct }}% kuota terpakai</p>
+            <p class="text-xs text-text-secondary mt-2">{{ $pct }}% kuota terpakai · sisa {{ $remainingLabel }}</p>
         @else
-            <p class="text-xs text-text-secondary">Kuota Anda tak terbatas.</p>
+            <p class="text-sm text-text-secondary">Pemakaian terhitung: <span class="font-semibold text-text-primary">{{ $usedLabel }}</span> — Akun Anda tidak memiliki kuota penyimpanan terdefinisi saat ini.</p>
         @endif
     </div>
 
