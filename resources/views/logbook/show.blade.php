@@ -8,12 +8,33 @@
     $owner = $user->isMahasiswa() && $logbook->mahasiswaTa?->isMember($user);
     $canReview = $user->can('review', $logbook);
     $canManageActionItems = $user->can('manageActionItems', $logbook);
+
+    // Navigasi "Kembali" konteks-sensitif pada halaman detail entri.
+    if ($logbook->parentEntry) {
+        // Entri ini adalah revisi yang menjawab entri induk → kembali ke sesi sebelumnya.
+        $backUrl = route('logbook.show', $logbook->parentEntry);
+        $backLabel = '← Lihat entri induk (sesi sebelumnya)';
+    } elseif ($logbook->revisionChildren->count() === 1) {
+        // Entri ini adalah induk dari tepat satu revisi berikutnya (umumnya dosen
+        // datang dari sini) → kembali ke revisi tersebut.
+        $child = $logbook->revisionChildren->first();
+        $backUrl = route('logbook.show', $child);
+        $backLabel = '← Kembali ke ' . ($child->revision_round ? 'Revisi ke-' . $child->revision_round : 'Revisi');
+    } else {
+        // Entri berdiri sendiri → kembali ke daftar logbook.
+        $backUrl = route('logbook.index');
+        $backLabel = '← Kembali ke Logbook';
+    }
 @endphp
 
 <div class="max-w-5xl space-y-6">
     <x-page-header
         :subtitle="$logbook->jenis === 'revisi' ? 'Entri Revisi' : 'Logbook Bimbingan'"
-        :title="$logbook->jenis === 'revisi' ? 'Revisi' . ($logbook->revision_round ? ' ke-' . $logbook->revision_round : '') : 'Sesi ' . $logbook->sesi_ke" />
+        :title="$logbook->jenis === 'revisi' ? 'Revisi' . ($logbook->revision_round ? ' ke-' . $logbook->revision_round : '') : 'Sesi ' . $logbook->sesi_ke">
+        <x-slot:actions>
+            <a href="{{ $backUrl }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">{{ $backLabel }}</a>
+        </x-slot:actions>
+    </x-page-header>
 
     <div class="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
     <div class="space-y-4 min-w-0">
@@ -50,7 +71,7 @@
         @if ($logbook->parentEntry)
             <div class="px-4 py-3 rounded-xl bg-brand/10 border border-brand/20 text-sm">
                 <p class="font-semibold">Menjawab entri induk #{{ $logbook->parentEntry->id }}</p>
-                <a href="{{ route('logbook.show', $logbook->parentEntry) }}" class="text-brand hover:underline">Lihat feedback dan anotasi ronde sebelumnya</a>
+                <a href="{{ route('logbook.show', $logbook->parentEntry) }}" class="text-brand hover:underline">Lihat feedback dan anotasi sesi sebelumnya</a>
             </div>
         @endif
 

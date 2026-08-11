@@ -170,7 +170,7 @@ class LogbookController extends Controller
 
                 if (($parent->revision_round ?? 0) + 1 > LogbookEntry::MAX_REVISION_ROUND) {
                     throw ValidationException::withMessages([
-                        'parent_entry_id' => 'Entri ini sudah mencapai batas maksimal '.LogbookEntry::MAX_REVISION_ROUND.' ronde revisi.',
+                        'parent_entry_id' => 'Entri ini sudah mencapai batas maksimal '.LogbookEntry::MAX_REVISION_ROUND.' sesi revisi.',
                     ]);
                 }
             }
@@ -683,11 +683,18 @@ class LogbookController extends Controller
         $pdf = new \setasign\Fpdi\Fpdi();
         $pageCount = $pdf->setSourceFile($source);
 
+        // Halaman daftar / legend komentar ditempatkan DI AWAL dokumen,
+        // sebelum halaman-halaman asli. appendCommentList mengembalikan map
+        // [comment_id => link] yang nanti diarahkan ke anotasi tujuan.
+        $links = $this->appendCommentList($pdf, $comments, $type);
+        $target = [];
+
         foreach (range(1, $pageCount) as $pageNo) {
             $pdf->AddPage();
             $tplId = $pdf->importPage($pageNo);
             $size = $pdf->getTemplateSize($tplId);
             $pdf->useTemplate($tplId, 0, 0, $size['width'], $size['height']);
+            $currentPage = $pdf->PageNo(); // nomor halaman output (termasuk blok daftar di depan)
 
             $pageComments = $comments->where('page_number', $pageNo);
             $i = 0;
@@ -702,6 +709,10 @@ class LogbookController extends Controller
                 $yBottom = $c->y2 * $size['height'];
                 $w = $x2 - $x1;
                 $h = $yBottom - $yTop;
+
+                // Target navigasi untuk link "klik baris daftar → lompat ke anotasi":
+                // halaman output + koordinat y (FPDF top-origin) di tengah kotak.
+                $target[$c->id] = ['page' => $currentPage, 'y' => $yTop + ($h * 0.5)];
 
                 // Konversi ke koordinat PDF (origin bottom-left).
                 $pdfY1 = $size['height'] - $yTop - $h;
@@ -759,8 +770,13 @@ class LogbookController extends Controller
             }
         }
 
-        // Halaman daftar / legend komentar di akhir dokumen.
-        $this->appendCommentList($pdf, $comments, $type);
+        // Arahkan setiap link pada halaman daftar ke anotasi tujuan secara
+        // internal (klik baris → lompat ke halaman & posisi anotasinya).
+        foreach ($links as $cid => $link) {
+            if (isset($target[$cid])) {
+                $pdf->SetLink($link, $target[$cid]['y'], $target[$cid]['page']);
+            }
+        }
 
         $filename = 'anotasi-'.$logbook->mahasiswaTa?->mahasiswa?->nim.'-'.now()->format('Ymd').'.pdf';
 
@@ -771,9 +787,12 @@ class LogbookController extends Controller
     }
 
     /**
-     * Tambah halaman terakhir berisi daftar/legend seluruh komentar.
+     * Tambah halaman daftar/legend seluruh komentar area (DI AWAL dokumen,
+     * sebelum halaman-halaman asli). Setiap baris diberi link internal agar
+     * bisa diklik untuk lompat ke anotasinya di halaman asli. Mengembalikan
+     * map [comment_id => link] yang diarahkan burnPdf() via SetLink.
      */
-    private function appendCommentList(\setasign\Fpdi\Fpdi $pdf, $comments, string $type): void
+    private function appendCommentList(\setasign\Fpdi\Fpdi $pdf, $comments, string $type): array
     {
         $only = $comments->filter(fn ($c) => $c->isArea())->values();
 
@@ -802,12 +821,18 @@ class LogbookController extends Controller
         $pdf->SetFont('Helvetica', '', 9);
         $pdf->SetFillColor(255, 255, 255);
         $row = 0;
+        $links = [];
         foreach ($only as $idx => $c) {
             $num = $idx + 1;
             $status = $c->isResolved() ? 'Selesai' : ($c->resolution_status === PdfComment::STATUS_ADDRESSED ? 'Dijawab' : 'Terbuka');
             $statusColor = $c->isResolved() ? [16, 185, 129] : ($c->resolution_status === PdfComment::STATUS_ADDRESSED ? [217, 119, 6] : [245, 158, 11]);
             $name = trim((string) ($c->user?->name ?? '-'));
             $text = trim((string) $c->comment);
+
+            // Buat link internal per baris; destinasi (halaman + posisi) diatur
+            // nanti di burnPdf() via SetLink setelah semua halaman dirender.
+            $link = $pdf->AddLink();
+            $links[$c->id] = $link;
 
             $pdf->SetTextColor(0, 0, 0);
             $pdf->SetFillColor(255, 255, 255);
@@ -839,11 +864,18 @@ class LogbookController extends Controller
             }
             $pdf->SetFont('Helvetica', '', 9);
 
+            // Jadikan seluruh baris klik-tabuh → lompat ke anotasi tujuan.
+            $rowTopY = $y0;
+            $rowW = $pdf->GetPageWidth() - $pdf->lMargin - $pdf->rMargin;
+            $pdf->Link($pdf->lMargin, $rowTopY, $rowW, $rowH, $link);
+
             if ($pdf->GetY() > 270) {
                 $pdf->AddPage();
             }
             $row++;
         }
+
+        return $links;
     }
 
     private function legendRow(\setasign\Fpdi\Fpdi $pdf, array $color, string $label): void

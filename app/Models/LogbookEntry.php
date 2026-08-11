@@ -173,7 +173,7 @@ class LogbookEntry extends Model
     }
 
     /**
-     * Apakah entri ini sudah melewati batas ronde revisi yang wajar.
+     * Apakah entri ini sudah melewati batas sesi revisi yang wajar.
      */
     public function exceedsRevisionRoundLimit(): bool
     {

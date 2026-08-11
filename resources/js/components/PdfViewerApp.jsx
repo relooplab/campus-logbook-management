@@ -532,7 +532,6 @@ function PdfViewerApp() {
                           width: ((a.x2 - a.x1) * size.width) + 'px',
                           height: ((a.y2 - a.y1) * size.height) + 'px',
                            borderColor: a.resolutionStatus === 'resolved' ? '#7C9473' : a.resolutionStatus === 'addressed' ? '#D97706' : '#C9A97E',
-                           backgroundColor: (a.resolutionStatus === 'resolved' ? 'rgba(124,148,115,.15)' : a.resolutionStatus === 'addressed' ? 'rgba(217,119,6,.15)' : 'rgba(201,169,126,.15)'),
                         }}>
                         <span className="absolute -top-3 -left-1 text-white text-[10px] px-1 rounded whitespace-nowrap"
                            style={{ backgroundColor: a.resolutionStatus === 'resolved' ? '#7C9473' : a.resolutionStatus === 'addressed' ? '#D97706' : '#C9A97E' }}>

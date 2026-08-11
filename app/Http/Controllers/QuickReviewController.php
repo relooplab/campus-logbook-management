@@ -156,8 +156,8 @@ class QuickReviewController extends Controller
 
         $lines = $comments->map(function ($c, $i) use ($logbook) {
             $source = $c->logbook_entry_id === $logbook->id
-                ? 'Ronde ini'
-                : 'Ronde sebelumnya, entri #'.$c->logbook_entry_id;
+                ? 'Sesi ini'
+                : 'Sesi sebelumnya, entri #'.$c->logbook_entry_id;
 
             return ($i + 1).'. ('.$source.', Hal. '.$c->page_number.') '.$c->comment;
         });

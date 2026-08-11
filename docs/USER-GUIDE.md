@@ -87,7 +87,7 @@ Entri logbook mencatat satu sesi bimbingan.
 
 - **Status entri**: `Draf` → `Dikirim` → `Disetujui` atau `Revisi`.
 - **Jenis entri**: `Logbook` (sesi bimbingan) dan `Revisi` (perbaikan hasil review).
-- **Batas ronde revisi**: maksimal 3 ronde per entri (peringatan muncul bila tercapai).
+- **Batas sesi revisi**: maksimal 3 sesi per entri (peringatan muncul bila tercapai).
 - **Auto-save draf**: isian logbook tersimpan otomatis di browser (localStorage) setiap 5 detik.
 - **Filter**: status, jenis, rentang tanggal, dan kata kunci.
 
@@ -353,7 +353,7 @@ Jika akun Anda diizinkan menjadi penguji, Anda dapat mencatat riwayat sidang/men
 Mode cepat untuk meninjau antrean satu per satu:
 
 1. Buka menu **Quick Review**.
-2. Baca ringkasan entri, feedback sebelumnya, dan anotasi ronde sebelumnya.
+2. Baca ringkasan entri, feedback sebelumnya, dan anotasi sesi sebelumnya.
 3. Gunakan **feedback terakhir** untuk mahasiswa tersebut (klik untuk memakai) atau **template feedback**.
 4. Klik **"Jadikan dari Komentar"** untuk membangun feedback dari komentar PDF yang belum di-resolve.
 5. Pilih **Setujui & Next** atau **Revisi & Next** untuk lanjut ke entri berikutnya.

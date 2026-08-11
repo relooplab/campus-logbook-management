@@ -37,7 +37,7 @@
                 <div class="px-3 py-2 rounded-xl bg-brand/10 border border-brand/20 text-sm">
                     <p class="font-semibold">Revisi ke-{{ $entry->revision_round }} dari entri #{{ $entry->parentEntry->id }}</p>
                     <p class="whitespace-pre-wrap mt-1">{{ $entry->parentEntry->feedback_dosen }}</p>
-                    <p class="text-xs text-text-secondary mt-2">Anotasi ronde sebelumnya: {{ $entry->parentEntry->comments->count() }} · ronde ini: {{ $entry->comments->count() }}</p>
+                    <p class="text-xs text-text-secondary mt-2">Anotasi sesi sebelumnya: {{ $entry->parentEntry->comments->count() }} · sesi ini: {{ $entry->comments->count() }}</p>
                     @if ($entry->parentEntry->comments->isNotEmpty())
                         <div class="mt-2 space-y-1">
                             @foreach ($entry->parentEntry->comments as $comment)
@@ -58,7 +58,7 @@
                     Anotasi</a>
             @endif
             @if ($entry->exceedsRevisionRoundLimit())
-                <p class="text-xs text-status-pending">Ronde revisi sudah mencapai batas perhatian. Pertimbangkan bimbingan tatap muka sebelum siklus berikutnya.</p>
+                <p class="text-xs text-status-pending">Sesi revisi sudah mencapai batas perhatian. Pertimbangkan bimbingan tatap muka sebelum siklus berikutnya.</p>
             @endif
         </div> {{-- Feedback terakhir untuk mahasiswa ini (reuse) --}} @if ($lastFeedback)
             <div class="bg-bg-surface rounded-xl border border-border p-4">
