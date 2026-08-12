@@ -25,6 +25,15 @@
                 @error('email_verification_override')<p class="text-xs text-status-danger">{{ $message }}</p>@enderror
             </div>
 
+            <div>
+                <label for="admin_contact_email" class="block text-sm font-medium mb-1">Email Kontak Admin (Default Global)</label>
+                <input type="email" name="admin_contact_email" id="admin_contact_email"
+                    value="{{ old("admin_contact_email", $institution->admin_contact_email) }}" placeholder="admin@kampus.ac.id"
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm sm:max-w-xs">
+                <p class="text-xs text-text-secondary mt-1">Ditampilkan sebagai info bantuan di halaman daftar, masuk, dan bawah profil user (mis. untuk koreksi NIDN). Institusi bisa menimpanya via form Profil Institusi. Ini <b>bukan</b> email akun System Admin — field terpisah. Kosongkan agar tidak menampilkan info kontak.</p>
+                @error('admin_contact_email')<p class="text-xs text-status-danger">{{ $message }}</p>@enderror
+            </div>
+
             <div id="smtp-form" class="space-y-4 pt-2 border-t border-border">
                 <p class="text-sm font-semibold">Konfigurasi SMTP</p>
                 <p class="text-xs text-text-secondary -mt-3">Pengaturan SMTP untuk pengiriman email. Nilai di sini menimpa konfigurasi di .env.</p>

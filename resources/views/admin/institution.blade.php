@@ -33,6 +33,12 @@
                 <div> <label class="block text-sm font-medium mb-1">Email</label> <input type="email" name="email"
                         value="{{ old("email", $institution->email) }}"
                         class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"> </div>
+                <div> <label class="block text-sm font-medium mb-1">Email Kontak Admin</label> <input type="email"
+                        name="admin_contact_email"
+                        value="{{ old("admin_contact_email", $institution->admin_contact_email) }}"
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                    <p class="text-xs text-text-secondary mt-1">Info bantuan di halaman daftar, masuk, dan bawah profil user (mis. untuk koreksi NIDN). Kosongkan untuk memakai default dari System Admin.</p>
+                </div>
                 <div> <label class="block text-sm font-medium mb-1">Website</label> <input type="url" name="website"
                         value="{{ old("website", $institution->website) }}"
                         class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm"> </div>

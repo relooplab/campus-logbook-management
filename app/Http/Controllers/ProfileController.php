@@ -29,7 +29,11 @@ class ProfileController extends Controller
         $universities = University::orderBy('name')->with('faculties.departments.studyPrograms')->get();
         $affiliation = $user->primaryUniversity();
 
-        return view('profile.index', compact('user', 'programs', 'universities', 'affiliation'));
+        // Email kontak admin yang relevan untuk user ini (prioritas: institusi
+        // user → default global dari system admin). Dipakai untuk info bantuan.
+        $adminContactEmail = \App\Models\Institution::adminContactEmailFor($user);
+
+        return view('profile.index', compact('user', 'programs', 'universities', 'affiliation', 'adminContactEmail'));
     }
 
     /**

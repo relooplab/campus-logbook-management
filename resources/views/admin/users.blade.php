@@ -236,6 +236,9 @@
                                                 <button class="text-status-danger hover:underline text-xs">Hapus</button>
                                             </form>
                                         @endif
+                                        @if ($u->isDosen())
+                                            <button type="button" data-nidn="{{ $u->id }}" data-name="{{ $u->name }}" class="nidn-btn text-brand hover:underline text-xs">Ubah NIDN</button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -341,6 +344,27 @@
         </form>
     </div>
 </div>
+
+{{-- Modal ubah NIDN --}}
+<div id="nidn-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-bg-surface rounded-lg border border-border p-4 w-full max-w-sm">
+        <h3 class="font-semibold mb-1">Ubah NIDN — <span id="nidn-name"></span></h3>
+        <p class="text-xs text-text-secondary mb-3">NIDN wajib 10 digit angka. Perubahan tercatat di audit.</p>
+        <form method="POST" action="" id="nidn-form">
+            @csrf
+            @method('PUT')
+            <div>
+                <label class="block text-sm font-medium mb-1">NIDN Baru</label>
+                <input type="text" name="nidn" id="nidn-input" inputmode="numeric" pattern="\d{10}" maxlength="10"
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm" placeholder="10 digit angka">
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" id="nidn-cancel" class="px-3 py-2 rounded-xl bg-status-danger hover:status-danger/90 text-white text-sm">Batal</button>
+                <button class="px-3 py-2 rounded-xl bg-brand text-[#0b1420] text-sm">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -380,6 +404,25 @@
             });
         });
         if (quotaCancel) quotaCancel.addEventListener('click', function() { quotaModal.classList.add('hidden'); });
+    }
+
+    // ---------- Ubah NIDN modal ----------
+    var nidnModal = document.getElementById('nidn-modal');
+    var nidnForm = document.getElementById('nidn-form');
+    var nidnName = document.getElementById('nidn-name');
+    var nidnInput = document.getElementById('nidn-input');
+    var nidnCancel = document.getElementById('nidn-cancel');
+    if (nidnForm && nidnModal) {
+        document.querySelectorAll('.nidn-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                nidnForm.action = "{{ url('admin/users') }}/" + btn.getAttribute('data-nidn') + "/nidn";
+                nidnName.textContent = btn.getAttribute('data-name');
+                if (nidnInput) nidnInput.value = '';
+                nidnModal.classList.remove('hidden');
+            });
+        });
+        if (nidnCancel) nidnCancel.addEventListener('click', function() { nidnModal.classList.add('hidden'); });
+        nidnModal.addEventListener('click', function(e) { if (e.target === nidnModal) nidnModal.classList.add('hidden'); });
     }
 
     // ---------- Bulk action toolbar ----------

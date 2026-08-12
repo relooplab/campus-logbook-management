@@ -26,7 +26,10 @@ class RegisterController extends Controller
 {
     public function showRegisterForm(): View
     {
-        return view('auth.register');
+        // Info bantuan untuk guest: email kontak admin default (global).
+        return view('auth.register', [
+            'adminContactEmail' => \App\Models\Institution::adminContactEmailFor(null),
+        ]);
     }
 
     public function register(Request $request): RedirectResponse

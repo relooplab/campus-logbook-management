@@ -316,6 +316,50 @@ class AdminController extends Controller
         return back()->with('success', "Password '{$user->name}' berhasil direset.");
     }
 
+    // ------------------------------------------------------- ubah NIDN
+
+    /**
+     * Ubah NIDN user oleh admin. System admin boleh lintas institusi; admin
+     * institusi hanya untuk user dalam institusi + cakupan admin_scopes-nya.
+     * NIDN wajib 10 digit angka, divalidasi keunikan global, dan diaudit.
+     */
+    public function updateUserNidn(Request $request, User $user): RedirectResponse
+    {
+        // Scoping: system admin selalu boleh; admin institusi hanya untuk user
+        // dalam institusi + admin_scopes (menolak tenant-hopping lintas institusi).
+        abort_unless($this->canManageUser($request, $user), 403);
+
+        // Admin biasa tidak boleh mengubah NIDN akun admin/system_admin.
+        if (!$request->user()->isSystemAdmin() && ($user->isAdmin() || $user->isSystemAdmin())) {
+            return back()->with('error', 'Hanya System Admin yang dapat mengubah NIDN akun admin.');
+        }
+
+        $oldNidn = $user->nidn;
+
+        $validated = $request->validate([
+            // NIDN persis 10 digit angka; nullable (boleh dikosongkan admin).
+            'nidn' => ['nullable', 'string', 'max:20', 'regex:/^\d{10}$/', function ($attr, $value, $fail) use ($user) {
+                if ($value && \App\Models\User::identifierIsTaken($value, $user->id)) {
+                    $fail('NIDN ini sudah dipakai akun lain (NIM/NIDN).');
+                }
+            }],
+        ]);
+
+        $user->update(['nidn' => $validated['nidn'] ?: null]);
+
+        \App\Support\Audit::log(
+            $request->user()->isSystemAdmin() ? 'SysAdmin mengubah NIDN' : 'Admin mengubah NIDN',
+            [
+                'target_user_id' => $user->id,
+                'target_email' => $user->email,
+                'nidn_lama' => $oldNidn,
+                'nidn_baru' => $validated['nidn'] ?: null,
+            ]
+        );
+
+        return back()->with('success', "NIDN '{$user->name}' berhasil diperbarui.");
+    }
+
     // ------------------------------------------------------- aksi massal & export
 
     /**
@@ -1801,6 +1845,7 @@ class AdminController extends Controller
             'city' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'email' => ['nullable', 'email', 'max:255'],
+            'admin_contact_email' => ['nullable', 'email', 'max:255'],
             'website' => ['nullable', 'url', 'max:255'],
             'footer_note' => ['nullable', 'string', 'max:500'],
             // Pengaturan upload (bisa diisi admin).
@@ -1863,6 +1908,10 @@ class AdminController extends Controller
             'mail_encryption' => ['nullable', 'string', 'max:20', 'in:ssl,tls,null'],
             'mail_from_address' => ['nullable', 'email', 'max:255'],
             'mail_from_name' => ['nullable', 'string', 'max:255'],
+            // Email kontak admin DEFAULT (global). Bisa di-override per institusi
+            // di form Profil Institusi. Dipakai sebagai info bantuan di
+            // register/login/profil. Bukan email system admin — field terpisah.
+            'admin_contact_email' => ['nullable', 'email', 'max:255'],
         ];
 
         $validated = $request->validate($rules);

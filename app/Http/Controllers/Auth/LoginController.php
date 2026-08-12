@@ -13,7 +13,10 @@ class LoginController extends Controller
 {
     public function showLoginForm(): View
     {
-        return view('auth.login');
+        // Info bantuan untuk guest: email kontak admin default (global).
+        return view('auth.login', [
+            'adminContactEmail' => \App\Models\Institution::adminContactEmailFor(null),
+        ]);
     }
 
     public function login(Request $request): RedirectResponse

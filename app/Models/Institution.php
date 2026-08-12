@@ -20,6 +20,7 @@ class Institution extends Model
         'city',
         'phone',
         'email',
+        'admin_contact_email',
         'website',
         'logo_path',
         'footer_note',
@@ -149,6 +150,18 @@ class Institution extends Model
     public static function current(): self
     {
         return self::forUser(auth()->user());
+    }
+
+    /**
+     * Email kontak admin untuk ditampilkan sebagai info bantuan.
+     * Prioritas: admin_contact_email institusi user → fallback ke default
+     * global (diisi system admin di panel pengaturan). Untuk user tanpa
+     * institusi (mis. guest register/login) → default global.
+     */
+    public static function adminContactEmailFor(?User $user): ?string
+    {
+        return self::forUser($user)?->admin_contact_email
+            ?: self::active()->admin_contact_email;
     }
 
     /**

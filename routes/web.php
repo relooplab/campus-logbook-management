@@ -315,6 +315,7 @@ Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])
             Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
             Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
             Route::post('/users/{user}/reset-password', [AdminController::class, 'resetPassword'])->name('users.reset-password');
+            Route::put('/users/{user}/nidn', [AdminController::class, 'updateUserNidn'])->name('users.nidn');
 
             // Aksi massal: harus bisa diakses admin institusi (dalam scope) DAN system admin.
             // Otorisasi per-user di-handle di controller via canManageUser().

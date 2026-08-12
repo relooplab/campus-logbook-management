@@ -86,6 +86,20 @@
                         <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
+                @elseif ($user->isDosen())
+                <div>
+                    <label class="block text-sm font-medium mb-1">NIDN</label>
+                    <input type="text" value="{{ $user->nidn }}" disabled readonly
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm text-text-secondary">
+                    <p class="text-xs text-text-secondary mt-1">
+                        Jika NIDN Anda salah, hubungi admin:
+                        @if ($adminContactEmail)
+                            <a href="mailto:{{ $adminContactEmail }}" class="text-brand hover:underline">{{ $adminContactEmail }}</a>
+                        @else
+                            <span>silakan hubungi admin institusi Anda.</span>
+                        @endif
+                    </p>
+                </div>
                 @endif
                 <div> <label class="block text-sm font-medium mb-1">Foto Profil</label> <input type="file"
                         name="photo" accept="image/*" class="w-full text-sm"> @error("photo")
@@ -298,6 +312,19 @@
                 Sandi</button>
         </form>
     </div>
+
+    {{-- Info kontak admin (bagian paling bawah profil) --}}
+    @if ($adminContactEmail)
+        <div class="bg-bg-surface rounded-xl border border-border p-4">
+            <p class="text-sm font-medium text-text-primary">Perlu bantuan admin?</p>
+            <p class="text-xs text-text-secondary mt-0.5">
+                Hubungi
+                <a href="mailto:{{ $adminContactEmail }}"
+                    class="text-brand hover:underline">{{ $adminContactEmail }}</a>
+                untuk pertanyaan atau koreksi data (misalnya NIDN).
+            </p>
+        </div>
+    @endif
 </div>
 @endsection @section('scripts')
 <script>
