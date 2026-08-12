@@ -1,3 +1,10 @@
+# [0.48.0](https://github.com/relooplab/campus-logbook-management/compare/v0.47.1...v0.48.0) (2026-08-12)
+
+
+### Features
+
+* NIM/NIDN diisi setelah verifikasi & pembersihan akun unverified otomatis ([5b3a3b8](https://github.com/relooplab/campus-logbook-management/commit/5b3a3b828736f1e90c43feccef18d65eff0107a7))
+
 ## [0.47.1](https://github.com/relooplab/campus-logbook-management/compare/v0.47.0...v0.47.1) (2026-08-12)
 
 
