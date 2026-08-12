@@ -1,3 +1,10 @@
+# [0.46.0](https://github.com/relooplab/campus-logbook-management/compare/v0.45.0...v0.46.0) (2026-08-12)
+
+
+### Features
+
+* ubah email self-service, verifikasi tanpa login, dan pembatasan akses dosen ke program pending ([08de8ee](https://github.com/relooplab/campus-logbook-management/commit/08de8eec822300cfd8f769f3cdb49876a77975c4))
+
 # [0.45.0](https://github.com/relooplab/campus-logbook-management/compare/v0.44.0...v0.45.0) (2026-08-12)
 
 

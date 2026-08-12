@@ -1,7 +1,7 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
     "name": "hafizhul/thesis-logbook-management",
-    "version": "0.45.0",
+    "version": "0.46.0",
     "type": "project",
     "description": "A web application for recording and monitoring undergraduate thesis mentoring sessions.",
     "keywords": [
