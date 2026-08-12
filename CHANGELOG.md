@@ -1,3 +1,10 @@
+## [0.47.1](https://github.com/relooplab/campus-logbook-management/compare/v0.47.0...v0.47.1) (2026-08-12)
+
+
+### Bug Fixes
+
+* kuota storage dosen tidak lagi 0 saat tak ada sumber kuota terdefinisi ([d9eaca7](https://github.com/relooplab/campus-logbook-management/commit/d9eaca73fa32cdf8a292e55e441ae11eef89bb34))
+
 # [0.47.0](https://github.com/relooplab/campus-logbook-management/compare/v0.46.0...v0.47.0) (2026-08-12)
 
 
