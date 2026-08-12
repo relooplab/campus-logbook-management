@@ -1,3 +1,10 @@
+# [0.47.0](https://github.com/relooplab/campus-logbook-management/compare/v0.46.0...v0.47.0) (2026-08-12)
+
+
+### Features
+
+* ubah NIDN oleh admin dan email kontak admin (default global / override institusi) ([d252e45](https://github.com/relooplab/campus-logbook-management/commit/d252e45ceff7d4e879e366672ccbd0caec44382c))
+
 # [0.46.0](https://github.com/relooplab/campus-logbook-management/compare/v0.45.0...v0.46.0) (2026-08-12)
 
 
