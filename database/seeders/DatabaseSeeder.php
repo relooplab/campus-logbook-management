@@ -54,8 +54,10 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        // Seed paket (Free vs Donasi).
-        Plan::firstOrCreate(
+        // Seed paket (Free vs Donasi). updateOrCreate agar plan yang sudah ada
+        // ikut diperbarui (mis. storage_mb free = 3 GB) — mencegah plan free
+        // tanpa storage_mb yang membuat kuota dosen jadi 0.
+        Plan::updateOrCreate(
             ['name' => 'free'],
             [
                 'label' => 'Gratis',
@@ -69,7 +71,7 @@ class DatabaseSeeder extends Seeder
                 'is_active' => true,
             ]
         );
-        Plan::firstOrCreate(
+        Plan::updateOrCreate(
             ['name' => 'donasi'],
             [
                 'label' => 'Donasi',

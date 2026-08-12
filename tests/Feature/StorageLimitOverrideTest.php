@@ -36,7 +36,8 @@ class StorageLimitOverrideTest extends TestCase
 
     private function defaultLimit(): int
     {
-        return (int) (Plan::where('name', 'free')->first()?->storageLimitMb() ?? 0);
+        $free = (int) (Plan::where('name', 'free')->first()?->storageLimitMb() ?? 0);
+        return $free > 0 ? $free : Feature::DEFAULT_STORAGE_LIMIT_MB;
     }
 
     private function setOverride(User $user, ?int $mb): void
@@ -65,5 +66,29 @@ class StorageLimitOverrideTest extends TestCase
         $u = $this->dosen();
         $this->setOverride($u, 500);
         $this->assertSame(500, Feature::storageLimitMb($u));
+    }
+
+    public function test_dosen_without_quota_source_gets_3gb_default(): void
+    {
+        // Pastikan tak ada free plan agar jalur default bawaan benar-benar tersentuh.
+        Plan::where('name', 'free')->delete();
+
+        $u = $this->dosen();
+        $this->assertSame(Feature::DEFAULT_STORAGE_LIMIT_MB, Feature::storageLimitMb($u));
+    }
+
+    public function test_mahasiswa_without_quota_source_stays_zero(): void
+    {
+        Plan::where('name', 'free')->delete();
+        Role::firstOrCreate(['name' => 'mahasiswa', 'guard_name' => 'web']);
+
+        $m = User::create([
+            'name' => 'Mhs Quota', 'email' => 'mhs-q-'.uniqid().'@t.test',
+            'password' => bcrypt('x'), 'registration_status' => 'active',
+            'nim' => 'MQ-'.uniqid(),
+        ]);
+        $m->assignRole('mahasiswa');
+
+        $this->assertSame(0, Feature::storageLimitMb($m), 'Selain dosen tidak dapat default 3 GB.');
     }
 }

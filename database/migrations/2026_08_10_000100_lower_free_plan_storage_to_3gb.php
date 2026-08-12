@@ -28,12 +28,16 @@ return new class extends Migration
         $plans = DB::table('plans')->where('name', 'free')->get(['id', 'features']);
         foreach ($plans as $plan) {
             $features = $plan->features ? json_decode($plan->features, true) : [];
-            if (is_array($features) && isset($features['storage_mb'])) {
-                $features['storage_mb'] = $mb;
-                DB::table('plans')->where('id', $plan->id)->update([
-                    'features' => json_encode($features),
-                ]);
+            if (! is_array($features)) {
+                $features = [];
             }
+
+            // Selalu set storage_mb (tanpa syarat isset) agar plan free yang
+            // terlanjur ada tanpa storage_mb tetap dipastikan 3 GB.
+            $features['storage_mb'] = $mb;
+            DB::table('plans')->where('id', $plan->id)->update([
+                'features' => json_encode($features),
+            ]);
         }
     }
 };

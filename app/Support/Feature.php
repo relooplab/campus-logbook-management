@@ -17,6 +17,14 @@ class Feature
     /** Kuota penyimpanan sementara (MB) untuk mahasiswa fase pending (menunggu persetujuan dosen). */
     public const PENDING_STUDENT_STORAGE_LIMIT_MB = 100;
 
+    /**
+     * Default kuota penyimpanan DOSEN (MB) bila TIDAK ADA sumber kuota lain
+     * yang terdefinisi (override admin, pool institusi, plan individual, maupun
+     * free plan). Disamakan dengan kuota free plan: 3 GB = 3072 MB.
+     * Berlaku KHUSUS untuk role dosen; selain dosen tetap 0.
+     */
+    public const DEFAULT_STORAGE_LIMIT_MB = 3072;
+
     public static function mode(): string
     {
         return config('app.mode', 'saas');
@@ -196,6 +204,7 @@ class Feature
 
     /**
      * Batas storage individual (plan user, fallback free plan).
+     * Bila tak ada sumber kuota jelas: dosen mendapat default 3 GB; selain itu 0.
      */
     private static function individualStorageLimitMb(?User $user): int
     {
@@ -204,9 +213,15 @@ class Feature
         }
 
         $plan = $user->activePlan();
-        return $plan
+        $mb = $plan
             ? $plan->storageLimitMb()
             : (Plan::where('name', 'free')->where('is_active', true)->first()?->storageLimitMb() ?? 0);
+
+        if ($mb > 0) {
+            return $mb;
+        }
+
+        return $user->isDosen() ? self::DEFAULT_STORAGE_LIMIT_MB : 0;
     }
 
     /**
