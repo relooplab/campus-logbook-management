@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 
 class Institution extends Model
 {
@@ -26,6 +27,7 @@ class Institution extends Model
         'allowed_file_types',
         'seminar_hardcopy_note',
         'email_verification_required',
+        'email_verification_override',
         'storage_limit_mb',
         'mail_mailer',
         'mail_host',
@@ -43,6 +45,60 @@ class Institution extends Model
             'email_verification_required' => 'boolean',
             'storage_limit_mb' => 'integer',
         ];
+    }
+
+    /**
+     * Password SMTP disimpan terenkripsi di DB. Saat dibaca, dekripsi kembali.
+     * Nilai lama yang masih plaintext ditangani (fallback ke apa adanya).
+     */
+    public function getMailPasswordAttribute(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Throwable $e) {
+            return $value; // belum terenkripsi (data lama)
+        }
+    }
+
+    /**
+     * Saat disimpan, password selalu dienkripsi (jangan simpan plaintext).
+     */
+    public function setMailPasswordAttribute(?string $value): void
+    {
+        if ($value === null || $value === '') {
+            $this->attributes['mail_password'] = null;
+            return;
+        }
+
+        $this->attributes['mail_password'] = Crypt::encryptString($value);
+    }
+
+    /**
+     * Status verifikasi email yang EFEKTIF (default + override admin):
+     * - override eksplisit (on/off) menang mutlak;
+     * - override null (Auto) = ikuti apakah SMTP sungguhan terkonfigurasi.
+     */
+    public function emailVerificationEffective(): bool
+    {
+        if ($this->email_verification_override !== null) {
+            return (bool) $this->email_verification_override;
+        }
+
+        return \App\Support\Feature::smtpConfigured();
+    }
+
+    /**
+     * Versi statis (query fresh, tanpa cache) untuk controller/middleware auth.
+     */
+    public static function emailVerificationRequiredNow(): bool
+    {
+        $institution = static::query()->first();
+
+        return $institution ? $institution->emailVerificationEffective() : false;
     }
 
     /**
@@ -152,12 +208,12 @@ class Institution extends Model
     }
 
     /**
-     * Apakah user yang baru registrasi WAJIB verifikasi email sebelum
-     * bisa masuk fitur aplikasi. Diset di panel system admin.
+     * Apakah verifikasi email efektif wajib (mengikuti override admin /
+     * default SMTP). Dipertahankan agar panggil lama tetap konsisten.
      */
     public function emailVerificationRequired(): bool
     {
-        return (bool) $this->email_verification_required;
+        return $this->emailVerificationEffective();
     }
 
     /**

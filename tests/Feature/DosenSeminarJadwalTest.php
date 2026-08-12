@@ -57,7 +57,7 @@ class DosenSeminarJadwalTest extends TestCase
             'waktu' => $waktu,
             'undangan_path' => 'undangan-'.uniqid().'.pdf',
             'undangan_original_name' => 'undangan.pdf',
-            'undangan_sebagai' => 'pembimbing_1',
+            'undangan_kepada' => ['pembimbing_1'],
             'status' => SeminarSubmission::STATUS_SUBMITTED,
         ]);
     }

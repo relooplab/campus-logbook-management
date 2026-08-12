@@ -1847,47 +1847,48 @@ class AdminController extends Controller
 
     /**
      * Simpan pengaturan autentikasi + SMTP.
-     * - email_verification_required: boolean.
+     * Status verifikasi: Auto (null, ikuti SMTP) / Wajib (true) / Tidak (false).
      * - mail_*: hanya divalidasi/disimpan saat toggle ON (form tersembunyi
      *   saat OFF di view, tapi user bisa POST manual — guard di sini).
      */
     public function updateSystemSettings(Request $request): RedirectResponse
     {
         $rules = [
-            'email_verification_required' => ['required', 'boolean'],
+            'email_verification_override' => ['nullable', 'string', 'in:auto,wajib,tidak'],
+            'mail_mailer' => ['nullable', 'string', 'max:20', 'in:smtp,log,array,sendmail,mailgun,ses,postmark,resend'],
+            'mail_host' => ['nullable', 'string', 'max:255'],
+            'mail_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
+            'mail_username' => ['nullable', 'string', 'max:255'],
+            'mail_password' => ['nullable', 'string', 'max:255'],
+            'mail_encryption' => ['nullable', 'string', 'max:20', 'in:ssl,tls,null'],
+            'mail_from_address' => ['nullable', 'email', 'max:255'],
+            'mail_from_name' => ['nullable', 'string', 'max:255'],
         ];
-
-        $verificationOn = $request->boolean('email_verification_required');
-
-        if ($verificationOn) {
-            $rules += [
-                'mail_mailer' => ['required', 'string', 'max:20', 'in:smtp,log,array,sendmail,mailgun,ses,postmark,resend'],
-                'mail_host' => ['required', 'string', 'max:255'],
-                'mail_port' => ['required', 'integer', 'min:1', 'max:65535'],
-                'mail_username' => ['nullable', 'string', 'max:255'],
-                'mail_password' => ['nullable', 'string', 'max:255'],
-                'mail_encryption' => ['nullable', 'string', 'max:20', 'in:ssl,tls,null'],
-                'mail_from_address' => ['required', 'email', 'max:255'],
-                'mail_from_name' => ['required', 'string', 'max:255'],
-            ];
-        } else {
-            $rules += [
-                'mail_mailer' => ['nullable', 'string', 'max:20', 'in:smtp,log,array,sendmail,mailgun,ses,postmark,resend'],
-                'mail_host' => ['nullable', 'string', 'max:255'],
-                'mail_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
-                'mail_username' => ['nullable', 'string', 'max:255'],
-                'mail_password' => ['nullable', 'string', 'max:255'],
-                'mail_encryption' => ['nullable', 'string', 'max:20', 'in:ssl,tls,null'],
-                'mail_from_address' => ['nullable', 'email', 'max:255'],
-                'mail_from_name' => ['nullable', 'string', 'max:255'],
-            ];
-        }
 
         $validated = $request->validate($rules);
 
         $institution = Institution::current();
+
+        // Status verifikasi: Auto (null) / Wajib (true) / Tidak Wajib (false).
+        switch ($request->input('email_verification_override')) {
+            case 'wajib':
+                $institution->email_verification_override = true;
+                break;
+            case 'tidak':
+                $institution->email_verification_override = false;
+                break;
+            default:
+                $institution->email_verification_override = null;
+        }
+
+        // SMTP: jangan timpa password bila tidak diisi (form tidak menampilkan nilai lama).
+        unset($validated['mail_password'], $validated['email_verification_override']);
         $institution->fill($validated);
-        $institution->email_verification_required = $verificationOn;
+        if ($request->filled('mail_password')) {
+            // Disimpan terenkripsi via mutator di model Institution.
+            $institution->mail_password = $request->input('mail_password');
+        }
+
         $institution->save();
 
         Institution::flush($institution->id);
@@ -1895,13 +1896,11 @@ class AdminController extends Controller
 
         \App\Support\Audit::log('SysAdmin mengubah pengaturan autentikasi & SMTP', [
             'institution_id' => $institution->id,
-            'email_verification_required' => $verificationOn,
+            'email_verification_override' => $institution->email_verification_override,
             'field_berubah' => array_values(array_diff(array_keys($validated), ['mail_password'])),
         ]);
 
-        return back()->with('success', $verificationOn
-            ? 'Verifikasi email diaktifkan. Form SMTP tampil.'
-            : 'Verifikasi email dimatikan. Form SMTP disembunyikan.');
+        return back()->with('success', 'Pengaturan autentikasi & SMTP berhasil disimpan.');
     }
 
     /**

@@ -92,7 +92,7 @@ class MaterialsReviewGateTest extends TestCase
             'waktu' => '09:00',
             'undangan_path' => 'seminar-materials/undangan.pdf',
             'undangan_original_name' => 'undangan.pdf',
-            'undangan_sebagai' => 'pembimbing_1',
+            'undangan_kepada' => ['pembimbing_1'],
             'status' => SeminarSubmission::STATUS_SUBMITTED,
         ]);
 

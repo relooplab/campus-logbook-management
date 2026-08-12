@@ -13,21 +13,21 @@
         <form method="POST" action="{{ route('admin.system.settings.update') }}" class="space-y-4">
             @csrf
 
-            <div class="flex items-start gap-3 p-4 rounded-lg bg-bg-panel border border-border">
-                <input type="checkbox" name="email_verification_required" value="1" id="email-verification-toggle"
-                    @checked(old('email_verification_required', $institution->email_verification_required))
-                    class="mt-1 rounded bg-bg-surface">
-                <div class="flex-1">
-                    <label for="email-verification-toggle" class="text-sm font-medium text-text-primary cursor-pointer">Wajib Verifikasi Email</label>
-                    <p class="text-xs text-text-secondary mt-1">Saat ON, user yang baru registrasi tidak bisa masuk fitur aplikasi sampai mereka mengeklik tautan verifikasi yang dikirim ke email. Saat OFF, user langsung aktif (perilaku lama).</p>
-                </div>
+            <div>
+                <label for="email-verification-toggle" class="block text-sm font-medium mb-1">Verifikasi Email</label>
+                <select name="email_verification_override" id="email-verification-toggle"
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm sm:max-w-xs">
+                    <option value="auto" @selected($institution->email_verification_override === null || old('email_verification_override') === 'auto')>Auto — ikuti SMTP</option>
+                    <option value="wajib" @selected($institution->email_verification_override === 1 || old('email_verification_override') === 'wajib')>Wajib</option>
+                    <option value="tidak" @selected($institution->email_verification_override === 0 || old('email_verification_override') === 'tidak')>Tidak Wajib</option>
+                </select>
+                <p class="text-xs text-text-secondary mt-1">Mode <b>Auto</b> menjadikan verifikasi email wajib bila SMTP sungguhan terkonfigurasi. Anda bisa override kapan saja.</p>
+                @error('email_verification_override')<p class="text-xs text-status-danger">{{ $message }}</p>@enderror
             </div>
 
-            @error('email_verification_required')<p class="text-xs text-status-danger">{{ $message }}</p>@enderror
-
-            <div id="smtp-form" class="space-y-4 pt-2 border-t border-border {{ old('email_verification_required', $institution->email_verification_required) ? '' : 'hidden' }}">
+            <div id="smtp-form" class="space-y-4 pt-2 border-t border-border">
                 <p class="text-sm font-semibold">Konfigurasi SMTP</p>
-                <p class="text-xs text-text-secondary -mt-3">Form ini hanya tampil saat verifikasi email diaktifkan. Isi lengkap agar email verifikasi dapat terkirim.</p>
+                <p class="text-xs text-text-secondary -mt-3">Pengaturan SMTP untuk pengiriman email. Nilai di sini menimpa konfigurasi di .env.</p>
 
                 <div class="grid sm:grid-cols-2 gap-4">
                     <div>
@@ -68,8 +68,9 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Password</label>
-                        <input type="password" name="mail_password" value="{{ old("mail_password", $institution->mail_password) }}" placeholder="••••••••"
+                        <input type="password" name="mail_password" placeholder="••••••••" autocomplete="new-password"
                             class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <p class="text-xs text-text-secondary mt-1">Kosongkan bila tidak ingin mengubah password SMTP yang tersimpan.</p>
                         @error('mail_password')<p class="text-xs text-status-danger mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div>
@@ -93,7 +94,7 @@
         </form>
     </div>
 
-    <div id="smtp-test" class="bg-bg-surface rounded-xl border border-border p-6 {{ old('email_verification_required', $institution->email_verification_required) ? '' : 'hidden' }}">
+    <div id="smtp-test" class="bg-bg-surface rounded-xl border border-border p-6">
         <h2 class="font-semibold mb-1">Kirim Email Uji</h2>
         <p class="text-sm text-text-secondary mb-4">Verifikasi konfigurasi SMTP dengan mengirim email percobaan ke alamat Anda.</p>
         <form method="POST" action="{{ route('admin.system.settings.test-mail') }}" class="flex flex-wrap items-end gap-3">
@@ -204,22 +205,4 @@
 @endsection
 
 @section('scripts')
-<script>
-    (function() {
-        var toggle = document.getElementById('email-verification-toggle');
-        var smtpForm = document.getElementById('smtp-form');
-        var smtpTest = document.getElementById('smtp-test');
-
-        if (!toggle) return;
-
-        function sync() {
-            var on = toggle.checked;
-            if (smtpForm) smtpForm.classList.toggle('hidden', !on);
-            if (smtpTest) smtpTest.classList.toggle('hidden', !on);
-        }
-
-        toggle.addEventListener('change', sync);
-        sync();
-    })();
-</script>
 @endsection

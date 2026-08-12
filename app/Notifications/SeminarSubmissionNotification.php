@@ -46,7 +46,7 @@ class SeminarSubmissionNotification extends Notification implements ShouldQueue
             ->line('• Tanggal: '.($submission->tanggal?->format('l, d F Y') ?? '—'))
             ->line('• Waktu: '.($submission->waktu?->format('H:i') ?? '—'))
             ->line('• Lokasi: '.($submission->lokasi ?: '—'))
-            ->line('• Undangan sebagai: '.$submission->undanganSebagaiLabel());
+            ->line('• Diundang: '.$submission->undanganKepadaLabel());
 
         if ($submission->catatan_keterangan) {
             $mail->line('• Catatan: '.$submission->catatan_keterangan);

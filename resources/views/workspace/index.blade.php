@@ -135,17 +135,18 @@
                     $usageSvc = app(\App\Services\StorageUsageService::class);
                     $usedLabel = $usageSvc->formatBytes($usedBytes ?? 0);
                     $quotaLabel = $quotaBytes > 0 ? $usageSvc->formatBytes($quotaBytes) : 'Tak terbatas';
+                    $quotaText = $quotaBytes > 0 ? $usedLabel.' / '.$quotaLabel : $usedLabel.' — tidak ada kuota';
                     $pct = $quotaBytes > 0 ? min(100, round(($usedBytes ?? 0) / $quotaBytes * 100)) : 0;
                 @endphp
                 <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-text-secondary">
-                    <span>Pemakaian workspace ini: {{ number_format($totalBytes / 1048576, 1) }} MB</span>
-                    <span>Kuota dosen: {{ $usedLabel }} / {{ $quotaLabel }}</span>
+                    <span>File di workspace ini: <span class="font-medium text-text-primary">{{ number_format($totalBytes / 1048576, 1) }} MB</span></span>
+                    <span>Pemakaian kuota dosen: <span class="font-medium text-text-primary">{{ $quotaText }}</span></span>
                 </div>
                 @if ($quotaBytes > 0)
                     <div class="mt-1 h-1.5 rounded-full bg-bg-panel overflow-hidden">
                         <div class="h-full rounded-full {{ $pct >= 90 ? 'bg-status-danger' : ($pct >= 70 ? 'bg-status-pending' : 'bg-brand') }}" style="width: {{ $pct }}%"></div>
                     </div>
-                    <p class="text-[10px] text-text-secondary mt-0.5">{{ $pct }}% terpakai</p>
+                    <p class="text-[10px] text-text-secondary mt-0.5">{{ $pct }}% kuota terpakai</p>
                 @endif
             </div>
         @endif

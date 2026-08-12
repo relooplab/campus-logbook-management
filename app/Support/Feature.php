@@ -33,6 +33,30 @@ class Feature
     }
 
     /**
+     * Apakah SMTP sungguhan (produksi) terkonfigurasi secara efektif.
+     * Mengecualikan sink pengembangan (Mailpit / localhost) agar verifikasi
+     * email tidak otomatis aktif di lingkungan dev.
+     */
+    public static function smtpConfigured(): bool
+    {
+        if (config('mail.default') !== 'smtp') {
+            return false;
+        }
+
+        $host = strtolower((string) config('mail.mailers.smtp.host', ''));
+        if ($host === '') {
+            return false;
+        }
+
+        $sinks = ['mailpit', '127.0.0.1', 'localhost', '0.0.0.0'];
+        if (in_array($host, $sinks, true) || str_contains($host, 'mailpit')) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Fitur prodi (multi-dosen & manajemen institusi) tersedia untuk SEMUA user.
      * Gate dilakukan per-user berdasarkan institution_id, bukan APP_MODE global.
      *

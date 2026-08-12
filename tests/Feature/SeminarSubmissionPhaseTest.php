@@ -70,7 +70,7 @@ class SeminarSubmissionPhaseTest extends TestCase
             'waktu' => '09:00',
             'undangan_path' => 'seminar-materials/undangan.pdf',
             'undangan_original_name' => 'undangan.pdf',
-            'undangan_sebagai' => 'pembimbing_1',
+            'undangan_kepada' => ['pembimbing_1'],
             'status' => SeminarSubmission::STATUS_SUBMITTED,
         ]);
     }
@@ -139,7 +139,7 @@ class SeminarSubmissionPhaseTest extends TestCase
             ->put(route('seminar-submission.update', $sub), [
                 'tanggal' => now()->addDays(2)->toDateString(),
                 'waktu' => '10:00',
-                'undangan_sebagai' => 'pembimbing_1',
+                'undangan_kepada' => ['pembimbing_1'],
                 'catatan_keterangan' => 'rev',
             ])
             ->assertStatus(403);

@@ -30,7 +30,7 @@ class EnsureEmailVerified
         }
 
         // Query langsung (skip cache) untuk konsistensi dengan controller auth.
-        $required = (bool) Institution::query()->value('email_verification_required');
+        $required = Institution::emailVerificationRequiredNow();
 
         $user = $request->user();
 

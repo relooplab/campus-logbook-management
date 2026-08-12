@@ -33,7 +33,7 @@ class SeminarSubmission extends Model
         'lokasi',
         'undangan_path',
         'undangan_original_name',
-        'undangan_sebagai',
+        'undangan_kepada',
         'materi_path',
         'materi_original_name',
         'materi_workspace_file_id',
@@ -48,6 +48,7 @@ class SeminarSubmission extends Model
         return [
             'tanggal' => 'date',
             'waktu' => 'datetime:H:i',
+            'undangan_kepada' => 'array',
         ];
     }
 
@@ -153,15 +154,25 @@ class SeminarSubmission extends Model
         };
     }
 
-    public function undanganSebagaiLabel(): string
+    public function undanganKepadaLabel(): string
     {
-        return match ($this->undangan_sebagai) {
-            'pembimbing_1' => 'Pembimbing 1',
-            'pembimbing_2' => 'Pembimbing 2',
-            'penguji_1' => 'Penguji 1',
-            'penguji_2' => 'Penguji 2',
-            default => ucfirst(str_replace('_', ' ', $this->undangan_sebagai)),
-        };
+        $ta = $this->mahasiswaTa;
+        $map = [
+            'pembimbing_1' => ['Pembimbing 1', $ta?->pembimbing1?->name],
+            'pembimbing_2' => ['Pembimbing 2', $ta?->pembimbing2?->name],
+            'penguji_1' => ['Penguji 1', $ta?->penguji1?->name],
+            'penguji_2' => ['Penguji 2', $ta?->penguji2?->name],
+        ];
+
+        $labels = collect($this->undangan_kepada ?? [])
+            ->map(function (string $key) use ($map) {
+                $role = $map[$key][0] ?? ucfirst(str_replace('_', ' ', $key));
+                $name = $map[$key][1] ?? null;
+                return $name ? $role.' — '.$name : $role;
+            })
+            ->filter(fn ($v) => $v !== '');
+
+        return $labels->isEmpty() ? '—' : $labels->implode('; ');
     }
 
     public function statusLabel(): string

@@ -47,14 +47,18 @@
                 @error('undangan') <p class="text-xs text-status-danger mt-1">{{ $message }}</p> @enderror
             </div>
             <div class="mt-4">
-                <label class="block text-xs text-text-secondary mb-1">Undangan sebagai <span class="text-status-danger">*</span></label>
-                <select name="undangan_sebagai" required class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm">
-                    <option value="">— Pilih peran —</option>
+                <label class="block text-xs text-text-secondary mb-1">Diundang (penerima surat) <span class="text-status-danger">*</span></label>
+                <div class="space-y-2">
                     @foreach ($undanganOptions as $key => $label)
-                        <option value="{{ $key }}" @selected(old('undangan_sebagai') === $key)>{{ $label }}</option>
+                        <label class="flex items-start gap-2 rounded-xl border border-border bg-bg-surface px-3 py-2 cursor-pointer">
+                            <input type="checkbox" name="undangan_kepada[]" value="{{ $key }}"
+                                @checked(in_array($key, old('undangan_kepada', []))) class="mt-0.5">
+                            <span class="text-sm text-text-primary">{{ $label }}</span>
+                        </label>
                     @endforeach
-                </select>
-                @error('undangan_sebagai') <p class="text-xs text-status-danger mt-1">{{ $message }}</p> @enderror
+                </div>
+                <p class="text-xs text-text-secondary mt-1">Pilih satu atau lebih dosen yang namanya tercantum di surat undangan.</p>
+                @error('undangan_kepada') <p class="text-xs text-status-danger mt-1">{{ $message }}</p> @enderror
             </div>
         </div>
 

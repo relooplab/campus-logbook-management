@@ -24,7 +24,7 @@ class EmailVerificationTest extends AuditSmokeTest
 
         // Pastikan setting default OFF agar test eksplisit bisa flip-kan.
         $institution = Institution::active();
-        $institution->email_verification_required = false;
+        $institution->email_verification_override = false;
         $institution->save();
         Institution::flush();
     }
@@ -59,7 +59,7 @@ class EmailVerificationTest extends AuditSmokeTest
 
     public function test_login_redirects_unverified_user_to_notice_when_on(): void
     {
-        Institution::active()->update(['email_verification_required' => true]);
+        Institution::active()->update(['email_verification_override' => true]);
         Institution::flush();
         auth()->logout();
 
@@ -79,13 +79,13 @@ class EmailVerificationTest extends AuditSmokeTest
 
         $response->assertRedirect(route('verification.notice'));
 
-        Institution::active()->update(['email_verification_required' => false]);
+        Institution::active()->update(['email_verification_override' => false]);
         Institution::flush();
     }
 
     public function test_signed_url_verifies_email(): void
     {
-        Institution::active()->update(['email_verification_required' => true]);
+        Institution::active()->update(['email_verification_override' => true]);
         Institution::flush();
 
         $user = User::create([
@@ -107,7 +107,7 @@ class EmailVerificationTest extends AuditSmokeTest
         $response->assertSessionHas('success');
         $this->assertNotNull($user->fresh()->email_verified_at, 'User harus sudah verified setelah klik link.');
 
-        Institution::active()->update(['email_verification_required' => false]);
+        Institution::active()->update(['email_verification_override' => false]);
         Institution::flush();
     }
 
@@ -132,7 +132,7 @@ class EmailVerificationTest extends AuditSmokeTest
 
     public function test_middleware_no_op_when_setting_off(): void
     {
-        Institution::active()->update(['email_verification_required' => false]);
+        Institution::active()->update(['email_verification_override' => false]);
         Institution::flush();
 
         $user = User::create([

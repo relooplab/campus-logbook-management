@@ -53,7 +53,7 @@ class LoginController extends Controller
             \App\Support\Audit::log('Login berhasil', ['email' => $credentials['email'], 'user_id' => $user->id]);
 
             // Query langsung (skip cache) — lihat komentar di RegisterController.
-            $verificationRequired = (bool) Institution::query()->value('email_verification_required');
+            $verificationRequired = Institution::emailVerificationRequiredNow();
 
             // Jika system admin mengaktifkan verifikasi email wajib dan user
             // belum verifikasi, arahkan ke halaman notice.

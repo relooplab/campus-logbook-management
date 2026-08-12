@@ -35,7 +35,13 @@
                     <h2 class="font-heading font-semibold text-text-primary">Workspace Pribadi</h2>
                     <p class="text-sm text-text-secondary">File pribadi milik Anda — hanya Anda yang bisa melihat</p>
                 </div>
-                <span class="text-xs text-text-secondary">{{ number_format($personalTotalBytes / 1073741824, 2) }} GB{{ $personalQuotaBytes > 0 ? ' / ' . number_format($personalQuotaBytes / 1073741824, 2) . ' GB' : '' }}</span>
+                @php
+                    $usageSvc = app(\App\Services\StorageUsageService::class);
+                    $personalUsedLabel = $usageSvc->formatBytes($personalTotalBytes);
+                    $personalQuotaLabel = $personalQuotaBytes > 0 ? $usageSvc->formatBytes($personalQuotaBytes) : 'Tak terbatas';
+                    $personalQuotaText = $personalQuotaBytes > 0 ? $personalUsedLabel.' / '.$personalQuotaLabel : $personalUsedLabel.' — tidak ada kuota terdefinisi';
+                @endphp
+                <span class="text-xs text-text-secondary">Pemakaian: <span class="font-semibold text-text-primary">{{ $personalQuotaText }}</span></span>
             </div>
 
             @if ($personalQuotaBytes > 0)

@@ -52,7 +52,7 @@
                 <span class="text-2xl">📄</span>
                 <div class="min-w-0">
                     <p class="text-sm font-medium text-text-primary truncate">{{ $submission->undangan_original_name }}</p>
-                    <p class="text-xs text-text-secondary">Undangan sebagai: {{ $submission->undanganSebagaiLabel() }}</p>
+                    <p class="text-xs text-text-secondary">Diundang: {{ $submission->undanganKepadaLabel() }}</p>
                 </div>
             </div>
             <a href="{{ route('seminar-submission.undangan-download', $submission) }}" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Download</a>

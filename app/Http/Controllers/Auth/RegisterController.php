@@ -16,7 +16,8 @@ use Illuminate\View\View;
  * - Dosen: akun dibuat role 'dosen' status ACTIVE.
  *
  * Perilaku verifikasi email dikontrol oleh system admin via setting
- * `institutions.email_verification_required`:
+ * `institutions.email_verification_override` (null = Auto/ikuti SMTP,
+ * true = Wajib, false = Tidak Wajib):
  *   - OFF (default): auto-verify + auto-login (perilaku lama).
  *   - ON:  email_verified_at = null, auto-login, lalu middleware
  *          EnsureEmailVerified mengarahkan ke halaman verifikasi.
@@ -53,7 +54,7 @@ class RegisterController extends Controller
         ]);
 
         $role = $validated['role'] ?? 'mahasiswa';
-        $verificationRequired = (bool) Institution::query()->value('email_verification_required');
+        $verificationRequired = Institution::emailVerificationRequiredNow();
 
         // Semua role langsung aktif (tanpa persetujuan admin).
         $registrationStatus = 'active';

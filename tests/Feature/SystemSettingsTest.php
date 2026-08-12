@@ -36,7 +36,7 @@ class SystemSettingsTest extends AuditSmokeTest
 
         $response->assertOk();
         $response->assertSee('Pengaturan Autentikasi');
-        $response->assertSee('Wajib Verifikasi Email');
+        $response->assertSee('Verifikasi Email');
     }
 
     public function test_non_system_admin_cannot_access_settings(): void
@@ -47,44 +47,45 @@ class SystemSettingsTest extends AuditSmokeTest
         $response->assertForbidden();
     }
 
-    public function test_toggle_off_persists(): void
+    public function test_override_tidak_persists(): void
     {
         $sys = $this->systemAdmin();
 
         $response = $this->actingAs($sys)
             ->post(route('admin.system.settings.update'), [
-                'email_verification_required' => 0,
+                'email_verification_override' => 'tidak',
             ]);
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
 
         $this->assertFalse(
-            (bool) Institution::active()->fresh()->email_verification_required,
-            'Toggle OFF harus tersimpan sebagai false.'
+            (bool) Institution::active()->fresh()->email_verification_override,
+            'Override "tidak" harus tersimpan sebagai false.'
         );
     }
 
-    public function test_toggle_on_requires_smtp_fields(): void
+    public function test_smtp_fields_optional(): void
     {
+        // SMTP kini opsional — menyimpan override tanpa SMTP harus sukses.
         $sys = $this->systemAdmin();
 
         $response = $this->actingAs($sys)
             ->post(route('admin.system.settings.update'), [
-                'email_verification_required' => 1,
-                // SMTP fields sengaja kosong -> harus error.
+                'email_verification_override' => 'wajib',
             ]);
 
-        $response->assertSessionHasErrors(['mail_mailer', 'mail_host', 'mail_port', 'mail_from_address', 'mail_from_name']);
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
     }
 
-    public function test_toggle_on_with_smtp_succeeds(): void
+    public function test_override_wajib_with_smtp_succeeds(): void
     {
         $sys = $this->systemAdmin();
 
         $response = $this->actingAs($sys)
             ->post(route('admin.system.settings.update'), [
-                'email_verification_required' => 1,
+                'email_verification_override' => 'wajib',
                 'mail_mailer' => 'log',
                 'mail_host' => 'smtp.test.local',
                 'mail_port' => 1025,
@@ -99,32 +100,20 @@ class SystemSettingsTest extends AuditSmokeTest
         $response->assertSessionHas('success');
 
         $inst = Institution::active()->fresh();
-        $this->assertTrue((bool) $inst->email_verification_required);
+        $this->assertSame(1, $inst->email_verification_override, 'Override "wajib" harus tersimpan true.');
         $this->assertSame('log', $inst->mail_mailer);
         $this->assertSame('smtp.test.local', $inst->mail_host);
         $this->assertSame(1025, (int) $inst->mail_port);
     }
 
-    public function test_smtp_form_hidden_when_toggle_off(): void
+    public function test_smtp_form_always_visible(): void
     {
         $sys = $this->systemAdmin();
-        Institution::active()->update(['email_verification_required' => false]);
-        Institution::flush();
 
         $response = $this->actingAs($sys)->get(route('admin.system.settings'));
         $response->assertOk();
-        // smtp-form hidden class
-        $this->assertStringContainsString('id="smtp-form" class="space-y-4 pt-2 border-t border-border hidden"', $response->getContent());
-    }
-
-    public function test_smtp_form_visible_when_toggle_on(): void
-    {
-        $sys = $this->systemAdmin();
-        Institution::active()->update(['email_verification_required' => true]);
-        Institution::flush();
-
-        $response = $this->actingAs($sys)->get(route('admin.system.settings'));
-        $response->assertOk();
-        $this->assertStringContainsString('id="smtp-form" class="space-y-4 pt-2 border-t border-border "', $response->getContent());
+        // Form SMTP selalu tampil (tanpa class hidden) & ada opsi Auto.
+        $this->assertStringContainsString('id="smtp-form" class="space-y-4 pt-2 border-t border-border"', $response->getContent());
+        $this->assertStringContainsString('Auto — ikuti SMTP', $response->getContent());
     }
 }
