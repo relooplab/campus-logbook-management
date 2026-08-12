@@ -1,3 +1,10 @@
+## [0.48.1](https://github.com/relooplab/campus-logbook-management/compare/v0.48.0...v0.48.1) (2026-08-12)
+
+
+### Bug Fixes
+
+* cegah redirect-loop verifikasi-afiliasi untuk dosen baru belum verifikasi ([d3d9b3f](https://github.com/relooplab/campus-logbook-management/commit/d3d9b3f8c802dbcf1b957f3e60185b6994e6f9d1))
+
 # [0.48.0](https://github.com/relooplab/campus-logbook-management/compare/v0.47.1...v0.48.0) (2026-08-12)
 
 
