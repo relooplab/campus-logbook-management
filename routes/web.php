@@ -73,17 +73,20 @@ Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'
 // alamat) karena tidak di-wrapper middleware `ensure.email.verified`.
 Route::middleware('auth')->put('/profile/email', [ProfileController::class, 'updateEmail'])->name('profile.email');
 
-Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])->group(function () {
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-    Route::get('/dashboard', DashboardController::class)->name('dashboard');
-
-    // Verifikasi email (notice/verify/send). Halaman notice & send tidak
-    // dipasang middleware `ensure.email.verified` agar user yang belum
-    // verified tetap bisa melihat & mengirim ulang tautan verifikasi.
+// Verifikasi email (notice/send) — auth-only, TERPISAH dari grup yang dilindungi
+// `ensure.dosen.affiliation` & `ensure.email.verified`. Tanpa ini, user yang belum
+// verifikasi (terutama dosen yang belum afiliasi) terjebak redirect-loop antara
+// halaman verifikasi dan halaman afiliasi (ERR_TOO_MANY_REDIRECTS).
+Route::middleware('auth')->group(function () {
     Route::get('/email/verify', [VerificationController::class, 'showNotice'])->name('verification.notice');
     Route::post('/email/send', [VerificationController::class, 'resend'])
         ->middleware('throttle:6,1')
         ->name('verification.send');
+});
+
+Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])->group(function () {
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     // Persetujuan attachment dosen (mahasiswa pilih dosen → dosen setujui/tolak).
     Route::middleware('role_or_permission:dosen|admin')->group(function () {
