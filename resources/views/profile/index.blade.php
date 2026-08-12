@@ -89,16 +89,25 @@
                 @elseif ($user->isDosen())
                 <div>
                     <label class="block text-sm font-medium mb-1">NIDN</label>
-                    <input type="text" value="{{ $user->nidn }}" disabled readonly
-                        class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm text-text-secondary">
-                    <p class="text-xs text-text-secondary mt-1">
-                        Jika NIDN Anda salah, hubungi admin:
-                        @if ($adminContactEmail)
-                            <a href="mailto:{{ $adminContactEmail }}" class="text-brand hover:underline">{{ $adminContactEmail }}</a>
-                        @else
-                            <span>silakan hubungi admin institusi Anda.</span>
-                        @endif
-                    </p>
+                    @if ($user->nidn)
+                        <input type="text" value="{{ $user->nidn }}" disabled readonly
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm text-text-secondary">
+                        <p class="text-xs text-text-secondary mt-1">NIDN hanya dapat diisi satu kali dan tidak dapat diubah sendiri setelah terisi. Jika NIDN Anda salah, hubungi admin:
+                            @if ($adminContactEmail)
+                                <a href="mailto:{{ $adminContactEmail }}" class="text-brand hover:underline">{{ $adminContactEmail }}</a>
+                            @else
+                                <span>silakan hubungi admin institusi Anda.</span>
+                            @endif
+                        </p>
+                    @else
+                        <input type="text" name="nidn" id="nidn" inputmode="numeric" pattern="\d{10}" maxlength="10"
+                            value="{{ old('nidn') }}" placeholder="10 digit angka"
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                        <p class="text-xs text-text-secondary mt-1">NIDN hanya dapat diisi <b>satu kali</b> dan tidak dapat diubah sendiri setelah terisi. Jika salah, hubungi admin.</p>
+                        @error('nidn')
+                            <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    @endif
                 </div>
                 @endif
                 <div> <label class="block text-sm font-medium mb-1">Foto Profil</label> <input type="file"

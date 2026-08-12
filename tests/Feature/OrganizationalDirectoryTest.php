@@ -51,7 +51,7 @@ class OrganizationalDirectoryTest extends AuditSmokeTest
             'password' => 'password',
             'password_confirmation' => 'password',
             'role' => 'dosen',
-            'nidn' => '1234567890',
+            // NIDN TIDAK lagi dikirim/pengunci di register.
         ]);
 
         // Dosen diarahkan ke halaman afiliasi (wajib isi) sebelum fitur lain.
@@ -59,9 +59,15 @@ class OrganizationalDirectoryTest extends AuditSmokeTest
 
         $user = User::where('email', 'dosen-baru@test.com')->first();
         $this->assertNotNull($user);
-        $this->assertEquals('1234567890', $user->nidn);
+        $this->assertNull($user->nidn, 'Register tidak lagi mengunci NIDN.');
         $this->assertTrue($user->hasRole('dosen'));
         $this->assertNull($user->primaryUniversity());
+
+        // Identitas (NIDN) diisi setelah mendaftar, via profil (one-time).
+        $this->actingAs($user)->put(route('profile.update'), [
+            'name' => 'Dosen Baru', 'nidn' => '1234567890',
+        ])->assertRedirect();
+        $this->assertSame('1234567890', $user->fresh()->nidn);
 
         // Instansi kini diisi lewat halaman profil (Afiliasi Institusi).
         $this->actingAs($user)

@@ -39,21 +39,9 @@ class RegisterController extends Controller
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
             'role' => ['required', 'in:mahasiswa,dosen'],
-            // Identitas: NIDN untuk dosen, NIM untuk mahasiswa (unik lintas kolom).
-            // NIM wajib untuk mahasiswa (konsisten dengan updateProfile).
-            // `nullable` wajib ada: saat role=dosen, field nim tetap dikirim (input
-            // hidden) dan diubah '' -> null oleh middleware ConvertEmptyStringsToNull;
-            // tanpa nullable, rule `string` akan gagal pada nilai null.
-            'nim' => ['nullable', 'required_if:role,mahasiswa', 'string', 'max:30', function ($attr, $value, $fail) {
-                if ($value && User::identifierIsTaken($value)) {
-                    $fail('NIM/NIDN ini sudah dipakai akun lain.');
-                }
-            }],
-            'nidn' => ['nullable', 'string', 'max:20', function ($attr, $value, $fail) {
-                if ($value && User::identifierIsTaken($value)) {
-                    $fail('NIM/NIDN ini sudah dipakai akun lain.');
-                }
-            }],
+            // NIM/NIDN TIDAK dikumpulkan saat pendaftaran. Identitas diisi
+            // setelah verifikasi email (via halaman profil) agar tidak "mengunci"
+            // NIM/NIDN oleh akun yang belum terverifikasi / tak pernah dikonfirmasi.
         ]);
 
         $role = $validated['role'] ?? 'mahasiswa';
@@ -66,9 +54,8 @@ class RegisterController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            // Mahasiswa -> NIM; Dosen -> NIDN. Masing-masing di kolomnya sendiri.
-            'nim' => $role === 'mahasiswa' ? ($validated['nim'] ?? null) : null,
-            'nidn' => $role === 'dosen' ? ($validated['nidn'] ?? null) : null,
+            'nim' => null,
+            'nidn' => null,
             'registration_status' => $registrationStatus,
             // Jika verifikasi email wajib, biarkan null agar user dipaksa
             // verifikasi sebelum bisa masuk fitur aplikasi.

@@ -57,6 +57,12 @@ Schedule::command('students:delete-inactive')
     ->timezone('Asia/Jakarta')
     ->withoutOverlapping();
 
+// Bersihkan akun yang tidak pernah verifikasi email (>7 hari) siang (harian 04:00).
+Schedule::command('users:delete-unverified')
+    ->dailyAt('04:00')
+    ->timezone('Asia/Jakarta')
+    ->withoutOverlapping();
+
 // Ingatkan dosen mengisi nilai seminar/sidang yang sudah berlangsung (harian 10:00).
 Schedule::command('sidang:remind-grading')
     ->dailyAt('10:00')

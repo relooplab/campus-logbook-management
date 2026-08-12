@@ -64,6 +64,16 @@ class ProfileController extends Controller
 
         // Field akademik khusus dosen.
         if ($user->isDosen()) {
+            // NIDN: one-time. Validasi berlaku hanya jika dikirim; penyimpanan
+            // dijaga terpisah di bawah (hanya jika `nidn` masih kosong).
+            $rules['nidn'] = [
+                'nullable', 'string', 'max:20', 'regex:/^\d{10}$/',
+                function ($attr, $value, $fail) use ($user) {
+                    if ($value && \App\Models\User::identifierIsTaken($value, $user->id)) {
+                        $fail('NIM/NIDN ini sudah dipakai akun lain.');
+                    }
+                },
+            ];
             $rules['google_scholar'] = ['nullable', 'url', 'max:255'];
             $rules['orcid'] = ['nullable', 'string', 'max:40'];
             $rules['sinta'] = ['nullable', 'string', 'max:40'];
@@ -74,6 +84,12 @@ class ProfileController extends Controller
         }
 
         $validated = $request->validate($rules);
+
+        // NIDN dosen: hanya bisa diisi SATU KALI (saat masih kosong). Setelah
+        // terisi, tidak bisa diubah sendiri lewat profil (hanya via admin).
+        if ($user->isDosen() && $user->nidn !== null) {
+            unset($validated['nidn']);
+        }
 
         // Konversi nilai checkbox opt-in jalur bimbingan (khusus dosen).
         if ($user->isDosen()) {

@@ -64,49 +64,6 @@ class NimNidnUniquenessTest extends AuditSmokeTest
         $this->assertSame($m->id, $found->id);
     }
 
-    public function test_register_rejects_duplicate_nidn(): void
-    {
-        $dosen = new User([
-            'name' => 'Dosen Existing', 'email' => 'de-'.uniqid().'@audit.test',
-            'password' => bcrypt('x'), 'registration_status' => 'active', 'whatsapp' => '628',
-        ]);
-        $dosen->nidn = '0000000999';
-        $dosen->save();
-
-        $response = $this->post(route('register'), [
-            'name' => 'Dosen Baru',
-            'email' => 'db-'.uniqid().'@audit.test',
-            'password' => 'secret123',
-            'password_confirmation' => 'secret123',
-            'role' => 'dosen',
-            'nidn' => '0000000999', // bentrok dengan NIDN dosen existing
-        ]);
-
-        $response->assertSessionHasErrors('nidn');
-    }
-
-    public function test_register_rejects_nim_matching_existing_nidn(): void
-    {
-        $dosen = new User([
-            'name' => 'Dosen X', 'email' => 'dx-'.uniqid().'@audit.test',
-            'password' => bcrypt('x'), 'registration_status' => 'active', 'whatsapp' => '628',
-        ]);
-        $dosen->nidn = '0000000777';
-        $dosen->save();
-
-        // Mahasiswa daftar pakai NIM yang = NIDN dosen existing -> tolak lintas kolom.
-        $response = $this->post(route('register'), [
-            'name' => 'Mhs Baru',
-            'email' => 'mb-'.uniqid().'@audit.test',
-            'password' => 'secret123',
-            'password_confirmation' => 'secret123',
-            'role' => 'mahasiswa',
-            'nim' => '0000000777',
-        ]);
-
-        $response->assertSessionHasErrors('nim');
-    }
-
     public function test_store_user_rejects_duplicate_nim(): void
     {
         $m = new User([
@@ -128,40 +85,89 @@ class NimNidnUniquenessTest extends AuditSmokeTest
         $response->assertSessionHasErrors('nim');
     }
 
-    /**
-     * Regresi: form register selalu mengirim `nim=""` (input hidden walau tab
-     * "Dosen" aktif). Middleware ConvertEmptyStringsToNull mengubah '' -> null.
-     * Tanpa `nullable`, rule `string` pada nim akan gagal ("must be a string")
-     * untuk pendaftaran dosen. Dosen harus tetap bisa daftar.
-     */
-    public function test_dosen_register_accepts_empty_nim_field(): void
+    /** Dosen pembantu untuk test pengisian NIDN via profil. */
+    private function dosen(?string $nidn = null): User
     {
+        Role::firstOrCreate(['name' => 'dosen', 'guard_name' => 'web']);
+
+        $u = new User([
+            'name' => 'Dosen Profil', 'email' => 'dosen-n-'.uniqid().'@audit.test',
+            'password' => bcrypt('x'), 'registration_status' => 'active',
+            'whatsapp' => '628', 'email_verified_at' => now(),
+        ]);
+        $u->save();
+        $u->assignRole('dosen');
+        if ($nidn) {
+            $u->forceFill(['nidn' => $nidn])->save();
+        }
+
+        return $u;
+    }
+
+    /** Register tidak lagi mengunci NIM/NIDN — identitas diisi setelah verifikasi email. */
+    public function test_register_does_not_lock_nidn(): void
+    {
+        $email = 'dosen-reg-'.uniqid().'@audit.test';
         $response = $this->post(route('register'), [
-            'name' => 'Dosen EmptyNim',
-            'email' => 'dosen-empty-nim-'.uniqid().'@audit.test',
+            'name' => 'Dosen Reg',
+            'email' => $email,
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
             'role' => 'dosen',
-            'nim' => '', // dikirim sebagai string kosong (seperti browser)
-            'nidn' => 'NIDN-'.uniqid(),
+            'nidn' => '1234567890', // dikirim tapi tidak boleh dikunci di pendaftaran
         ]);
 
         $response->assertSessionHasNoErrors();
         $response->assertRedirect();
+
+        $user = User::where('email', $email)->first();
+        $this->assertNotNull($user);
+        $this->assertNull($user->nidn, 'NIDN tidak boleh tersimpan saat register.');
     }
 
-    /** Mahasiswa tetap wajib NIM — kalau dibiarkan kosong, harus error. */
-    public function test_mahasiswa_register_requires_nim(): void
+    public function test_dosen_can_set_nidn_once_in_profile(): void
     {
-        $response = $this->post(route('register'), [
-            'name' => 'Mhs NoNim',
-            'email' => 'mhs-no-nim-'.uniqid().'@audit.test',
-            'password' => 'secret123',
-            'password_confirmation' => 'secret123',
-            'role' => 'mahasiswa',
-            'nim' => '',
-        ]);
+        $dosen = $this->dosen();
+        $this->assertNull($dosen->nidn);
 
-        $response->assertSessionHasErrors('nim');
+        $this->actingAs($dosen)->put(route('profile.update'), [
+            'name' => $dosen->name, 'nidn' => '1234567890',
+        ])->assertRedirect()->assertSessionHas('success');
+
+        $this->assertSame('1234567890', $dosen->fresh()->nidn);
+    }
+
+    public function test_dosen_cannot_change_nidn_after_set(): void
+    {
+        $dosen = $this->dosen('1234567890');
+
+        $this->actingAs($dosen)->put(route('profile.update'), [
+            'name' => $dosen->name, 'nidn' => '0987654321',
+        ])->assertRedirect()->assertSessionHas('success');
+
+        $this->assertSame('1234567890', $dosen->fresh()->nidn, 'NIDN tidak boleh berubah lewat profil setelah terisi.');
+    }
+
+    public function test_dosen_nidn_must_be_10_digits_in_profile(): void
+    {
+        $dosen = $this->dosen();
+
+        $this->actingAs($dosen)->put(route('profile.update'), [
+            'name' => $dosen->name, 'nidn' => '12345',
+        ])->assertSessionHasErrors('nidn');
+
+        $this->assertNull($dosen->fresh()->nidn);
+    }
+
+    public function test_dosen_nidn_must_be_unique_globally_in_profile(): void
+    {
+        $other = $this->dosen('1111222233');
+
+        $dosen = $this->dosen();
+        $this->actingAs($dosen)->put(route('profile.update'), [
+            'name' => $dosen->name, 'nidn' => '1111222233',
+        ])->assertSessionHasErrors('nidn');
+
+        $this->assertNull($dosen->fresh()->nidn);
     }
 }
