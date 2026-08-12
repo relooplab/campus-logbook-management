@@ -1,3 +1,10 @@
+# [0.45.0](https://github.com/relooplab/campus-logbook-management/compare/v0.44.0...v0.45.0) (2026-08-12)
+
+
+### Features
+
+* undangan seminar multi-penerima, override verifikasi email, dan SMTP terenkripsi ([e12c831](https://github.com/relooplab/campus-logbook-management/commit/e12c831f460b791e3f169709b09bc38aad4571fa))
+
 # [0.44.0](https://github.com/relooplab/campus-logbook-management/compare/v0.43.0...v0.44.0) (2026-08-11)
 
 
