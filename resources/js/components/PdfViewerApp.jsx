@@ -87,7 +87,6 @@ function PdfViewerApp() {
   const [showOverview, setShowOverview] = useState(false); // daftar ringkas komentar dosen (overview)
 
   const pdfRef = useRef(null);
-  const redirectTimer = useRef(null); // timer auto-redirect ke halaman revisi (beri jeda feedback)
   const canvasRefs = useRef([]);
   const pageSizeRefs = useRef([]);
   const stageRef = useRef(null);
@@ -159,11 +158,6 @@ function PdfViewerApp() {
       renderAllPages(pdfRef.current, scale);
     }
   }, [scale, numPages]);
-
-  // Bersihkan timer auto-redirect bila komponen dilepas (mencegah navigasi ganda).
-  useEffect(() => () => {
-    if (redirectTimer.current) clearTimeout(redirectTimer.current);
-  }, []);
 
 
   // ---------------------------------------------------------------- drag draw
@@ -310,14 +304,6 @@ function PdfViewerApp() {
       } else {
         setSelected(null);
         setAllResponded(true);
-        // Feedback singkat dulu (~1 dtk) sebelum auto-redirect ke halaman revisi,
-        // agar mahasiswa sempat sadar "semua sudah beres".
-        if (redirectTimer.current) clearTimeout(redirectTimer.current);
-        if (returnUrl) {
-          redirectTimer.current = setTimeout(() => {
-            window.location.href = returnUrl;
-          }, 1000);
-        }
       }
     } catch (e) {
       alert('Gagal menyimpan balasan.');
@@ -364,13 +350,8 @@ function PdfViewerApp() {
     });
   }
 
-  // Kembali ke halaman revisi. Bersihkan timer auto-redirect agar tidak bertabrakan
-  // (anti double-nav) bila pengguna menekan tombol manual sebelum jeda berakhir.
+  // Kembali ke halaman revisi (manual, via tombol di banner sukses).
   function goBackToRevision() {
-    if (redirectTimer.current) {
-      clearTimeout(redirectTimer.current);
-      redirectTimer.current = null;
-    }
     if (returnUrl) window.location.href = returnUrl;
   }
 

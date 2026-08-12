@@ -23,14 +23,17 @@ class MahasiswaTaPolicy
             return true;
         }
 
-        // Dosen pembimbing ATAU penguji dapat melihat workspace.
-        if ($user->isDosen() && ($mahasiswaTa->isPembimbing($user) || $mahasiswaTa->isPenguji($user))) {
+        // Dosen pembimbing ATAU penguji dapat melihat workspace,
+        // hanya setelah program disetujui (pending/ditolak → ditunda).
+        if ($user->isDosen()
+            && $mahasiswaTa->dosenHasGrantedAccess()
+            && ($mahasiswaTa->isPembimbing($user) || $mahasiswaTa->isPenguji($user))) {
             return true;
         }
 
         // Dosen lain yang punya hubungan langsung dengan pembimbing
-        // (TA bersama atau grup yang sama) dapat melihat workspace.
-        if ($user->isDosen()) {
+        // (TA bersama atau grup yang sama) — juga hanya setelah disetujui.
+        if ($user->isDosen() && $mahasiswaTa->dosenHasGrantedAccess()) {
             foreach ($mahasiswaTa->allDosenIds() as $dosenId) {
                 if ($dosen = User::find($dosenId)) {
                     if ($user->hasDirectRelation($dosen)) {

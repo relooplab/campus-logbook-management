@@ -59,11 +59,12 @@ class DashboardController extends Controller
 
     private function dosenDashboard(User $user): View
     {
-        // TA where the dosen is pembimbing 1/2 atau penguji 1/2.
+        // TA where the dosen is pembimbing 1/2 atau penguji 1/2 (sudah disetujui).
         $tas = MahasiswaTa::where(fn ($q) => $q->where('pembimbing_1_id', $user->id)
             ->orWhere('pembimbing_2_id', $user->id)
             ->orWhere('penguji_1_id', $user->id)
             ->orWhere('penguji_2_id', $user->id))
+            ->whereNotIn('status_ta', [MahasiswaTa::STATUS_PENDING_APPROVAL, MahasiswaTa::STATUS_DITOLAK])
             ->with(['mahasiswa', 'pembimbing1', 'pembimbing2', 'penguji1', 'penguji2'])
             ->latest()
             ->get();

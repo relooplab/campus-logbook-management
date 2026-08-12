@@ -407,4 +407,14 @@ class MahasiswaTa extends Model
 
         return $this->mahasiswa;
     }
+
+    /**
+     * Apakah dosen sudah "diberi akses" ke data program ini.
+     * Program masih PENDING/DITOLAK belum dianggap milik dosen →
+     * akses materi/workspace ditunda sampai disetujui.
+     */
+    public function dosenHasGrantedAccess(): bool
+    {
+        return ! in_array($this->status_ta, [self::STATUS_PENDING_APPROVAL, self::STATUS_DITOLAK], true);
+    }
 }

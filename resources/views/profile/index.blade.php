@@ -36,6 +36,38 @@
                 @endforeach
             </div>
         </div>
+
+        <div class="rounded-xl border border-border bg-bg-surface p-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <p class="text-sm font-medium text-text-primary">Alamat Email</p>
+                    <p class="text-xs text-text-secondary">{{ $user->email }}</p>
+                </div>
+                <button type="button" onclick="document.getElementById('email-change-form').classList.toggle('hidden')"
+                    class="text-sm text-brand font-medium hover:underline">Ubah Email</button>
+            </div>
+            <form method="POST" action="{{ route('profile.email') }}" id="email-change-form" class="hidden mt-3 space-y-3">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label class="block text-xs text-text-secondary mb-1">Email Baru</label>
+                    <input type="email" name="email" required value="{{ old('email') }}" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs text-text-secondary mb-1">Konfirmasi Email Baru</label>
+                    <input type="email" name="email_confirmation" required value="{{ old('email_confirmation') }}" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs text-text-secondary mb-1">Password Saat Ini</label>
+                    <input type="password" name="current_password" required class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                </div>
+                @error('email')<p class="text-xs text-status-danger">{{ $message }}</p>@enderror
+                @error('current_password')<p class="text-xs text-status-danger">{{ $message }}</p>@enderror
+                @if (session('info'))<p class="text-xs text-status-info">{{ session('info') }}</p>@endif
+                <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-semibold">Simpan Email</button>
+            </form>
+        </div>
+
         <form method="POST" action="{{ route("profile.update") }}" enctype="multipart/form-data" class="space-y-4">
             @csrf @method("PUT") <div class="grid sm:grid-cols-2 gap-4">
                 <div> <label class="block text-sm font-medium mb-1" for="name">Nama Lengkap</label> <input

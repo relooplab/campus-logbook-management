@@ -62,6 +62,17 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [RegisterController::class, 'register'])->middleware('throttle:5,1')->name('register');
 });
 
+// Verifikasi email via signed link — TANPA wajib login dulu (agar bisa dipakai
+// di perangkat/browser mana pun). Keabsahan URL ditangani middleware `signed`,
+// lalu id/hash divalidasi di controller sebelum user di-login.
+Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('verification.verify');
+
+// Ubah email (self-service) — bisa diakses user yang belum verified (mis. salah
+// alamat) karena tidak di-wrapper middleware `ensure.email.verified`.
+Route::middleware('auth')->put('/profile/email', [ProfileController::class, 'updateEmail'])->name('profile.email');
+
 Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
@@ -70,9 +81,6 @@ Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])
     // dipasang middleware `ensure.email.verified` agar user yang belum
     // verified tetap bisa melihat & mengirim ulang tautan verifikasi.
     Route::get('/email/verify', [VerificationController::class, 'showNotice'])->name('verification.notice');
-    Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
-        ->middleware(['signed', 'throttle:6,1'])
-        ->name('verification.verify');
     Route::post('/email/send', [VerificationController::class, 'resend'])
         ->middleware('throttle:6,1')
         ->name('verification.send');

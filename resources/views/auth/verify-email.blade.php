@@ -29,4 +29,33 @@
             Keluar
         </button>
     </form>
+
+    <div class="mt-6 pt-4 border-t border-border">
+        <details class="text-sm">
+            <summary class="cursor-pointer text-text-secondary font-medium">Alamat email salah? Ganti email</summary>
+            <form method="POST" action="{{ route('profile.email') }}" class="mt-3 space-y-3">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label class="block text-xs text-text-secondary mb-1">Email Baru</label>
+                    <input type="email" name="email" required value="{{ old('email') }}" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs text-text-secondary mb-1">Konfirmasi Email Baru</label>
+                    <input type="email" name="email_confirmation" required value="{{ old('email_confirmation') }}" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs text-text-secondary mb-1">Password Saat Ini</label>
+                    <input type="password" name="current_password" required class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                </div>
+                @if ($errors->any())
+                    <p class="text-xs text-status-danger">{{ $errors->first() }}</p>
+                @endif
+                <button type="submit"
+                    class="w-full rounded-xl bg-bg-hover hover:bg-border text-text-primary py-2 text-sm font-medium transition-colors">
+                    Simpan &amp; Kirim Ulang Verifikasi
+                </button>
+            </form>
+        </details>
+    </div>
 @endsection

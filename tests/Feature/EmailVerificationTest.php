@@ -111,6 +111,36 @@ class EmailVerificationTest extends AuditSmokeTest
         Institution::flush();
     }
 
+    public function test_signed_url_verifies_unauthenticated_user(): void
+    {
+        // Inti perbaikan: link verifikasi harus bisa dipakai TANPA login dulu.
+        Institution::active()->update(['email_verification_override' => true]);
+        Institution::flush();
+
+        $user = User::create([
+            'name' => 'Guest Verify', 'email' => 'guest-verify@audit.test',
+            'password' => Hash::make('secret123'), 'registration_status' => 'active',
+            'nim' => 'NIM-GV', 'whatsapp' => '628',
+            'email_verified_at' => null,
+        ]);
+        Role::firstOrCreate(['name' => 'mahasiswa', 'guard_name' => 'web']);
+        $user->assignRole('mahasiswa');
+
+        $url = URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
+            'id' => $user->id, 'hash' => sha1($user->email),
+        ]);
+
+        // Tanpa actingAs → sebagai tamu (bukan di-login).
+        $response = $this->get($url);
+
+        $response->assertRedirect();
+        $this->assertNotNull($user->fresh()->email_verified_at, 'Harus verified walau tidak login saat klik link.');
+        $this->assertAuthenticatedAs($user);
+
+        Institution::active()->update(['email_verification_override' => false]);
+        Institution::flush();
+    }
+
     public function test_resend_sends_notification(): void
     {
         $user = User::create([

@@ -27,6 +27,7 @@ class MaterialsReviewQueue
     {
         return MahasiswaTa::where('pembimbing_1_id', $user->id)
             ->orWhere('pembimbing_2_id', $user->id)
+            ->whereNotIn('status_ta', [MahasiswaTa::STATUS_PENDING_APPROVAL, MahasiswaTa::STATUS_DITOLAK])
             ->pluck('id');
     }
 
@@ -42,6 +43,7 @@ class MaterialsReviewQueue
                 $q->whereIn('mahasiswa_ta_id', $taIds)
                     ->orWhere('dosen_id', $user->id);
             })
+            ->whereHas('mahasiswaTa', fn ($q) => $q->whereNotIn('status_ta', [MahasiswaTa::STATUS_PENDING_APPROVAL, MahasiswaTa::STATUS_DITOLAK]))
             ->with(['mahasiswaTa.mahasiswa'])
             ->orderByDesc('submitted_at')
             ->get();
@@ -59,7 +61,7 @@ class MaterialsReviewQueue
                         ->orWhere('pembimbing_2_id', $user->id)
                         ->orWhere('penguji_1_id', $user->id)
                         ->orWhere('penguji_2_id', $user->id);
-                });
+                })->whereNotIn('status_ta', [MahasiswaTa::STATUS_PENDING_APPROVAL, MahasiswaTa::STATUS_DITOLAK]);
             })
             ->whereDoesntHave('reads', fn ($q) => $q->where('user_id', $user->id))
             ->with(['mahasiswaTa.mahasiswa'])

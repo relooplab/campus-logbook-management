@@ -144,9 +144,11 @@ class SeminarSubmissionController extends Controller
     /**
      * Detail submission.
      */
-    public function show(Request $request, SeminarSubmission $submission): View
+    public function show(Request $request, SeminarSubmission $submission): View|RedirectResponse
     {
-        $this->authorizeView($request->user(), $submission);
+        if ($r = $this->authorizeView($request->user(), $submission)) {
+            return $r;
+        }
 
         $submission->load(['mahasiswaTa.mahasiswa', 'mahasiswaTa.pembimbing1', 'mahasiswaTa.pembimbing2', 'mahasiswaTa.penguji1', 'mahasiswaTa.penguji2', 'workspaceFile', 'sidang.grades.user']);
 
@@ -265,7 +267,9 @@ class SeminarSubmissionController extends Controller
      */
     public function updateHardcopyNote(Request $request, SeminarSubmission $submission): RedirectResponse
     {
-        $this->authorizeDosen($request->user(), $submission);
+        if ($r = $this->authorizeDosen($request->user(), $submission)) {
+            return $r;
+        }
 
         $validated = $request->validate([
             'catatan_hardcopy' => ['required', 'string'],
@@ -281,7 +285,9 @@ class SeminarSubmissionController extends Controller
      */
     public function downloadUndangan(Request $request, SeminarSubmission $submission)
     {
-        $this->authorizeView($request->user(), $submission);
+        if ($r = $this->authorizeView($request->user(), $submission)) {
+            return $r;
+        }
 
         return Storage::disk('local')->download($submission->undangan_path, $submission->undangan_original_name);
     }
@@ -291,7 +297,9 @@ class SeminarSubmissionController extends Controller
      */
     public function downloadMateri(Request $request, SeminarSubmission $submission)
     {
-        $this->authorizeView($request->user(), $submission);
+        if ($r = $this->authorizeView($request->user(), $submission)) {
+            return $r;
+        }
 
         return Storage::disk('local')->download($submission->materi_path, $submission->materi_original_name);
     }
@@ -343,22 +351,24 @@ class SeminarSubmissionController extends Controller
     }
 
     /**
-     * Otorisasi akses view: member, dosen terkait, atau admin.
+     * Otorisasi akses view. Mengembalikan redirect bila dosen belum
+     * menyetujui program (arahkan ke halaman persetujuan), selain itu null/403.
      */
-    private function authorizeView($user, SeminarSubmission $submission): void
+    private function authorizeView($user, SeminarSubmission $submission): ?RedirectResponse
     {
         $ta = $submission->mahasiswaTa;
 
-        if ($user->isAdmin()) {
-            return;
-        }
-
-        if ($ta->isMember($user)) {
-            return;
+        if ($user->isAdmin() || $ta->isMember($user)) {
+            return null;
         }
 
         if ($user->isDosen() && ($ta->isPembimbing($user) || $ta->isPenguji($user))) {
-            return;
+            if ($ta->dosenHasGrantedAccess()) {
+                return null;
+            }
+
+            return redirect()->route('approval.index')
+                ->with('warning', 'Mahasiswa ini belum disetujui. Setujui programnya untuk mengakses materinya.');
         }
 
         abort(403);
@@ -366,16 +376,26 @@ class SeminarSubmissionController extends Controller
 
     /**
      * Otorisasi dosen terkait (pembimbing/penguji) atau admin.
+     * Redirect ke halaman persetujuan bila program belum disetujui.
      */
-    private function authorizeDosen($user, SeminarSubmission $submission): void
+    private function authorizeDosen($user, SeminarSubmission $submission): ?RedirectResponse
     {
         $ta = $submission->mahasiswaTa;
 
         if ($user->isAdmin()) {
-            return;
+            return null;
         }
 
-        abort_unless($user->isDosen() && ($ta->isPembimbing($user) || $ta->isPenguji($user)), 403);
+        if ($user->isDosen() && ($ta->isPembimbing($user) || $ta->isPenguji($user))) {
+            if ($ta->dosenHasGrantedAccess()) {
+                return null;
+            }
+
+            return redirect()->route('approval.index')
+                ->with('warning', 'Mahasiswa ini belum disetujui. Setujui programnya untuk mengakses materinya.');
+        }
+
+        abort(403);
     }
 
 }

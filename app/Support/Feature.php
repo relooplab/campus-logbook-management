@@ -166,9 +166,10 @@ class Feature
             return 0;
         }
 
-        // 1. Override admin — tetap menang mutlak.
+        // 1. Override admin — menang mutlak. Nilai 0 (atau kosong) dianggap
+        //    "ikuti paket/pool" (konsisten dengan copy UI), bukan unlimited.
         $override = UserPlanOverride::where('user_id', $user->id)->first();
-        if ($override && $override->storage_limit_mb !== null) {
+        if ($override && $override->storage_limit_mb !== null && $override->storage_limit_mb > 0) {
             return (int) $override->storage_limit_mb;
         }
 

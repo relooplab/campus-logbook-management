@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,19 +25,29 @@ class VerificationController extends Controller
     }
 
     /**
-     * Verifikasi email via signed URL (dari email).
+     * Verifikasi email via signed link (dari email).
+     * Bisa dipakai tanpa login: keabsahan URL ditangani middleware `signed`
+     * dan `hash` dibandingkan dengan email user. Setelah sukses, user di-login.
      */
-    public function verify(EmailVerificationRequest $request): RedirectResponse
+    public function verify(Request $request, int $id, string $hash): RedirectResponse
     {
-        $user = $request->user();
+        $user = User::find($id);
+
+        if (! $user || ! hash_equals((string) $hash, sha1($user->email))) {
+            abort(403);
+        }
 
         if ($user->hasVerifiedEmail()) {
+            Auth::login($user);
+
             return redirect()->intended(route('dashboard'));
         }
 
         if ($user->markEmailAsVerified()) {
             event(new Verified($user));
         }
+
+        Auth::login($user);
 
         return redirect()->intended(route('dashboard'))
             ->with('success', 'Email Anda berhasil diverifikasi.');

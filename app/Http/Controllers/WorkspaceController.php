@@ -20,8 +20,14 @@ class WorkspaceController extends Controller
     /**
      * Daftar file workspace.
      */
-    public function index(Request $request, MahasiswaTa $mahasiswaTa): View
+    public function index(Request $request, MahasiswaTa $mahasiswaTa): View|RedirectResponse
     {
+        // Dosen belum menyetujui program → arahkan ke halaman persetujuan (bukan 403).
+        if ($request->user()->isDosen() && ! $mahasiswaTa->dosenHasGrantedAccess()) {
+            return redirect()->route('approval.index')
+                ->with('warning', 'Mahasiswa ini belum disetujui. Setujui programnya untuk mengakses materinya.');
+        }
+
         $this->authorize('viewWorkspace', $mahasiswaTa);
 
         $query = $mahasiswaTa->workspaceFiles()->with('uploader');

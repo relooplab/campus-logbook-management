@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Institution;
 use App\Models\MahasiswaTa;
 use App\Models\StudyProgram;
 use App\Models\University;
@@ -11,6 +12,7 @@ use App\Support\Feature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -92,6 +94,46 @@ class ProfileController extends Controller
         }
 
         return back()->with('success', 'Profil berhasil diperbarui.');
+    }
+
+    /**
+     * Ubah alamat email (self-service). Wajib konfirmasi password.
+     * Bila verifikasi email wajib aktif, alamat baru harus diverifikasi ulang.
+     */
+    public function updateEmail(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'email_confirmation' => ['required', 'same:email'],
+            'current_password' => ['required', 'string'],
+        ]);
+
+        if (! Hash::check($validated['current_password'], $user->password)) {
+            return back()->withErrors(['current_password' => 'Password saat ini salah.'])->withInput();
+        }
+
+        $newEmail = strtolower($validated['email']);
+
+        if ($newEmail === strtolower((string) $user->email)) {
+            return back()->with('info', 'Alamat email sudah sama, tidak ada perubahan.');
+        }
+
+        $user->email = $newEmail;
+
+        if (Institution::emailVerificationRequiredNow()) {
+            // Alamat baru harus diverifikasi ulang; kirim link ke alamat baru.
+            $user->email_verified_at = null;
+            $user->save();
+            $user->sendEmailVerificationNotification();
+
+            return back()->with('success', 'Email diubah. Silakan verifikasi di alamat baru Anda.');
+        }
+
+        $user->save();
+
+        return back()->with('success', 'Email berhasil diubah.');
     }
 
     /**
