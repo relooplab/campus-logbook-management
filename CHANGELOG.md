@@ -1,3 +1,10 @@
+# [0.50.0](https://github.com/relooplab/campus-logbook-management/compare/v0.49.0...v0.50.0) (2026-08-13)
+
+
+### Features
+
+* metadata kuota kontekstual untuk kolom Kuota di dashboard admin ([7e16942](https://github.com/relooplab/campus-logbook-management/commit/7e169425fb7b07b10c44d7bc33759f149f1ebf9c))
+
 # [0.49.0](https://github.com/relooplab/campus-logbook-management/compare/v0.48.1...v0.49.0) (2026-08-13)
 
 
