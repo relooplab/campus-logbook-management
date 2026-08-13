@@ -193,9 +193,14 @@
                                         @if ($q && $q['has_override'])
                                             <span class="inline-block px-1.5 py-0.5 rounded text-[10px] bg-accent-purple/10 text-accent-purple">override</span>
                                             <span class="text-text-primary">{{ $q['override_mb'] }} MB</span>
+                                        @elseif ($q && $q['effective_mb'] !== null)
+                                            <span class="text-text-secondary">{{ $q['effective_mb'] }} MB</span>
+                                            <span class="block text-[10px] text-text-secondary/70" title="{{ $q['legend'] ?? '' }}">{{ $q['note'] ?? 'ikut paket/pool' }}</span>
                                         @else
-                                            <span class="text-text-secondary">{{ $q ? $q['effective_mb'] : '—' }} MB</span>
-                                            <span class="block text-[10px] text-text-secondary/70">ikut paket/pool</span>
+                                            <span class="text-text-secondary italic">{{ $q['note'] ?? '—' }}</span>
+                                            @if (! empty($q['legend'] ?? ''))
+                                                <span class="block text-[10px] text-text-secondary/70" title="{{ $q['legend'] }}">{{ $q['legend'] }}</span>
+                                            @endif
                                         @endif
                                     </td>
                                     <td class="py-3 px-4 text-xs text-text-secondary">

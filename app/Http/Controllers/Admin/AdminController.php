@@ -74,11 +74,17 @@ class AdminController extends Controller
 
         // Map kuota efektif per user (halaman ini) — hanya untuk system admin
         // agar tabel bisa menampilkan kolom "Kuota" tanpa N+1.
+        // Untuk mahasiswa, angka relevan ditentukan via status program (lihat
+        // Feature::storageDisplayMetadata), bukan fallback free-plan yang menyesatkan.
         $quotaMap = collect();
         if ($isSystemAdmin) {
             $quotaMap = $users->getCollection()->mapWithKeys(function ($u) {
+                $display = \App\Support\Feature::storageDisplayMetadata($u);
+
                 return [$u->id => [
-                    'effective_mb' => \App\Support\Feature::storageLimitMb($u),
+                    'effective_mb' => $display['mb'],
+                    'note' => $display['note'],
+                    'legend' => $display['legend'],
                     'has_override' => (bool) $u->planOverride?->storage_limit_mb,
                     'override_mb' => $u->planOverride?->storage_limit_mb,
                 ]];

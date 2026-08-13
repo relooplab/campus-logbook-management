@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Department;
 use App\Models\DirectorySubscription;
 use App\Models\Faculty;
+use App\Models\MahasiswaTa;
 use App\Models\Plan;
 use App\Models\StudyProgram;
 use App\Models\University;
@@ -156,6 +157,53 @@ class Feature
     public static function pendingStudentStorageLimitMb(): int
     {
         return self::PENDING_STUDENT_STORAGE_LIMIT_MB;
+    }
+
+    /**
+     * Metadata kuota untuk keperluan TAMPILAN (mis. kolom "Kuota" di dashboard admin).
+     *
+     * Berbeda dengan storageLimitMb() yang menghitung "kuota pribadi user", di sini
+     * angka yang relevan menyesuaikan role & status program, agar tidak menyesatkan:
+     *
+     * - Dosen/admin   : pakai storageLimitMb() (pool institusi / plan individual).
+     * - Mahasiswa     : tidak punya kuota penyimpanan pribadi yang permanen.
+     *     - Jika masih ada program pending_approval/ditolak → 100 MB sementara.
+     *     - Jika semua program sudah disetujui (aktif/tamat/nonaktif) → datanya
+     *       dibebankan ke kuota dosen pembimbing (storageChargeTarget), sehingga
+     *       tidak ada angka kuota mandiri (mb = null).
+     *
+     * @return array{mb:?int, note:string, legend:?string}
+     */
+    public static function storageDisplayMetadata(User $user): array
+    {
+        if (!$user->isMahasiswa()) {
+            return [
+                'mb' => self::storageLimitMb($user),
+                'note' => 'ikut paket/pool',
+                'legend' => null,
+            ];
+        }
+
+        $hasPendingOrRejected = $user->mahasiswaPrograms()
+            ->whereIn('status_ta', [
+                MahasiswaTa::STATUS_PENDING_APPROVAL,
+                MahasiswaTa::STATUS_DITOLAK,
+            ])
+            ->exists();
+
+        if ($hasPendingOrRejected) {
+            return [
+                'mb' => self::PENDING_STUDENT_STORAGE_LIMIT_MB,
+                'note' => 'sementara (pending approval)',
+                'legend' => 'Menunggu persetujuan dosen. Setelah disetujui, beban kuota dialihkan ke dosen pembimbing.',
+            ];
+        }
+
+        return [
+            'mb' => null,
+            'note' => 'ikut dosen pembimbing',
+            'legend' => 'Program sudah disetujui — data dibebankan ke kuota dosen pembimbing.',
+        ];
     }
 
     /**
