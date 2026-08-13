@@ -127,6 +127,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Enforce Dosen Pending Approval (Gate Lunak)
+    |--------------------------------------------------------------------------
+    | Bila true, middleware `ensure.dosen.decision` aktif: dosen yang punya
+    | mahasiswa pending yang SUDAH melewati batas waktu diarahkan ke halaman
+    | Persetujuan sampai memutuskan Approve/Tolak. Batas waktu (hari) diatur
+    | `dosen_pending_approval_deadline_days`. Nonaktif di env testing.
+    |
+    */
+
+    'enforce_dosen_pending_approval' => env('APP_ENFORCE_DOSEN_PENDING_APPROVAL', env('APP_ENV', 'production') !== 'testing'),
+
+    'dosen_pending_approval_deadline_days' => env('APP_DOSEN_PENDING_APPROVAL_DEADLINE_DAYS', 4),
+
+    /*
+    |--------------------------------------------------------------------------
     | External Links (configurable per-institution)
     |--------------------------------------------------------------------------
     | Tautan eksternal yang mungkin berbeda antar institusi. Isi di .env:

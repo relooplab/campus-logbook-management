@@ -20,6 +20,9 @@
             ->whereDoesntHave('reads', fn ($q) => $q->where('user_id', $user->id))
             ->count();
     }
+
+    // Papan peringatan: dosen dengan mahasiswa pending menunggu keputusan.
+    $pendingApprovals = ($user?->isDosen()) ? $user->pendingApprovals() : collect();
 @endphp
 <!DOCTYPE html>
 <html lang="id" class="dark">
@@ -499,6 +502,19 @@
                             <li>{{ $importError }}</li>
                         @endforeach
                     </ul>
+                </div>
+            @endif
+
+            @if ($pendingApprovals->isNotEmpty())
+                <div class="mb-4 px-4 py-3 rounded-xl border border-status-pending/40 bg-status-pending/10 text-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <p class="text-status-pending font-medium">
+                            <span class="material-symbols-outlined icon-sm align-text-bottom">hourglass_top</span>
+                            Anda punya {{ $pendingApprovals->count() }} mahasiswa yang menunggu persetujuan. Mohon diproses sebelum melewati {{ config('app.dosen_pending_approval_deadline_days', 4) }} hari agar akses tidak terkunci.
+                        </p>
+                        <a href="{{ route('approval.index') }}"
+                            class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-semibold hover:opacity-90">Keputusan Persetujuan →</a>
+                    </div>
                 </div>
             @endif
 

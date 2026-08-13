@@ -84,7 +84,7 @@ Route::middleware('auth')->group(function () {
         ->name('verification.send');
 });
 
-Route::middleware(['auth', 'ensure.dosen.affiliation', 'ensure.email.verified'])->group(function () {
+Route::middleware(['auth', 'ensure.dosen.decision', 'ensure.dosen.affiliation', 'ensure.email.verified'])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 

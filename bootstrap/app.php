@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'ensure.dosen.affiliation' => \App\Http\Middleware\EnsureDosenAffiliation::class,
             'ensure.email.verified' => \App\Http\Middleware\EnsureEmailVerified::class,
+            'ensure.dosen.decision' => \App\Http\Middleware\EnsureDosenPendingApproval::class,
         ]);
 
         // Catat waktu terakhir aktif user pada setiap request web.

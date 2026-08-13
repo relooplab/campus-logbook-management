@@ -430,6 +430,39 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Program (TA/KP) yang menunggu keputusan dosen ini (sebagai pembimbing/
+     * penguji yang dipilih mahasiswa). Dipakai untuk papan peringatan.
+     */
+    public function pendingApprovals(): \Illuminate\Database\Eloquent\Collection
+    {
+        return MahasiswaTa::where('status_ta', MahasiswaTa::STATUS_PENDING_APPROVAL)
+            ->where(fn ($q) => $q->where('pembimbing_1_id', $this->id)
+                ->orWhere('pembimbing_2_id', $this->id)
+                ->orWhere('penguji_1_id', $this->id)
+                ->orWhere('penguji_2_id', $this->id))
+            ->with('mahasiswa')
+            ->orderBy('created_at')
+            ->get();
+    }
+
+    /**
+     * Benarkah ada mahasiswa pending yang sudah melewati batas waktu (hari)?
+     * Dipakai gate keras "harus diputuskan" (gate lunak: blokir setelah lewat batas).
+     */
+    public function hasPendingApprovalOverdue(int $days): bool
+    {
+        $cutoff = now()->subDays(max(1, $days));
+
+        return MahasiswaTa::where('status_ta', MahasiswaTa::STATUS_PENDING_APPROVAL)
+            ->where(fn ($q) => $q->where('pembimbing_1_id', $this->id)
+                ->orWhere('pembimbing_2_id', $this->id)
+                ->orWhere('penguji_1_id', $this->id)
+                ->orWhere('penguji_2_id', $this->id))
+            ->where('created_at', '<', $cutoff)
+            ->exists();
+    }
+
+    /**
      * Ambang batas (menit) untuk dianggap "online" sejak terakhir aktif.
      */
     public const ONLINE_THRESHOLD_MINUTES = 5;
