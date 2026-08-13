@@ -1,3 +1,10 @@
+# [0.49.0](https://github.com/relooplab/campus-logbook-management/compare/v0.48.1...v0.49.0) (2026-08-13)
+
+
+### Features
+
+* gate keputusan dosen untuk persetujuan mahasiswa yang melewati batas waktu ([d06f311](https://github.com/relooplab/campus-logbook-management/commit/d06f3116448da9c038c92926d97743fa2e3b3107))
+
 ## [0.48.1](https://github.com/relooplab/campus-logbook-management/compare/v0.48.0...v0.48.1) (2026-08-12)
 
 
