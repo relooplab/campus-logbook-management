@@ -1,3 +1,10 @@
+# [0.51.0](https://github.com/relooplab/campus-logbook-management/compare/v0.50.0...v0.51.0) (2026-08-24)
+
+
+### Features
+
+* shareable signed document links & .ics calendar attachment for seminar submission emails ([f355e4a](https://github.com/relooplab/campus-logbook-management/commit/f355e4aa2eff740e82ebf67f3928a067f10cea18))
+
 # [0.50.0](https://github.com/relooplab/campus-logbook-management/compare/v0.49.0...v0.50.0) (2026-08-13)
 
 
