@@ -432,3 +432,15 @@ Route::middleware(['auth', 'ensure.dosen.decision', 'ensure.dosen.affiliation', 
         Route::post('/backup/restore', [SystemBackupController::class, 'restore'])->name('backup.restore');
     });
 });
+
+// ------------------------------------------- link berbagi dokumen bahan seminar/sidang
+// Tautan langsung (tanpa login) yang dipakai di email notifikasi bahan
+// seminar/sidang. Keabsahan signature & masa berlaku divalidasi middleware
+// `signed` (URL bertanda tangan sementara, masa berlaku dari model).
+Route::middleware('signed')->group(function () {
+    Route::get('/shared/seminar-submission/{submission}/undangan', [SeminarSubmissionController::class, 'sharedDownloadUndangan'])
+        ->name('seminar-submission.shared-undangan');
+    Route::get('/shared/seminar-submission/{submission}/materi', [SeminarSubmissionController::class, 'sharedDownloadMateri'])
+        ->name('seminar-submission.shared-materi');
+});
+

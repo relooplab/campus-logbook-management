@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -186,5 +188,60 @@ class SeminarSubmission extends Model
     public function materiFromWorkspace(): bool
     {
         return $this->materi_workspace_file_id !== null;
+    }
+
+    // ------------------------------------------------------------- jadwal (.ics)
+
+    /**
+     * Durasi default acara di lampiran kalender (.ics).
+     * Form pemberian bahan belum memiliki isian durasi, jadi dipakai nilai ini.
+     */
+    public const DEFAULT_DURASI_MENIT = 60;
+
+    /**
+     * Waktu mulai acara (gabungan tanggal + waktu) di timezone aplikasi.
+     */
+    public function start(): CarbonInterface
+    {
+        $date = $this->tanggal ?: now();
+        $time = $this->waktu ?: now();
+
+        return Carbon::create(
+            (int) $date->format('Y'),
+            (int) $date->format('n'),
+            (int) $date->format('j'),
+            (int) $time->format('G'),
+            (int) $time->format('i'),
+            0,
+            config('app.timezone')
+        );
+    }
+
+    /**
+     * Waktu selesai acara untuk lampiran kalender (.ics).
+     * Fallback ke DEFAULT_DURASI_MENIT karena form belum punya isian durasi
+     * (siap memakai kolom `durasi_menit` bila kelak ditambahkan).
+     */
+    public function end(): CarbonInterface
+    {
+        return $this->start()->copy()
+            ->addMinutes((int) ($this->durasi_menit ?? self::DEFAULT_DURASI_MENIT));
+    }
+
+    /**
+     * Masa berlaku tautan berbagi dokumen (signed URL) di email notifikasi:
+     * berlaku hingga hari setelah jadwal seminar/sidang, minimal 7 hari.
+     */
+    public function sharedLinkExpiration(): CarbonInterface
+    {
+        $minimum = now()->addDays(7);
+
+        if ($this->tanggal === null) {
+            return $minimum;
+        }
+
+        $afterEvent = $this->tanggal->copy()->endOfDay()->addDay();
+
+        return $afterEvent->greaterThan($minimum) ? $afterEvent : $minimum;
     }
 }

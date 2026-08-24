@@ -304,7 +304,31 @@ class SeminarSubmissionController extends Controller
         return Storage::disk('local')->download($submission->materi_path, $submission->materi_original_name);
     }
 
+    /**
+     * Download surat undangan via tautan berbagi (signed URL) — tanpa login.
+     * Dipakai oleh email notifikasi bahan seminar/sidang. Signature & masa
+     * berlaku tautan sudah divalidasi middleware `signed`.
+     */
+    public function sharedDownloadUndangan(SeminarSubmission $submission)
+    {
+        if (! $submission->undangan_path || ! Storage::disk('local')->exists($submission->undangan_path)) {
+            abort(404);
+        }
 
+        return Storage::disk('local')->download($submission->undangan_path, $submission->undangan_original_name);
+    }
+
+    /**
+     * Download materi via tautan berbagi (signed URL) — tanpa login.
+     */
+    public function sharedDownloadMateri(SeminarSubmission $submission)
+    {
+        if (! $submission->materi_path || ! Storage::disk('local')->exists($submission->materi_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('local')->download($submission->materi_path, $submission->materi_original_name);
+    }
 
     /**
      * Daftar pilihan "undangan sebagai" dari data mahasiswa.
