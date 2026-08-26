@@ -1,3 +1,15 @@
+# [0.53.0](https://github.com/relooplab/campus-logbook-management/compare/v0.52.0...v0.53.0) (2026-08-26)
+
+
+### Bug Fixes
+
+* inject APP_TIMEZONE into container via x-app-env anchor ([#17](https://github.com/relooplab/campus-logbook-management/issues/17)) ([4085f01](https://github.com/relooplab/campus-logbook-management/commit/4085f01b71e9e8ffcc5fa7f26d2f2268316ee12b))
+
+
+### Features
+
+* in-app PDF preview for seminar documents, PDF viewer overhaul, branded mail theme ([b23c2f1](https://github.com/relooplab/campus-logbook-management/commit/b23c2f1b840236f1321a3b06634e87bc288dfda5))
+
 # [0.52.0](https://github.com/relooplab/campus-logbook-management/compare/v0.51.1...v0.52.0) (2026-08-26)
 
 
