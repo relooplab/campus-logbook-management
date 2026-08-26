@@ -1,3 +1,10 @@
+# [0.52.0](https://github.com/relooplab/campus-logbook-management/compare/v0.51.1...v0.52.0) (2026-08-26)
+
+
+### Features
+
+* inline PDF preview for shared seminar submission documents ([1a2899b](https://github.com/relooplab/campus-logbook-management/commit/1a2899b9a82205376f26ce81faadaf5628d21a2a))
+
 ## [0.51.1](https://github.com/relooplab/campus-logbook-management/compare/v0.51.0...v0.51.1) (2026-08-26)
 
 
