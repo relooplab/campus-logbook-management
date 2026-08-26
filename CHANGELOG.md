@@ -1,3 +1,10 @@
+## [0.51.1](https://github.com/relooplab/campus-logbook-management/compare/v0.51.0...v0.51.1) (2026-08-26)
+
+
+### Bug Fixes
+
+* branded markdown email template & RFC 5545-correct ICS for seminar submission notification ([667479c](https://github.com/relooplab/campus-logbook-management/commit/667479c81b534e17ed77895a4044ddcba825f748))
+
 # [0.51.0](https://github.com/relooplab/campus-logbook-management/compare/v0.50.0...v0.51.0) (2026-08-24)
 
 
