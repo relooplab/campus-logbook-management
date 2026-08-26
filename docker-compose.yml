@@ -8,6 +8,8 @@ x-app-env: &app-env
   APP_ENV: production
   APP_DEBUG: "${APP_DEBUG:-false}"
   APP_URL: "${APP_URL:-http://localhost:8280}"
+  # Timezone aplikasi (ICS/undangan kalender). Default Asia/Jakarta (WIB).
+  APP_TIMEZONE: "${APP_TIMEZONE:-Asia/Jakarta}"
   # Versi rilis (override opsional). Default kosong -> ReleaseVersion pakai CHANGELOG.
   # JANGAN set default "0.0.0" di sini: config('app.version') jadi truthy dan
   # ReleaseVersion::get() selalu return "0.0.0" (bukan versi CHANGELOG).
