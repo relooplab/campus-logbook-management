@@ -37,35 +37,28 @@ class SeminarSubmissionNotification extends Notification implements ShouldQueue
         $ta = $submission->mahasiswaTa;
         $mahasiswa = $ta?->mahasiswa;
 
-        $mail = (new MailMessage)
+        $urlUndangan = $this->signedUrl('undangan');
+        $urlMateri = $submission->materi_path ? $this->signedUrl('materi') : null;
+
+        return (new MailMessage)
             ->subject('Bahan '.$submission->jenisLabel().' Dikirim')
-            ->greeting('Halo '.$notifiable->name)
-            ->line('Mahasiswa '.($mahasiswa?->name ?? '—').' telah mengirim bahan '.$submission->jenisLabel().'.')
-            ->line('')
-            ->line('Detail Jadwal:')
-            ->line('• Jenis: '.$submission->jenisLabel())
-            ->line('• Mahasiswa: '.($mahasiswa?->name ?? '—'))
-            ->line('• Tanggal: '.($submission->tanggal?->format('l, d F Y') ?? '—'))
-            ->line('• Waktu: '.($submission->waktu?->format('H:i') ?? '—').' – '.$submission->end()->format('H:i').' ('.SeminarSubmission::DEFAULT_DURASI_MENIT.' menit)')
-            ->line('• Lokasi: '.($submission->lokasi ?: '—'))
-            ->line('• Diundang: '.$submission->undanganKepadaLabel());
-
-        if ($submission->catatan_keterangan) {
-            $mail->line('• Catatan: '.$submission->catatan_keterangan);
-        }
-
-        $mail->line('')
-            ->line('Unduh dokumen (tautan sementara, berlaku hingga lewat jadwal):')
-            ->line('[Surat Undangan — '.$submission->undangan_original_name.']('.$this->signedUrl('undangan').')');
-
-        if ($submission->materi_path) {
-            $mail->line('[Materi — '.($submission->materi_original_name ?: 'file materi').']('.$this->signedUrl('materi').')');
-        }
-
-        return $mail
-            ->action('Lihat Detail Bahan', route('seminar-submission.show', $submission))
-            ->line('')
-            ->line('Lampiran .ics memuat jadwal di atas — klik untuk menambahkannya ke kalender Anda.')
+            ->markdown('emails.seminar-submission', [
+                'namaDosen' => $notifiable->name,
+                'namaMahasiswa' => $mahasiswa?->name ?? '—',
+                'jenisLabel' => $submission->jenisLabel(),
+                'tanggal' => $submission->tanggal?->format('l, d F Y') ?? '—',
+                'waktuMulai' => $submission->waktu?->format('H:i') ?? '—',
+                'waktuSelesai' => $submission->end()->format('H:i'),
+                'durasiMenit' => SeminarSubmission::DEFAULT_DURASI_MENIT,
+                'lokasi' => $submission->lokasi ?: '—',
+                'diundang' => $submission->undanganKepadaLabel(),
+                'catatan' => $submission->catatan_keterangan,
+                'urlUndangan' => $urlUndangan,
+                'namaFileUndangan' => $submission->undangan_original_name,
+                'urlMateri' => $urlMateri,
+                'namaFileMateri' => $submission->materi_original_name ?: 'file materi',
+                'urlDetail' => route('seminar-submission.show', $submission),
+            ])
             ->attachData(
                 $this->buildIcs($notifiable),
                 'undangan-'.$submission->id.'.ics',
@@ -109,14 +102,24 @@ class SeminarSubmissionNotification extends Notification implements ShouldQueue
     {
         $submission = $this->submission;
         $mahasiswa = $submission->mahasiswaTa?->mahasiswa;
-        $timezone = config('app.timezone', 'UTC');
         $start = $submission->start();
         $end = $submission->end();
 
-        $description = 'Undangan '.$submission->jenisLabel()
-            .' atas nama mahasiswa '.($mahasiswa?->name ?? '—').'.'
-            ."\nDiundang: ".$submission->undanganKepadaLabel()
-            .($submission->catatan_keterangan ? "\nCatatan: ".$submission->catatan_keterangan : '');
+        $mahasiswaName = $mahasiswa?->name ?? '—';
+
+        // Narasi selaras dengan badan email notifikasi, disesuaikan untuk teks
+        // polos lampiran kalender (tanpa bullet). Sertakan tautan dokumen agar
+        // bisa dibuka langsung dari undangan kalender.
+        $description = 'Undangan '.$submission->jenisLabel().' atas nama mahasiswa '.$mahasiswaName.'.'."\n"
+            .'Jenis: '.$submission->jenisLabel()."\n"
+            .'Mahasiswa: '.$mahasiswaName."\n"
+            .'Tanggal: '.$submission->start()->format('l, d F Y')."\n"
+            .'Waktu: '.$submission->start()->format('H:i').' – '.$submission->end()->format('H:i').' ('.SeminarSubmission::DEFAULT_DURASI_MENIT.' menit)'."\n"
+            .'Lokasi: '.($submission->lokasi ?: '—')."\n"
+            .'Diundang: '.$submission->undanganKepadaLabel()
+            .($submission->catatan_keterangan ? "\nCatatan: ".$submission->catatan_keterangan : '')
+            ."\nLink Surat Undangan: ".$this->signedUrl('undangan')
+            .($submission->materi_path ? "\nLink Materi: ".$this->signedUrl('materi') : '');
 
         $lines = [
             'BEGIN:VCALENDAR',
@@ -127,8 +130,11 @@ class SeminarSubmissionNotification extends Notification implements ShouldQueue
             'BEGIN:VEVENT',
             'UID:bahan-seminar-'.$submission->id.'@'.$this->icsDomain(),
             'DTSTAMP:'.now()->utc()->format('Ymd\THis\Z'),
-            'DTSTART;TZID='.$timezone.':'.$start->format('Ymd\THis'),
-            'DTEND;TZID='.$timezone.':'.$end->format('Ymd\THis'),
+            // Waktu dikirim dalam UTC (akhiran Z): semua klien kalender
+            // (Google Calendar, Apple Calendar, Outlook) menampilkannya konsisten
+            // tanpa bergantung pada resolusi TZID/VTIMEZONE di sisi klien.
+            'DTSTART:'.$start->copy()->utc()->format('Ymd\THis\Z'),
+            'DTEND:'.$end->copy()->utc()->format('Ymd\THis\Z'),
             'SUMMARY:'.$this->escapeIcs($submission->jenisLabel().' — '.($mahasiswa?->name ?? 'Mahasiswa')),
             'LOCATION:'.$this->escapeIcs((string) ($submission->lokasi ?? '')),
             'DESCRIPTION:'.$this->escapeIcs($description),
@@ -154,20 +160,41 @@ class SeminarSubmissionNotification extends Notification implements ShouldQueue
     }
 
     /**
-     * Line-folding ICS: maksimal 75 karakter per baris, kelanjutan baris
-     * didahului CRLF + satu spasi.
+     * Line-folding ICS: maksimal 75 oktet per baris (RFC 5545), kelanjutan baris
+     * didahului CRLF + satu spasi. Pembelahan dilakukan per karakter agar tidak
+     * memotong di tengah karakter multibyte (mis. em-dash —).
      */
     private function foldLines(string $content): string
     {
         $folded = [];
 
         foreach (explode("\r\n", $content) as $line) {
-            if (mb_strlen($line) <= 75) {
+            if (strlen($line) <= 75) {
                 $folded[] = $line;
                 continue;
             }
 
-            $folded[] = implode("\r\n ", mb_str_split($line, 75));
+            $chars = preg_split('//u', $line, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            $segments = [];
+            $current = '';
+
+            // Segmen pertama boleh 75 oktet; segmen lanjutan maks 74 karena
+            // didahului 1 spasi folding (RFC 5545: maks 75 oktet/baris).
+            foreach ($chars as $char) {
+                $limit = $segments === [] ? 75 : 74;
+                if ($current !== '' && strlen($current.$char) > $limit) {
+                    $segments[] = $current;
+                    $current = $char;
+                } else {
+                    $current .= $char;
+                }
+            }
+
+            if ($current !== '') {
+                $segments[] = $current;
+            }
+
+            $folded[] = implode("\r\n ", $segments);
         }
 
         return implode("\r\n", $folded);

@@ -104,6 +104,27 @@ class SeminarSubmissionEmailTest extends TestCase
         $this->assertStringContainsString('/shared/seminar-submission/'.$this->submission->id.'/materi', $html);
     }
 
+    public function test_email_menggunakan_template_markdown_responsif(): void
+    {
+        $mail = (new SeminarSubmissionNotification($this->submission))->toMail($this->dosen);
+        $html = $mail->render();
+
+        // Panel detail jadwal.
+        $this->assertStringContainsString('panel-content', $html);
+        $this->assertStringContainsString('Detail Jadwal', $html);
+        $this->assertStringContainsString('Seminar Proposal', $html);
+
+        // Tombol aksi (mobile: full-width lewat media query framework).
+        $this->assertStringContainsString('class="button', $html);
+        $this->assertStringContainsString('Surat Undangan', $html);
+        $this->assertStringContainsString('Materi', $html);
+        $this->assertStringContainsString('Lihat Detail Bahan', $html);
+
+        // Subcopy berisi fallback tautan dengan word-break.
+        $this->assertStringContainsString('subcopy', $html);
+        $this->assertStringContainsString('break-all', $html);
+    }
+
     public function test_email_menyertakan_lampiran_ics_dengan_dtend_satu_jam(): void
     {
         $mail = (new SeminarSubmissionNotification($this->submission))->toMail($this->dosen);
@@ -116,7 +137,8 @@ class SeminarSubmissionEmailTest extends TestCase
         $this->assertStringEndsWith('.ics', (string) $attachment['name']);
 
         $ics = $attachment['data'];
-        $timezone = config('app.timezone', 'UTC');
+        // Unfold baris terlipat (RFC 5545) agar substring mudah diperiksa.
+        $unfolded = str_replace("\r\n ", '', $ics);
         $start = $this->submission->start();
         $end = $this->submission->end();
 
@@ -124,14 +146,34 @@ class SeminarSubmissionEmailTest extends TestCase
         $this->assertStringContainsString('BEGIN:VEVENT', $ics);
         $this->assertStringContainsString('END:VCALENDAR', $ics);
         $this->assertSame(60, (int) $start->diffInMinutes($end));
-        $this->assertStringContainsString('DTSTART;TZID='.$timezone.':'.$start->format('Ymd\THis'), $ics);
-        $this->assertStringContainsString('DTEND;TZID='.$timezone.':'.$end->format('Ymd\THis'), $ics);
+        // 09:00 WIB = 02:00 UTC; durasi default 1 jam -> selesai 03:00 UTC.
+        // Tanggal pasti ikut serta (DTSTART memuat Ymd).
+        $tanggal = $this->submission->tanggal->format('Ymd');
+        $this->assertStringContainsString('DTSTART:'.$tanggal.'T020000Z', $ics);
+        $this->assertStringContainsString('DTEND:'.$tanggal.'T030000Z', $ics);
         $this->assertStringContainsString('SUMMARY:Seminar Proposal — Mhs Ics', $ics);
         $this->assertStringContainsString('LOCATION:Ruang Sidang A', $ics);
 
-        // Semua baris ter-fold maksimal 75 karakter (RFC 5545).
+        // Narasi DESCRIPTION selaras dengan detail badan email.
+        $this->assertStringContainsString('Undangan Seminar Proposal atas nama mahasiswa Mhs Ics.', $unfolded);
+        $this->assertStringContainsString('Jenis: Seminar Proposal', $unfolded);
+        $this->assertStringContainsString('Mahasiswa: Mhs Ics', $unfolded);
+        // Koma di-escape menjadi \, (RFC 5545) — klien kalender menampilkan normal.
+        $this->assertStringContainsString('Tanggal: '.str_replace(',', '\\,', $start->format('l, d F Y')), $unfolded);
+        $this->assertStringContainsString('Waktu: 09:00 – 10:00 (60 menit)', $unfolded);
+        $this->assertStringContainsString('Lokasi: Ruang Sidang A', $unfolded);
+        $this->assertStringContainsString('Diundang: Pembimbing 1 — Dosen Ics', $unfolded);
+        $this->assertStringContainsString('Catatan: Hadir tepat waktu.', $unfolded);
+
+        // Tautan dokumen ikut disertakan di deskripsi kalender.
+        $this->assertStringContainsString('Link Surat Undangan:', $unfolded);
+        $this->assertStringContainsString('/shared/seminar-submission/'.$this->submission->id.'/undangan', $unfolded);
+        $this->assertStringContainsString('Link Materi:', $unfolded);
+        $this->assertStringContainsString('/shared/seminar-submission/'.$this->submission->id.'/materi', $unfolded);
+
+        // Semua baris ter-fold maksimal 75 oktet (RFC 5545).
         foreach (explode("\r\n", $ics) as $line) {
-            $this->assertTrue(mb_strlen($line) <= 75, 'Baris ICS melebihi 75 karakter: '.$line);
+            $this->assertTrue(strlen($line) <= 75, 'Baris ICS melebihi 75 oktet: '.$line);
         }
     }
 
