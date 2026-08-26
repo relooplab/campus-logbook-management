@@ -15,6 +15,15 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.mjs?v=' + WORKER
  *    TERPISAH dari file PDF.
  *  - (Opsional) tombol "Unduh PDF dengan Anotasi" membakar anotasi ke PDF
  *    via endpoint /pdf/burn (server-side, FPDI).
+ *
+ * Layout halaman:
+ *  - Halaman disusun vertikal (continuous scroll) di dalam panel bertingkat
+ *    tetap (max-h + overflow-auto) sehingga scrollbar vertikal & horizontal
+ *    SELALU terlihat tanpa harus menggulir ke bawah dokumen.
+ *  - Canvas responsif (width:100%, height:auto) — halaman landscape ikut
+ *    menyempurnakan lebar kontainer, tidak menimpa halaman sebelahnya.
+ *  - Overlay anotasi & gambar area memakai koordinat PERSENTASE agar tetap
+ *    presisi pada ukuran tampilan apa pun.
  */
 
 const DATA = window.PDF_VIEWER_DATA || {};
@@ -76,11 +85,12 @@ function PdfViewerApp() {
   const [activeType, setActiveType] = useState('draft');
   const [annotations, setAnnotations] = useState([]);
   const [numPages, setNumPages] = useState(0);
+  const [pageSizes, setPageSizes] = useState([]); // ukuran tampilan tiap halaman (px, sesuai skala)
   const [scale, setScale] = useState(1.4);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [areaMode, setAreaMode] = useState(true); // Mode area ON secara default
-  const [drawing, setDrawing] = useState(null); // rect sedang digambar (pixel)
+  const [drawing, setDrawing] = useState(null); // rect sedang digambar (koordinat ternormalisasi 0-1)
   const [modal, setModal] = useState(null); // { geometry, comment, saving }
   const [selected, setSelected] = useState(null);
   const [allResponded, setAllResponded] = useState(false); // semua komentar dosen sudah ditanggapi
@@ -88,8 +98,8 @@ function PdfViewerApp() {
 
   const pdfRef = useRef(null);
   const canvasRefs = useRef([]);
-  const pageSizeRefs = useRef([]);
   const stageRef = useRef(null);
+  const renderGenRef = useRef(0); // penanda generasi render (anti race saat ganti skala cepat)
 
   const pdfUrl = activeType === 'catatan' ? catatanUrl : draftUrl;
 
@@ -101,8 +111,8 @@ function PdfViewerApp() {
     setAnnotations([]);
     setAllResponded(false);
     setNumPages(0);
+    setPageSizes([]);
     canvasRefs.current = [];
-    pageSizeRefs.current = [];
     if (!pdfUrl) {
       setError('Tidak ada file PDF untuk ditampilkan.');
       setLoading(false);
@@ -111,9 +121,28 @@ function PdfViewerApp() {
     pdfjsLib.getDocument(pdfUrl).promise.then(async (doc) => {
       if (cancelled) return;
       pdfRef.current = doc;
+
+      // Kumpulkan dimensi dasar (skala 1) semua halaman untuk menghitung
+      // skala awal "pas lebar panel".
+      const base = [];
+      for (let i = 1; i <= doc.numPages; i++) {
+        const page = await doc.getPage(i);
+        const v = page.getViewport({ scale: 1 });
+        base.push({ width: v.width, height: v.height });
+      }
+      if (cancelled) return;
+
+      const stageW = (stageRef.current?.clientWidth ?? 600) - 16; // dikurangi padding p-2
+      const fit = base.length ? stageW / base[0].width : 1;
+      const s = Math.min(1.4, Math.max(0.5, Math.round(fit * 100) / 100));
+      setScale(s);
+
+      const sizes = base.map((b) => ({
+        width: Math.floor(b.width * s),
+        height: Math.floor(b.height * s),
+      }));
+      setPageSizes(sizes);
       setNumPages(doc.numPages);
-      // Render semua halaman sekaligus (continuous scroll)
-      await renderAllPages(doc, scale);
       setLoading(false);
     }).catch((e) => {
       console.error(e);
@@ -128,44 +157,53 @@ function PdfViewerApp() {
   }, [activeType, pdfUrl]);
 
   // ---------------------------------------------------------------- render
-  async function renderAllPages(doc, scl) {
-    const pages = [];
-    for (let i = 1; i <= doc.numPages; i++) {
-      const page = await doc.getPage(i);
-      const viewport = page.getViewport({ scale: scl });
-      pages.push({ page, viewport });
-    }
-    // Setelah semua viewport diketahui, render canvas satu per satu.
-    // Kita perlu menunggu DOM canvas tersedia (setelah setState numPages).
-    // Gunakan requestAnimationFrame agar React sempat render canvas.
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-    for (let i = 0; i < pages.length; i++) {
-      const { page, viewport } = pages[i];
-      const c = canvasRefs.current[i];
-      if (!c) continue;
-      c.width = Math.floor(viewport.width);
-      c.height = Math.floor(viewport.height);
-      c.style.width = viewport.width + 'px';
-      c.style.height = viewport.height + 'px';
-      const ctx = c.getContext('2d');
-      await page.render({ canvasContext: ctx, viewport }).promise;
-      pageSizeRefs.current[i] = { width: c.width, height: c.height };
-    }
-  }
-
+  // Render canvas setiap kali skala/jumlah halaman berubah. Penanda generasi
+  // mencegah dua loop render paralel menulis ke canvas yang sama.
   useEffect(() => {
-    if (pdfRef.current && numPages > 0) {
-      renderAllPages(pdfRef.current, scale);
-    }
-  }, [scale, numPages]);
+    const doc = pdfRef.current;
+    if (!doc || numPages === 0 || pageSizes.length !== numPages) return;
 
+    const gen = ++renderGenRef.current;
+
+    (async () => {
+      // Tunggu React memasang elemen canvas untuk halaman yang baru muncul.
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      for (let i = 0; i < numPages; i++) {
+        if (gen !== renderGenRef.current) return; // dibatalkan render lebih baru
+        const c = canvasRefs.current[i];
+        const size = pageSizes[i];
+        if (!c || !size) continue;
+
+        const page = await doc.getPage(i + 1);
+        if (gen !== renderGenRef.current) return;
+        const viewport = page.getViewport({ scale });
+
+        // Resolusi bitmap mengikuti skala (ketajaman), tampilan responsif
+        // mengikuti lebar wrapper (CSS) agar tidak meluber/menimpa.
+        c.width = Math.floor(viewport.width);
+        c.height = Math.floor(viewport.height);
+        c.style.width = '100%';
+        c.style.height = 'auto';
+
+        const ctx = c.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport }).promise;
+      }
+    })();
+  }, [scale, numPages, pageSizes]);
 
   // ---------------------------------------------------------------- drag draw
+  // Koordinat pointer dikonversi ke fraksi 0-1 relatif ukuran TAMPILAN canvas,
+  // bukan piksel mentah — agar akurat meski canvas diskalakan oleh CSS.
   function canvasPoint(e, canvas) {
     const rect = canvas.getBoundingClientRect();
     const cx = (e.touches ? e.touches[0].clientX : e.clientX);
     const cy = (e.touches ? e.touches[0].clientY : e.clientY);
-    return { x: cx - rect.left, y: cy - rect.top };
+    return {
+      x: Math.min(Math.max((cx - rect.left) / rect.width, 0), 1),
+      y: Math.min(Math.max((cy - rect.top) / rect.height, 0), 1),
+      rw: rect.width,
+      rh: rect.height,
+    };
   }
 
   function onMouseDown(e, pageIndex) {
@@ -174,7 +212,7 @@ function PdfViewerApp() {
     const canvas = canvasRefs.current[pageIndex];
     if (!canvas) return;
     const p = canvasPoint(e, canvas);
-    setDrawing({ pageIndex, x1: p.x, y1: p.y, x2: p.x, y2: p.y });
+    setDrawing({ pageIndex, x1: p.x, y1: p.y, x2: p.x, y2: p.y, rw: p.rw, rh: p.rh });
     e.preventDefault();
   }
   function onMouseMove(e, pageIndex) {
@@ -186,17 +224,13 @@ function PdfViewerApp() {
   }
   function onMouseUp(e, pageIndex) {
     if (!drawing || drawing.pageIndex !== pageIndex) return;
-    const { x1, y1, x2, y2 } = drawing;
-    const w = Math.abs(x2 - x1), h = Math.abs(y2 - y1);
+    const { x1, y1, x2, y2, rw, rh } = drawing;
+    const w = Math.abs(x2 - x1) * rw, h = Math.abs(y2 - y1) * rh;
     if (w < 12 || h < 12) { setDrawing(null); return; }
-    const left = Math.min(x1, x2), top = Math.min(y1, y2);
-    const size = pageSizeRefs.current[pageIndex];
-    if (!size) { setDrawing(null); return; }
-    const cw = size.width, ch = size.height;
-    // normalisasi (top-origin)
     const norm = {
       page: pageIndex + 1,
-      x1: left / cw, y1: top / ch, x2: (left + w) / cw, y2: (top + h) / ch,
+      x1: Math.min(x1, x2), y1: Math.min(y1, y2),
+      x2: Math.max(x1, x2), y2: Math.max(y1, y2),
     };
     setModal({ geometry: norm, comment: '', saving: false });
     setDrawing(null);
@@ -265,6 +299,7 @@ function PdfViewerApp() {
       scrollToAnnotation(next);
     } else {
       setSelected(null);
+      setAllResponded(true);
     }
   }
 
@@ -287,7 +322,7 @@ function PdfViewerApp() {
       // Perbarui anotasi ini (balasan + status from server, biasanya 'addressed').
       setAnnotations((a) => a.map((x) => (x.id === id ? {
         ...x,
-        reply: d.reply || reply,
+        reply: d.reply || '',
         resolutionStatus: d.resolution_status || x.resolutionStatus,
         resolved: (d.resolution_status || x.resolutionStatus) === 'resolved',
       } : x)));
@@ -338,7 +373,7 @@ function PdfViewerApp() {
   const unrespondedDosen = useMemo(() => (canReply
     ? annotations
         .filter((a) => a.isDosen && a.resolutionStatus === 'open' && !a.reply)
-        .sort((x, y) => (x.page - y.page) || (y.y1 - x.y1) || (y.x1 - x.x1))
+        .sort((x, y) => (x.page - y.page) || (y.y1 - x.y1) || (x.x1 - x.x1))
     : []), [annotations, canReply]);
   const dosenCommentCount = canReply ? annotations.filter((a) => a.isDosen).length : annotations.length;
 
@@ -364,7 +399,7 @@ function PdfViewerApp() {
     try {
       const res = await fetch(buildFeedbackUrl, {
         method: 'POST',
-        headers: { 'X-CSRF-TOKEN': csrf, Accept: 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, Accept: 'application/json' },
         credentials: 'same-origin',
       });
       if (!res.ok) {
@@ -401,11 +436,20 @@ function PdfViewerApp() {
         )}
       </div>
 
-      {/* Toolbar */}
+      {/* Toolbar — panel PDF di bawah menggulir sendiri (max-h + overflow-auto),
+          sehingga toolbar ini dan kedua scrollbar panel SELALU terlihat tanpa
+          harus menggulir ke bawah dokumen terlebih dulu. */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm">Total {numPages || '…'} halaman</span>
-        <button onClick={() => setScale((s) => Math.min(4, s + 0.2))} className="px-3 py-1.5 rounded-md bg-bg-panel dark:bg-bg-panel text-sm">+</button>
-        <button onClick={() => setScale((s) => Math.max(0.5, s - 0.2))} className="px-3 py-1.5 rounded-md bg-bg-panel dark:bg-bg-panel text-sm">−</button>
+        <button onClick={() => setScale((s) => Math.max(0.5, Math.round((s - 0.2) * 100) / 100))}
+          title="Perkecil"
+          className="px-3 py-1.5 rounded-md bg-bg-panel dark:bg-bg-panel text-sm font-bold leading-none">−</button>
+        <span className="text-sm font-medium tabular-nums min-w-[3.25rem] text-center px-1.5 py-1 rounded-md bg-bg-panel dark:bg-bg-panel">
+          {Math.round(scale * 100)}%
+        </span>
+        <button onClick={() => setScale((s) => Math.min(4, Math.round((s + 0.2) * 100) / 100))}
+          title="Perbesar"
+          className="px-3 py-1.5 rounded-md bg-bg-panel dark:bg-bg-panel text-sm font-bold leading-none">+</button>
         <button onClick={() => setAreaMode((m) => !m)}
           className={`px-3 py-1.5 rounded-md text-sm font-semibold ${areaMode ? 'bg-brand text-white' : 'bg-bg-panel dark:bg-bg-panel'}`}>
           {areaMode ? 'Mode Area: ON' : 'Mode Area: OFF'}
@@ -476,31 +520,40 @@ function PdfViewerApp() {
         </div>
       )}
 
-      {/* Stage: continuous scroll, 2 halaman di layar besar */}
+      {/* Stage: panel bertingkat tetap (max-h + overflow-auto) — scrollbar
+          vertikal & horizontal selalu terlihat di tepi panel tanpa harus
+          menggulir ke bawah dokumen terlebih dulu. Halaman disusun vertikal;
+          lebar tiap halaman mengikuti skala dan dibatasi maxWidth agar halaman
+          landscape tidak pernah menimpa halaman lain. */}
       <div ref={stageRef}
-        className="bg-bg-surface dark:bg-bg-surface rounded-lg border border-border p-2 overflow-x-auto">
+        className="bg-bg-surface dark:bg-bg-surface rounded-lg border border-border p-2 overflow-auto max-h-[75vh]">
         {error && (
           <div className="flex items-center justify-center p-8 text-center text-sm text-status-danger">
             {error}
           </div>
         )}
         {!error && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+          <div className="space-y-4">
             {Array.from({ length: numPages }, (_, i) => {
               const pageAnnotations = annotationsByPage[i + 1] || [];
-              const size = pageSizeRefs.current[i] || { width: 0, height: 0 };
+              const size = pageSizes[i];
               return (
                 <div key={i}
-                  className="relative inline-block"
+                  className="relative mx-auto"
+                  style={{
+                    width: size ? size.width + 'px' : undefined,
+                    maxWidth: '100%',
+                    touchAction: areaMode ? 'none' : 'auto',
+                  }}
                   onMouseDown={(e) => onMouseDown(e, i)}
                   onMouseMove={(e) => onMouseMove(e, i)}
                   onMouseUp={(e) => onMouseUp(e, i)}
                   onTouchStart={(e) => onMouseDown(e, i)}
                   onTouchMove={(e) => onMouseMove(e, i)}
-                  onTouchEnd={(e) => onMouseUp(e, i)}
-                  style={{ touchAction: areaMode ? 'none' : 'auto' }}>
-                  <canvas ref={(el) => { canvasRefs.current[i] = el; }} />
-                  {/* Lapisan overlay anotasi */}
+                  onTouchEnd={(e) => onMouseUp(e, i)}>
+                  <canvas ref={(el) => { canvasRefs.current[i] = el; }} className="block w-full h-auto" />
+                  {/* Lapisan overlay anotasi — posisi dalam % agar presisi pada
+                      ukuran tampilan apa pun. */}
                   <div className="absolute inset-0">
                     {pageAnnotations.map((a) => (
                       <div key={a.id}
@@ -508,10 +561,10 @@ function PdfViewerApp() {
                         className="anno-box absolute border-2 cursor-pointer"
                         onClick={() => setSelected(a)}
                         style={{
-                          left: (a.x1 * size.width) + 'px',
-                          top: (a.y1 * size.height) + 'px',
-                          width: ((a.x2 - a.x1) * size.width) + 'px',
-                          height: ((a.y2 - a.y1) * size.height) + 'px',
+                          left: (a.x1 * 100) + '%',
+                          top: (a.y1 * 100) + '%',
+                          width: ((a.x2 - a.x1) * 100) + '%',
+                          height: ((a.y2 - a.y1) * 100) + '%',
                            borderColor: a.resolutionStatus === 'resolved' ? '#7C9473' : a.resolutionStatus === 'addressed' ? '#D97706' : '#C9A97E',
                         }}>
                         <span className="absolute -top-3 -left-1 text-white text-[10px] px-1 rounded whitespace-nowrap"
@@ -520,14 +573,14 @@ function PdfViewerApp() {
                         </span>
                       </div>
                     ))}
-                    {/* Persegi saat menggambar */}
+                    {/* Persegi saat menggambar (persen relatif ukuran tampilan) */}
                     {drawing && drawing.pageIndex === i && (
                       <div className="absolute border-2 border-dashed border-sand bg-sand/20"
                         style={{
-                          left: Math.min(drawing.x1, drawing.x2) + 'px',
-                          top: Math.min(drawing.y1, drawing.y2) + 'px',
-                          width: Math.abs(drawing.x2 - drawing.x1) + 'px',
-                          height: Math.abs(drawing.y2 - drawing.y1) + 'px',
+                          left: (Math.min(drawing.x1, drawing.x2) * 100) + '%',
+                          top: (Math.min(drawing.y1, drawing.y2) * 100) + '%',
+                          width: (Math.abs(drawing.x2 - drawing.x1) * 100) + '%',
+                          height: (Math.abs(drawing.y2 - drawing.y1) * 100) + '%',
                         }} />
                     )}
                   </div>

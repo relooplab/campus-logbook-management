@@ -28,8 +28,13 @@ mkdir -p \
 chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache 2>/dev/null || true
 chmod -R ug+rw /var/www/storage /var/www/bootstrap/cache 2>/dev/null || true
 
-# Pastikan storage:link selalu ada.
-if [ ! -L /var/www/public/storage ]; then
+# Pastikan storage:link selalu ada & menunjuk target yang benar.
+# Recreate tiap start (bukan hanya saat belum ada): volume public_pp persisten,
+# jadi symlink basi dari deployment lama bisa tertinggal di dalamnya — tanpa
+# recreate ini foto profil tetap 404 meski kode sudah baru.
+if [ ! -e /var/www/public/storage ] || [ -L /var/www/public/storage ]; then
+    ln -sfn /var/www/storage/app/public /var/www/public/storage || php artisan storage:link || true
+else
     php artisan storage:link || true
 fi
 

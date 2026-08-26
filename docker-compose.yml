@@ -86,6 +86,10 @@ services:
     volumes:
       # Fix #6: nginx kini punya akses ke folder public yang sama dgn app.
       - public_pp:/var/www/public:ro
+      # Fix foto profil: symlink /var/www/public/storage menunjuk keluar
+      # root public_pp menuju volume storage milik app. Tanpa mount ini,
+      # nginx tidak bisa mengikuti symlink tsb (404 pada /storage/...).
+      - app_storage:/var/www/storage:ro
     depends_on:
       - logbook-ta-app
     networks: [backend]

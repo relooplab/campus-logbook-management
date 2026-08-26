@@ -55,7 +55,15 @@
                     <p class="text-xs text-text-secondary">Diundang: {{ $submission->undanganKepadaLabel() }}</p>
                 </div>
             </div>
-            <a href="{{ route('seminar-submission.undangan-download', $submission) }}" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Download</a>
+            <div class="flex flex-wrap items-center gap-2">
+                @if ($submission->isUndanganPdf())
+                    <a href="{{ route('seminar-submission.undangan-preview', $submission) }}" target="_blank"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bg-hover text-text-primary text-xs font-medium hover:bg-border">
+                        <span class="material-symbols-outlined icon-sm">visibility</span> Buka di Browser
+                    </a>
+                @endif
+                <a href="{{ route('seminar-submission.undangan-download', $submission) }}" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Download</a>
+            </div>
         </div>
     </div>
 
@@ -73,7 +81,15 @@
                         </p>
                     </div>
                 </div>
-                <a href="{{ route('seminar-submission.materi-download', $submission) }}" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Download</a>
+                <div class="flex flex-wrap items-center gap-2">
+                    @if ($submission->isMateriPdf())
+                        <a href="{{ route('seminar-submission.materi-preview', $submission) }}" target="_blank"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bg-hover text-text-primary text-xs font-medium hover:bg-border">
+                            <span class="material-symbols-outlined icon-sm">visibility</span> Buka di Browser
+                        </a>
+                    @endif
+                    <a href="{{ route('seminar-submission.materi-download', $submission) }}" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Download</a>
+                </div>
             </div>
         @else
             <p class="text-sm text-text-secondary">Belum ada dokumen materi.</p>

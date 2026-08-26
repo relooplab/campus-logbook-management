@@ -305,6 +305,48 @@ class SeminarSubmissionController extends Controller
     }
 
     /**
+     * Preview surat undangan di browser — PDF dirender inline tanpa unduhan,
+     * non-PDF otomatis diunduh sebagai attachment.
+     */
+    public function previewUndangan(Request $request, SeminarSubmission $submission)
+    {
+        if ($r = $this->authorizeView($request->user(), $submission)) {
+            return $r;
+        }
+
+        if (! $submission->undangan_path || ! Storage::disk('local')->exists($submission->undangan_path)) {
+            abort(404);
+        }
+
+        return $this->streamOrInline(
+            $submission->undangan_path,
+            $submission->undangan_original_name,
+            $submission->isUndanganPdf()
+        );
+    }
+
+    /**
+     * Preview dokumen materi di browser — PDF dirender inline tanpa unduhan,
+     * non-PDF otomatis diunduh sebagai attachment.
+     */
+    public function previewMateri(Request $request, SeminarSubmission $submission)
+    {
+        if ($r = $this->authorizeView($request->user(), $submission)) {
+            return $r;
+        }
+
+        if (! $submission->materi_path || ! Storage::disk('local')->exists($submission->materi_path)) {
+            abort(404);
+        }
+
+        return $this->streamOrInline(
+            $submission->materi_path,
+            $submission->materi_original_name,
+            $submission->isMateriPdf()
+        );
+    }
+
+    /**
      * Download surat undangan via tautan berbagi (signed URL) — tanpa login.
      * Dipakai oleh email notifikasi bahan seminar/sidang. Signature & masa
      * berlaku tautan sudah divalidasi middleware `signed`.

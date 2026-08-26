@@ -41,6 +41,7 @@ class SeminarSubmissionNotification extends Notification implements ShouldQueue
         $urlMateri = $submission->materi_path ? $this->signedUrl('materi') : null;
 
         return (new MailMessage)
+            ->theme('clean-minimal')
             ->subject('Bahan '.$submission->jenisLabel().' Dikirim')
             ->markdown('emails.seminar-submission', [
                 'namaDosen' => $notifiable->name,

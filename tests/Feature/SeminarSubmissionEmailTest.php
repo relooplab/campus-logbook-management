@@ -116,8 +116,9 @@ class SeminarSubmissionEmailTest extends TestCase
 
         // Tombol aksi (mobile: full-width lewat media query framework).
         $this->assertStringContainsString('class="button', $html);
-        $this->assertStringContainsString('Surat Undangan', $html);
-        $this->assertStringContainsString('Materi', $html);
+        // Label tombol mencerminkan aksi buka-di-browser (bukan unduh).
+        $this->assertStringContainsString('Buka Surat Undangan di Browser', $html);
+        $this->assertStringContainsString('Buka Materi di Browser', $html);
         $this->assertStringContainsString('Lihat Detail Bahan', $html);
 
         // Subcopy berisi fallback tautan dengan word-break.
@@ -175,6 +176,22 @@ class SeminarSubmissionEmailTest extends TestCase
         foreach (explode("\r\n", $ics) as $line) {
             $this->assertTrue(strlen($line) <= 75, 'Baris ICS melebihi 75 oktet: '.$line);
         }
+    }
+
+    public function test_dosen_bisa_buka_preview_pdf_tanpa_download_dari_aplikasi(): void
+    {
+        // Route preview dalam aplikasi (auth): PDF dirender inline, bukan attachment.
+        $this->actingAs($this->dosen)
+            ->get(route('seminar-submission.undangan-preview', $this->submission))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertHeader('content-disposition', 'inline; filename=undangan.pdf');
+
+        $this->actingAs($this->dosen)
+            ->get(route('seminar-submission.materi-preview', $this->submission))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertHeader('content-disposition', 'inline; filename=materi.pdf');
     }
 
     public function test_tautan_berbagi_bisa_diakses_guest_dan_menolak_signature_rusak(): void

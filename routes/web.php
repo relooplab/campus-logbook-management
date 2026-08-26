@@ -230,6 +230,8 @@ Route::middleware(['auth', 'ensure.dosen.decision', 'ensure.dosen.affiliation', 
     Route::put('/seminar-submission/{submission}/hardcopy-note', [SeminarSubmissionController::class, 'updateHardcopyNote'])->name('seminar-submission.hardcopy-note');
     Route::get('/seminar-submission/{submission}/undangan/download', [SeminarSubmissionController::class, 'downloadUndangan'])->name('seminar-submission.undangan-download');
     Route::get('/seminar-submission/{submission}/materi/download', [SeminarSubmissionController::class, 'downloadMateri'])->name('seminar-submission.materi-download');
+    Route::get('/seminar-submission/{submission}/undangan/preview', [SeminarSubmissionController::class, 'previewUndangan'])->name('seminar-submission.undangan-preview');
+    Route::get('/seminar-submission/{submission}/materi/preview', [SeminarSubmissionController::class, 'previewMateri'])->name('seminar-submission.materi-preview');
 
     // -------------------------------------------------- finalisasi TA/KP
     // NOTE: /finalisasi/review HARUS didefinisikan sebelum /finalisasi/{mahasiswaTa}

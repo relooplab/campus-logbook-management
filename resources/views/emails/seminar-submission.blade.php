@@ -17,13 +17,15 @@ Mahasiswa **{{ $namaMahasiswa }}** telah mengirim bahan **{{ $jenisLabel }}** be
 @endif
 </x-mail::panel>
 
+Dokumen dapat dibuka langsung di browser tanpa harus diunduh:
+
 <x-mail::button :url="$urlUndangan">
-📄 Surat Undangan — {{ $namaFileUndangan }}
+👁 Buka Surat Undangan di Browser
 </x-mail::button>
 
 @if ($urlMateri)
 <x-mail::button :url="$urlMateri">
-📄 Materi — {{ $namaFileMateri }}
+👁 Buka Materi di Browser
 </x-mail::button>
 @endif
 
@@ -36,10 +38,10 @@ Lampiran **.ics** memuat jadwal di atas — klik untuk menambahkannya ke kalende
 <x-slot:subcopy>
 Jika tombol di atas tidak berfungsi, salin tautan berikut ke browser Anda:
 
-**Surat Undangan:** <span class="break-all">{{ $urlUndangan }}</span>
+**Surat Undangan ({{ $namaFileUndangan }}):** <span class="break-all">{{ $urlUndangan }}</span>
 
 @if ($urlMateri)
-**Materi:** <span class="break-all">{{ $urlMateri }}</span>
+**Materi ({{ $namaFileMateri }}):** <span class="break-all">{{ $urlMateri }}</span>
 @endif
 
 **Detail Bahan:** <span class="break-all">{{ $urlDetail }}</span>
