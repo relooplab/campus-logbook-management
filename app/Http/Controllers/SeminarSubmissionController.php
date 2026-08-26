@@ -315,7 +315,11 @@ class SeminarSubmissionController extends Controller
             abort(404);
         }
 
-        return Storage::disk('local')->download($submission->undangan_path, $submission->undangan_original_name);
+        return $this->streamOrInline(
+            $submission->undangan_path,
+            $submission->undangan_original_name,
+            $submission->isUndanganPdf()
+        );
     }
 
     /**
@@ -327,7 +331,33 @@ class SeminarSubmissionController extends Controller
             abort(404);
         }
 
-        return Storage::disk('local')->download($submission->materi_path, $submission->materi_original_name);
+        return $this->streamOrInline(
+            $submission->materi_path,
+            $submission->materi_original_name,
+            $submission->isMateriPdf()
+        );
+    }
+
+    /**
+     * Kirim file: PDF ditampilkan inline di browser (preview tanpa unduhan),
+     * sedangkan non-PDF tetap diunduh sebagai attachment.
+     */
+    private function streamOrInline(string $path, string $name, bool $isPdf)
+    {
+        if (! $isPdf) {
+            return Storage::disk('local')->download($path, $name);
+        }
+
+        $fullPath = Storage::disk('local')->path($path);
+        $size = (int) filesize($fullPath);
+
+        return response()->streamDownload(function () use ($fullPath) {
+            readfile($fullPath);
+        }, $name, [
+            'Content-Type' => 'application/pdf',
+            'Content-Length' => $size,
+            'Cache-Control' => 'private, no-transform',
+        ], 'inline');
     }
 
     /**

@@ -185,10 +185,12 @@ class SeminarSubmissionEmailTest extends TestCase
             ['submission' => $this->submission->id]
         );
 
-        // Guest (tanpa login) bisa unduh (BinaryFileResponse: cek status + header).
+        // Guest (tanpa login) bisa akses. PDF ditampilkan inline di browser
+        // (preview tanpa unduhan) — Content-Type PDF + Content-Disposition inline.
         $this->get($url)
             ->assertOk()
-            ->assertHeader('Content-Disposition', 'attachment; filename=undangan.pdf');
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertHeader('content-disposition', 'inline; filename=undangan.pdf');
 
         // Signature dimanipulasi -> 403.
         $this->get($url.'&tampered=1')->assertForbidden();

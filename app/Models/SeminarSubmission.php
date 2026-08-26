@@ -190,6 +190,30 @@ class SeminarSubmission extends Model
         return $this->materi_workspace_file_id !== null;
     }
 
+    /**
+     * True bila surat undangan adalah PDF (bisa preview inline di browser).
+     */
+    public function isUndanganPdf(): bool
+    {
+        return $this->isPdfName($this->undangan_original_name);
+    }
+
+    /**
+     * True bila dokumen materi adalah PDF (bisa preview inline di browser).
+     */
+    public function isMateriPdf(): bool
+    {
+        return $this->isPdfName($this->materi_original_name);
+    }
+
+    /**
+     * True bila nama file berakhiran .pdf (case-insensitive).
+     */
+    private function isPdfName(?string $name): bool
+    {
+        return str_ends_with(strtolower((string) $name), '.pdf');
+    }
+
     // ------------------------------------------------------------- jadwal (.ics)
 
     /**
