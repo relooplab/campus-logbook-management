@@ -393,7 +393,7 @@
     </aside>
 
     {{-- ===================== MAIN CONTENT ===================== --}}
-    <div id="main-wrap" class="flex-1 md:ml-60 transition-all duration-200 ease-in-out">
+    <div id="main-wrap" class="flex-1 md:ml-60 min-w-0 transition-all duration-200 ease-in-out">
         <header class="sticky top-0 z-30 h-16 bg-bg-base/80 backdrop-blur border-b border-border px-3 md:px-8 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_auto_1fr] items-center gap-2 md:gap-3">
             <div class="flex items-center gap-2 md:gap-3 min-w-0">
                 <button type="button" id="sidebar-open-btn" title="Buka menu" class="md:hidden p-2 rounded-xl bg-bg-hover text-text-secondary hover:text-text-primary shrink-0">
