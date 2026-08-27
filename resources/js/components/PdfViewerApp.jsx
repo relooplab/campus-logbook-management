@@ -97,6 +97,7 @@ function PdfViewerApp() {
   const [showOverview, setShowOverview] = useState(false); // daftar ringkas komentar dosen (overview)
 
   const pdfRef = useRef(null);
+  const baseRef = useRef([]); // dimensi dasar (skala 1) tiap halaman
   const canvasRefs = useRef([]);
   const stageRef = useRef(null);
   const renderGenRef = useRef(0); // penanda generasi render (anti race saat ganti skala cepat)
@@ -135,13 +136,9 @@ function PdfViewerApp() {
       const stageW = (stageRef.current?.clientWidth ?? 600) - 16; // dikurangi padding p-2
       const fit = base.length ? stageW / base[0].width : 1;
       const s = Math.min(1.4, Math.max(0.5, Math.round(fit * 100) / 100));
-      setScale(s);
 
-      const sizes = base.map((b) => ({
-        width: Math.floor(b.width * s),
-        height: Math.floor(b.height * s),
-      }));
-      setPageSizes(sizes);
+      baseRef.current = base; // simpan dimensi dasar utk derivasi ukuran saat zoom
+      setScale(s);
       setNumPages(doc.numPages);
       setLoading(false);
     }).catch((e) => {
@@ -155,6 +152,20 @@ function PdfViewerApp() {
       .then((list) => setAnnotations(list.map(toAnnotation)));
     return () => { cancelled = true; };
   }, [activeType, pdfUrl]);
+
+  // Ukuran tampilan halaman = dimensi dasar x skala aktif. Efek ini kini
+  // ikut jalan saat ZOOM berubah, sehingga lebar wrapper membesar bersama
+  // bitmap yang dirender ulang — zoom terlihat nyata dan teks tetap tajam
+  // (sebelumnya wrapper terkunci di skala awal: bitmap baru diperas ke
+  // kotak lama => zoom tidak terlihat + tampilan buram).
+  useEffect(() => {
+    const base = baseRef.current;
+    if (!base.length || !numPages) return;
+    setPageSizes(base.map((b) => ({
+      width: Math.floor(b.width * scale),
+      height: Math.floor(b.height * scale),
+    })));
+  }, [scale, numPages]);
 
   // ---------------------------------------------------------------- render
   // Render canvas setiap kali skala/jumlah halaman berubah. Penanda generasi
@@ -522,11 +533,12 @@ function PdfViewerApp() {
 
       {/* Stage: panel bertingkat tetap (max-h + overflow-auto) — scrollbar
           vertikal & horizontal selalu terlihat di tepi panel tanpa harus
-          menggulir ke bawah dokumen terlebih dulu. Halaman disusun vertikal;
-          lebar tiap halaman mengikuti skala dan dibatasi maxWidth agar halaman
-          landscape tidak pernah menimpa halaman lain. */}
+          menggulir ke bawah dokumen terlebih dulu. Halaman disusun vertikal
+          (block flow) sehingga tidak mungkin saling menimpa; lebar tiap
+          halaman mengikuti skala zoom dan melebihi lebar panel memunculkan
+          scrollbar horizontal pada panel itu sendiri. */}
       <div ref={stageRef}
-        className="bg-bg-surface dark:bg-bg-surface rounded-lg border border-border p-2 overflow-auto max-h-[75vh]">
+        className="pdf-stage bg-bg-surface dark:bg-bg-surface rounded-lg border border-border p-2 overflow-x-scroll overflow-y-auto max-h-[75vh]">
         {error && (
           <div className="flex items-center justify-center p-8 text-center text-sm text-status-danger">
             {error}
@@ -542,7 +554,9 @@ function PdfViewerApp() {
                   className="relative mx-auto"
                   style={{
                     width: size ? size.width + 'px' : undefined,
-                    maxWidth: '100%',
+                    // Tanpa maxWidth: zoom melebihi lebar panel memunculkan
+                    // scrollbar horizontal DI PANEL (selalu terlihat). Susunan
+                    // vertikal membuat halaman tak mungkin saling menimpa.
                     touchAction: areaMode ? 'none' : 'auto',
                   }}
                   onMouseDown={(e) => onMouseDown(e, i)}

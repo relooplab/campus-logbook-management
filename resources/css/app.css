@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Panel viewer PDF: scrollbar selalu tampak (overflow-x-scroll) dan diberi
+   ketebalan/warna eksplisit agar mudah ditemukan tanpa harus menggulir dulu. */
+.pdf-stage {
+    scrollbar-width: thin;
+    scrollbar-color: #94a3b8 transparent;
+}
+
+.pdf-stage::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.pdf-stage::-webkit-scrollbar-track {
+    background: rgba(148, 163, 184, 0.15);
+    border-radius: 8px;
+}
+
+.pdf-stage::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 8px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+}
+
+.pdf-stage::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+    border: 3px solid transparent;
+    background-clip: content-box;
+}
