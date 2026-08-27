@@ -93,6 +93,41 @@
                         <p class="font-medium text-text-primary">{{ collect([$kp->penguji1?->name, $kp->penguji2?->name])->filter()->implode(' · ') ?: 'Belum ada' }}</p>
                     </div>
                 </div>
+
+                <div class="px-3 py-2.5 rounded-xl bg-bg-panel">
+                    <p class="text-xs text-text-secondary mb-1">Anggota Kelompok:</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        @foreach ($kp->allMembers() as $member)
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-bg-surface border border-border">
+                                {{ $member->name }}
+                                @if ($canManageKpMembers && $member->id !== $kp->user_id)
+                                    <form method="POST" action="{{ route('profile.kp.remove-member', [$kp, $member]) }}"
+                                        onsubmit="return confirm('Hapus {{ $member->name }} dari kelompok?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-status-danger leading-none" title="Hapus anggota">&times;</button>
+                                    </form>
+                                @endif
+                            </span>
+                        @endforeach
+                    </div>
+                </div>
+
+                @if ($canManageKpMembers)
+                    <form method="POST" action="{{ route('profile.kp.add-member', $kp) }}" class="flex flex-wrap items-center gap-2">
+                        @csrf
+                        <select name="user_id" required
+                            class="flex-1 min-w-[180px] rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
+                            <option value="">+ Tambah teman ke kelompok...</option>
+                            @foreach ($kpEligibleMembers as $cand)
+                                <option value="{{ $cand->id }}">{{ $cand->name }} ({{ $cand->nim }})</option>
+                            @endforeach
+                        </select>
+                        <button class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Tambah</button>
+                    </form>
+                    @if ($kpEligibleMembers->isEmpty())
+                        <p class="text-xs text-text-secondary">Belum ada mahasiswa yang dapat ditambahkan (semua sudah terlibat KP lain).</p>
+                    @endif
+                @endif
             </div>
 
             @include('profile.partials.usul-penguji', ['program' => $kp])

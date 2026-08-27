@@ -53,6 +53,17 @@
                 @error('fase') <p class="text-status-danger text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
+            <div id="kp-members-wrap" class="hidden">
+                <label class="block text-xs text-text-secondary mb-1">Anggota Kelompok <span class="text-text-secondary">(opsional, Ctrl+klik untuk pilih banyak)</span></label>
+                <select name="member_ids[]" multiple size="4" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm">
+                    @foreach ($memberCandidates as $cand)
+                        <option value="{{ $cand->id }}">{{ $cand->name }} ({{ $cand->nim }})</option>
+                    @endforeach
+                </select>
+                <p class="text-xs text-text-secondary mt-1">Ajak teman Anda bergabung dalam kelompok KP yang sama. Semua anggota berbagi satu logbook &amp; bimbingan — tidak perlu submit berkas masing-masing.</p>
+                @error('member_ids.*') <p class="text-status-danger text-xs mt-1">{{ $message }}</p> @enderror
+            </div>
+
             <div>
                 <label class="block text-xs text-text-secondary mb-1">Pembimbing 1 <span class="text-text-secondary">(opsional)</span></label>
                 <select name="pembimbing_1_id" class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm">
@@ -123,6 +134,9 @@
             if (faseSelect.selectedOptions[0] && faseSelect.selectedOptions[0].dataset.jenis !== jenis) {
                 faseSelect.value = '';
             }
+            // Tampilkan pemilih anggota kelompok hanya untuk KP.
+            var membersWrap = document.getElementById('kp-members-wrap');
+            if (membersWrap) membersWrap.classList.toggle('hidden', jenis !== 'kp');
         }
 
         jenisSelect.addEventListener('change', sync);

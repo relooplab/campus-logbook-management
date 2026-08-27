@@ -172,6 +172,90 @@ class MahasiswaTa extends Model
         return $members->values();
     }
 
+    /**
+     * Apakah kandidat layak digabung ke kelompok KP.
+     *
+     * Aturan satu program KP per mahasiswa:
+     *  - Harus ber-role mahasiswa.
+     *  - Tidak boleh sudah menjadi pemilik/anggota kelompok ini.
+     *  - Tidak boleh menjadi anggota pivot kelompok KP non-ditolak LAIN
+     *    (keterlibatan ganda yang tidak bisa disatukan).
+     *
+     * Kandidat yang menjadi PEMILIK program KP-nya sendiri tetap dianggap
+     * layak, karena program lamanya akan dinonaktifkan saat digabung
+     * (histori data tetap tersimpan).
+     */
+    public static function kpCandidateEligible(User $candidate, ?int $ignoreProgramId = null): bool
+    {
+        if (! $candidate->isMahasiswa()) {
+            return false;
+        }
+
+        $isMemberOfOtherGroup = \DB::table('mahasiswa_ta_members')
+            ->join('mahasiswa_ta', 'mahasiswa_ta.id', '=', 'mahasiswa_ta_members.mahasiswa_ta_id')
+            ->where('mahasiswa_ta_members.user_id', $candidate->id)
+            ->where('mahasiswa_ta.jenis', self::JENIS_KP)
+            ->where('mahasiswa_ta.status_ta', '!=', self::STATUS_DITOLAK)
+            ->when($ignoreProgramId, fn ($w) => $w->where('mahasiswa_ta.id', '!=', $ignoreProgramId))
+            ->exists();
+
+        return ! $isMemberOfOtherGroup;
+    }
+
+    /**
+     * Nonaktifkan program KP milik $member (sebagai pemilik) selain program
+     * yang ditunjuk. Dipakai saat mahasiswa digabung ke kelompok — program
+     * lamanya dinonaktifkan agar tidak ada program ganda, tanpa menghapus data
+     * (logbook/sesi/workspace lama tetap tersimpan).
+     */
+    public static function deactivateKpExcept(User $member, ?int $exceptProgramId): void
+    {
+        self::where('jenis', self::JENIS_KP)
+            ->where('user_id', $member->id)
+            ->where('id', '!=', $exceptProgramId)
+            ->whereIn('status_ta', [self::STATUS_AKTIF, self::STATUS_PENDING_APPROVAL])
+            ->update(['status_ta' => self::STATUS_NONAKTIF]);
+    }
+
+    /**
+     * Daftar mahasiswa yang layak ditambahkan sebagai anggota kelompok ini
+     * (untuk dropdown UI). Difilter ke perguruan tinggi pemilik bila tersedia
+     * agar opsi yang ditampilkan relevan.
+     */
+    public function eligibleMemberCandidates(): \Illuminate\Support\Collection
+    {
+        $q = User::role('mahasiswa')->orderBy('name');
+
+        $owner = $this->mahasiswa;
+        if ($owner?->universities()->exists()) {
+            $ownerUniv = $owner->universities()->orderByDesc('user_university.is_primary')->first()->id;
+            $q->whereHas('universities', fn ($w) => $w->whereKey($ownerUniv));
+        }
+
+        return $q->get()
+            ->reject(fn (User $u) => $u->id === $this->user_id)
+            ->filter(fn (User $u) => static::kpCandidateEligible($u, $this->id))
+            ->values();
+    }
+
+    /**
+     * Kandidat anggota untuk pembuatan KP baru (alur Pilih Dosen).
+     */
+    public static function kpNewMemberCandidates(?User $owner = null): \Illuminate\Support\Collection
+    {
+        $q = User::role('mahasiswa')->orderBy('name');
+
+        if ($owner?->universities()->exists()) {
+            $ownerUniv = $owner->universities()->orderByDesc('user_university.is_primary')->first()->id;
+            $q->whereHas('universities', fn ($w) => $w->whereKey($ownerUniv));
+        }
+
+        return $q->get()
+            ->reject(fn (User $u) => $owner && $u->id === $owner->id)
+            ->filter(fn (User $u) => static::kpCandidateEligible($u))
+            ->values();
+    }
+
     public function institution(): BelongsTo
     {
         return $this->belongsTo(Institution::class);

@@ -7,6 +7,7 @@ use App\Models\MahasiswaTa;
 use App\Models\StudyProgram;
 use App\Models\University;
 use App\Models\User;
+use App\Notifications\ActivityNotification;
 use App\Services\OrganizationalDirectoryService;
 use App\Support\Feature;
 use Illuminate\Http\RedirectResponse;
@@ -179,6 +180,62 @@ class ProfileController extends Controller
     }
 
     /**
+     * Tambah anggota kelompok KP (oleh pemilik kelompok).
+     * Program KP lama milik anggota dinonaktifkan bila ada (tanpa hapus data).
+     */
+    public function addMember(Request $request, MahasiswaTa $mahasiswaTa): RedirectResponse
+    {
+        $user = $request->user();
+
+        abort_unless($mahasiswaTa->isKp(), 404, 'Program bukan KP.');
+        abort_unless($mahasiswaTa->user_id === $user->id, 403, 'Hanya pemilik kelompok yang dapat menambah anggota.');
+
+        $validated = $request->validate([
+            'user_id' => ['required', 'exists:users,id'],
+        ]);
+
+        $candidate = User::findOrFail($validated['user_id']);
+
+        if ($candidate->id === $mahasiswaTa->user_id || $mahasiswaTa->members()->whereKey($candidate->id)->exists()) {
+            return back()->with('error', 'Mahasiswa tersebut sudah menjadi anggota kelompok ini.');
+        }
+
+        if (! MahasiswaTa::kpCandidateEligible($candidate, $mahasiswaTa->id)) {
+            return back()->with('error', 'Mahasiswa tersebut telah menjadi anggota kelompok KP lain dan tidak dapat digabung.');
+        }
+
+        $mahasiswaTa->members()->attach($candidate->id);
+        MahasiswaTa::deactivateKpExcept($candidate, $mahasiswaTa->id);
+
+        $this->bestEffort(fn () => $candidate->notify(new ActivityNotification(
+            "Anda telah ditambahkan ke kelompok KP '".($mahasiswaTa->tempat_kp ?: 'Kerja Praktik')."'.",
+            route('profile.profil-akademik'),
+            'Gabung Kelompok KP',
+        )));
+
+        return redirect()->route('profile.profil-akademik')
+            ->with('success', "{$candidate->name} ditambahkan sebagai anggota kelompok.");
+    }
+
+    /**
+     * Hapus anggota kelompok KP (oleh pemilik kelompok).
+     * Pemilik utama tidak dapat dihapus.
+     */
+    public function removeMember(Request $request, MahasiswaTa $mahasiswaTa, User $user): RedirectResponse
+    {
+        $actor = $request->user();
+
+        abort_unless($mahasiswaTa->isKp(), 404, 'Program bukan KP.');
+        abort_unless($mahasiswaTa->user_id === $actor->id, 403, 'Hanya pemilik kelompok yang dapat menghapus anggota.');
+        abort_if($user->id === $mahasiswaTa->user_id, 422, 'Pemilik kelompok tidak dapat dihapus.');
+
+        $mahasiswaTa->members()->detach($user->id);
+
+        return redirect()->route('profile.profil-akademik')
+            ->with('success', "{$user->name} dihapus dari kelompok.");
+    }
+
+    /**
      * Form pilih dosen (mahasiswa aktif yang belum attach dosen).
      * Menampilkan daftar dosen untuk dipilih sebagai pembimbing/penguji.
      */
@@ -235,7 +292,10 @@ class ProfileController extends Controller
             $affiliation?->pivot->department_id
         );
 
-        return view('profile.select-dosen', compact('user', 'affiliation', 'dosenList', 'faseLabelsTa', 'faseLabelsKp', 'jenisLabelTa', 'jenisLabelKp'));
+        // Kandidat teman untuk bergabung dalam kelompok KP saat membuat program.
+        $memberCandidates = \App\Models\MahasiswaTa::kpNewMemberCandidates($user);
+
+        return view('profile.select-dosen', compact('user', 'affiliation', 'dosenList', 'faseLabelsTa', 'faseLabelsKp', 'jenisLabelTa', 'jenisLabelKp', 'memberCandidates'));
     }
 
     /**
@@ -275,6 +335,8 @@ class ProfileController extends Controller
             'pembimbing_2_id' => ['nullable', 'exists:users,id'],
             'penguji_1_id' => ['nullable', 'exists:users,id'],
             'penguji_2_id' => ['nullable', 'exists:users,id'],
+            'member_ids' => ['nullable', 'array'],
+            'member_ids.*' => ['integer', 'exists:users,id'],
         ], [
             'pembimbing_1_id.required_without_all' => 'Pilih minimal satu peran dosen (pembimbing atau penguji).',
         ]);
@@ -316,6 +378,27 @@ class ProfileController extends Controller
             'status_ta' => \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL,
             'fase' => $validated['fase'],
         ]);
+
+        // Anggota kelompok (khusus KP): mahasiswa yang diajak tergabung sejak awal.
+        // Validasi satu-program-KP + nonaktifkan program lama milik anggota.
+        if ($validated['jenis'] === \App\Models\MahasiswaTa::JENIS_KP && !empty($validated['member_ids'])) {
+            $memberIds = array_values(array_unique(
+                array_diff($validated['member_ids'], [$user->id])
+            ));
+
+            foreach ($memberIds as $mid) {
+                $cand = \App\Models\User::find($mid);
+                if (! $cand || ! $cand->isMahasiswa() || ! \App\Models\MahasiswaTa::kpCandidateEligible($cand, $ta->id)) {
+                    return back()->with('error', 'Salah satu teman yang dipilih tidak valid atau telah menjadi anggota kelompok KP lain.');
+                }
+            }
+
+            $ta->members()->sync($memberIds);
+
+            foreach ($memberIds as $mid) {
+                \App\Models\MahasiswaTa::deactivateKpExcept(\App\Models\User::find($mid), $ta->id);
+            }
+        }
 
         // Notifikasi ke dosen yang dipilih.
         foreach ($dosenIds as $dosenId) {

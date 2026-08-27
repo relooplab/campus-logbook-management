@@ -27,6 +27,12 @@ class ProfilAkademikController extends Controller
 
         $programs = collect(compact('ta', 'kp'))->filter();
 
+        // Kandidat & izin kelola anggota kelompok KP (hanya pemilik).
+        $canManageKpMembers = $kp && $kp->user_id === $user->id;
+        $kpEligibleMembers = $canManageKpMembers
+            ? $kp->eligibleMemberCandidates()
+            : collect();
+
         // Daftar dosen aktif untuk dropdown usul penguji (bebas dari PT mana saja).
         $dosenList = User::role('dosen')
             ->where('registration_status', 'active')
@@ -47,7 +53,8 @@ class ProfilAkademikController extends Controller
             ->get();
 
         return view('profile.profil-akademik', compact(
-            'ta', 'kp', 'programs', 'dosenList', 'pendingRequests', 'historyRequests'
+            'ta', 'kp', 'programs', 'dosenList', 'pendingRequests', 'historyRequests',
+            'canManageKpMembers', 'kpEligibleMembers'
         ));
     }
 
