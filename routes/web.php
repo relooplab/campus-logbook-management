@@ -131,6 +131,8 @@ Route::middleware(['auth', 'ensure.dosen.decision', 'ensure.dosen.affiliation', 
     // ------------------------------------------------------- profil akademik (mahasiswa)
     Route::get('/profil-akademik', [ProfilAkademikController::class, 'index'])->name('profile.profil-akademik');
     Route::post('/profil-akademik/penguji', [ProfilAkademikController::class, 'proposePenguji'])->name('profile.profil-akademik.penguji');
+    Route::post('/kp/{mahasiswaTa}/anggota', [ProfileController::class, 'addMember'])->name('profile.kp.add-member');
+    Route::delete('/kp/{mahasiswaTa}/anggota/{user}', [ProfileController::class, 'removeMember'])->name('profile.kp.remove-member');
 
     // ------------------------------------------------------- afiliasi (dosen)
     Route::get('/profil/afiliasi', [ProfileController::class, 'affiliation'])->name('profile.affiliation');
@@ -152,6 +154,10 @@ Route::middleware(['auth', 'ensure.dosen.decision', 'ensure.dosen.affiliation', 
     Route::get('/mahasiswa-kp/{mahasiswaTa}', [MahasiswaTaController::class, 'show'])->name('mahasiswa-kp.show');
     Route::post('/mahasiswa-kp/{mahasiswaTa}/fase', [MahasiswaTaController::class, 'updateFase'])
         ->name('mahasiswa-kp.fase');
+
+    // Gabungkan mahasiswa (dari program KP terpisah) ke kelompok ini — oleh pembimbing.
+    Route::post('/mahasiswa-kp/{mahasiswaTa}/gabung', [MahasiswaTaController::class, 'gabungkanAnggota'])
+        ->name('mahasiswa-kp.gabung');
 
     // ------------------------------------------------------ logbook harian KP
     Route::get('/kp/{mahasiswaTa}/logbook-harian', [LogbookHarianController::class, 'index'])->name('logbook-harian.index');

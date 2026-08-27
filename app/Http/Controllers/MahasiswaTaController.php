@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\User;
+use App\Notifications\ActivityNotification;
 use App\Services\MahasiswaDashboardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -95,12 +96,17 @@ class MahasiswaTaController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Kandidat anggota untuk tombol "Gabung mahasiswa" (dosen pembimbing).
+        $eligibleMembers = ($mahasiswaTa->isKp() && $user->isDosen())
+            ? $mahasiswaTa->eligibleMemberCandidates()
+            : collect();
+
         return view('mahasiswa.show', compact(
             'mahasiswaTa', 'entries', 'approved', 'target', 'percent',
             'faseKeys', 'faseIndex', 'faseLabels',
             'unlockedAchievements', 'unlockedCodes', 'totalAchievements',
             'stats', 'timeline', 'heatmap', 'regularity', 'regularityTooltip',
-            'logbookHarian', 'dosenList'
+            'logbookHarian', 'dosenList', 'eligibleMembers'
         ));
     }
 
@@ -142,6 +148,46 @@ class MahasiswaTaController extends Controller
         ]);
 
         return back()->with('success', "Fase diperbarui: {$old} → {$new}.");
+    }
+
+    /**
+     * Gabungkan mahasiswa ke kelompok KP (oleh dosen pembimbing).
+     *
+     * Dipakai kasus produksi di mana mahasiswa terpisah padahal seharusnya
+     * satu kelompok: mahasiswa dijadikan anggota kelompok ini dan program KP
+     * lamanya dinonaktifkan (histori data tetap tersimpan, tidak dipindah).
+     */
+    public function gabungkanAnggota(Request $request, MahasiswaTa $mahasiswaTa): RedirectResponse
+    {
+        $user = $request->user();
+
+        abort_unless($mahasiswaTa->isKp(), 404, 'Program bukan KP.');
+        abort_unless($user->isDosen() && $mahasiswaTa->isPembimbing($user), 403, 'Hanya pembimbing yang dapat menggabungkan anggota.');
+
+        $validated = $request->validate([
+            'user_id' => ['required', 'exists:users,id'],
+        ]);
+
+        $candidate = User::findOrFail($validated['user_id']);
+
+        if ($candidate->id === $mahasiswaTa->user_id || $mahasiswaTa->members()->whereKey($candidate->id)->exists()) {
+            return back()->with('error', 'Mahasiswa tersebut sudah menjadi anggota kelompok ini.');
+        }
+
+        if (! MahasiswaTa::kpCandidateEligible($candidate, $mahasiswaTa->id)) {
+            return back()->with('error', 'Mahasiswa tersebut telah menjadi anggota kelompok KP lain dan tidak dapat digabung.');
+        }
+
+        $mahasiswaTa->members()->attach($candidate->id);
+        MahasiswaTa::deactivateKpExcept($candidate, $mahasiswaTa->id);
+
+        $this->bestEffort(fn () => $candidate->notify(new ActivityNotification(
+            "Anda telah digabungkan ke kelompok KP '".($mahasiswaTa->tempat_kp ?: 'Kerja Praktik')."'.",
+            route('dashboard'),
+            'Gabung Kelompok KP',
+        )));
+
+        return back()->with('success', "{$candidate->name} ditambahkan sebagai anggota kelompok.");
     }
 
     /**

@@ -35,6 +35,19 @@
                     </div>
                 </div>
             @endif
+            @if ($mahasiswaTa->isKp() && $isDosen && $mahasiswaTa->isPembimbing($user))
+                <form method="POST" action="{{ route('mahasiswa-kp.gabung', $mahasiswaTa) }}" class="mt-2 flex flex-wrap items-center gap-2">
+                    @csrf
+                    <select name="user_id" required
+                        class="rounded-xl border border-border bg-bg-surface px-2 py-1 text-xs">
+                        <option value="">+ Gabung mahasiswa (dari KP terpisah)...</option>
+                        @foreach ($eligibleMembers as $cand)
+                            <option value="{{ $cand->id }}">{{ $cand->name }} ({{ $cand->nim }})</option>
+                        @endforeach
+                    </select>
+                    <button class="px-2 py-1 rounded-xl bg-bg-hover text-xs font-medium hover:bg-border">Tambah</button>
+                </form>
+            @endif
         </div>
         <div class="text-center">
             <div class="text-2xl font-bold text-brand">{{ $approved }}/{{ $target }}</div>

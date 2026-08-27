@@ -108,7 +108,7 @@
                     <select name="member_ids[]" multiple size="3"
                         class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
                         <option value="" disabled>Anggota kelompok lainnya (opsional, Ctrl+klik untuk pilih banyak)...</option>
-                        @foreach ($mahasiswaList as $m)
+                        @foreach ($kpNewMemberCandidates as $m)
                             <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->nim }})</option>
                         @endforeach
                     </select>
@@ -173,7 +173,7 @@
                         <label class="block text-xs text-text-secondary mb-1">Anggota Kelompok Lainnya</label>
                         <select name="member_ids[]" multiple size="3"
                             class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm">
-                            @foreach ($mahasiswaList as $m)
+                            @foreach (($kpMemberCandidates[$ta->id] ?? collect()) as $m)
                                 <option value="{{ $m->id }}" @selected($ta->members->contains('id', $m->id))>{{ $m->name }} ({{ $m->nim }})</option>
                             @endforeach
                         </select>

@@ -802,7 +802,25 @@ class AdminController extends Controller
         $dosenList = $dosenQuery->get();
         $mahasiswaList = $mahasiswaQuery->get();
 
-        return view('admin.tas', compact('tas', 'dosenList', 'mahasiswaList', 'jenis'));
+        // Dropdown "Anggota Kelompok Lainnya" (KP): sertakan juga mahasiswa
+        // yang sudah punya KP sendiri (kasus penggabungan), bukan hanya yang
+        // belum punya KP. Per-program: anggota existing + kandidat eligible.
+        $kpMemberCandidates = [];
+        foreach ($tas->where('jenis', MahasiswaTa::JENIS_KP) as $ta) {
+            $kpMemberCandidates[$ta->id] = $ta->allMembers()
+                ->merge($ta->eligibleMemberCandidates())
+                ->unique('id')
+                ->values();
+        }
+        // Untuk form "Buat Data KP": kandidat anggota juga dari pool yang lebih luas.
+        $kpNewMemberCandidates = MahasiswaTa::kpNewMemberCandidates();
+        if (! $request->user()->isSystemAdmin() && $request->user()->institution_id) {
+            $kpNewMemberCandidates = $kpNewMemberCandidates
+                ->where('institution_id', $request->user()->institution_id)
+                ->values();
+        }
+
+        return view('admin.tas', compact('tas', 'dosenList', 'mahasiswaList', 'jenis', 'kpMemberCandidates', 'kpNewMemberCandidates'));
     }
 
     public function storeTa(Request $request): RedirectResponse
@@ -842,9 +860,25 @@ class AdminController extends Controller
 
         $program = MahasiswaTa::create($validated);
 
-        // Anggota kelompok tambahan (khusus KP).
+        // Anggota kelompok tambahan (khusus KP) — validasi satu-program-KP &
+        // nonaktifkan program lama milik anggota yang digabung.
         if ($isKp && !empty($validated['member_ids'])) {
-            $program->members()->sync(array_diff($validated['member_ids'], [$program->user_id]));
+            $memberIds = array_values(array_unique(
+                array_diff($validated['member_ids'], [$program->user_id])
+            ));
+
+            foreach ($memberIds as $mid) {
+                $candidate = User::find($mid);
+                if (! $candidate || ! MahasiswaTa::kpCandidateEligible($candidate, $program->id)) {
+                    return back()->with('error', 'Salah satu anggota telah menjadi anggota kelompok KP lain.');
+                }
+            }
+
+            $program->members()->sync($memberIds);
+
+            foreach ($memberIds as $mid) {
+                MahasiswaTa::deactivateKpExcept(User::find($mid), $program->id);
+            }
         }
 
         return back()->with('success', 'Data '.($isKp ? 'KP' : 'TA').' dibuat.');
@@ -878,9 +912,25 @@ class AdminController extends Controller
         $mahasiswaTa->update($validated);
 
         // Sinkronkan anggota kelompok tambahan (khusus KP).
+        // Validasi satu-program-KP + nonaktifkan program lama milik anggota
+        // yang digabung (tanpa menghapus data).
         if ($isKp) {
-            $memberIds = array_diff($validated['member_ids'] ?? [], [$mahasiswaTa->user_id]);
+            $memberIds = array_values(array_unique(
+                array_diff($validated['member_ids'] ?? [], [$mahasiswaTa->user_id])
+            ));
+
+            foreach ($memberIds as $mid) {
+                $candidate = \App\Models\User::find($mid);
+                if (! $candidate || ! \App\Models\MahasiswaTa::kpCandidateEligible($candidate, $mahasiswaTa->id)) {
+                    return back()->with('error', 'Salah satu anggota telah menjadi anggota kelompok KP lain dan tidak dapat digabung.');
+                }
+            }
+
             $mahasiswaTa->members()->sync($memberIds);
+
+            foreach ($memberIds as $mid) {
+                \App\Models\MahasiswaTa::deactivateKpExcept(\App\Models\User::find($mid), $mahasiswaTa->id);
+            }
         }
 
         return back()->with('success', 'Data '.($isKp ? 'KP' : 'TA').' diperbarui.');
