@@ -137,6 +137,12 @@ class SeminarSubmissionController extends Controller
         // Notifikasi ke dosen terkait.
         $this->notifyDosen($mahasiswaTa, $submission);
 
+        // Kirim notifikasi & email yang sama ke mahasiswa pengirim sebagai
+        // bukti/salinan bahan yang telah dikirim (sapaan dibedakan via peran).
+        if ($mahasiswa = $mahasiswaTa->mahasiswa) {
+            $this->bestEffort(fn () => $mahasiswa->notify(new SeminarSubmissionNotification($submission, 'mahasiswa')));
+        }
+
         return redirect()->route('seminar-submission.show', $submission)
             ->with('success', 'Bahan seminar/sidang berhasil dikirim.');
     }

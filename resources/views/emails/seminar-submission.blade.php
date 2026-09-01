@@ -1,7 +1,11 @@
 <x-mail::message>
-# Halo {{ $namaDosen }}
+# Halo {{ $penerima }}
 
+@if ($role === 'mahasiswa')
+Anda telah mengirim bahan **{{ $jenisLabel }}**. Berikut salinan ringkas untuk acuan Anda.
+@else
 Mahasiswa **{{ $namaMahasiswa }}** telah mengirim bahan **{{ $jenisLabel }}** beserta dokumen pendukungnya. Mohon untuk direview sebelum jadwal dimulai.
+@endif
 
 <x-mail::panel>
 **Detail Jadwal**
