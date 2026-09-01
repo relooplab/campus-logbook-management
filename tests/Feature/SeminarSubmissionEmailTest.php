@@ -220,4 +220,24 @@ class SeminarSubmissionEmailTest extends TestCase
         $this->assertSame('09:00', $start->format('H:i'));
         $this->assertSame('10:00', $this->submission->end()->format('H:i'));
     }
+
+    public function test_mahasiswa_pengirim_menerima_email_sama_dengan_narasi_khusus(): void
+    {
+        $mail = (new SeminarSubmissionNotification($this->submission, 'mahasiswa'))->toMail($this->mhs);
+        $html = $mail->render();
+
+        // Sapaan & narasi khusus penerima mahasiswa (bukti kirim).
+        $this->assertStringContainsString('Halo Mhs Ics', $html);
+        $this->assertStringContainsString('Anda telah mengirim bahan', $html);
+
+        // Struktur email tetap lengkap: tombol dokumen & detail.
+        $this->assertStringContainsString('Buka Surat Undangan di Browser', $html);
+        $this->assertStringContainsString('Buka Materi di Browser', $html);
+        $this->assertStringContainsString('Lihat Detail Bahan', $html);
+        $this->assertStringContainsString('break-all', $html);
+
+        // Tetap ada lampiran .ics.
+        $this->assertCount(1, $mail->rawAttachments);
+        $this->assertStringEndsWith('.ics', (string) $mail->rawAttachments[0]['name']);
+    }
 }

@@ -19,8 +19,10 @@ class SeminarSubmissionNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public SeminarSubmission $submission)
-    {
+    public function __construct(
+        public SeminarSubmission $submission,
+        public string $role = 'dosen', // 'dosen' | 'mahasiswa'
+    ) {
     }
 
     public function via(object $notifiable): array
@@ -44,7 +46,8 @@ class SeminarSubmissionNotification extends Notification implements ShouldQueue
             ->theme('clean-minimal')
             ->subject('Bahan '.$submission->jenisLabel().' Dikirim')
             ->markdown('emails.seminar-submission', [
-                'namaDosen' => $notifiable->name,
+                'role' => $this->role,
+                'penerima' => $notifiable->name,
                 'namaMahasiswa' => $mahasiswa?->name ?? '—',
                 'jenisLabel' => $submission->jenisLabel(),
                 'tanggal' => $submission->tanggal?->format('l, d F Y') ?? '—',
@@ -71,9 +74,14 @@ class SeminarSubmissionNotification extends Notification implements ShouldQueue
     {
         $submission = $this->submission;
         $mahasiswa = $submission->mahasiswaTa?->mahasiswa;
+        $nama = $mahasiswa?->name ?? '—';
+
+        $msg = $this->role === 'mahasiswa'
+            ? 'Anda telah mengirim bahan '.$submission->jenisLabel().'.'
+            : 'Mahasiswa '.$nama.' mengirim bahan '.$submission->jenisLabel().'.';
 
         return [
-            'message' => 'Mahasiswa '.($mahasiswa?->name ?? '—').' mengirim bahan '.$submission->jenisLabel().'.',
+            'message' => $msg,
             'url' => route('seminar-submission.show', $submission),
         ];
     }
