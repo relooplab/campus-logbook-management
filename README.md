@@ -1,4 +1,4 @@
-# Thesis Logbook Management
+# Campus Logbook Management
 
 Aplikasi web untuk mencatat, memantau, dan mengelola proses bimbingan tugas akhir/kerja praktik antara mahasiswa, dosen pembimbing, penguji, dan administrator.
 
