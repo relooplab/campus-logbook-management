@@ -7,6 +7,7 @@
     $user = auth()->user();
     $owner = $user->isMahasiswa() && $logbook->mahasiswaTa?->isMember($user);
     $canReview = $user->can('review', $logbook);
+    $canReopen = $user->can('reopen', $logbook);
     $canManageActionItems = $user->can('manageActionItems', $logbook);
 
     // Navigasi "Kembali" konteks-sensitif pada halaman detail entri.
@@ -245,6 +246,30 @@
                         <p class="text-status-danger text-xs">{{ $message }}</p>
                     @enderror
                     <button type="submit" class="w-full px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20">Minta Revisi</button>
+                </form>
+            </div>
+        @endif
+
+        @if ($canReopen && $logbook->status === 'approved')
+            <div class="card p-5 space-y-4">
+                <h2 class="font-heading font-semibold text-text-primary">Buka Kembali Persetujuan</h2>
+                <div class="px-4 py-3 rounded-xl bg-status-pending/10 border border-status-pending/20 text-sm text-text-secondary">
+                    Entri ini sudah disetujui. Jika ternyata masih perlu perbaikan, batalkan persetujuan atau minta revisi kembali ke mahasiswa.
+                </div>
+                <form method="POST" action="{{ route('logbook.reopen', $logbook) }}"
+                    onsubmit="return confirm('Batalkan persetujuan? Entri akan kembali menunggu review.');">
+                    @csrf
+                    <button type="submit" class="w-full px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">Batalkan Persetujuan → Menunggu Review</button>
+                </form>
+                <form method="POST" action="{{ route('logbook.reopen-revisi', $logbook) }}" class="space-y-2"
+                    onsubmit="return confirm('Minta revisi kembali ke mahasiswa dengan feedback ini?');">
+                    @csrf
+                    <textarea name="feedback_dosen" rows="3" required minlength="20" placeholder="Feedback revisi lanjutan wajib diisi (minimal 20 karakter)..."
+                        class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">{{ old('feedback_dosen') }}</textarea>
+                    @error('feedback_dosen')
+                        <p class="text-status-danger text-xs">{{ $message }}</p>
+                    @enderror
+                    <button type="submit" class="w-full px-4 py-2 rounded-xl bg-status-danger/10 text-status-danger text-sm font-medium hover:bg-status-danger/20">Minta Revisi Kembali</button>
                 </form>
             </div>
         @endif

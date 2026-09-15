@@ -644,6 +644,65 @@ class LogbookController extends Controller
         return back()->with('success', 'Entri dikembalikan untuk revisi.');
     }
 
+    /**
+     * Batalkan persetujuan: approved → submitted agar masuk antrean review lagi.
+     */
+    public function reopen(LogbookEntry $logbook): RedirectResponse
+    {
+        $this->authorize('reopen', $logbook);
+
+        // Hanya program aktif yang bisa dibuka kembali.
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
+
+        abort_unless($logbook->status === LogbookEntry::STATUS_APPROVED, 422, 'Hanya entri yang sudah disetujui yang bisa dibuka kembali.');
+
+        $logbook->update([
+            'status' => LogbookEntry::STATUS_SUBMITTED,
+            'reviewed_at' => null,
+        ]);
+
+        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Persetujuan entri Anda dibatalkan dosen, kini kembali menunggu review.'));
+        $logbook->notifyParties(
+            'Persetujuan entri '.($logbook->jenis === 'revisi' ? 'revisi' : 'logbook sesi '.$logbook->sesi_ke).' dibatalkan dosen. Entri kembali menunggu review.',
+            route('logbook.show', $logbook),
+            'Persetujuan Dibatalkan',
+        );
+
+        return back()->with('success', 'Persetujuan dibatalkan. Entri kembali menunggu review.');
+    }
+
+    /**
+     * Minta revisi lagi pada entri yang sudah disetujui: approved → revisi.
+     */
+    public function reopenRevisi(Request $request, LogbookEntry $logbook): RedirectResponse
+    {
+        $this->authorize('reopen', $logbook);
+
+        // Hanya program aktif yang bisa dibuka kembali.
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
+
+        abort_unless($logbook->status === LogbookEntry::STATUS_APPROVED, 422, 'Hanya entri yang sudah disetujui yang bisa diminta revisi kembali.');
+
+        $validated = $request->validate([
+            'feedback_dosen' => ['required', 'string', 'min:20'],
+        ]);
+
+        $logbook->update([
+            'status' => LogbookEntry::STATUS_REVISI,
+            'feedback_dosen' => $validated['feedback_dosen'],
+            'reviewed_at' => now(),
+        ]);
+
+        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri yang sudah disetujui diminta revisi kembali: '.$validated['feedback_dosen']));
+        $logbook->notifyParties(
+            'Entri yang sudah disetujui diminta revisi kembali: '.$validated['feedback_dosen'],
+            route('logbook.show', $logbook),
+            'Permintaan Revisi Kembali',
+        );
+
+        return back()->with('success', 'Entri dibuka kembali dan dikembalikan untuk revisi.');
+    }
+
     // ---------------------------------------------------------------- pdf serve
 
     public function pdf(LogbookEntry $logbook)

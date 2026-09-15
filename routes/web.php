@@ -300,6 +300,8 @@ Route::middleware(['auth', 'ensure.dosen.decision', 'ensure.dosen.affiliation', 
     Route::post('/logbook/{logbook}/submit', [LogbookController::class, 'submit'])->name('logbook.submit');
     Route::post('/logbook/{logbook}/approve', [LogbookController::class, 'approve'])->name('logbook.approve');
     Route::post('/logbook/{logbook}/revisi', [LogbookController::class, 'requestRevisi'])->name('logbook.request-revisi');
+    Route::post('/logbook/{logbook}/reopen', [LogbookController::class, 'reopen'])->name('logbook.reopen');
+    Route::post('/logbook/{logbook}/reopen-revisi', [LogbookController::class, 'reopenRevisi'])->name('logbook.reopen-revisi');
 
     Route::get('/logbook/{logbook}/pdf', [LogbookController::class, 'pdf'])->name('logbook.pdf');
     Route::get('/logbook/{logbook}/catatan-pdf', [LogbookController::class, 'catatanPdf'])->name('logbook.catatan-pdf');
