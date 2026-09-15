@@ -1,3 +1,21 @@
+# [0.54.0](https://github.com/relooplab/campus-logbook-management/compare/v0.53.0...v0.54.0) (2026-09-15)
+
+
+### Bug Fixes
+
+* **auth:** mention spam folder on verify-email notice ([2d8da6c](https://github.com/relooplab/campus-logbook-management/commit/2d8da6ce25323aadb01e5b7c5a2eef75542588e1))
+* **nginx:** don't cache 404 responses for static assets ([fc365a6](https://github.com/relooplab/campus-logbook-management/commit/fc365a62049a65dee6cad33762a4683bb203bc38))
+* **nginx:** don't cache 404 responses for static assets ([#18](https://github.com/relooplab/campus-logbook-management/issues/18)) ([e6bfed0](https://github.com/relooplab/campus-logbook-management/commit/e6bfed00e1dec7fce66ea3ee06adb12edc4e8db9))
+* **pdf-viewer:** prevent zoom from pushing layout buttons off-screen ([059725d](https://github.com/relooplab/campus-logbook-management/commit/059725d193d661fcfeea8d4b719ac28cff59bd4a)), closes [#main-wrap](https://github.com/relooplab/campus-logbook-management/issues/main-wrap)
+* **pdf-viewer:** working zoom + always-visible scrollbars ([1e5e732](https://github.com/relooplab/campus-logbook-management/commit/1e5e73252a37e20ee8226c8c35fed8678a5b4740))
+
+
+### Features
+
+* **kp:** unify group KP membership across admin, dosen & student onboarding ([0ac7db2](https://github.com/relooplab/campus-logbook-management/commit/0ac7db2508832e1ff5b22dfd29e3e28c3dca3549))
+* **logbook:** dosen dapat membuka kembali entri yang sudah disetujui ([9d1748f](https://github.com/relooplab/campus-logbook-management/commit/9d1748f69b73bf615aa6d98a83287c5da990fb14))
+* **seminar:** send same notification email to submitting student ([9ae2527](https://github.com/relooplab/campus-logbook-management/commit/9ae2527bc651a3e3616802be063ebf67f29c46d9))
+
 # [0.53.0](https://github.com/relooplab/campus-logbook-management/compare/v0.52.0...v0.53.0) (2026-08-26)
 
 
