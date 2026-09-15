@@ -198,6 +198,15 @@ class LogbookEntry extends Model
     }
 
     /**
+     * Entri yang sudah disetujui masih bisa dibuka kembali oleh dosen
+     * pembimbing (batal ke menunggu-review atau minta revisi lagi).
+     */
+    public function isReopenable(): bool
+    {
+        return $this->status === self::STATUS_APPROVED;
+    }
+
+    /**
      * Resolve the dosen who is expected to review this entry, following the
      * assignment priority from the spec:
      *   1. mahasiswa_ta.pembimbing_1_id

@@ -106,6 +106,17 @@ class LogbookEntryPolicy
     }
 
     /**
+     * Dosen pembimbing boleh membuka kembali entri yang sudah disetujui
+     * (baik untuk dibatalkan ke menunggu-review maupun diminta revisi lagi).
+     */
+    public function reopen(User $user, LogbookEntry $entry): bool
+    {
+        return $user->isDosen()
+            && $entry->status === LogbookEntry::STATUS_APPROVED
+            && in_array($user->id, $this->pembimbingIds($entry->mahasiswaTa, $entry), true);
+    }
+
+    /**
      * Dosen yang benar pembimbing/reviewer entri ini (tanpa syarat status),
      * dipakai untuk aksi seperti resolve/hapus komentar PDF. Lebih sempit
      * dari 'view' (yang juga mencakup dosen cross-link grup).

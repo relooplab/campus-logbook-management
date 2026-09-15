@@ -212,4 +212,78 @@ class RevisionWorkflowTest extends AuditSmokeTest
             ->post(route('logbook.request-revisi', $this->entrySubmitted), ['feedback_dosen' => 'Perbaiki.'])
             ->assertSessionHasErrors('feedback_dosen');
     }
+
+    public function test_dosen_can_reopen_approved_to_submitted(): void
+    {
+        $this->entrySubmitted->update([
+            'status' => LogbookEntry::STATUS_APPROVED,
+            'reviewed_at' => now(),
+        ]);
+
+        $this->actingAs($this->dosen)
+            ->post(route('logbook.reopen', $this->entrySubmitted))
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('logbook_entries', [
+            'id' => $this->entrySubmitted->id,
+            'status' => LogbookEntry::STATUS_SUBMITTED,
+        ]);
+        $this->assertNull($this->entrySubmitted->fresh()->reviewed_at);
+    }
+
+    public function test_dosen_can_request_revisi_again_on_approved(): void
+    {
+        $this->entrySubmitted->update([
+            'status' => LogbookEntry::STATUS_APPROVED,
+            'reviewed_at' => now(),
+        ]);
+
+        $feedback = 'Ternyata masih ada bagian metodologi yang perlu diperbaiki lagi dengan detail.';
+
+        $this->actingAs($this->dosen)
+            ->post(route('logbook.reopen-revisi', $this->entrySubmitted), ['feedback_dosen' => $feedback])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('logbook_entries', [
+            'id' => $this->entrySubmitted->id,
+            'status' => LogbookEntry::STATUS_REVISI,
+            'feedback_dosen' => $feedback,
+        ]);
+    }
+
+    public function test_reopen_revisi_requires_meaningful_feedback(): void
+    {
+        $this->entrySubmitted->update([
+            'status' => LogbookEntry::STATUS_APPROVED,
+            'reviewed_at' => now(),
+        ]);
+
+        $this->actingAs($this->dosen)
+            ->post(route('logbook.reopen-revisi', $this->entrySubmitted), ['feedback_dosen' => 'Perbaiki.'])
+            ->assertSessionHasErrors('feedback_dosen');
+    }
+
+    public function test_mahasiswa_cannot_reopen_approved(): void
+    {
+        $this->entrySubmitted->update([
+            'status' => LogbookEntry::STATUS_APPROVED,
+            'reviewed_at' => now(),
+        ]);
+
+        $this->actingAs($this->mhs)
+            ->post(route('logbook.reopen', $this->entrySubmitted))
+            ->assertForbidden();
+
+        $this->actingAs($this->mhs)
+            ->post(route('logbook.reopen-revisi', $this->entrySubmitted), ['feedback_dosen' => 'Mahasiswa mencoba membuka kembali entri yang disetujui.'])
+            ->assertForbidden();
+    }
+
+    public function test_reopen_only_from_approved_status(): void
+    {
+        // entrySubmitted masih berstatus submitted → reopen harus 403 via policy.
+        $this->actingAs($this->dosen)
+            ->post(route('logbook.reopen', $this->entrySubmitted))
+            ->assertForbidden();
+    }
 }
