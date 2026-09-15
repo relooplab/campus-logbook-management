@@ -10,7 +10,7 @@
     @endif
 
     <p class="text-sm text-text-secondary mb-4">
-        Sebelum melanjutkan, silakan periksa email Anda untuk link verifikasi.
+        Sebelum melanjutkan, silakan periksa email Anda untuk link verifikasi, termasuk folder spam/promosi jika email tidak ada di kotak masuk.
         Jika Anda tidak menerima email, klik tombol di bawah untuk mengirim ulang.
     </p>
 
