@@ -1,258 +1,463 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import * as pdfjsLib from 'pdfjs-dist';
+import { ArrowLeft, BookOpen, ChevronDown, ChevronUp, Download, ListTree, Maximize, Minimize, PanelLeft, Search, Square, Type, X, Zap } from 'lucide-react';
 
-// Worker PDF.js. Tambah query ?v= (dari import.meta.env / Vite) agar cache
-// browser ter-invalidasi saat rebuild — mencegah MIME/cache stale.
-const WORKER_VERSION = import.meta.env?.VITE_WORKER_VERSION || '1';
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.mjs?v=' + WORKER_VERSION;
+import {
+  AreaHighlight,
+  LeftPanel,
+  PdfHighlighter,
+  PdfLoader,
+  TextHighlight,
+  useHighlightContainerContext,
+} from 'react-pdf-highlighter-plus';
+import SelectionTip from './pdf/SelectionTip.jsx';
+import AnnotationSidebar from './pdf/AnnotationSidebar.jsx';
+import { useAnnotationControls } from './pdf/HighlightToolbar.jsx';
+import {
+  buildPayloadFromSelection,
+  statusColor,
+  toAnnotation,
+} from './pdf/annotationAdapter.js';
 
 /**
- * Arsitektur viewer (pendekatan Google Drive):
- *  - PDF dirender oleh PDF.js ke <canvas>.
- *  - Anotasi digambar sebagai lapisan overlay (DOM) di atas canvas.
- *  - Anotasi disimpan sebagai JSON format W3C Web Annotation di DB,
- *    TERPISAH dari file PDF.
- *  - (Opsional) tombol "Unduh PDF dengan Anotasi" membakar anotasi ke PDF
- *    via endpoint /pdf/burn (server-side, FPDI).
+ * Anotasi PDF dengan react-pdf-highlighter-plus — hanya dua fitur:
+ *  - Text highlight: blok teks sebagai kutipan berkomentar.
+ *  - Area highlight: seret kotak pada halaman.
  *
- * Layout halaman:
- *  - Halaman disusun vertikal (continuous scroll) di dalam panel bertingkat
- *    tetap (max-h + overflow-auto) sehingga scrollbar vertikal & horizontal
- *    SELALU terlihat tanpa harus menggulir ke bawah dokumen.
- *  - Canvas responsif (width:100%, height:auto) — halaman landscape ikut
- *    menyempurnakan lebar kontainer, tidak menimpa halaman sebelahnya.
- *  - Overlay anotasi & gambar area memakai koordinat PERSENTASE agar tetap
- *    presisi pada ukuran tampilan apa pun.
+ * Layout: sidebar kiri (daftar kartu anotasi) + viewer PDF + tip mengambang
+ * "+ Tambah komentar" + toolbar inline pada highlight terpilih.
+ * Navigasi hash: klik kartu -> #highlight-{id} -> scroll + ring aktif.
+ *
+ * Logika kampus dipertahankan: tabs draft/catatan, anotasi tersimpan sebagai
+ * W3C Web Annotation (backend tidak berubah), warna status
+ * open/addressed/resolved, reply/tanggapan, resolve, hapus,
+ * Jadikan Feedback, dan Unduh PDF dengan Anotasi (burn server-side).
  */
 
 const DATA = window.PDF_VIEWER_DATA || {};
-const { draftUrl, catatanUrl, hasCatatan, entryId, csrf, commentsUrl, storeUrl, resolveUrl, replyUrl, deleteUrl, burnUrl, buildFeedbackUrl, canReview, canReply, returnUrl } = DATA;
+const { title, draftUrl, catatanUrl, hasCatatan, entryId, csrf, commentsUrl, storeUrl, resolveUrl, replyUrl, deleteUrl, burnUrl, buildFeedbackUrl, canReview, canReply, returnUrl } = DATA;
 
-const TYPE_LABEL = { draft: 'File Perbaikan/Draft', catatan: 'Catatan Perbaikan' };
+const parseIdFromHash = () => {
+  const m = (document.location.hash || '').match(/^#highlight-(.+)$/);
+  return m ? m[1] : null;
+};
+const resetHash = () => {
+  if (document.location.hash) document.location.hash = '';
+};
 
-function parseSelector(value) {
-  // value = "page=N&xywh=normalized:x1,y1,x2,y2"
-  const parts = (value || '').split('&');
-  let page = null, coords = null;
-  for (const p of parts) {
-    if (p.startsWith('page=')) page = parseInt(p.slice(5), 10);
-    else if (p.startsWith('xywh=normalized:')) coords = p.slice(17).split(',').map(Number);
+// ---------------------------------------------------------------------------
+// Container render tiap highlight. Toolbar aksi kampus menempel lewat slot
+// extraButtons/extraPanel bawaan lib (pola example-app).
+// ---------------------------------------------------------------------------
+function HighlightContainer({ annotationsById, onReply, onToggleResolve, onDelete, onSkipNext, hasNext }) {
+  const { highlight, isScrolledTo } = useHighlightContainerContext();
+  const meta = annotationsById[highlight.id];
+  const color = statusColor(meta?.resolutionStatus);
+  const controls = useAnnotationControls(highlight, meta, {
+    canReview,
+    canReply,
+    onReply,
+    onToggleResolve,
+    onDelete,
+    onSkipNext,
+    hasNext,
+  });
+  const copyText = highlight.type === 'text' ? highlight.content?.text : meta?.comment || highlight.content?.text;
+
+  if (highlight.type === 'text') {
+    return (
+      <TextHighlight
+        highlight={highlight}
+        isScrolledTo={isScrolledTo}
+        highlightColor={color}
+        copyText={copyText}
+        extraButtons={controls.button}
+        extraPanel={controls.panel}
+      />
+    );
   }
-  return { page, x1: coords?.[0], y1: coords?.[1], x2: coords?.[2], y2: coords?.[3] };
+  return (
+    <AreaHighlight
+      highlight={highlight}
+      isScrolledTo={isScrolledTo}
+      highlightColor={color}
+      copyText={copyText}
+      extraButtons={controls.button}
+      extraPanel={controls.panel}
+    />
+  );
 }
 
-// Ubah anotasi DB (payload Web Annotation) ke bentuk yang bisa dirender.
-function toAnnotation(item) {
-  const payload = item.payload || {};
-  const selector = payload.target?.selector || {};
-  const { page, x1, y1, x2, y2 } = parseSelector(selector.value);
-  const body = Array.isArray(payload.body) ? payload.body[0] : {};
-  const resolutionStatus = item.resolution_status || (body.resolved ? 'resolved' : 'open');
-  return {
-    id: item.id,
-    page,
-    x1, y1, x2, y2,
-    comment: body.value || '',
-    reply: item.reply || '',
-    resolved: resolutionStatus === 'resolved',
-    resolutionStatus,
-    isDosen: !!item.is_dosen,
-    user: item.user?.name || '',
-    created: item.created_at,
-  };
-}
+// ---------------------------------------------------------------------------
+// View dalam PdfLoader: PdfHighlighter text + area saja.
+// ---------------------------------------------------------------------------
+function HighlighterView({
+  pdfDocument,
+  highlights,
+  annotationsById,
+  actions,
+  hasNext,
+  areaMode,
+  scale,
+  onScaleChange,
+  onSaveSelection,
+  onDocumentReady,
+  onTextDetect,
+  onUtilsReady,
+  leftOpen,
+  onLeftOpenChange,
+  isMobile,
+  utilsRef,
+}) {
+  const [utilsReady, setUtilsReady] = useState(false);
+  const readyRef = useRef(false);
+  useEffect(() => {
+    if (utilsReady) return onUtilsReady();
+  }, [utilsReady, onUtilsReady]);
+  useEffect(() => {
+    if (!pdfDocument) return;
+    let cancelled = false;
+    onDocumentReady(pdfDocument.numPages || 0);
+    // Deteksi apakah PDF punya lapisan teks yang bisa diseleksi.
+    // PDF hasil pindaian (gambar) tidak punya teks -> mode teks tak berguna.
+    (async () => {
+      try {
+        const n = Math.min(pdfDocument.numPages || 0, 3);
+        let found = 0;
+        for (let p = 1; p <= n && found === 0; p++) {
+          const page = await pdfDocument.getPage(p);
+          if (cancelled) return;
+          const tc = await page.getTextContent();
+          if (cancelled) return;
+          found += (tc.items || []).filter((it) => (it.str || '').trim()).length;
+        }
+        if (!cancelled) onTextDetect(found > 0);
+      } catch (e) {
+        /* abaikan: anggap teks tersedia */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pdfDocument, onDocumentReady, onTextDetect]);
 
-function buildPayload(fileType, page, x1, y1, x2, y2, comment, resolved = false) {
-  return {
-    '@context': 'http://www.w3.org/ns/anno.jsonld',
-    type: 'Annotation',
-    motivation: 'commenting',
-    body: [{ type: 'TextualBody', value: comment, purpose: 'commenting', resolved }],
-    target: {
-      type: 'SpecificResource',
-      source: `urn:logbook-ta:entry:${entryId}:${fileType}`,
-      selector: {
-        type: 'FragmentSelector',
-        conformsTo: 'http://www.w3.org/TR/media-frags/',
-        value: `page=${page}&xywh=normalized:${x1},${y1},${x2},${y2}`,
-      },
-    },
-  };
+  return (
+    <div className="relative flex h-full w-full">
+      {isMobile && leftOpen && (
+        <button aria-label="Tutup navigasi PDF" onClick={() => onLeftOpenChange(false)} className="absolute inset-0 z-30 bg-black/40" />
+      )}
+      {utilsReady && leftOpen && utilsRef.current && (
+        <div className={isMobile ? 'absolute inset-y-0 left-0 z-40 w-64 bg-bg-surface shadow-xl' : 'shrink-0'} style={isMobile ? undefined : { width: 260 }}>
+          <LeftPanel
+            pdfDocument={pdfDocument}
+            mode="light"
+            viewer={utilsRef.current.getViewer()}
+            linkService={utilsRef.current.getLinkService()}
+            eventBus={utilsRef.current.getEventBus()}
+            goToPage={(p) => utilsRef.current.goToPage(p)}
+            onPageSelect={() => { if (isMobile) onLeftOpenChange(false); }}
+            isOpen={leftOpen}
+            onOpenChange={onLeftOpenChange}
+            width={260}
+            defaultTab="outline"
+          />
+        </div>
+      )}
+      <div className="relative min-w-0 flex-1">
+        <PdfHighlighter
+          pdfDocument={pdfDocument}
+          highlights={highlights}
+          enableAreaSelection={() => areaMode}
+          areaSelectionMode={areaMode}
+          pdfScaleValue={scale}
+          onZoomChange={(s) => onScaleChange(Math.min(4, Math.max(0.1, Math.round(s * 100) / 100)))}
+          onScrollAway={resetHash}
+          utilsRef={(u) => {
+            utilsRef.current = u;
+            if (u && !readyRef.current) {
+              readyRef.current = true;
+              setUtilsReady(true);
+            }
+          }}
+          selectionTip={<SelectionTip onSave={onSaveSelection} />}
+          style={{ height: '100%' }}
+        >
+          <HighlightContainer
+            annotationsById={annotationsById}
+            onReply={actions.reply}
+            onToggleResolve={actions.toggleResolve}
+            onDelete={actions.remove}
+            onSkipNext={actions.skipNext}
+            hasNext={hasNext}
+          />
+        </PdfHighlighter>
+      </div>
+    </div>
+  );
 }
 
 function PdfViewerApp() {
   const [activeType, setActiveType] = useState('draft');
   const [annotations, setAnnotations] = useState([]);
   const [numPages, setNumPages] = useState(0);
-  const [pageSizes, setPageSizes] = useState([]); // ukuran tampilan tiap halaman (px, sesuai skala)
-  const [scale, setScale] = useState(1.4);
-  const [loading, setLoading] = useState(true);
+  // Skala awal "page-width" (pas lebar panel, seperti viewer lama) agar tajam;
+  // setelah pengguna zoom, onZoomChange mengisinya dengan angka.
+  const [scale, setScale] = useState('page-width');
   const [error, setError] = useState(null);
-  const [areaMode, setAreaMode] = useState(true); // Mode area ON secara default
-  const [drawing, setDrawing] = useState(null); // rect sedang digambar (koordinat ternormalisasi 0-1)
-  const [modal, setModal] = useState(null); // { geometry, comment, saving }
-  const [selected, setSelected] = useState(null);
-  const [allResponded, setAllResponded] = useState(false); // semua komentar dosen sudah ditanggapi
-  const [showOverview, setShowOverview] = useState(false); // daftar ringkas komentar dosen (overview)
+  const [areaMode, setAreaMode] = useState(true); // true = seret area, false = blok teks
+  const [hasSelectableText, setHasSelectableText] = useState(null); // null = memeriksa, false = PDF pindaian
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [scrolledId, setScrolledId] = useState(null);
+  const [allResponded, setAllResponded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchCount, setSearchCount] = useState(null);
+  const [leftOpen, setLeftOpen] = useState(false);
+  const [searchReady, setSearchReady] = useState(false);
+  const [spread, setSpread] = useState(0);
 
-  const pdfRef = useRef(null);
-  const baseRef = useRef([]); // dimensi dasar (skala 1) tiap halaman
-  const canvasRefs = useRef([]);
-  const stageRef = useRef(null);
-  const renderGenRef = useRef(0); // penanda generasi render (anti race saat ganti skala cepat)
+  const searchQueryRef = useRef('');
+  searchQueryRef.current = searchQuery;
+
+  const utilsRef = useRef(null);
 
   const pdfUrl = activeType === 'catatan' ? catatanUrl : draftUrl;
 
-  // ---------------------------------------------------------------- load PDF
+  // Esc menutup mode fullscreen.
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setIsFullscreen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isFullscreen]);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarOpen(false);
+      setSpread(0);
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
+    const onModeShortcut = (event) => {
+      if (event.defaultPrevented || event.isComposing || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return;
+      const target = event.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || target.closest('input, textarea, select, [role="textbox"]'))) return;
+      const key = event.key.toLowerCase();
+      const textShortcut = key === 't';
+      const areaShortcut = key === 'a';
+      if (!textShortcut && !areaShortcut) return;
+      if (textShortcut && hasSelectableText === false) return;
+      event.preventDefault();
+      setAreaMode(areaShortcut);
+    };
+    document.addEventListener('keydown', onModeShortcut);
+    return () => document.removeEventListener('keydown', onModeShortcut);
+  }, [hasSelectableText]);
+
+  const prevScaleRef = useRef('page-width');
+  useEffect(() => {
+    if (!searchReady) return;
+    const viewer = utilsRef.current?.getViewer();
+    if (!viewer) return;
+    viewer.spreadMode = spread;
+    if (spread) {
+      viewer.currentScaleValue = 'page-width';
+      const pages = viewer.viewer.querySelector('.spread')?.querySelectorAll('.page');
+      const width = Array.from(pages || []).reduce((total, page) => total + page.getBoundingClientRect().width, 0);
+      if (width > 0) {
+        setScale(Math.max(0.1, Math.floor(viewer.currentScale * (viewer.container.clientWidth - 40) / width * 1000) / 1000));
+      }
+    }
+  }, [spread, searchReady]);
+
+  function toggleSpread() {
+    if (spread) {
+      setSpread(0);
+      setScale(prevScaleRef.current);
+    } else {
+      prevScaleRef.current = scale;
+      setSpread(1);
+      setScale('page-width');
+    }
+  }
+
+  function doSearch(q) {
+    searchQueryRef.current = q;
+    setSearchQuery(q);
+    if (!q.trim()) {
+      setSearchCount(null);
+      utilsRef.current?.clearSearch?.();
+      return;
+    }
+    setSearchCount(null);
+    utilsRef.current?.search?.(q);
+  }
+  function clearSearchBox() {
+    searchQueryRef.current = '';
+    setSearchQuery('');
+    setSearchCount(null);
+    utilsRef.current?.clearSearch?.();
+  }
+
+  const handleUtilsReady = useCallback(() => {
+    const utils = utilsRef.current;
+    const bus = utils?.getEventBus();
+    if (!bus) return;
+    setSearchReady(true);
+    const onCount = (e) => {
+      if (!searchQueryRef.current.trim()) return;
+      if (e.rawQuery != null && e.rawQuery !== searchQueryRef.current) return;
+      if (e.state === 1) {
+        setSearchCount({ current: 0, total: 0 });
+        return;
+      }
+      if (e.state === 3) return;
+      setSearchCount(e.matchesCount || { current: 0, total: 0 });
+    };
+    bus.on('updatefindmatchescount', onCount);
+    bus.on('updatefindcontrolstate', onCount);
+    return () => {
+      bus.off('updatefindmatchescount', onCount);
+      bus.off('updatefindcontrolstate', onCount);
+      utils.clearSearch();
+    };
+  }, []);
+
+  // ---------------------------------------------------------------- muat anotasi
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     setError(null);
     setAnnotations([]);
     setAllResponded(false);
     setNumPages(0);
-    setPageSizes([]);
-    canvasRefs.current = [];
+    setScrolledId(null);
+    setHasSelectableText(null);
+    searchQueryRef.current = '';
+    setSearchQuery('');
+    setSearchCount(null);
+    setSearchReady(false);
+    setSpread(0);
+    setScale('page-width');
+    utilsRef.current = null;
     if (!pdfUrl) {
       setError('Tidak ada file PDF untuk ditampilkan.');
-      setLoading(false);
       return;
     }
-    pdfjsLib.getDocument(pdfUrl).promise.then(async (doc) => {
-      if (cancelled) return;
-      pdfRef.current = doc;
-
-      // Kumpulkan dimensi dasar (skala 1) semua halaman untuk menghitung
-      // skala awal "pas lebar panel".
-      const base = [];
-      for (let i = 1; i <= doc.numPages; i++) {
-        const page = await doc.getPage(i);
-        const v = page.getViewport({ scale: 1 });
-        base.push({ width: v.width, height: v.height });
-      }
-      if (cancelled) return;
-
-      const stageW = (stageRef.current?.clientWidth ?? 600) - 16; // dikurangi padding p-2
-      const fit = base.length ? stageW / base[0].width : 1;
-      const s = Math.min(1.4, Math.max(0.5, Math.round(fit * 100) / 100));
-
-      baseRef.current = base; // simpan dimensi dasar utk derivasi ukuran saat zoom
-      setScale(s);
-      setNumPages(doc.numPages);
-      setLoading(false);
-    }).catch((e) => {
-      console.error(e);
-      setError('Gagal memuat PDF. Pastikan file tersedia dan aset frontend ter-build (lihat README).');
-      setLoading(false);
-    });
-    // muat anotasi
     fetch(commentsUrl + '?type=' + activeType, { credentials: 'same-origin' })
-      .then((r) => r.json())
-      .then((list) => setAnnotations(list.map(toAnnotation)));
-    return () => { cancelled = true; };
+      .then((r) => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then((list) => {
+        if (!cancelled) {
+          setAnnotations(list.map(toAnnotation));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError('Gagal memuat anotasi.');
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [activeType, pdfUrl]);
 
-  // Ukuran tampilan halaman = dimensi dasar x skala aktif. Efek ini kini
-  // ikut jalan saat ZOOM berubah, sehingga lebar wrapper membesar bersama
-  // bitmap yang dirender ulang — zoom terlihat nyata dan teks tetap tajam
-  // (sebelumnya wrapper terkunci di skala awal: bitmap baru diperas ke
-  // kotak lama => zoom tidak terlihat + tampilan buram).
-  useEffect(() => {
-    const base = baseRef.current;
-    if (!base.length || !numPages) return;
-    setPageSizes(base.map((b) => ({
-      width: Math.floor(b.width * scale),
-      height: Math.floor(b.height * scale),
-    })));
-  }, [scale, numPages]);
+  const highlights = useMemo(() => annotations.map((a) => a.highlight), [annotations]);
+  const annotationsById = useMemo(() => {
+    const map = {};
+    annotations.forEach((a) => {
+      map[String(a.id)] = a;
+    });
+    return map;
+  }, [annotations]);
 
-  // ---------------------------------------------------------------- render
-  // Render canvas setiap kali skala/jumlah halaman berubah. Penanda generasi
-  // mencegah dua loop render paralel menulis ke canvas yang sama.
-  useEffect(() => {
-    const doc = pdfRef.current;
-    if (!doc || numPages === 0 || pageSizes.length !== numPages) return;
-
-    const gen = ++renderGenRef.current;
-
-    (async () => {
-      // Tunggu React memasang elemen canvas untuk halaman yang baru muncul.
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-      for (let i = 0; i < numPages; i++) {
-        if (gen !== renderGenRef.current) return; // dibatalkan render lebih baru
-        const c = canvasRefs.current[i];
-        const size = pageSizes[i];
-        if (!c || !size) continue;
-
-        const page = await doc.getPage(i + 1);
-        if (gen !== renderGenRef.current) return;
-        const viewport = page.getViewport({ scale });
-
-        // Resolusi bitmap mengikuti skala (ketajaman), tampilan responsif
-        // mengikuti lebar wrapper (CSS) agar tidak meluber/menimpa.
-        c.width = Math.floor(viewport.width);
-        c.height = Math.floor(viewport.height);
-        c.style.width = '100%';
-        c.style.height = 'auto';
-
-        const ctx = c.getContext('2d');
-        await page.render({ canvasContext: ctx, viewport }).promise;
+  // ---------------------------------------------------------------- navigasi hash ala demo
+  const scrollToAnnotation = useCallback((a) => {
+    const target = annotationsById[String(a.id)] || a;
+    try {
+      if (utilsRef.current && target.highlight) {
+        utilsRef.current.scrollToHighlight(target.highlight);
+        return;
       }
-    })();
-  }, [scale, numPages, pageSizes]);
+    } catch (e) {
+      /* abaikan, highlight belum siap */
+    }
+  }, [annotationsById]);
 
-  // ---------------------------------------------------------------- drag draw
-  // Koordinat pointer dikonversi ke fraksi 0-1 relatif ukuran TAMPILAN canvas,
-  // bukan piksel mentah — agar akurat meski canvas diskalakan oleh CSS.
-  function canvasPoint(e, canvas) {
-    const rect = canvas.getBoundingClientRect();
-    const cx = (e.touches ? e.touches[0].clientX : e.clientX);
-    const cy = (e.touches ? e.touches[0].clientY : e.clientY);
-    return {
-      x: Math.min(Math.max((cx - rect.left) / rect.width, 0), 1),
-      y: Math.min(Math.max((cy - rect.top) / rect.height, 0), 1),
-      rw: rect.width,
-      rh: rect.height,
+  const getAnnotationById = useCallback((id) => annotations.find((x) => String(x.id) === String(id)) || null, [annotations]);
+
+  // PDF pindaian tak punya teks yang bisa diblok -> paksa mode Area.
+  useEffect(() => {
+    if (hasSelectableText === false) setAreaMode(true);
+  }, [hasSelectableText]);
+
+  const handleTextDetect = useCallback((v) => setHasSelectableText(v), []);
+
+  function zoomIn() {
+    const currentScale = utilsRef.current?.getViewer()?.currentScale || 1;
+    setScale(Math.min(4, Math.round((currentScale + 0.2) * 100) / 100));
+  }
+  function zoomOut() {
+    const currentScale = utilsRef.current?.getViewer()?.currentScale || 1;
+    setScale(Math.max(0.1, Math.round((currentScale - 0.2) * 100) / 100));
+  }
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const id = parseIdFromHash();
+      setScrolledId(id);
+      if (id) {
+        const found = getAnnotationById(id);
+        if (found) scrollToAnnotation(found);
+      }
     };
+    window.addEventListener('hashchange', onHashChange);
+    onHashChange();
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, [getAnnotationById, scrollToAnnotation]);
+
+  function openAnnotation(a) {
+    const next = `#highlight-${a.id}`;
+    if (document.location.hash === next) {
+      setScrolledId(String(a.id));
+      scrollToAnnotation(a);
+    } else {
+      document.location.hash = next; // memicu hashchange -> scroll + ring
+    }
+    if (isMobile) setSidebarOpen(false);
   }
 
-  function onMouseDown(e, pageIndex) {
-    if (!areaMode) return;
-    if (e.target.closest('.anno-box')) return;
-    const canvas = canvasRefs.current[pageIndex];
-    if (!canvas) return;
-    const p = canvasPoint(e, canvas);
-    setDrawing({ pageIndex, x1: p.x, y1: p.y, x2: p.x, y2: p.y, rw: p.rw, rh: p.rh });
-    e.preventDefault();
-  }
-  function onMouseMove(e, pageIndex) {
-    if (!drawing || drawing.pageIndex !== pageIndex) return;
-    const canvas = canvasRefs.current[pageIndex];
-    if (!canvas) return;
-    const p = canvasPoint(e, canvas);
-    setDrawing({ ...drawing, x2: p.x, y2: p.y });
-  }
-  function onMouseUp(e, pageIndex) {
-    if (!drawing || drawing.pageIndex !== pageIndex) return;
-    const { x1, y1, x2, y2, rw, rh } = drawing;
-    const w = Math.abs(x2 - x1) * rw, h = Math.abs(y2 - y1) * rh;
-    if (w < 12 || h < 12) { setDrawing(null); return; }
-    const norm = {
-      page: pageIndex + 1,
-      x1: Math.min(x1, x2), y1: Math.min(y1, y2),
-      x2: Math.max(x1, x2), y2: Math.max(y1, y2),
-    };
-    setModal({ geometry: norm, comment: '', saving: false });
-    setDrawing(null);
+  // ---------------------------------------------------------------- antrean tanggapan
+  const unrespondedDosen = useMemo(() => (canReply
+    ? annotations
+        .filter((a) => a.isDosen && a.resolutionStatus === 'open' && !a.reply)
+        .sort((x, y) => (x.page - y.page) || (y.y1 - x.y1) || (x.x1 - x.x1))
+    : []), [annotations, canReply]);
+
+  function nextUnresponded(excludeId) {
+    return annotations
+      .filter((x) => x.isDosen && x.resolutionStatus === 'open' && !x.reply && x.id !== excludeId)
+      .sort((x, y) => (x.page - y.page) || (y.y1 - x.y1) || (y.x1 - x.x1))[0] || null;
   }
 
-  // ---------------------------------------------------------------- save
-  async function saveAnnotation() {
-    if (!modal) return;
-    const { geometry, comment } = modal;
-    setModal({ ...modal, saving: true });
-    const payload = buildPayload(activeType, geometry.page, geometry.x1, geometry.y1, geometry.x2, geometry.y2, comment.trim() || 'Tandai area');
+  // ---------------------------------------------------------------- simpan (dari SelectionTip)
+  async function saveAnnotation(selection, commentText) {
+    if (!selection || !selection.position) return false;
+    const comment = (commentText || '').trim() || 'Tandai area';
+    const payload = buildPayloadFromSelection(entryId, activeType, selection, comment);
     try {
       const res = await fetch(storeUrl, {
         method: 'POST',
@@ -262,61 +467,17 @@ function PdfViewerApp() {
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const saved = await res.json();
-      setAnnotations((a) => [...a, toAnnotation(saved)]);
-      setModal(null);
+      setAnnotations((a) => [...a, toAnnotation({ ...saved, is_dosen: canReview ? true : saved.is_dosen })]);
+      return true;
     } catch (e) {
       alert('Gagal menyimpan anotasi.');
-      setModal({ ...modal, saving: false });
+      return false;
     }
   }
 
-  // Simpan komentar dengan tekan Enter (tanpa Shift)
-  function onCommentKeyDown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      saveAnnotation();
-    }
-  }
-
-  // ---------------------------------------------------------------- resolve/delete
-  async function toggleResolve(id) {
-    try {
-      const res = await fetch(resolveUrl.replace('{id}', id), {
-        method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, Accept: 'application/json' }, credentials: 'same-origin',
-      });
-      if (!res.ok) {
-        alert('Gagal mengubah status anotasi. Status: ' + res.status);
-        return;
-      }
-      const d = await res.json();
-      setAnnotations((a) => a.map((x) => (x.id === id ? {
-        ...x,
-        resolved: d.resolution_status === 'resolved',
-        resolutionStatus: d.resolution_status,
-      } : x)));
-      // Tutup dialog anotasi setelah status resolve berhasil diperbarui
-      setSelected(null);
-    } catch (e) {
-      alert('Gagal mengubah status anotasi.');
-    }
-  }
-  // --------------------------------------------- skip ke anotasi dosen berikutnya
-  function goToNext() {
-    const next = annotations
-      .filter((x) => x.isDosen && x.resolutionStatus === 'open' && !x.reply && x.id !== (selected?.id))
-      .sort((x, y) => (x.page - y.page) || (y.y1 - x.y1) || (y.x1 - x.x1))[0] || null;
-    if (next) {
-      setSelected(next);
-      scrollToAnnotation(next);
-    } else {
-      setSelected(null);
-      setAllResponded(true);
-    }
-  }
-
+  // ---------------------------------------------------------------- reply / resolve / hapus
   async function saveReply(id, reply) {
-    if (!replyUrl) return;
-    if (!reply.trim()) return;
+    if (!replyUrl || !String(reply || '').trim()) return false;
     try {
       const res = await fetch(replyUrl.replace('{id}', id), {
         method: 'POST',
@@ -326,33 +487,45 @@ function PdfViewerApp() {
       });
       if (!res.ok) {
         alert('Gagal menyimpan balasan. Status: ' + res.status);
-        return;
+        return false;
       }
       const d = await res.json();
-
-      // Perbarui anotasi ini (balasan + status from server, biasanya 'addressed').
       setAnnotations((a) => a.map((x) => (x.id === id ? {
         ...x,
         reply: d.reply || '',
         resolutionStatus: d.resolution_status || x.resolutionStatus,
         resolved: (d.resolution_status || x.resolutionStatus) === 'resolved',
       } : x)));
-
       // Lanjut otomatis ke anotasi dosen berikutnya yang belum ditanggapi.
-      const next = annotations
-        .filter((x) => x.id !== id)
-        .filter((x) => x.isDosen && x.resolutionStatus === 'open' && !x.reply)
-        .sort((x, y) => (x.page - y.page) || (y.y1 - x.y1) || (y.x1 - x.x1))[0] || null;
-
-      if (next) {
-        setSelected(next);
-        scrollToAnnotation(next);
-      } else {
-        setSelected(null);
-        setAllResponded(true);
-      }
+      const next = nextUnresponded(id);
+      if (next) openAnnotation(next);
+      else setAllResponded(true);
+      return true;
     } catch (e) {
       alert('Gagal menyimpan balasan.');
+      return false;
+    }
+  }
+
+  async function toggleResolve(id) {
+    try {
+      const res = await fetch(resolveUrl.replace('{id}', id), {
+        method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, Accept: 'application/json' }, credentials: 'same-origin',
+      });
+      if (!res.ok) {
+        alert('Gagal mengubah status anotasi. Status: ' + res.status);
+        return false;
+      }
+      const d = await res.json();
+      setAnnotations((a) => a.map((x) => (x.id === id ? {
+        ...x,
+        resolved: d.resolution_status === 'resolved',
+        resolutionStatus: d.resolution_status,
+      } : x)));
+      return true;
+    } catch (e) {
+      alert('Gagal mengubah status anotasi.');
+      return false;
     }
   }
 
@@ -362,39 +535,27 @@ function PdfViewerApp() {
     });
     if (!res.ok) {
       alert('Gagal menghapus anotasi. Status: ' + res.status);
-      return;
+      return false;
     }
     setAnnotations((a) => a.filter((x) => x.id !== id));
-    setSelected(null);
+    if (String(scrolledId) === String(id)) {
+      setScrolledId(null);
+      resetHash();
+    }
+    return true;
   }
 
-  // Anotasi per halaman
-  const annotationsByPage = useMemo(() => {
-    const map = {};
-    annotations.forEach((a) => {
-      if (!map[a.page]) map[a.page] = [];
-      map[a.page].push(a);
-    });
-    return map;
-  }, [annotations]);
-
-  // ---------------------------------------------------------------- antrean tanggapan
-  // Komentar milik dosen (terurut halaman lalu posisi) yang masih menunggu tanggapan
-  // mahasiswa = status 'open' dan belum ada balasan.
-  const unrespondedDosen = useMemo(() => (canReply
-    ? annotations
-        .filter((a) => a.isDosen && a.resolutionStatus === 'open' && !a.reply)
-        .sort((x, y) => (x.page - y.page) || (y.y1 - x.y1) || (x.x1 - x.x1))
-    : []), [annotations, canReply]);
-  const dosenCommentCount = canReply ? annotations.filter((a) => a.isDosen).length : annotations.length;
-
-  // Scroll halaman ke lokasi anotasi tertentu (continuous scroll).
-  function scrollToAnnotation(a) {
-    requestAnimationFrame(() => {
-      const el = document.getElementById('anno-' + a.id);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
+  function skipToNext(excludeId) {
+    const next = nextUnresponded(excludeId);
+    if (next) openAnnotation(next);
   }
+
+  const actions = useMemo(() => ({
+    reply: saveReply,
+    toggleResolve,
+    remove: removeAnnotation,
+    skipNext: skipToNext,
+  }), [annotations]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Kembali ke halaman revisi (manual, via tombol di banner sukses).
   function goBackToRevision() {
@@ -402,9 +563,6 @@ function PdfViewerApp() {
   }
 
   // ---------------------------------------------------------------- build feedback
-  // Tombol "Jadikan Feedback": kompilasi komentar yang belum resolve, simpan ke
-  // session (di server), lalu langsung pindah ke Quick Review agar feedback
-  // sudah terisi otomatis di textarea.
   async function buildFeedback() {
     if (!buildFeedbackUrl) return;
     try {
@@ -414,7 +572,6 @@ function PdfViewerApp() {
         credentials: 'same-origin',
       });
       if (!res.ok) {
-        console.error('Build feedback error:', res.status);
         alert('Gagal membuat feedback. Status: ' + res.status + '. Pastikan Anda adalah pembimbing entri ini.');
         return;
       }
@@ -423,269 +580,242 @@ function PdfViewerApp() {
         alert('Tidak ada komentar yang belum resolve.');
         return;
       }
-      // Berhasil: langsung pindah ke halaman Quick Review.
       window.location.href = '/quick-review';
     } catch (e) {
-      console.error(e);
       alert('Gagal membuat feedback. Periksa koneksi atau coba lagi.');
     }
   }
 
+  const sidebarClass = isMobile
+    ? `absolute inset-y-0 left-0 z-40 w-80 max-w-[85vw] bg-bg-surface border-r border-border transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
+    : `flex-shrink-0 border-r border-border transition-all duration-300 overflow-hidden ${sidebarOpen ? 'w-80' : 'w-0 border-r-0'}`;
+
   return (
-    <div className="space-y-4">
-      {/* Tabs */}
-      <div className="border-b border-border flex gap-1 overflow-x-auto">
-        <button onClick={() => setActiveType('draft')}
-          className={`px-4 py-2 rounded-t-lg text-sm font-semibold whitespace-nowrap ${activeType === 'draft' ? 'bg-bg-surface dark:bg-bg-surface border-b-2 border-brand' : 'bg-bg-panel dark:bg-bg-panel'}`}>
-          {TYPE_LABEL.draft}
-        </button>
-        {hasCatatan && (
-          <button onClick={() => setActiveType('catatan')}
-            className={`px-4 py-2 rounded-t-lg text-sm font-semibold whitespace-nowrap ${activeType === 'catatan' ? 'bg-bg-surface dark:bg-bg-surface border-b-2 border-brand' : 'bg-bg-panel dark:bg-bg-panel'}`}>
-            {TYPE_LABEL.catatan}
-          </button>
-        )}
-      </div>
-
-      {/* Toolbar — panel PDF di bawah menggulir sendiri (max-h + overflow-auto),
-          sehingga toolbar ini dan kedua scrollbar panel SELALU terlihat tanpa
-          harus menggulir ke bawah dokumen terlebih dulu. */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm">Total {numPages || '…'} halaman</span>
-        <button onClick={() => setScale((s) => Math.max(0.5, Math.round((s - 0.2) * 100) / 100))}
-          title="Perkecil"
-          className="px-3 py-1.5 rounded-md bg-bg-panel dark:bg-bg-panel text-sm font-bold leading-none">−</button>
-        <span className="text-sm font-medium tabular-nums min-w-[3.25rem] text-center px-1.5 py-1 rounded-md bg-bg-panel dark:bg-bg-panel">
-          {Math.round(scale * 100)}%
+    <div className={isFullscreen
+      ? 'fixed inset-0 z-[60] bg-bg-base flex flex-col gap-2 p-2'
+      : 'h-full flex flex-col gap-2 p-2 md:p-3'}>
+      {/* Bar compact: kembali | judul | file | mode | zoom | panel || aksi */}
+      <div className="flex items-center gap-1.5 md:gap-2 rounded-lg border border-border bg-bg-surface px-2 py-1.5 overflow-x-auto shrink-0">
+        <a href={returnUrl} title="Kembali ke detail"
+          className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap bg-bg-panel hover:bg-bg-hover shrink-0">
+          <ArrowLeft className="h-3.5 w-3.5" /><span className="hidden sm:inline">Kembali</span>
+        </a>
+        <span className="text-sm font-bold whitespace-nowrap truncate" title={`Anotasi PDF · ${title || ''}`}>
+          Anotasi PDF · {title}
         </span>
-        <button onClick={() => setScale((s) => Math.min(4, Math.round((s + 0.2) * 100) / 100))}
-          title="Perbesar"
-          className="px-3 py-1.5 rounded-md bg-bg-panel dark:bg-bg-panel text-sm font-bold leading-none">+</button>
-        <button onClick={() => setAreaMode((m) => !m)}
-          className={`px-3 py-1.5 rounded-md text-sm font-semibold ${areaMode ? 'bg-brand text-white' : 'bg-bg-panel dark:bg-bg-panel'}`}>
-          {areaMode ? 'Mode Area: ON' : 'Mode Area: OFF'}
+        <button
+          onClick={() => setLeftOpen((v) => !v)}
+          title="Outline & halaman"
+          className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap shrink-0 ${leftOpen ? 'bg-brand text-white' : 'bg-bg-panel hover:bg-bg-hover'}`}
+        >
+          <ListTree className="h-3.5 w-3.5" />
         </button>
-        {buildFeedbackUrl && (
-          <button onClick={buildFeedback}
-            className="px-3 py-1.5 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">
-            ⚡ Jadikan Feedback
+        <div className="flex items-center gap-0.5 rounded-md bg-bg-panel p-0.5 shrink-0" role="group" aria-label="File">
+          <button onClick={() => setActiveType('draft')}
+            className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${activeType === 'draft' ? 'bg-brand text-white shadow' : 'hover:bg-bg-hover'}`}>
+            Draft
           </button>
-        )}
-        {burnUrl && (
-          <a href={burnUrl.replace('__TYPE__', activeType)} target="_blank" rel="noopener"
-            className="ml-auto px-3 py-1.5 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">
-            Unduh PDF dengan Anotasi
-          </a>
-        )}
-      </div>
-
-      {/* Overview scope komentar dosen (hanya untuk mahasiswa pemilik TA) */}
-      {canReply && (
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="px-3 py-1.5 rounded-full bg-bg-panel dark:bg-bg-panel border border-border text-sm">
-            Komentar dosen: <span className="font-semibold text-text-primary">{dosenCommentCount}</span>
-            {' · '}belum ditanggapi <span className="font-semibold text-status-pending">{unrespondedDosen.length}</span>
-          </span>
-          {unrespondedDosen.length > 0 && (
-            <button onClick={() => setShowOverview((s) => !s)}
-              className="px-3 py-1.5 rounded-md bg-bg-panel dark:bg-bg-panel border border-border text-sm font-medium hover:bg-bg-hover">
-              {showOverview ? 'Sembunyikan daftar' : 'Lihat daftar komentar'}
+          {hasCatatan && (
+            <button onClick={() => setActiveType('catatan')}
+              className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${activeType === 'catatan' ? 'bg-brand text-white shadow' : 'hover:bg-bg-hover'}`}>
+              Catatan
             </button>
           )}
         </div>
-      )}
-
-      {/* Daftar ringkas komentar dosen yang belum ditanggapi → klik untuk lompat */}
-      {canReply && showOverview && unrespondedDosen.length > 0 && (
-        <div className="rounded-lg border border-border bg-bg-panel p-3 max-h-64 overflow-y-auto">
-          <p className="text-xs font-semibold text-text-secondary mb-2">Komentar dosen yang menunggu tanggapan (urut hal. & posisi)</p>
-          <div className="space-y-1.5">
-            {unrespondedDosen.map((a) => (
-              <button key={a.id}
-                onClick={() => { setSelected(a); scrollToAnnotation(a); }}
-                className="w-full text-left rounded-md bg-bg-surface dark:bg-bg-surface border border-border px-3 py-2 text-sm hover:bg-bg-hover flex items-center gap-2">
-                <span className="text-xs text-text-secondary shrink-0">Hal. {a.page}</span>
-                <span className="flex-1 truncate">{a.comment}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded text-white shrink-0" style={{ backgroundColor: '#D97706' }}>Belum ditanggapi</span>
-              </button>
-            ))}
-          </div>
+        <span className="w-px h-5 bg-border shrink-0" />
+        <div className="flex items-center gap-1 rounded-md bg-bg-panel p-0.5 shrink-0" role="search">
+          <Search className="h-3.5 w-3.5 mx-1 text-text-secondary" />
+          <input
+            value={searchQuery}
+            aria-label="Cari di PDF"
+            disabled={!searchReady || !!error}
+            onChange={(e) => doSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.stopPropagation();
+                clearSearchBox();
+              }
+              if (e.key === 'Enter' && searchCount?.total > 0) {
+                e.preventDefault();
+                e.shiftKey ? utilsRef.current?.findPrevious?.() : utilsRef.current?.findNext?.();
+              }
+            }}
+            placeholder="Cari di PDF…"
+            className="w-28 md:w-40 bg-transparent text-xs outline-none placeholder:text-text-secondary"
+          />
+          {searchQuery.trim() && (
+            <span role="status" aria-live="polite" className="text-xs tabular-nums text-text-secondary whitespace-nowrap">
+              {searchCount ? `${searchCount.current}/${searchCount.total}` : 'Mencari…'}
+            </span>
+          )}
+          <button onClick={() => utilsRef.current?.findPrevious?.()} disabled={!searchReady || !searchCount?.total || !!error}
+            title="Hasil sebelumnya" className="px-1 py-0.5 rounded hover:bg-bg-hover disabled:opacity-40">
+            <ChevronUp className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={() => utilsRef.current?.findNext?.()} disabled={!searchReady || !searchCount?.total || !!error}
+            title="Hasil berikutnya" className="px-1 py-0.5 rounded hover:bg-bg-hover disabled:opacity-40">
+            <ChevronDown className="h-3.5 w-3.5" />
+          </button>
+          {searchQuery && (
+            <button onClick={clearSearchBox} title="Hapus pencarian" className="px-1 py-0.5 rounded hover:bg-bg-hover">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
-      )}
+        <div className="flex items-center gap-0.5 rounded-md bg-bg-panel p-0.5 shrink-0" role="group" aria-label="Mode anotasi">
+          <button onClick={() => setAreaMode(false)}
+            disabled={hasSelectableText === false}
+            aria-keyshortcuts="t"
+            aria-pressed={!areaMode}
+            title={hasSelectableText === false ? 'PDF pindaian: teks tidak dapat diblok' : 'Mode teks (T)'}
+            className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold ${!areaMode ? 'bg-brand text-white shadow' : 'hover:bg-bg-hover'} disabled:opacity-40`}>
+            <Type className="h-3.5 w-3.5" /> Teks
+          </button>
+          <button onClick={() => setAreaMode(true)}
+            aria-keyshortcuts="a"
+            aria-pressed={areaMode}
+            title="Mode area (A)"
+            className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold ${areaMode ? 'bg-brand text-white shadow' : 'hover:bg-bg-hover'}`}>
+            <Square className="h-3.5 w-3.5" /> Area
+          </button>
+        </div>
+        <div className="flex items-center gap-0.5 rounded-md bg-bg-panel p-0.5 shrink-0" aria-label="Zoom">
+          <button onClick={zoomOut} title="Perkecil"
+            className="px-2 py-1 rounded text-xs font-bold leading-none hover:bg-bg-hover">−</button>
+          <span className="text-xs font-medium tabular-nums min-w-[2.75rem] text-center" title={typeof scale === 'number' ? '' : 'Otomatis selebar panel'}>
+            {typeof scale === 'number' ? `${Math.round(scale * 100)}%` : 'Pas'}
+          </span>
+          <button onClick={zoomIn} title="Perbesar"
+            className="px-2 py-1 rounded text-xs font-bold leading-none hover:bg-bg-hover">+</button>
+          {!isMobile && (
+            <button onClick={toggleSpread} disabled={!searchReady || numPages < 2 || !!error}
+              aria-label="Dua halaman" aria-pressed={spread === 1}
+              title={spread ? 'Tampilkan satu halaman' : 'Tampilkan dua halaman berdampingan'}
+              className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold whitespace-nowrap disabled:opacity-40 ${spread ? 'bg-brand text-white' : 'hover:bg-bg-hover'}`}>
+              <BookOpen className="h-3.5 w-3.5" /> {spread ? '2 hal' : '1 hal'}
+            </button>
+          )}
+        </div>
+        <button onClick={() => setSidebarOpen((v) => !v)}
+          title="Tampilkan/sembunyikan panel anotasi"
+          className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap shrink-0 ${sidebarOpen ? 'bg-brand text-white' : 'bg-bg-panel hover:bg-bg-hover'}`}>
+          <PanelLeft className="h-3.5 w-3.5" /> {annotations.length}
+        </button>
+        <span className="hidden lg:inline text-xs text-text-secondary whitespace-nowrap shrink-0">{numPages || '…'} hal</span>
+        <div className="ml-auto flex items-center gap-1.5 shrink-0">
+          {buildFeedbackUrl && (
+            <button onClick={buildFeedback} title="Kompilasi komentar menjadi feedback"
+              className="flex items-center gap-1 px-2 py-1 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-xs font-semibold whitespace-nowrap">
+              <Zap className="h-3.5 w-3.5" /><span className="hidden md:inline">Feedback</span>
+            </button>
+          )}
+          {burnUrl && (
+            <a href={burnUrl.replace('__TYPE__', activeType)} target="_blank" rel="noopener" title="Unduh PDF dengan anotasi"
+              className="flex items-center gap-1 px-2 py-1 rounded-md bg-bg-panel hover:bg-bg-hover text-xs font-semibold whitespace-nowrap">
+              <Download className="h-3.5 w-3.5" /><span className="hidden md:inline">PDF Anotasi</span>
+            </a>
+          )}
+          <button onClick={() => setIsFullscreen((v) => !v)}
+            title={isFullscreen ? 'Keluar layar penuh (Esc)' : 'Layar penuh'}
+            className={`flex items-center px-2 py-1 rounded-md text-xs font-semibold ${isFullscreen ? 'bg-brand text-white' : 'bg-bg-panel hover:bg-bg-hover'}`}>
+            {isFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
+          </button>
+        </div>
+      </div>
 
-      {/* Selesai menanggapi: banner sukses + auto-redirect ke halaman revisi */}
+      {/* Banner sukses menanggapi */}
       {canReply && allResponded && (
-        <div className="rounded-lg border border-status-success/40 bg-status-success/10 p-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="font-semibold text-text-primary">Semua komentar dosen telah Anda tanggapi</p>
-            <p className="text-sm text-text-secondary mt-0.5">
-              {unrespondedDosen.length === 0
-                ? 'Tidak ada lagi komentar dosen yang menunggu tanggapan pada file ini. Anda akan dialihkan ke halaman revisi.'
-                : 'Anda dapat menanggapi sisa komentar atau menutup viewer ini.'}
-            </p>
-          </div>
+        <div className="rounded-lg border border-status-success/40 bg-status-success/10 px-3 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0">
+          <p className="text-sm">
+            <span className="font-semibold">Semua komentar dosen telah Anda tanggapi. </span>
+            <span className="text-text-secondary">{unrespondedDosen.length === 0 ? 'Tidak ada lagi yang menunggu tanggapan.' : 'Anda dapat menanggapi sisa komentar.'}</span>
+          </p>
           <button onClick={goBackToRevision}
-            className="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-semibold hover:opacity-90">
+            className="px-3 py-1.5 rounded-lg bg-brand text-[#0b1420] text-xs font-semibold hover:opacity-90">
             Kembali ke Revisi
           </button>
         </div>
       )}
 
-      {/* Stage: panel bertingkat tetap (max-h + overflow-auto) — scrollbar
-          vertikal & horizontal selalu terlihat di tepi panel tanpa harus
-          menggulir ke bawah dokumen terlebih dulu. Halaman disusun vertikal
-          (block flow) sehingga tidak mungkin saling menimpa; lebar tiap
-          halaman mengikuti skala zoom dan melebihi lebar panel memunculkan
-          scrollbar horizontal pada panel itu sendiri. */}
-      <div ref={stageRef}
-        className="pdf-stage bg-bg-surface dark:bg-bg-surface rounded-lg border border-border p-2 overflow-x-scroll overflow-y-auto max-h-[75vh]">
-        {error && (
-          <div className="flex items-center justify-center p-8 text-center text-sm text-status-danger">
-            {error}
-          </div>
+      {/* PDF pindaian: tidak ada teks yang bisa diblok */}
+      {hasSelectableText === false && (
+        <div className="rounded-lg border border-status-pending/40 bg-status-pending/10 px-3 py-2 text-xs shrink-0">
+          <span className="font-semibold">PDF ini tampaknya hasil pindaian (gambar)</span>
+          <span className="text-text-secondary"> — teks tidak dapat diblok. Gunakan Mode Area.</span>
+        </div>
+      )}
+
+      {/* Main flex-fill: sidebar anotasi + viewer PDF */}
+      <div className="relative flex flex-1 min-h-0 overflow-hidden rounded-lg border border-border bg-bg-surface">
+        {isMobile && sidebarOpen && (
+          <div className="absolute inset-0 z-30 bg-black/40" onClick={() => setSidebarOpen(false)} />
         )}
-        {!error && (
-          <div className="space-y-4">
-            {Array.from({ length: numPages }, (_, i) => {
-              const pageAnnotations = annotationsByPage[i + 1] || [];
-              const size = pageSizes[i];
-              return (
-                <div key={i}
-                  className="relative mx-auto"
-                  style={{
-                    width: size ? size.width + 'px' : undefined,
-                    // Tanpa maxWidth: zoom melebihi lebar panel memunculkan
-                    // scrollbar horizontal DI PANEL (selalu terlihat). Susunan
-                    // vertikal membuat halaman tak mungkin saling menimpa.
-                    touchAction: areaMode ? 'none' : 'auto',
-                  }}
-                  onMouseDown={(e) => onMouseDown(e, i)}
-                  onMouseMove={(e) => onMouseMove(e, i)}
-                  onMouseUp={(e) => onMouseUp(e, i)}
-                  onTouchStart={(e) => onMouseDown(e, i)}
-                  onTouchMove={(e) => onMouseMove(e, i)}
-                  onTouchEnd={(e) => onMouseUp(e, i)}>
-                  <canvas ref={(el) => { canvasRefs.current[i] = el; }} className="block w-full h-auto" />
-                  {/* Lapisan overlay anotasi — posisi dalam % agar presisi pada
-                      ukuran tampilan apa pun. */}
-                  <div className="absolute inset-0">
-                    {pageAnnotations.map((a) => (
-                      <div key={a.id}
-                        id={'anno-' + a.id}
-                        className="anno-box absolute border-2 cursor-pointer"
-                        onClick={() => setSelected(a)}
-                        style={{
-                          left: (a.x1 * 100) + '%',
-                          top: (a.y1 * 100) + '%',
-                          width: ((a.x2 - a.x1) * 100) + '%',
-                          height: ((a.y2 - a.y1) * 100) + '%',
-                           borderColor: a.resolutionStatus === 'resolved' ? '#7C9473' : a.resolutionStatus === 'addressed' ? '#D97706' : '#C9A97E',
-                        }}>
-                        <span className="absolute -top-3 -left-1 text-white text-[10px] px-1 rounded whitespace-nowrap"
-                           style={{ backgroundColor: a.resolutionStatus === 'resolved' ? '#7C9473' : a.resolutionStatus === 'addressed' ? '#D97706' : '#C9A97E' }}>
-                          {a.resolutionStatus === 'addressed' ? 'Diperbaiki' : a.resolutionStatus === 'resolved' ? 'Selesai' : '#' + a.id}
-                        </span>
-                      </div>
-                    ))}
-                    {/* Persegi saat menggambar (persen relatif ukuran tampilan) */}
-                    {drawing && drawing.pageIndex === i && (
-                      <div className="absolute border-2 border-dashed border-sand bg-sand/20"
-                        style={{
-                          left: (Math.min(drawing.x1, drawing.x2) * 100) + '%',
-                          top: (Math.min(drawing.y1, drawing.y2) * 100) + '%',
-                          width: (Math.abs(drawing.x2 - drawing.x1) * 100) + '%',
-                          height: (Math.abs(drawing.y2 - drawing.y1) * 100) + '%',
-                        }} />
-                    )}
-                  </div>
-                  {/* Label halaman */}
-                  <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded">
-                    Hal. {i + 1}
-                  </div>
+
+        <div className={sidebarClass}>
+          <div className="h-full w-80 max-w-[85vw]">
+            <AnnotationSidebar
+              annotations={annotations}
+              scrolledId={scrolledId}
+              canReview={canReview}
+              canReply={canReply}
+              unrespondedCount={unrespondedDosen.length}
+              onOpen={openAnnotation}
+              onReply={saveReply}
+              onToggleResolve={toggleResolve}
+              onDelete={removeAnnotation}
+              onBuildFeedback={buildFeedback}
+              // Footer feedback sidebar disembunyikan: tombolnya sudah ada di bar compact.
+              buildFeedbackUrl={null}
+            />
+          </div>
+        </div>
+
+        <div className="relative min-w-0 flex-1">
+          {error && (
+            <div className="flex items-center justify-center p-8 text-center text-sm text-status-danger">
+              {error}
+            </div>
+          )}
+          {!error && pdfUrl && (
+            <PdfLoader
+              key={activeType}
+              document={pdfUrl}
+              disableAutoFetch={false}
+              beforeLoad={() => (
+                <div className="flex items-center justify-center p-8 text-center text-sm text-text-secondary">
+                  Memuat PDF…
                 </div>
-              );
-            })}
-          </div>
-        )}
+              )}
+              errorMessage={() => (
+                <div className="flex items-center justify-center p-8 text-center text-sm text-status-danger">
+                  Gagal memuat PDF. Pastikan file tersedia dan aset frontend ter-build (lihat README).
+                </div>
+              )}
+            >
+              {(pdfDocument) => (
+                <HighlighterView
+                  pdfDocument={pdfDocument}
+                  highlights={highlights}
+                  annotationsById={annotationsById}
+                  actions={actions}
+                  hasNext={unrespondedDosen.length > 0}
+                  areaMode={areaMode}
+                  scale={scale}
+                  onScaleChange={setScale}
+                  onSaveSelection={saveAnnotation}
+                  onDocumentReady={setNumPages}
+                  onTextDetect={handleTextDetect}
+                  onUtilsReady={handleUtilsReady}
+                  leftOpen={leftOpen}
+                  onLeftOpenChange={setLeftOpen}
+                  isMobile={isMobile}
+                  utilsRef={utilsRef}
+                />
+              )}
+            </PdfLoader>
+          )}
+        </div>
       </div>
-
-      <p className="text-xs text-text-secondary">
-        {loading ? 'Memuat PDF…' : areaMode ? 'Seret pada halaman untuk menandai area, lalu tekan Enter untuk menyimpan komentar.' : 'Nyalakan Mode Area untuk menandai area, lalu beri komentar.'}
-      </p>
-
-      {/* Modal komentar baru */}
-      {modal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-bg-surface dark:bg-bg-surface rounded-lg border border-border p-4 w-full max-w-md">
-            <h3 className="font-semibold mb-2">Komentar pada area ini</h3>
-            <textarea rows="3" value={modal.comment} onChange={(e) => setModal({ ...modal, comment: e.target.value })}
-              onKeyDown={onCommentKeyDown}
-              className="w-full rounded-md border border-border bg-bg-surface dark:bg-bg-surface px-3 py-2 text-sm"
-              placeholder="Tulis komentar… (Enter untuk simpan)" autoFocus />
-            <p className="text-xs text-text-secondary mt-1">Tekan Enter untuk menyimpan, Shift+Enter untuk baris baru.</p>
-            <div className="flex justify-end gap-2 mt-3">
-              <button onClick={() => setModal(null)} className="px-3 py-2 rounded-md bg-bg-panel dark:bg-bg-panel text-sm">Batal</button>
-              <button onClick={saveAnnotation} disabled={modal.saving}
-                className="px-3 py-2 rounded-md bg-brand-fill hover:bg-brand-fill-hover text-white text-sm">
-                {modal.saving ? 'Menyimpan…' : 'Simpan'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal detail komentar */}
-      {selected && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-bg-surface dark:bg-bg-surface rounded-lg border border-border p-4 w-full max-w-md">
-            <h3 className="font-semibold mb-2">Anotasi #{selected.id}</h3>
-            {canReply && selected.isDosen && (() => {
-              const i = unrespondedDosen.findIndex((a) => a.id === selected.id);
-              return i >= 0
-                ? <p className="text-xs text-text-secondary mb-1">Komentar dosen {i + 1}/{unrespondedDosen.length} · hal. {selected.page}</p>
-                : null;
-            })()}
-            <p className="text-sm mb-1">{selected.user}</p>
-            <p className="text-sm mb-3">{selected.comment}</p>
-            {selected.reply && (
-              <div className="mb-3 rounded-md bg-bg-panel dark:bg-bg-panel p-3">
-                <p className="text-xs font-semibold text-text-secondary mb-1">Balasan Mahasiswa</p>
-                <p className="text-sm whitespace-pre-wrap">{selected.reply}</p>
-              </div>
-            )}
-            {canReply && (
-              <div className="mb-3">
-                <textarea key={selected.id} rows="3" defaultValue={selected.reply} autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      saveReply(selected.id, e.target.value.trim());
-                    }
-                  }}
-                  className="w-full rounded-md border border-border bg-bg-surface dark:bg-bg-surface px-3 py-2 text-sm"
-                  placeholder="Tulis balasan / penjelasan perbaikan… lalu Enter" />
-                <p className="text-xs text-text-secondary mt-1">Enter = kirim balasan & lanjut ke anotasi berikutnya · Shift+Enter = baris baru.</p>
-                {unrespondedDosen.length > 0 && (
-                  <button onClick={goToNext}
-                    className="mt-2 px-3 py-1 rounded-md bg-bg-panel dark:bg-bg-panel text-xs font-medium hover:bg-border">
-                    Lewati → anotasi dosen berikutnya
-                  </button>
-                )}
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <button onClick={() => toggleResolve(selected.id)}
-                className="px-3 py-2 rounded-md bg-sand text-white text-sm">
-                {selected.resolutionStatus === 'resolved' ? 'Buka kembali' : selected.resolutionStatus === 'addressed' ? 'Buka kembali' : canReview ? 'Tandai Selesai' : 'Tandai Sudah Diperbaiki'}
-              </button>
-              <button onClick={() => removeAnnotation(selected.id)}
-                className="px-3 py-2 rounded-md bg-status-danger text-white text-sm">Hapus</button>
-              <button onClick={() => setSelected(null)}
-                className="ml-auto px-3 py-2 rounded-md bg-bg-panel dark:bg-bg-panel text-sm">Tutup</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
