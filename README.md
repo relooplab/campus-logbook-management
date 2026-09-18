@@ -42,7 +42,7 @@ Aplikasi web untuk mencatat, memantau, dan mengelola proses bimbingan tugas akhi
 - SQLite atau MySQL
 
 ```bash
-git clone https://github.com/relooplab/thesis-logbook-management.git
+git clone https://github.com/relooplab/campus-logbook-management.git
 cd thesis-logbook-management
 
 composer install
