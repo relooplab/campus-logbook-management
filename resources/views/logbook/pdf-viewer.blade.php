@@ -1,17 +1,10 @@
-@extends("layouts.app") @section("title", "Viewer PDF & Anotasi") @section("head") @vite(["resources/js/pdf-viewer.jsx"])
+@extends("layouts.focus") @section("title", "Viewer PDF & Anotasi") @section("head") @vite(["resources/js/pdf-viewer.jsx"])
 @endsection @section("content")
-<div class="space-y-4">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="text-xl font-bold"> Viewer PDF & Anotasi —
-            {{ $logbook->jenis === "revisi" ? "Revisi" : "Sesi " . $logbook->sesi_ke }} </h1>
-        <a href="{{ route("logbook.show", $logbook) }}"
-            class="px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Kembali</a>
-    </div>
-    <div id="pdf-viewer-root"></div>
-</div>
+<div id="pdf-viewer-root" class="h-full"></div>
 @endsection @section("scripts")
 <script>
     window.PDF_VIEWER_DATA = {
+        title: @json($logbook->jenis === "revisi" ? "Revisi" : "Sesi " . $logbook->sesi_ke),
         draftUrl: @if ($logbook->lampiran_path)
             @json(route("logbook.pdf", $logbook))
         @else

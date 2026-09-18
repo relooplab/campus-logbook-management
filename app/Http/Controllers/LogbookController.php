@@ -1019,14 +1019,26 @@ class LogbookController extends Controller
             ->orderBy('created_at')
             ->get()
             ->map(function (PdfComment $c) {
-                // Pastikan payload W3C tersedia (untuk data lama, bangun dari kolom).
+                $status = $c->resolution_status ?: ($c->is_resolved ? PdfComment::STATUS_RESOLVED : PdfComment::STATUS_OPEN);
+                // Pakai payload tersimpan bila ada (membawa `native`: tipe +
+                // multi-rect presisi highlight teks), tapi segarkan isi dan
+                // status dari kolom agar tidak basi. Fallback bangun dari kolom
+                // untuk baris lama tanpa payload.
+                $payload = $c->payload;
+                if (is_array($payload) && isset($payload['body'][0]) && is_array($payload['body'][0])) {
+                    $payload['body'][0]['value'] = $c->comment;
+                    $payload['body'][0]['resolved'] = $status === PdfComment::STATUS_RESOLVED;
+                    $payload['body'][0]['resolution_status'] = $status;
+                } else {
+                    $payload = $c->buildPayloadFromColumns();
+                }
+
                 return [
                     'id' => $c->id,
                     'user' => $c->user,
                     'file_type' => $c->file_type,
-                    // Bangun ulang agar status terbaru tidak tertutup payload lama.
-                    'payload' => $c->buildPayloadFromColumns(),
-                    'resolution_status' => $c->resolution_status ?: ($c->is_resolved ? PdfComment::STATUS_RESOLVED : PdfComment::STATUS_OPEN),
+                    'payload' => $payload,
+                    'resolution_status' => $status,
                     'reply' => $c->reply,
                     'is_dosen' => (bool) ($c->user ? $c->user->isDosen() : false),
                     'created_at' => $c->created_at,
