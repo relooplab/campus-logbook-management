@@ -43,7 +43,7 @@ Aplikasi web untuk mencatat, memantau, dan mengelola proses bimbingan tugas akhi
 
 ```bash
 git clone https://github.com/relooplab/campus-logbook-management.git
-cd thesis-logbook-management
+cd campus-logbook-management
 
 composer install
 npm install
