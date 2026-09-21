@@ -97,7 +97,14 @@
                             @endif
                             <td class="py-3 px-4 font-mono">{{ $entry->jenis === 'revisi' ? '—' : $entry->sesi_ke }}</td>
                             <td class="py-3 px-4 table-col-jenis">{{ ucfirst($entry->jenis) }}</td>
-                            <td class="py-3 px-4">{{ $entry->topik ?? 'Revisi' }}</td>
+                            <td class="py-3 px-4">
+                                {{ $entry->topik ?? 'Revisi' }}
+                                @if (!$isMahasiswa && $entry->dosen)
+                                    <span class="block text-[10px] text-text-secondary">
+                                        → {{ $entry->mahasiswaTa?->dosenRoleLabel($entry->dosen) ?? 'Dosen' }}: {{ $entry->dosen->name }}
+                                    </span>
+                                @endif
+                            </td>
                             <td class="py-3 px-4 table-col-tanggal font-mono">{{ $entry->tanggal_tampil?->format('d M Y') ?? '—' }}</td>
                             <td class="py-3 px-4">@include('partials.status-badge', ['status' => $entry->status, 'entry' => $entry])</td>
                             @if ($isMahasiswa)

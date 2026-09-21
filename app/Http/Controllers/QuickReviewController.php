@@ -27,7 +27,9 @@ class QuickReviewController extends Controller
         $queue = LogbookEntry::where('status', LogbookEntry::STATUS_SUBMITTED)
             ->where(function ($query) use ($taIds, $user) {
                 $query->whereIn('mahasiswa_ta_id', $taIds)
-                    ->orWhere('dosen_id', $user->id);
+                    ->orWhere('dosen_id', $user->id)
+                    // Reviewer penerima revisi dari entri ini (termasuk dosen penguji).
+                    ->orWhereHas('revisionChildren', fn ($q) => $q->where('dosen_id', $user->id));
             });
         $queueCount = (clone $queue)->count();
         $entry = $queue

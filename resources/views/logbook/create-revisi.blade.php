@@ -59,13 +59,29 @@
                     class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
                     <option value="">Tidak ada — revisi mandiri</option>
                     @foreach ($parents as $parent)
-                        <option value="{{ $parent->id }}" @selected(old('parent_entry_id', $selectedParentId) == $parent->id)>
+                        <option value="{{ $parent->id }}" data-dosen-id="{{ $parent->dosen_id }}"
+                            @selected(old('parent_entry_id', $selectedParentId) == $parent->id)>
                             Entri #{{ $parent->id }} · {{ $parent->revision_round ? "Revisi ke-{$parent->revision_round}" : 'Logbook' }} · {{ $parent->reviewed_at?->format('d M Y') }}
                         </option>
                     @endforeach
                 </select>
                 <p class="text-xs text-text-secondary mt-1">Kosongkan jika ingin membuat revisi tanpa menghubungkan ke entri logbook yang ada.</p>
                 @error('parent_entry_id')
+                    <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            {{-- Penerima perbaikan: pembimbing ATAU dosen penguji. --}}
+            <div class="mt-3">
+                <label class="block text-xs text-text-secondary mb-1" for="addressed_dosen_id">Kirim kepada (penerima perbaikan)</label>
+                <select name="addressed_dosen_id" id="addressed_dosen_id" required
+                    class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
+                    @foreach ($dosenOptions as $dosenId => $label)
+                        <option value="{{ $dosenId }}" @selected((string) old('addressed_dosen_id', $defaultRecipientId) === (string) $dosenId)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <p class="text-xs text-text-secondary mt-1">Revisi dapat ditujukan ke dosen pembimbing atau dosen penguji. Penerima akan menerima notifikasi dan dapat meninjau entri ini.</p>
+                @error('addressed_dosen_id')
                     <p class="text-status-danger text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
@@ -238,6 +254,13 @@
                     <div>
                         <p class="text-xs text-text-secondary">Umpan Balik yang dijawab</p>
                         <p class="text-text-primary" id="review-parent">—</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-2">
+                    <span class="material-symbols-outlined icon-sm text-text-secondary mt-0.5">send</span>
+                    <div>
+                        <p class="text-xs text-text-secondary">Dikirim kepada</p>
+                        <p class="text-text-primary" id="review-penerima">—</p>
                     </div>
                 </div>
                 <div class="flex items-start gap-2">
@@ -450,6 +473,20 @@
         lastSyncedParent = parentSelect.value;
     }
 
+    // ===== Penerima perbaikan (pembimbing / dosen penguji) =====
+    var recipientSelect = document.getElementById('addressed_dosen_id');
+    var defaultRecipientValue = '{{ $defaultRecipientId }}';
+    if (parentSelect && recipientSelect) {
+        // Saat entri induk berubah, default penerima mengikuti reviewer entri tsb.
+        parentSelect.addEventListener('change', function () {
+            var opt = parentSelect.selectedOptions[0];
+            var dosenId = opt ? (opt.dataset.dosenId || '') : '';
+            if (dosenId && recipientSelect.querySelector('option[value="' + dosenId + '"]')) {
+                recipientSelect.value = dosenId;
+            }
+        });
+    }
+
     // ===== Review ringkasan =====
     function updateReview() {
         var parentText = '—';
@@ -468,6 +505,18 @@
 
         var tanggal = document.getElementById('tanggal_pengiriman');
         document.getElementById('review-tanggal').textContent = tanggal && tanggal.value ? tanggal.value : '—';
+
+        var penerimaText = '—';
+        if (recipientSelect && recipientSelect.value && recipientSelect.selectedOptions[0]) {
+            penerimaText = recipientSelect.selectedOptions[0].textContent.trim();
+        }
+        var reviewPenerima = document.getElementById('review-penerima');
+        if (reviewPenerima) reviewPenerima.textContent = penerimaText;
+
+        var kirimBtn = document.getElementById('btn-kirim');
+        if (kirimBtn && penerimaText !== '—') {
+            kirimBtn.textContent = 'Kirim ke ' + penerimaText.split(' — ')[0];
+        }
     }
 
     // ===== Auto-save draft ke localStorage =====
@@ -498,6 +547,7 @@
                 tanggal_pengiriman: document.getElementById('tanggal_pengiriman')?.value || '',
                 progres_kendala: document.getElementById('progres_kendala')?.value || '',
                 parent_entry_id: document.getElementById('parent_entry_id')?.value || '',
+                addressed_dosen_id: document.getElementById('addressed_dosen_id')?.value || '',
                 riwayat: []
             };
             document.querySelectorAll('#kartu-perbaikan .perbaikan-card').forEach(function (card) {
@@ -522,6 +572,7 @@
         function restoreDraft(saved) {
             if (saved.tanggal_pengiriman) document.getElementById('tanggal_pengiriman').value = saved.tanggal_pengiriman;
             if (saved.parent_entry_id) document.getElementById('parent_entry_id').value = saved.parent_entry_id;
+            if (saved.addressed_dosen_id && recipientSelect) recipientSelect.value = saved.addressed_dosen_id;
             document.getElementById('progres_kendala').value = saved.progres_kendala;
             // Restore riwayat rows.
             if (saved.riwayat && saved.riwayat.length) {
@@ -538,6 +589,7 @@
             document.getElementById('tanggal_pengiriman').value = '';
             document.getElementById('parent_entry_id').value = '';
             document.getElementById('progres_kendala').value = '';
+            if (recipientSelect && defaultRecipientValue) recipientSelect.value = defaultRecipientValue;
             kartuContainer.innerHTML = '';
             addKartu();
             msg.textContent = 'Draft dibuang.';
@@ -551,6 +603,7 @@
             if (saved && saved.progres_kendala && !document.getElementById('progres_kendala').value) {
                 if (saved.tanggal_pengiriman) document.getElementById('tanggal_pengiriman').value = saved.tanggal_pengiriman;
                 if (saved.parent_entry_id) document.getElementById('parent_entry_id').value = saved.parent_entry_id;
+                if (saved.addressed_dosen_id && recipientSelect) recipientSelect.value = saved.addressed_dosen_id;
                 document.getElementById('progres_kendala').value = saved.progres_kendala;
                 if (saved.riwayat && saved.riwayat.length) {
                     kartuContainer.innerHTML = '';

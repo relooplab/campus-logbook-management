@@ -384,6 +384,10 @@ universities (perguruan tinggi)
 | 9 | Foto profil | `public` / `profiles/` | Dosen (miliknya sendiri) atau dosen pembimbing mahasiswa (untuk foto mahasiswa bimbingannya) | User sendiri (mahasiswa/dosen/admin) | User sendiri (file lama dihapus otomatis saat ganti) | Tidak ada tombol hapus mandiri (hanya ganti) | ✅ Ya |
 | 10 | Logo institusi | `local` / `institution/` | Tidak dibebankan ke kuota user manapun (resource singleton institusi) | Admin | Admin (file lama dihapus otomatis saat ganti) | Tidak ada | ✅ Ya |
 
+> **Penerima revisi (TA/KP bimbingan)** — `logbook_entries.dosen_id` pada entri revisi menyimpan penerima yang dipilih mahasiswa: **dosen pembimbing** atau **dosen penguji** (`addressed_dosen_id` pada form). Penerima menjadi reviewer entri (`LogbookEntryPolicy::reviewerIds()`), muncul di Antrean Review, dan dapat menyetujui / meminta revisi. Pembimbing tetap menerima notifikasi (CC) dan tetap dapat mereview. Entri lama (`dosen_id` = pembimbing) berperilaku sama seperti sebelumnya — tidak ada migrasi/backfill.
+
+> **Toggle notifikasi berkala (per institusi)** — `institutions.weekly_digest_enabled` (default ON) mengontrol `ta:weekly-digest` (Senin 07:00); `institutions.daily_reminder_enabled` (default ON) mengontrol `logbook:send-reminders` + `ta:notify-inactive` (harian 08:00). Command memeriksa `Institution::forUser($penerima)` per penerima sehingga satu institusi bisa OFF sementara institusi lain tetap menerima. Diatur system admin di panel Pengaturan → *Notifikasi Berkala* (`updateSystemSettings`, form parsial `_notification_form` agar tidak menimpa SMTP).
+
 ### 12.3 Mekanisme Orphan Cleanup
 
 `files:prune-orphans` (`app/Console/Commands/PruneOrphanFiles.php`, terjadwal mingguan Minggu 03:00, buffer 30 hari):

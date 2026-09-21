@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Institution;
 use App\Models\LogbookEntry;
+use App\Support\ProgramContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,12 +20,17 @@ class StoreRevisiRequest extends FormRequest
      * ada logbook terlebih dahulu (parent_entry_id opsional).
      * Catatan perbaikan diisi sebagai tabel terstruktur (riwayat_perbaikan),
      * bukan upload file PDF. PDF catatan perbaikan dibuat otomatis oleh sistem.
+     * Penerima revisi (addressed_dosen_id) boleh pembimbing ATAU dosen penguji
+     * program; kosong = default pembimbing 1.
      */
     public function rules(): array
     {
         $inst = Institution::current();
         $maxKb = $inst->maxUploadSizeMb() * 1024;
         $mimes = implode(',', $inst->allowedFileTypes());
+
+        $ta = ProgramContext::resolve($this->user(), $this);
+        $allowedDosenIds = $ta ? $ta->allDosenIds() : [];
 
         return [
             'parent_entry_id' => [
@@ -35,6 +41,7 @@ class StoreRevisiRequest extends FormRequest
                         ->whereIn('status', ['revisi', 'revision_in_progress']);
                 }),
             ],
+            'addressed_dosen_id' => ['nullable', Rule::in($allowedDosenIds)],
             'addressed_comment_ids' => ['nullable', 'array'],
             'addressed_comment_ids.*' => ['integer', 'distinct'],
             'tanggal_pengiriman' => ['required', 'date', 'before_or_equal:today'],
@@ -58,6 +65,7 @@ class StoreRevisiRequest extends FormRequest
             'tanggal_pengiriman.required' => 'Tanggal pengiriman revisi wajib diisi.',
             'tanggal_pengiriman.before_or_equal' => 'Tanggal tidak boleh di masa depan.',
             'parent_entry_id.required' => 'Entri asal revisi wajib dipilih.',
+            'addressed_dosen_id.in' => 'Penerima revisi harus pembimbing atau dosen penguji program Anda.',
             'progres_kendala.max' => 'Pesan untuk dosen maksimal 500 karakter.',
             'riwayat_perbaikan.required' => 'Tabel catatan perbaikan wajib diisi minimal 1 baris.',
             'riwayat_perbaikan.min' => 'Tabel catatan perbaikan wajib diisi minimal 1 baris.',

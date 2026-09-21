@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\InactivityNotification;
+use App\Models\Institution;
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Notifications\InactivityReminderNotification;
@@ -33,6 +34,11 @@ class NotifyInactiveStudents extends Command
         $sent = 0;
         foreach ($inactive as $ta) {
             if (!$ta->mahasiswa) {
+                continue;
+            }
+
+            // Toggle per institusi penerima (sama seperti reminder harian 08:00).
+            if (! Institution::forUser($ta->mahasiswa)->isDailyReminderEnabled()) {
                 continue;
             }
 

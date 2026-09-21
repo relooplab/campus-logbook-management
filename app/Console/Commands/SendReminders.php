@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Institution;
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\User;
@@ -32,6 +33,11 @@ class SendReminders extends Command
 
         foreach ($tas as $ta) {
             if ($ta->mahasiswa) {
+                // Toggle per institusi penerima.
+                if (! Institution::forUser($ta->mahasiswa)->isDailyReminderEnabled()) {
+                    continue;
+                }
+
                 $ta->mahasiswa->notify(new ReminderNotification(
                     "Anda belum mencatat bimbingan selama {$inactiveDays}+ hari. Silakan perbarui logbook Anda.",
                     url('/logbook/create'),
@@ -51,6 +57,10 @@ class SendReminders extends Command
                 ->count();
 
             if ($oldCount > 0 && ($dosen = User::find($id))) {
+                if (! Institution::forUser($dosen)->isDailyReminderEnabled()) {
+                    continue;
+                }
+
                 $dosen->notify(new ReminderNotification(
                     "Anda memiliki {$oldCount} entri menunggu review lebih dari {$queueDays} hari.",
                     url('/logbook'),

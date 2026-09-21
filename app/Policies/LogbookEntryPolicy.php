@@ -9,9 +9,15 @@ use App\Models\User;
 class LogbookEntryPolicy
 {
     /**
-     * Pembimbing resolve (priority sesuai spesifikasi).
+     * Dosen yang berhak mereview entri ini:
+     *   1. pembimbing 1 / pembimbing 2 program,
+     *   2. dosen reviewer yang tersimpan di entri (`dosen_id`) — termasuk
+     *      penerima revisi yang dipilih mahasiswa (bisa dosen penguji),
+     *   3. penerima revisi dari entri anak (agar penguji penerima revisi tetap
+     *      bisa menindaklanjuti komentar pada entri induk).
+     * `dosen_id` entri revisi lama berisi pembimbing, sehingga perilakunya sama.
      */
-    private function pembimbingIds(?MahasiswaTa $ta, LogbookEntry $entry): array
+    private function reviewerIds(?MahasiswaTa $ta, LogbookEntry $entry): array
     {
         $ids = [];
         if ($ta) {
@@ -26,6 +32,15 @@ class LogbookEntryPolicy
             $ids[] = $entry->dosen_id;
         } elseif ($entry->parent_entry_id && $entry->parentEntry?->dosen_id) {
             $ids[] = $entry->parentEntry->dosen_id;
+        }
+
+        // Penerima revisi anak (antrean perbaikan yang ditujukan ke dosen ini).
+        if ($entry->exists) {
+            foreach ($entry->revisionChildren()->pluck('dosen_id') as $childDosenId) {
+                if ($childDosenId) {
+                    $ids[] = $childDosenId;
+                }
+            }
         }
 
         return array_values(array_unique(array_filter($ids)));
@@ -61,15 +76,20 @@ class LogbookEntryPolicy
             return true;
         }
 
-        // Dosen pembimbing/penguji langsung.
-        if (in_array($user->id, $this->pembimbingIds($entry->mahasiswaTa, $entry), true)) {
+        // Dosen pembimbing/penguji langsung (penguji pada program yang sama).
+        if (in_array($user->id, $this->reviewerIds($entry->mahasiswaTa, $entry), true)) {
+            return true;
+        }
+
+        // Dosen penguji resmi program (pembimbing_1/2 atau penguji_1/2).
+        if ($user->isDosen() && $entry->mahasiswaTa?->isPenguji($user)) {
             return true;
         }
 
         // Dosen lain yang punya hubungan langsung dengan pembimbing
         // (TA bersama atau grup yang sama) dapat melihat entri.
         if ($user->isDosen()) {
-            foreach ($this->pembimbingIds($entry->mahasiswaTa, $entry) as $pembimbingId) {
+            foreach ($this->reviewerIds($entry->mahasiswaTa, $entry) as $pembimbingId) {
                 if ($pembimbing = User::find($pembimbingId)) {
                     if ($user->hasDirectRelation($pembimbing)) {
                         return true;
@@ -96,40 +116,41 @@ class LogbookEntryPolicy
     }
 
     /**
-     * Dosen yang merupakan pembimbing berhak mereview.
+     * Dosen reviewer entri (pembimbing, atau penerima revisi yang dipilih
+     * mahasiswa — termasuk penguji) berhak mereview.
      */
     public function review(User $user, LogbookEntry $entry): bool
     {
         return $user->isDosen()
             && $entry->status === LogbookEntry::STATUS_SUBMITTED
-            && in_array($user->id, $this->pembimbingIds($entry->mahasiswaTa, $entry), true);
+            && in_array($user->id, $this->reviewerIds($entry->mahasiswaTa, $entry), true);
     }
 
     /**
-     * Dosen pembimbing boleh membuka kembali entri yang sudah disetujui
+     * Dosen reviewer boleh membuka kembali entri yang sudah disetujui
      * (baik untuk dibatalkan ke menunggu-review maupun diminta revisi lagi).
      */
     public function reopen(User $user, LogbookEntry $entry): bool
     {
         return $user->isDosen()
             && $entry->status === LogbookEntry::STATUS_APPROVED
-            && in_array($user->id, $this->pembimbingIds($entry->mahasiswaTa, $entry), true);
+            && in_array($user->id, $this->reviewerIds($entry->mahasiswaTa, $entry), true);
     }
 
     /**
-     * Dosen yang benar pembimbing/reviewer entri ini (tanpa syarat status),
-     * dipakai untuk aksi seperti resolve/hapus komentar PDF. Lebih sempit
-     * dari 'view' (yang juga mencakup dosen cross-link grup).
+     * Dosen yang benar reviewer entri ini (tanpa syarat status), dipakai untuk
+     * aksi seperti resolve/hapus komentar PDF. Lebih sempit dari 'view' (yang
+     * juga mencakup dosen cross-link grup).
      */
     public function isReviewer(User $user, LogbookEntry $entry): bool
     {
-        return $user->isDosen() && in_array($user->id, $this->pembimbingIds($entry->mahasiswaTa, $entry), true);
+        return $user->isDosen() && in_array($user->id, $this->reviewerIds($entry->mahasiswaTa, $entry), true);
     }
 
     /**
      * Boleh menambah/menghapus action item: mahasiswa pemilik (owner) ATAU
-     * dosen pembimbing/reviewer. Pemilik tetap satu-satunya yang boleh toggle
-     * status selesai (lihat policy update).
+     * dosen reviewer. Pemilik tetap satu-satunya yang boleh toggle status
+     * selesai (lihat policy update).
      */
     public function manageActionItems(User $user, LogbookEntry $entry): bool
     {

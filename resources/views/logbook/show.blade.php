@@ -10,6 +10,15 @@
     $canReopen = $user->can('reopen', $logbook);
     $canManageActionItems = $user->can('manageActionItems', $logbook);
 
+    // Peran dosen reviewer entri ini (pembimbing ATAU penguji bila mahasiswa
+    // mengirim revisi ke dosen pengujinya).
+    $reviewerRole = ($logbook->dosen && $logbook->mahasiswaTa)
+        ? $logbook->mahasiswaTa->dosenRoleLabel($logbook->dosen)
+        : null;
+    $reviewerLabel = $logbook->dosen
+        ? (($reviewerRole ? $reviewerRole.' — ' : '').$logbook->dosen->name)
+        : ($logbook->mahasiswaTa?->pembimbing1?->name ?? null);
+
     // Navigasi "Kembali" konteks-sensitif pada halaman detail entri.
     if ($logbook->parentEntry) {
         // Entri ini adalah revisi yang menjawab entri induk → kembali ke sesi sebelumnya.
@@ -50,7 +59,7 @@
                 ['label' => 'Mahasiswa', 'value' => $logbook->mahasiswaTa?->mahasiswa?->name],
                 ['label' => $logbook->jenis === 'revisi' ? 'Tanggal Pengiriman Revisi' : 'Tanggal Bimbingan', 'value' => $logbook->tanggal_tampil?->format('d M Y') ?? '—'],
                 ['label' => 'Topik', 'value' => $logbook->topik ?? 'Revisi'],
-                ['label' => 'Dosen', 'value' => $logbook->dosen?->name ?? ($logbook->mahasiswaTa?->pembimbing1?->name ?? '—')],
+                ['label' => $logbook->jenis === 'revisi' ? 'Ditujukan kepada' : 'Dosen', 'value' => $reviewerLabel ?? '—'],
             ],
         ])
 
