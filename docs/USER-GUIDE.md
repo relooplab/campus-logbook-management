@@ -87,6 +87,7 @@ Entri logbook mencatat satu sesi bimbingan.
 
 - **Status entri**: `Draf` → `Dikirim` → `Disetujui` atau `Revisi`.
 - **Jenis entri**: `Logbook` (sesi bimbingan) dan `Revisi` (perbaikan hasil review).
+- **Penerima revisi**: entri revisi dapat ditujukan ke **dosen pembimbing** atau **dosen penguji** program. Penerima menjadi reviewer entri tersebut; pembimbing tetap menerima notifikasi (CC).
 - **Batas sesi revisi**: maksimal 3 sesi per entri (peringatan muncul bila tercapai).
 - **Auto-save draf**: isian logbook tersimpan otomatis di browser (localStorage) setiap 5 detik.
 - **Filter**: status, jenis, rentang tanggal, dan kata kunci.
@@ -95,6 +96,7 @@ Entri logbook mencatat satu sesi bimbingan.
 
 - Dokumen lampiran (PDF) dapat dibuka dalam **viewer PDF**.
 - Dosen dapat **menandai area** pada PDF dan **memberi komentar** (anotasi) per halaman.
+- **Dosen penguji** yang menerima revisi juga dapat membuka viewer dan memberi anotasi.
 - Komentar memiliki status **terbuka/resolved**.
 - Dosen dapat **membangun feedback otomatis** dari komentar yang belum di-resolve.
 
@@ -125,6 +127,9 @@ Entri logbook mencatat satu sesi bimbingan.
 - Notifikasi masuk untuk aktivitas penting (entri baru, status berubah, komentar PDF, dll).
 - **Lonjong notifikasi** di header menampilkan jumlah belum dibaca; tersedia **dropdown** dan **halaman semua notifikasi**.
 - **Notifikasi real-time** (via Reverb/Pusher) menampilkan toast saat ada perubahan status entri atau komentar PDF.
+- **Notifikasi berkala** (dapat dimatikan system admin di panel **Pengaturan** → *Notifikasi Berkala*):
+  - **Digest Mingguan** — setiap Senin 07:00 WIB, ringkasan bimbingan ke dosen & mahasiswa.
+  - **Reminder Harian** — setiap 08:00 WIB, pengingat mahasiswa tidak aktif & antrean review dosen (termasuk pengingat inaktivitas > 3 minggu + CC pembimbing).
 
 ### 3.9 Catatan Sidang & Riwayat Menguji
 
@@ -278,8 +283,9 @@ Selain workspace mahasiswa, dosen juga memiliki **workspace pribadi** melalui me
 
 1. Saat dosen meminta revisi, status entri menjadi **Revisi**.
 2. Buka detail entri → klik **Buat Revisi dari Feedback Ini**.
-3. Isi ringkasan perbaikan dan unggah revisi (bisa mengunggah **Catatan Perbaikan**).
-4. Kirim ke dosen → dosen akan mereview kembali.
+3. Isi tabel **catatan perbaikan** (halaman, komentar dosen, perbaikan yang dilakukan, status) dan unggah **file perbaikan**.
+4. Pada langkah pertama wizard, pilih **Kirim kepada**: dosen **pembimbing** atau dosen **penguji** (default: pembimbing 1 / penerima entri induk).
+5. Kirim → penerima menerima notifikasi (pembimbing ikut diberi tahu) dan mereview kembali.
 
 #### 4.1.4 Mengelola Workspace
 
@@ -347,6 +353,7 @@ Jika akun Anda diizinkan menjadi penguji, Anda dapat mencatat riwayat sidang/men
    - Pilih **Setujui (Approve)** untuk menyetujui, atau
    - Isi **feedback** (wajib, min. 20 karakter) lalu **Minta Revisi**.
 4. Saat menyetujui dengan lampiran PDF yang belum dibuka, aplikasi mengonfirmasi terlebih dahulu.
+5. Bila Anda **dosen penguji** yang dipilih mahasiswa sebagai penerima revisi, entri tersebut juga tampil di **Antrean Review** Anda; Anda dapat menyetujui atau meminta revisi seperti pembimbing.
 
 #### 4.2.3 Quick Review
 

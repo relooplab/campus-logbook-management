@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Institution;
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\PdfComment;
@@ -20,6 +21,12 @@ class SendWeeklyDigest extends Command
         // ---------- Dosem ----------
         $dosens = User::role('dosen')->get();
         foreach ($dosens as $dosen) {
+            // Toggle per institusi penerima: institusi yang menonaktifkan
+            // digest dilewati, institusi lain tetap menerima.
+            if (! Institution::forUser($dosen)->isWeeklyDigestEnabled()) {
+                continue;
+            }
+
             $taIds = MahasiswaTa::where('pembimbing_1_id', $dosen->id)
                 ->orWhere('pembimbing_2_id', $dosen->id)
                 ->pluck('id');
@@ -47,6 +54,10 @@ class SendWeeklyDigest extends Command
         // ---------- Mahasiswa ----------
         $mahasiswa = User::role('mahasiswa')->with('programAktif')->get();
         foreach ($mahasiswa as $m) {
+            if (! Institution::forUser($m)->isWeeklyDigestEnabled()) {
+                continue;
+            }
+
             $ta = $m->programAktif;
             if (!$ta) continue;
 

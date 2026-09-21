@@ -103,6 +103,43 @@
         </form>
     </div>
 
+    <div class="bg-bg-surface rounded-xl border border-border p-6">
+        <h2 class="font-semibold mb-1">Notifikasi Berkala</h2>
+        <p class="text-sm text-text-secondary mb-4">Atur email otomatis berkala. Berlaku untuk seluruh user pada institusi Anda ({{ $institution->institution_name ?? 'ini' }}). Mematikan toggle berarti email + notifikasi in-app untuk jenis tersebut tidak dikirim.</p>
+        <form method="POST" action="{{ route('admin.system.settings.update') }}" class="space-y-3">
+            @csrf
+            {{-- Pertahankan nilai autentikasi/SMTP saat ini agar tidak tertimpa form parsial ini. --}}
+            <input type="hidden" name="_notification_form" value="1">
+            <input type="hidden" name="email_verification_override_keep" value="{{ $institution->email_verification_override === true ? 'wajib' : ($institution->email_verification_override === false ? 'tidak' : 'auto') }}">
+            <input type="hidden" name="admin_contact_email_keep" value="{{ $institution->admin_contact_email }}">
+            <input type="hidden" name="mail_mailer_keep" value="{{ $institution->mail_mailer ?? 'smtp' }}">
+            <input type="hidden" name="mail_host_keep" value="{{ $institution->mail_host }}">
+            <input type="hidden" name="mail_port_keep" value="{{ $institution->mail_port }}">
+            <input type="hidden" name="mail_username_keep" value="{{ $institution->mail_username }}">
+            <input type="hidden" name="mail_from_address_keep" value="{{ $institution->mail_from_address }}">
+            <input type="hidden" name="mail_from_name_keep" value="{{ $institution->mail_from_name }}">
+
+            <label class="flex items-start gap-3 rounded-xl border border-border p-3 cursor-pointer">
+                <input type="checkbox" name="weekly_digest_enabled" value="1" @checked(old('weekly_digest_enabled', $institution->isWeeklyDigestEnabled())) class="mt-1 rounded bg-bg-surface border-border">
+                <span>
+                    <span class="block text-sm font-medium">Digest Mingguan (Senin 07:00 WIB)</span>
+                    <span class="block text-xs text-text-secondary mt-0.5">Ringkasan bimbingan mingguan ke dosen &amp; mahasiswa (<code>ta:weekly-digest</code>).</span>
+                </span>
+            </label>
+            <label class="flex items-start gap-3 rounded-xl border border-border p-3 cursor-pointer">
+                <input type="checkbox" name="daily_reminder_enabled" value="1" @checked(old('daily_reminder_enabled', $institution->isDailyReminderEnabled())) class="mt-1 rounded bg-bg-surface border-border">
+                <span>
+                    <span class="block text-sm font-medium">Reminder Harian (08:00 WIB)</span>
+                    <span class="block text-xs text-text-secondary mt-0.5">Pengingat mahasiswa tidak aktif &amp; antrean review dosen (<code>logbook:send-reminders</code>), termasuk pengingat inaktivitas &gt; 3 minggu + CC pembimbing (<code>ta:notify-inactive</code>).</span>
+                </span>
+            </label>
+
+            <div class="flex items-center gap-3 pt-1">
+                <button class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan</button>
+            </div>
+        </form>
+    </div>
+
     <div id="smtp-test" class="bg-bg-surface rounded-xl border border-border p-6">
         <h2 class="font-semibold mb-1">Kirim Email Uji</h2>
         <p class="text-sm text-text-secondary mb-4">Verifikasi konfigurasi SMTP dengan mengirim email percobaan ke alamat Anda.</p>

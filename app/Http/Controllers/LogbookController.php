@@ -56,17 +56,31 @@ class LogbookController extends Controller
 
         $selectedParentId = $request->query('parent_entry_id');
 
+        $selectedParent = $selectedParentId
+            ? $parents->firstWhere('id', $selectedParentId)
+            : null;
+
         $parentComments = collect();
-        if ($selectedParentId) {
-            $selectedParent = $parents->firstWhere('id', $selectedParentId);
-            if ($selectedParent) {
-                $parentComments = $selectedParent->comments()
-                    ->where('resolution_status', '!=', PdfComment::STATUS_RESOLVED)
-                    ->get();
-            }
+        if ($selectedParent) {
+            $parentComments = $selectedParent->comments()
+                ->where('resolution_status', '!=', PdfComment::STATUS_RESOLVED)
+                ->get();
         }
 
-        return view('logbook.create-revisi', compact('ta', 'parents', 'selectedParentId', 'parentComments'));
+        // Pilihan penerima revisi: pembimbing 1/2 ATAU dosen penguji 1/2.
+        // Default: penerima entri induk (bila ada), selain itu pembimbing 1.
+        $dosenOptions = $ta->dosenRecipientOptions();
+        $defaultRecipientId = old('addressed_dosen_id')
+            ?: ($selectedParent?->dosen_id ?: $ta->pembimbing_1_id);
+
+        if ($defaultRecipientId && !isset($dosenOptions[(int) $defaultRecipientId])) {
+            // Dosen default sudah tidak lagi terkait program (mis. penguji diganti).
+            $defaultRecipientId = $ta->pembimbing_1_id ?: array_key_first($dosenOptions);
+        }
+
+        return view('logbook.create-revisi', compact(
+            'ta', 'parents', 'selectedParentId', 'parentComments', 'dosenOptions', 'defaultRecipientId'
+        ));
     }
 
     public function store(StoreLogbookEntryRequest $request): RedirectResponse
@@ -181,7 +195,11 @@ class LogbookController extends Controller
                 'revision_round' => $parent ? ($parent->revision_round ?? 0) + 1 : null,
                 'sesi_ke' => null, // revisi: sesi tidak dipakai (null agar unique index (mahasiswa_ta_id, sesi_ke) mengizinkan banyak revisi)
                 'jenis' => LogbookEntry::JENIS_REVISI,
-                'dosen_id' => $parent?->dosen_id ?: $parent?->reviewDosen()?->id ?: $ta->pembimbing_1_id,
+                // `dosen_id` = reviewer entri. Penerima revisi yang dipilih
+                // mahasiswa (pembimbing ATAU dosen penguji) menjadi reviewer;
+                // kosong = rantai entri induk / pembimbing 1.
+                'dosen_id' => $data['addressed_dosen_id']
+                    ?? ($parent?->dosen_id ?: $parent?->reviewDosen()?->id ?: $ta->pembimbing_1_id),
                 'topik' => $parent?->topik,
                 'progres_kendala' => $data['progres_kendala'] ?? null,
                 'tanggal_pengiriman' => $data['tanggal_pengiriman'],
@@ -227,10 +245,18 @@ class LogbookController extends Controller
                 ]);
         }
 
+        // Penerima revisi (pembimbing ATAU dosen penguji) + pembimbing sebagai CC.
+        $recipient = $entry->reviewDosen();
+        $recipientRole = $recipient ? $ta->dosenRoleLabel($recipient) : null;
+        $recipientLabel = $recipient
+            ? ($recipientRole ? $recipientRole.' — '.$recipient->name : $recipient->name)
+            : 'dosen';
+
         if ($submit) {
             $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($entry, 'Ada entri revisi baru menunggu review.'));
-            $entry->notifyDosen(
-                'Entri revisi baru dikirim oleh mahasiswa.',
+            $entry->notifyReviewers(
+                'Entri revisi baru dikirim oleh mahasiswa'
+                    .($recipientRole ? ' untuk '.$recipientRole.'.' : '.'),
                 route('logbook.show', $entry),
                 'Entri Baru Menunggu Review',
             );
@@ -238,7 +264,7 @@ class LogbookController extends Controller
 
         return redirect()->route('logbook.show', $entry)
             ->with('success', $submit
-                ? 'Entri revisi dikirim ke dosen.'
+                ? 'Entri revisi dikirim ke '.$recipientLabel.'.'
                 : 'Entri revisi tersimpan sebagai draf.');
     }
 
@@ -274,7 +300,7 @@ class LogbookController extends Controller
             $query = LogbookEntry::where(fn ($q) => $q->whereIn('mahasiswa_ta_id', $taIds)
                     ->orWhereIn('mahasiswa_ta_id', $relatedTaIds)
                     ->orWhere('dosen_id', $user->id))
-                ->with(['mahasiswaTa.mahasiswa']);
+                ->with(['mahasiswaTa.mahasiswa', 'dosen']);
         } else {
             $query = LogbookEntry::with(['mahasiswaTa.mahasiswa']);
         }
@@ -580,7 +606,7 @@ class LogbookController extends Controller
         }
 
         $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Ada entri baru menunggu review.'));
-        $logbook->notifyDosen(
+        $logbook->notifyReviewers(
             'Entri '.($logbook->jenis === 'revisi' ? 'revisi' : 'logbook sesi '.$logbook->sesi_ke).' baru dikirim oleh mahasiswa.',
             route('logbook.show', $logbook),
             'Entri Baru Menunggu Review',
@@ -602,7 +628,10 @@ class LogbookController extends Controller
         ]);
         $this->resolveCommentsOnApproval($logbook);
 
-        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda telah disetujui oleh pembimbing.'));
+        // Reviewer bisa pembimbing atau dosen penguji (penerima revisi), jadi
+        // pesan notifikasi tidak menyebut peran tertentu.
+        $reviewerName = auth()->user()?->name;
+        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda telah disetujui'.($reviewerName ? ' oleh '.$reviewerName : ' oleh dosen').'.'));
         $logbook->notifyParties(
             'Entri '.($logbook->jenis === 'revisi' ? 'revisi' : 'logbook sesi '.$logbook->sesi_ke).' telah disetujui.',
             route('logbook.show', $logbook),
@@ -1097,7 +1126,9 @@ class LogbookController extends Controller
 
         $this->bestEffort(fn () => \App\Events\PdfCommentCreated::dispatch($comment));
 
-        // Notifikasi ke pihak terkait (kecuali penulis komentar sendiri).
+        // Notifikasi ke pihak terkait (kecuali penulis komentar sendiri):
+        // pemilik TA, reviewer entri, pembimbing (CC), serta penerima revisi
+        // aktif dari entri ini maupun entri induknya (bisa dosen penguji).
         $recipients = [];
         if ($ownerId = $logbook->mahasiswaTa?->user_id) {
             $recipients[] = $ownerId;
@@ -1105,6 +1136,13 @@ class LogbookController extends Controller
         if ($dosen = $logbook->reviewDosen()) {
             $recipients[] = $dosen->id;
         }
+        $recipients = array_merge($recipients, array_filter([
+            $logbook->mahasiswaTa?->pembimbing_1_id,
+            $logbook->mahasiswaTa?->pembimbing_2_id,
+        ]), $logbook->revisionChildren()->pluck('dosen_id')->all(), $logbook->parentEntry
+            ? [$logbook->parentEntry->dosen_id]
+            : []);
+
         foreach (array_unique(array_filter($recipients)) as $id) {
             if ($id !== $request->user()->id && ($u = \App\Models\User::find($id))) {
                 $this->bestEffort(fn () => $u->notify(new \App\Notifications\ActivityNotification(

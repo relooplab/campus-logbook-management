@@ -477,6 +477,58 @@ class MahasiswaTa extends Model
     }
 
     /**
+     * Label peran dosen pada program ini, mis. "Pembimbing 1", "Penguji 2",
+     * atau "Pembimbing 2 & Penguji 1" bila satu dosen memegang dua peran
+     * (mode individual). Null bila dosen tidak terkait program ini.
+     */
+    public function dosenRoleLabel(User $dosen): ?string
+    {
+        $roles = [];
+        if ($this->pembimbing_1_id === $dosen->id) {
+            $roles[] = 'Pembimbing 1';
+        }
+        if ($this->pembimbing_2_id === $dosen->id) {
+            $roles[] = 'Pembimbing 2';
+        }
+        if ($this->penguji_1_id === $dosen->id) {
+            $roles[] = 'Penguji 1';
+        }
+        if ($this->penguji_2_id === $dosen->id) {
+            $roles[] = 'Penguji 2';
+        }
+
+        return $roles ? implode(' & ', $roles) : null;
+    }
+
+    /**
+     * Pilihan dosen penerima revisi (pembimbing/penguji) dengan label perannya.
+     * Urutan: Pembimbing 1, Pembimbing 2, Penguji 1, Penguji 2 — namun dosen
+     * yang memegang dua peran hanya muncul sekali (label digabung).
+     *
+     * @return array<int, string> [user_id => 'Pembimbing 1 — Nama']
+     */
+    public function dosenRecipientOptions(): array
+    {
+        $options = [];
+        $this->loadMissing(['pembimbing1', 'pembimbing2', 'penguji1', 'penguji2']);
+
+        foreach ([
+            $this->pembimbing1,
+            $this->pembimbing2,
+            $this->penguji1,
+            $this->penguji2,
+        ] as $dosen) {
+            if (!$dosen || isset($options[$dosen->id])) {
+                continue;
+            }
+
+            $options[$dosen->id] = ($this->dosenRoleLabel($dosen) ?? 'Dosen').' — '.$dosen->name;
+        }
+
+        return $options;
+    }
+
+    /**
      * Target kuota penyimpanan untuk data program ini.
      * - Program yang sudah disetujui (aktif/tamat/nonaktif): dibebankan ke dosen
      *   pembimbing (pembimbing 1, fallback pembimbing 2).

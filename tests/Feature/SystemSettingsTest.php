@@ -100,7 +100,7 @@ class SystemSettingsTest extends AuditSmokeTest
         $response->assertSessionHas('success');
 
         $inst = Institution::active()->fresh();
-        $this->assertSame(1, $inst->email_verification_override, 'Override "wajib" harus tersimpan true.');
+        $this->assertTrue((bool) $inst->email_verification_override, 'Override "wajib" harus tersimpan true.');
         $this->assertSame('log', $inst->mail_mailer);
         $this->assertSame('smtp.test.local', $inst->mail_host);
         $this->assertSame(1025, (int) $inst->mail_port);
@@ -115,5 +115,76 @@ class SystemSettingsTest extends AuditSmokeTest
         // Form SMTP selalu tampil (tanpa class hidden) & ada opsi Auto.
         $this->assertStringContainsString('id="smtp-form" class="space-y-4 pt-2 border-t border-border"', $response->getContent());
         $this->assertStringContainsString('Auto — ikuti SMTP', $response->getContent());
+    }
+
+    public function test_form_notifikasi_menampilkan_toggle_dengan_status_tersimpan(): void
+    {
+        $sys = $this->systemAdmin();
+
+        $response = $this->actingAs($sys)->get(route('admin.system.settings'));
+
+        $response->assertOk();
+        $response->assertSee('Notifikasi Berkala');
+        $response->assertSee('Digest Mingguan (Senin 07:00 WIB)');
+        $response->assertSee('Reminder Harian (08:00 WIB)');
+    }
+
+    public function test_mematikan_toggle_melalui_form_menyimpan_off(): void
+    {
+        $sys = $this->systemAdmin();
+        $institution = Institution::current();
+        $this->assertTrue($institution->isWeeklyDigestEnabled());
+        $this->assertTrue($institution->isDailyReminderEnabled());
+
+        // Submit form notifikasi dengan kedua checkbox unchecked (absent).
+        $this->actingAs($sys)->post(route('admin.system.settings.update'), [
+            '_notification_form' => '1',
+            'email_verification_override_keep' => 'auto',
+            'mail_mailer_keep' => 'smtp',
+        ])->assertRedirect()->assertSessionHas('success');
+
+        $institution->refresh();
+        $this->assertFalse($institution->isWeeklyDigestEnabled());
+        $this->assertFalse($institution->isDailyReminderEnabled());
+    }
+
+    public function test_menyalakan_toggle_melalui_form_menyimpan_on(): void
+    {
+        $sys = $this->systemAdmin();
+        Institution::current()->update([
+            'weekly_digest_enabled' => false,
+            'daily_reminder_enabled' => false,
+        ]);
+
+        $this->actingAs($sys)->post(route('admin.system.settings.update'), [
+            '_notification_form' => '1',
+            'email_verification_override_keep' => 'auto',
+            'mail_mailer_keep' => 'smtp',
+            'weekly_digest_enabled' => '1',
+            'daily_reminder_enabled' => '1',
+        ])->assertRedirect()->assertSessionHas('success');
+
+        $institution = Institution::current()->fresh();
+        $this->assertTrue($institution->isWeeklyDigestEnabled());
+        $this->assertTrue($institution->isDailyReminderEnabled());
+    }
+
+    public function test_form_autentikasi_tidak_mengubah_toggle(): void
+    {
+        $sys = $this->systemAdmin();
+        Institution::current()->update([
+            'weekly_digest_enabled' => false,
+            'daily_reminder_enabled' => false,
+        ]);
+
+        // Submit form autentikasi/SMTP (tanpa _notification_form) — toggle tetap OFF.
+        $this->actingAs($sys)->post(route('admin.system.settings.update'), [
+            'email_verification_override' => 'tidak',
+        ])->assertRedirect()->assertSessionHas('success');
+
+        $institution = Institution::current()->fresh();
+        $this->assertFalse($institution->isWeeklyDigestEnabled());
+        $this->assertFalse($institution->isDailyReminderEnabled());
+        $this->assertFalse((bool) $institution->email_verification_override);
     }
 }

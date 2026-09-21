@@ -212,10 +212,18 @@ class LogbookEntry extends Model
      *   1. mahasiswa_ta.pembimbing_1_id
      *   2. mahasiswa_ta.pembimbing_2_id
      *   3. entry.dosen_id (fallback)
+     *
+     * Khusus entri revisi: mahasiswa memilih penerima (pembimbing ATAU penguji)
+     * yang tersimpan di `dosen_id`, sehingga penerima itu yang menjadi reviewer.
+     * Entri revisi lama (dosen_id = pembimbing) tetap berperilaku sama.
      */
     public function reviewDosen(): ?User
     {
         $ta = $this->mahasiswaTa;
+
+        if ($this->jenis === self::JENIS_REVISI && $this->dosen_id) {
+            return $this->dosen;
+        }
 
         if ($ta) {
             if ($ta->pembimbing_1_id) {
@@ -274,6 +282,35 @@ class LogbookEntry extends Model
                 $dosen->notify(new \App\Notifications\ActivityNotification($message, $url, $subject));
             } catch (\Throwable $e) {
                 report($e);
+            }
+        }
+    }
+
+    /**
+     * Notify penerima entri (penerima revisi yang dipilih mahasiswa, atau
+     * pembimbing sebagai fallback). Khusus entri revisi, para pembimbing ikut
+     * diberi tahu (CC) agar pengawasan bimbingan tetap berjalan ketika revisi
+     * ditujukan ke dosen penguji. Entri logbook biasa tetap hanya mengabari
+     * reviewer-nya (perilaku lama).
+     */
+    public function notifyReviewers(string $message, ?string $url = null, string $subject = 'Entri Baru Menunggu Review'): void
+    {
+        $recipients = [$this->reviewDosen()?->id];
+
+        if ($this->jenis === self::JENIS_REVISI) {
+            $recipients[] = $this->mahasiswaTa?->pembimbing_1_id;
+            $recipients[] = $this->mahasiswaTa?->pembimbing_2_id;
+        }
+
+        $recipients = array_unique(array_filter($recipients));
+
+        foreach ($recipients as $id) {
+            if ($user = User::find($id)) {
+                try {
+                    $user->notify(new \App\Notifications\ActivityNotification($message, $url, $subject));
+                } catch (\Throwable $e) {
+                    report($e);
+                }
             }
         }
     }

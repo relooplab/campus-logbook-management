@@ -29,6 +29,8 @@ class Institution extends Model
         'seminar_hardcopy_note',
         'email_verification_required',
         'email_verification_override',
+        'weekly_digest_enabled',
+        'daily_reminder_enabled',
         'storage_limit_mb',
         'mail_mailer',
         'mail_host',
@@ -44,6 +46,9 @@ class Institution extends Model
     {
         return [
             'email_verification_required' => 'boolean',
+            'email_verification_override' => 'boolean',
+            'weekly_digest_enabled' => 'boolean',
+            'daily_reminder_enabled' => 'boolean',
             'storage_limit_mb' => 'integer',
         ];
     }
@@ -227,6 +232,25 @@ class Institution extends Model
     public function emailVerificationRequired(): bool
     {
         return $this->emailVerificationEffective();
+    }
+
+    /**
+     * Apakah digest mingguan (Senin 07:00) aktif untuk institusi ini.
+     * Default true (perilaku lama) bila kolom null — mis. baris yang dibuat
+     * sebelum migrasi toggle.
+     */
+    public function isWeeklyDigestEnabled(): bool
+    {
+        return $this->weekly_digest_enabled ?? true;
+    }
+
+    /**
+     * Apakah reminder harian 08:00 (logbook:send-reminders + ta:notify-inactive)
+     * aktif untuk institusi ini. Default true (perilaku lama).
+     */
+    public function isDailyReminderEnabled(): bool
+    {
+        return $this->daily_reminder_enabled ?? true;
     }
 
     /**

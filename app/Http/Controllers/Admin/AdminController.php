@@ -1954,6 +1954,23 @@ class AdminController extends Controller
      */
     public function updateSystemSettings(Request $request): RedirectResponse
     {
+        // Form notifikasi berkala memakai field *_keep agar nilai autentikasi/
+        // SMTP tidak tertimpa null oleh form parsial. Normalisasi dulu ke
+        // nama kolom asli bila field asli tidak dikirim.
+        foreach ([
+            'email_verification_override', 'admin_contact_email', 'mail_mailer',
+            'mail_host', 'mail_port', 'mail_username', 'mail_from_address',
+            'mail_from_name',
+        ] as $field) {
+            if (!$request->exists($field) && $request->exists($field.'_keep')) {
+                $request->merge([$field => $request->input($field.'_keep') ?: null]);
+            }
+        }
+        // Toggle notifikasi hanya diubah bila form notifikasi yang submit
+        // (ditandai hidden _notification_form=1) — form autentikasi/SMTP
+        // tidak menyentuh toggle.
+        $notificationForm = $request->boolean('_notification_form');
+
         $rules = [
             'email_verification_override' => ['nullable', 'string', 'in:auto,wajib,tidak'],
             'mail_mailer' => ['nullable', 'string', 'max:20', 'in:smtp,log,array,sendmail,mailgun,ses,postmark,resend'],
@@ -1968,6 +1985,22 @@ class AdminController extends Controller
             // di form Profil Institusi. Dipakai sebagai info bantuan di
             // register/login/profil. Bukan email system admin — field terpisah.
             'admin_contact_email' => ['nullable', 'email', 'max:255'],
+            // Toggle notifikasi berkala (checkbox): hanya '1'/absent.
+            // Dicatat di audit tetapi tidak ikut $validated->fill agar form
+            // parsial (section notifikasi) tidak menimpa kolom lain dengan null.
+            'weekly_digest_enabled' => ['nullable', 'in:1'],
+            'daily_reminder_enabled' => ['nullable', 'in:1'],
+            // Hidden field dari form parsial notifikasi — diabaikan saat fill
+            // (nilai asli dipertahankan dari DB).
+            'email_verification_override_keep' => ['nullable'],
+            'admin_contact_email_keep' => ['nullable'],
+            'mail_mailer_keep' => ['nullable'],
+            'mail_host_keep' => ['nullable'],
+            'mail_port_keep' => ['nullable'],
+            'mail_username_keep' => ['nullable'],
+            'mail_from_address_keep' => ['nullable'],
+            'mail_from_name_keep' => ['nullable'],
+            '_notification_form' => ['nullable', 'in:1'],
         ];
 
         $validated = $request->validate($rules);
@@ -1987,8 +2020,19 @@ class AdminController extends Controller
         }
 
         // SMTP: jangan timpa password bila tidak diisi (form tidak menampilkan nilai lama).
-        unset($validated['mail_password'], $validated['email_verification_override']);
+        unset(
+            $validated['mail_password'], $validated['email_verification_override'],
+            $validated['email_verification_override_keep'], $validated['admin_contact_email_keep'],
+            $validated['mail_mailer_keep'], $validated['mail_host_keep'], $validated['mail_port_keep'],
+            $validated['mail_username_keep'], $validated['mail_from_address_keep'],
+            $validated['mail_from_name_keep'], $validated['_notification_form']
+        );
         $institution->fill($validated);
+        // Checkbox toggle: hanya diubah dari form notifikasi; absent (unchecked) = OFF.
+        if ($notificationForm) {
+            $institution->weekly_digest_enabled = $request->boolean('weekly_digest_enabled');
+            $institution->daily_reminder_enabled = $request->boolean('daily_reminder_enabled');
+        }
         if ($request->filled('mail_password')) {
             // Disimpan terenkripsi via mutator di model Institution.
             $institution->mail_password = $request->input('mail_password');
@@ -2002,6 +2046,8 @@ class AdminController extends Controller
         \App\Support\Audit::log('SysAdmin mengubah pengaturan autentikasi & SMTP', [
             'institution_id' => $institution->id,
             'email_verification_override' => $institution->email_verification_override,
+            'weekly_digest_enabled' => $institution->weekly_digest_enabled,
+            'daily_reminder_enabled' => $institution->daily_reminder_enabled,
             'field_berubah' => array_values(array_diff(array_keys($validated), ['mail_password'])),
         ]);
 
