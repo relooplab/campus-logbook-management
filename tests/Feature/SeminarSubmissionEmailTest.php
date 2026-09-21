@@ -7,6 +7,7 @@ use App\Models\SeminarSubmission;
 use App\Models\User;
 use App\Notifications\SeminarSubmissionNotification;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Spatie\Permission\Models\Role;
@@ -176,6 +177,70 @@ class SeminarSubmissionEmailTest extends TestCase
         foreach (explode("\r\n", $ics) as $line) {
             $this->assertTrue(strlen($line) <= 75, 'Baris ICS melebihi 75 oktet: '.$line);
         }
+    }
+
+    public function test_update_mengirim_notifikasi_perubahan_ke_dosen_dan_mahasiswa(): void
+    {
+        Notification::fake();
+
+        $tanggalBaru = now()->addDays(5)->toDateString();
+
+        $this->actingAs($this->mhs)
+            ->put(route('seminar-submission.update', $this->submission), [
+                'tanggal' => $tanggalBaru,
+                'waktu' => '10:00',
+                'lokasi' => 'Ruang Sidang B',
+                'undangan_kepada' => ['pembimbing_1'],
+                'catatan_keterangan' => 'Hadir tepat waktu.',
+            ])
+            ->assertRedirect(route('seminar-submission.show', $this->submission));
+
+        // Dosen pembimbing menerima notifikasi mode update dengan rincian berubah.
+        Notification::assertSentTo($this->dosen, SeminarSubmissionNotification::class, function ($n) {
+            return $n->isUpdate === true
+                && in_array('Tanggal', $n->changedFields, true)
+                && in_array('Waktu', $n->changedFields, true)
+                && in_array('Lokasi', $n->changedFields, true);
+        });
+
+        // Mahasiswa pengirim menerima salinan "Anda memperbarui...".
+        Notification::assertSentTo($this->mhs, SeminarSubmissionNotification::class, function ($n) {
+            return $n->isUpdate === true && $n->role === 'mahasiswa';
+        });
+
+        // Pesan in-app & subject email dibedakan dari kiriman pertama.
+        $notif = new SeminarSubmissionNotification($this->submission->fresh(), 'dosen', true, ['Tanggal']);
+        $this->assertStringContainsString('memperbarui', $notif->toArray($this->dosen)['message']);
+        $this->assertStringContainsString('Perubahan Bahan', $notif->toMail($this->dosen)->subject);
+        $this->assertStringContainsString('Yang berubah', $notif->toMail($this->dosen)->render());
+    }
+
+    public function test_update_tanpa_perubahan_tetap_mengirim_notifikasi_tanpa_rincian(): void
+    {
+        Notification::fake();
+
+        $this->actingAs($this->mhs)
+            ->put(route('seminar-submission.update', $this->submission), [
+                'tanggal' => $this->submission->tanggal->toDateString(),
+                'waktu' => $this->submission->waktu->format('H:i'),
+                'lokasi' => $this->submission->lokasi,
+                'undangan_kepada' => ['pembimbing_1'],
+                'catatan_keterangan' => $this->submission->catatan_keterangan,
+            ])
+            ->assertRedirect();
+
+        Notification::assertSentTo($this->dosen, SeminarSubmissionNotification::class, function ($n) {
+            return $n->isUpdate === true && $n->changedFields === [];
+        });
+    }
+
+    public function test_kiriman_pertama_tidak_ditandai_sebagai_perubahan(): void
+    {
+        $notif = new SeminarSubmissionNotification($this->submission);
+
+        $this->assertFalse($notif->isUpdate);
+        $this->assertStringContainsString('mengirim bahan', $notif->toArray($this->dosen)['message']);
+        $this->assertStringContainsString('Dikirim', $notif->toMail($this->dosen)->subject);
     }
 
     public function test_dosen_bisa_buka_preview_pdf_tanpa_download_dari_aplikasi(): void

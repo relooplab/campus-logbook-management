@@ -225,6 +225,9 @@ class SeminarSubmissionController extends Controller
             'catatan_keterangan' => $data['catatan_keterangan'] ?? null,
         ];
 
+        // Ringkasan perubahan untuk notifikasi (dibandingkan sebelum update).
+        $changedFields = $this->diffSubmissionChanges($submission, $data, $request);
+
         // Cek kuota target pembebanan (dosen pembimbing saat aktif, mahasiswa 100 MB saat pending).
         $dosen = $submission->mahasiswaTa->storageChargeTarget();
 
@@ -262,6 +265,15 @@ class SeminarSubmissionController extends Controller
             app(StorageUsageService::class)->withUploadLock($dosen, $incoming, $applyUpdate);
         } else {
             $applyUpdate();
+        }
+
+        $submission->refresh();
+
+        // Notifikasi perubahan ke dosen terkait + salinan ke mahasiswa pengirim,
+        // dibedakan dari notifikasi kiriman pertama (subject/isi "Perubahan").
+        $this->notifyDosen($submission->mahasiswaTa, $submission, true, $changedFields);
+        if ($mahasiswa = $submission->mahasiswaTa->mahasiswa) {
+            $this->bestEffort(fn () => $mahasiswa->notify(new SeminarSubmissionNotification($submission, 'mahasiswa', true, $changedFields)));
         }
 
         return redirect()->route('seminar-submission.show', $submission)
@@ -433,13 +445,60 @@ class SeminarSubmissionController extends Controller
     /**
      * Notifikasi ke dosen terkait (pembimbing + penguji).
      */
-    private function notifyDosen(MahasiswaTa $ta, SeminarSubmission $submission): void
+    private function notifyDosen(MahasiswaTa $ta, SeminarSubmission $submission, bool $isUpdate = false, array $changedFields = []): void
     {
         foreach ($ta->allDosenIds() as $dosenId) {
             if ($dosen = \App\Models\User::find($dosenId)) {
-                $this->bestEffort(fn () => $dosen->notify(new SeminarSubmissionNotification($submission)));
+                $this->bestEffort(fn () => $dosen->notify(new SeminarSubmissionNotification($submission, 'dosen', $isUpdate, $changedFields)));
             }
         }
+    }
+
+    /**
+     * Bandingkan nilai lama vs baru untuk ringkasan "yang berubah" pada notifikasi.
+     *
+     * @return string[]
+     */
+    private function diffSubmissionChanges(SeminarSubmission $submission, array $data, Request $request): array
+    {
+        $changed = [];
+
+        $oldTanggal = $submission->tanggal?->toDateString();
+        $newTanggal = isset($data['tanggal']) ? date('Y-m-d', strtotime((string) $data['tanggal'])) : null;
+        if ($newTanggal !== null && $newTanggal !== $oldTanggal) {
+            $changed[] = 'Tanggal';
+        }
+
+        $oldWaktu = $submission->waktu?->format('H:i');
+        if (isset($data['waktu']) && $data['waktu'] !== $oldWaktu) {
+            $changed[] = 'Waktu';
+        }
+
+        if (($data['lokasi'] ?? null) !== $submission->lokasi) {
+            $changed[] = 'Lokasi';
+        }
+
+        $oldKepada = (array) ($submission->undangan_kepada ?? []);
+        $newKepada = (array) ($data['undangan_kepada'] ?? []);
+        sort($oldKepada);
+        sort($newKepada);
+        if ($oldKepada !== $newKepada) {
+            $changed[] = 'Daftar undangan';
+        }
+
+        if (($data['catatan_keterangan'] ?? null) !== $submission->catatan_keterangan) {
+            $changed[] = 'Catatan';
+        }
+
+        if ($request->file('undangan')) {
+            $changed[] = 'Surat undangan';
+        }
+
+        if ($request->file('materi_upload') || $request->filled('materi_workspace_id')) {
+            $changed[] = 'Materi';
+        }
+
+        return array_values(array_unique($changed));
     }
 
     /**

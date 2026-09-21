@@ -1,10 +1,18 @@
 <x-mail::message>
 # Halo {{ $penerima }}
 
-@if ($role === 'mahasiswa')
+@if (($isUpdate ?? false) && ($role ?? 'dosen') === 'mahasiswa')
+Anda memperbarui bahan **{{ $jenisLabel }}**. Berikut salinan ringkas terbaru untuk acuan Anda.
+@elseif (($isUpdate ?? false))
+Mahasiswa **{{ $namaMahasiswa }}** memperbarui bahan **{{ $jenisLabel }}**. Mohon periksa kembali detail terbaru di bawah sebelum jadwal dimulai.
+@elseif (($role ?? 'dosen') === 'mahasiswa')
 Anda telah mengirim bahan **{{ $jenisLabel }}**. Berikut salinan ringkas untuk acuan Anda.
 @else
 Mahasiswa **{{ $namaMahasiswa }}** telah mengirim bahan **{{ $jenisLabel }}** beserta dokumen pendukungnya. Mohon untuk direview sebelum jadwal dimulai.
+@endif
+
+@if (($isUpdate ?? false) && !empty($changedFields ?? []))
+> **Yang berubah:** {{ implode(', ', $changedFields) }}
 @endif
 
 <x-mail::panel>

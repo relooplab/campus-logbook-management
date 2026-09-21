@@ -22,6 +22,9 @@ class SeminarSubmissionNotification extends Notification implements ShouldQueue
     public function __construct(
         public SeminarSubmission $submission,
         public string $role = 'dosen', // 'dosen' | 'mahasiswa'
+        public bool $isUpdate = false,
+        /** @var string[] Ringkasan field yang berubah, mis. ['Tanggal', 'Materi']. */
+        public array $changedFields = [],
     ) {
     }
 
@@ -44,9 +47,11 @@ class SeminarSubmissionNotification extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->theme('clean-minimal')
-            ->subject('Bahan '.$submission->jenisLabel().' Dikirim')
+            ->subject($this->isUpdate ? 'Perubahan Bahan '.$submission->jenisLabel() : 'Bahan '.$submission->jenisLabel().' Dikirim')
             ->markdown('emails.seminar-submission', [
                 'role' => $this->role,
+                'isUpdate' => $this->isUpdate,
+                'changedFields' => $this->changedFields,
                 'penerima' => $notifiable->name,
                 'namaMahasiswa' => $mahasiswa?->name ?? '—',
                 'jenisLabel' => $submission->jenisLabel(),
@@ -76,9 +81,16 @@ class SeminarSubmissionNotification extends Notification implements ShouldQueue
         $mahasiswa = $submission->mahasiswaTa?->mahasiswa;
         $nama = $mahasiswa?->name ?? '—';
 
-        $msg = $this->role === 'mahasiswa'
-            ? 'Anda telah mengirim bahan '.$submission->jenisLabel().'.'
-            : 'Mahasiswa '.$nama.' mengirim bahan '.$submission->jenisLabel().'.';
+        if ($this->isUpdate) {
+            $rincian = $this->changedFields ? ' ('.implode(', ', $this->changedFields).')' : '';
+            $msg = $this->role === 'mahasiswa'
+                ? 'Anda memperbarui bahan '.$submission->jenisLabel().$rincian.'.'
+                : 'Mahasiswa '.$nama.' memperbarui bahan '.$submission->jenisLabel().$rincian.'.';
+        } else {
+            $msg = $this->role === 'mahasiswa'
+                ? 'Anda telah mengirim bahan '.$submission->jenisLabel().'.'
+                : 'Mahasiswa '.$nama.' mengirim bahan '.$submission->jenisLabel().'.';
+        }
 
         return [
             'message' => $msg,
@@ -144,7 +156,7 @@ class SeminarSubmissionNotification extends Notification implements ShouldQueue
             // tanpa bergantung pada resolusi TZID/VTIMEZONE di sisi klien.
             'DTSTART:'.$start->copy()->utc()->format('Ymd\THis\Z'),
             'DTEND:'.$end->copy()->utc()->format('Ymd\THis\Z'),
-            'SUMMARY:'.$this->escapeIcs($submission->jenisLabel().' — '.($mahasiswa?->name ?? 'Mahasiswa')),
+            'SUMMARY:'.$this->escapeIcs(($this->isUpdate ? 'PERUBAHAN: ' : '').$submission->jenisLabel().' — '.($mahasiswa?->name ?? 'Mahasiswa')),
             'LOCATION:'.$this->escapeIcs((string) ($submission->lokasi ?? '')),
             'DESCRIPTION:'.$this->escapeIcs($description),
             'ORGANIZER:MAILTO:'.($mahasiswa?->email ?: 'no-reply@example.com'),
