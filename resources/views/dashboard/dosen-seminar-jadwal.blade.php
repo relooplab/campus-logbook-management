@@ -7,18 +7,18 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="font-heading font-bold text-2xl text-text-primary">Agenda Seminar/Sidang</h1>
-            <p class="text-sm text-text-secondary mt-0.5">Jadwal & bahan seminar/sidang mahasiswa yang Anda bimbing/puji, diurutkan dari jadwal terdekat.</p>
+            <p class="text-sm text-text-secondary mt-0.5">{{ $tab === 'past' ? 'Riwayat jadwal seminar/sidang mahasiswa yang Anda bimbing/uji, diurutkan dari yang terbaru.' : 'Jadwal & bahan seminar/sidang mahasiswa yang Anda bimbing/uji, diurutkan dari jadwal terdekat.' }}</p>
         </div>
         <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Dashboard</a>
     </div>
 
-    {{-- ===== Filter: tab Akan Datang / Terlewat + jenis ===== --}}
+    {{-- ===== Filter: tab Akan Datang / Riwayat + jenis ===== --}}
     <div class="card p-4 flex flex-wrap items-center gap-3">
         <div class="flex gap-1">
             <a href="{{ route('dosen.seminar-jadwal', ['tab' => 'upcoming', 'jenis' => $jenis]) }}"
                 class="px-3 py-1.5 rounded-lg text-sm font-medium {{ $tab !== 'past' ? 'bg-brand text-[#0b1420]' : 'bg-bg-hover text-text-secondary hover:bg-border' }}">Akan Datang</a>
             <a href="{{ route('dosen.seminar-jadwal', ['tab' => 'past', 'jenis' => $jenis]) }}"
-                class="px-3 py-1.5 rounded-lg text-sm font-medium {{ $tab === 'past' ? 'bg-brand text-[#0b1420]' : 'bg-bg-hover text-text-secondary hover:bg-border' }}">Terlewat</a>
+                class="px-3 py-1.5 rounded-lg text-sm font-medium {{ $tab === 'past' ? 'bg-brand text-[#0b1420]' : 'bg-bg-hover text-text-secondary hover:bg-border' }}">Riwayat</a>
         </div>
         <form method="GET" action="{{ route('dosen.seminar-jadwal') }}" class="flex items-center gap-2">
             <input type="hidden" name="tab" value="{{ $tab }}">
@@ -29,7 +29,7 @@
                 @endforeach
             </select>
         </form>
-        <span class="text-xs text-text-secondary ml-auto">{{ $tab === 'past' ? 'Jadwal yang sudah lewat' : $submissions->total().' agenda' }}</span>
+        <span class="text-xs text-text-secondary ml-auto">{{ $tab === 'past' ? 'Riwayat jadwal' : $submissions->total().' agenda' }}</span>
     </div>
 
     {{-- ===== Daftar agenda ===== --}}
@@ -37,7 +37,7 @@
         @if ($submissions->isEmpty())
             <div class="px-4 py-10 rounded-xl bg-bg-panel border border-border text-center text-text-secondary">
                 <span class="material-symbols-outlined icon-lg mb-2 text-text-secondary/50">event_busy</span>
-                <p>Tidak ada {{ $tab === 'past' ? 'jadwal terlewat' : 'agenda' }}.</p>
+                <p>Tidak ada {{ $tab === 'past' ? 'riwayat jadwal' : 'agenda' }}.</p>
             </div>
         @else
             <div class="space-y-3">
@@ -62,7 +62,7 @@
                                         @if ($hasSidang)
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-status-success/15 text-status-success">Sudah Dinilai</span>
                                         @elseif ($isPast)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-status-danger/15 text-status-danger">Terlewat</span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-bg-hover text-text-secondary">Selesai</span>
                                         @else
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-status-pending/15 text-status-pending">Menunggu</span>
                                         @endif

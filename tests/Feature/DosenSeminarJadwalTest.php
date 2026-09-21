@@ -96,4 +96,56 @@ class DosenSeminarJadwalTest extends TestCase
         $r->assertOk();
         $r->assertSee('Seminar Proposal');
     }
+
+    public function test_past_tab_uses_riwayat_label_and_selesai_badge(): void
+    {
+        $this->makeSubmission(SeminarSubmission::JENIS_PROPOSAL, now()->subDays(1)->toDateString(), '09:00');
+
+        $r = $this->actingAs($this->dosen)->get(route('dosen.seminar-jadwal', ['tab' => 'past']));
+        $r->assertOk();
+        $r->assertSee('Riwayat');
+        $r->assertSee('Selesai');
+        $r->assertSee('diurutkan dari yang terbaru');
+        $r->assertDontSee('Terlewat');
+    }
+
+    public function test_past_tab_sorted_newest_first(): void
+    {
+        $this->makeSubmission(SeminarSubmission::JENIS_PROPOSAL, now()->subDays(5)->toDateString(), '09:00');
+        $this->makeSubmission(SeminarSubmission::JENIS_PROPOSAL, now()->subDays(1)->toDateString(), '09:00');
+
+        $r = $this->actingAs($this->dosen)->get(route('dosen.seminar-jadwal', ['tab' => 'past']));
+        $r->assertOk();
+
+        // Terbaru (H-1) harus muncul sebelum yang lama (H-5).
+        $tanggalBaru = now()->subDays(1)->format('d M Y');
+        $tanggalLama = now()->subDays(5)->format('d M Y');
+        $html = $r->getContent();
+        $posBaru = strpos($html, $tanggalBaru);
+        $posLama = strpos($html, $tanggalLama);
+
+        $this->assertNotFalse($posBaru);
+        $this->assertNotFalse($posLama);
+        $this->assertLessThan($posLama, $posBaru, 'Tab Riwayat harus terurut dari yang terbaru.');
+    }
+
+    public function test_upcoming_tab_sorted_nearest_first(): void
+    {
+        $this->makeSubmission(SeminarSubmission::JENIS_PROPOSAL, now()->addDays(1)->toDateString(), '09:00');
+        $this->makeSubmission(SeminarSubmission::JENIS_PROPOSAL, now()->addDays(5)->toDateString(), '09:00');
+
+        $r = $this->actingAs($this->dosen)->get(route('dosen.seminar-jadwal'));
+        $r->assertOk();
+
+        // Terdekat (H+1) harus muncul sebelum yang jauh (H+5).
+        $tanggalDekat = now()->addDays(1)->format('d M Y');
+        $tanggalJauh = now()->addDays(5)->format('d M Y');
+        $html = $r->getContent();
+        $posDekat = strpos($html, $tanggalDekat);
+        $posJauh = strpos($html, $tanggalJauh);
+
+        $this->assertNotFalse($posDekat);
+        $this->assertNotFalse($posJauh);
+        $this->assertLessThan($posJauh, $posDekat, 'Tab Akan Datang harus terurut dari jadwal terdekat.');
+    }
 }

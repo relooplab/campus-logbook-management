@@ -398,9 +398,7 @@ class DashboardController extends Controller
         $jenis = $request->query('jenis');
 
         $query = \App\Models\SeminarSubmission::whereIn('mahasiswa_ta_id', $taIds)
-            ->with(['mahasiswaTa.mahasiswa'])
-            ->orderBy('tanggal')
-            ->orderBy('waktu');
+            ->with(['mahasiswaTa.mahasiswa']);
 
         if ($jenis && in_array($jenis, \App\Models\SeminarSubmission::JENISES, true)) {
             $query->where('jenis', $jenis);
@@ -411,9 +409,13 @@ class DashboardController extends Controller
         if ($tab === 'past') {
             $query->where(fn ($q) => $q->where('tanggal', '<', $today)
                 ->orWhere(fn ($q2) => $q2->where('tanggal', $today)->where('waktu', '<', $nowTime)));
+            // Riwayat: terbaru dulu.
+            $query->orderByDesc('tanggal')->orderByDesc('waktu');
         } else { // upcoming
             $query->where(fn ($q) => $q->where('tanggal', '>', $today)
                 ->orWhere(fn ($q2) => $q2->where('tanggal', $today)->where('waktu', '>=', $nowTime)));
+            // Akan datang: terdekat dulu.
+            $query->orderBy('tanggal')->orderBy('waktu');
         }
 
         $submissions = $query->paginate(15)->withQueryString();
