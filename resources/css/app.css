@@ -31,3 +31,37 @@
     border: 3px solid transparent;
     background-clip: content-box;
 }
+
+/* Detail logbook dan seminar memakai lebar area kerja yang tersedia. */
+.detail-workspace {
+    width: 100%;
+    max-width: 1600px;
+    margin-inline: auto;
+    container-type: inline-size;
+}
+
+.detail-workspace-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.detail-workspace-grid > * { min-width: 0; }
+
+@container (min-width: 980px) {
+    .detail-workspace-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);
+    }
+
+    .detail-workspace-panel {
+        position: sticky;
+        top: 80px;
+        max-height: calc(100dvh - 96px);
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+}
+
+.detail-workspace-panel { min-width: 0; }
+.detail-workspace-card { overflow-wrap: anywhere; }
