@@ -1,3 +1,21 @@
+# [0.55.0](https://github.com/relooplab/campus-logbook-management/compare/v0.54.0...v0.55.0) (2026-09-29)
+
+
+### Bug Fixes
+
+* **build:** npm ci --legacy-peer-deps for react-pdf-highlighter-plus peer conflict ([5c764ee](https://github.com/relooplab/campus-logbook-management/commit/5c764ee8d6c04b62d22b6e3ce9a34d2dbeeddc1e))
+* **compose:** make mail env overridable instead of hardcoded mailpit ([9e977a4](https://github.com/relooplab/campus-logbook-management/commit/9e977a49954c79da07d749fd4f2268ec0dd3c89f))
+
+
+### Features
+
+* **dashboard:** tab Riwayat agenda seminar + badge Selesai + urut terbaru ([c612890](https://github.com/relooplab/campus-logbook-management/commit/c6128906fb214fb5542f1eeaa56a5e0dff313a01))
+* **email-notifikasi:** penerima revisi dosen penguji dan toggle notifikasi berkala ([144febb](https://github.com/relooplab/campus-logbook-management/commit/144febb4edddecca8cdb0f121044478097db4fef))
+* **pdf-viewer:** migrasi ke react-pdf-highlighter-plus + sidebar anotasi ([b74358a](https://github.com/relooplab/campus-logbook-management/commit/b74358a4ae2389a69bccf1a8f7bfa5518104eee3))
+* **seminar:** email & notifikasi saat mahasiswa memperbarui bahan seminar ([cd2607a](https://github.com/relooplab/campus-logbook-management/commit/cd2607a5621181a7f86502867223b07da7a5e562))
+* **ui:** redesign academic and review workspaces ([21e8b8d](https://github.com/relooplab/campus-logbook-management/commit/21e8b8d51171064a697a431437563e5d4b355830))
+* **ui:** redesign revision review and seminar detail workspaces ([ac11ff6](https://github.com/relooplab/campus-logbook-management/commit/ac11ff664dc8df2734d249f9438bf28f08fe1d1c))
+
 # [0.54.0](https://github.com/relooplab/campus-logbook-management/compare/v0.53.0...v0.54.0) (2026-09-15)
 
 
