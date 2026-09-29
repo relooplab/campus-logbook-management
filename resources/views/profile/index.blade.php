@@ -17,6 +17,8 @@
 @endphp
 @if ($user->isDosen())
     @include('profile.partials.dosen-workspace')
+@elseif ($user->isMahasiswa())
+    @include('profile.partials.mahasiswa-workspace')
 @else
 <div class="max-w-2xl space-y-6">
     <h1 class="text-xl font-bold">Profil</h1> {{-- Data profil --}} <div
@@ -361,12 +363,34 @@
         });
     })();
     (function () {
-        var form = document.getElementById('dosen-profile-form');
+        var form = document.getElementById('dosen-profile-form') || document.getElementById('mahasiswa-profile-form');
         if (!form) return;
         form.addEventListener('submit', function () {
             var button = form.querySelector('button[type="submit"]');
             button.disabled = true;
             button.textContent = 'Menyimpan…';
+        });
+    })();
+    // Student-only inline editors; lecturer output and behavior are unchanged.
+    (function () {
+        [['affiliation-toggle', 'kartu-afiliasi', 'aff-university'], ['email-toggle', 'email-change-form', 'new-email']].forEach(function (ids) {
+            var toggle = document.getElementById(ids[0]);
+            var panel = document.getElementById(ids[1]);
+            if (!toggle || !panel) return;
+            toggle.addEventListener('click', function () {
+                var opening = panel.classList.contains('hidden');
+                panel.classList.toggle('hidden', !opening);
+                toggle.setAttribute('aria-expanded', String(opening));
+                if (opening) document.getElementById(ids[2]).focus();
+            });
+        });
+        var cancel = document.getElementById('affiliation-cancel');
+        if (!cancel) return;
+        cancel.addEventListener('click', function () {
+            document.getElementById('kartu-afiliasi').classList.add('hidden');
+            var toggle = document.getElementById('affiliation-toggle');
+            toggle.setAttribute('aria-expanded', 'false');
+            toggle.focus();
         });
     })();
 </script>
@@ -382,10 +406,10 @@
         if (!elU || !elF || !elD || !elP) return;
 
         var preselect = {
-            university: @json($affiliation?->id ?? null),
-            faculty: @json($affiliation?->pivot?->faculty_id ?? null),
-            department: @json($affiliation?->pivot?->department_id ?? null),
-            prodi: @json($affiliation?->pivot?->study_program_id ?? null)
+            university: @json(old('university_id', $affiliation?->id)),
+            faculty: @json(old('faculty_id', $affiliation?->pivot?->faculty_id)),
+            department: @json(old('department_id', $affiliation?->pivot?->department_id)),
+            prodi: @json(old('study_program_id', $affiliation?->pivot?->study_program_id))
         };
 
         function fill(select, options, selectedId) {
@@ -394,7 +418,7 @@
                 var opt = document.createElement('option');
                 opt.value = o.id;
                 opt.textContent = o.name;
-                if (o.id === selectedId) opt.selected = true;
+                if (o.id === Number(selectedId)) opt.selected = true;
                 select.appendChild(opt);
             });
             select.disabled = options.length === 0;

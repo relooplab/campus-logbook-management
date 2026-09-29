@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
+use Carbon\Carbon;
 
 /**
  * Logika bersama untuk data dashboard mahasiswa (stats, timeline, heatmap).
@@ -55,12 +56,14 @@ class MahasiswaDashboardService
             ->sortDesc()
             ->values();
 
-        if ($dates->isEmpty()) return 0;
+        if ($dates->isEmpty()) {
+            return 0;
+        }
 
         $streak = 0;
         $current = now()->startOfWeek();
         foreach ($dates as $week) {
-            $w = \Carbon\Carbon::parse($week);
+            $w = Carbon::parse($week);
             if ($w->eq($current) || $w->eq($current->copy()->subWeek())) {
                 $streak++;
                 $current = $w->copy()->subWeek();
@@ -68,6 +71,7 @@ class MahasiswaDashboardService
                 break;
             }
         }
+
         return $streak;
     }
 
@@ -118,7 +122,7 @@ class MahasiswaDashboardService
         $daysSince = $last ? (int) $last->created_at->diffInDays(now()) : null;
         $items[] = [
             'date' => 'Akan datang',
-            'ts' => PHP_INT_MAX, // selalu di paling bawah setelah sort
+            'ts' => PHP_INT_MIN, // selalu di paling bawah setelah sort menurun
             'label' => "Sesi {$next} — belum ada bimbingan".($daysSince ? " ({$daysSince} hari sejak sesi terakhir)" : ''),
             'status' => 'future',
             'type' => 'future',
@@ -135,7 +139,7 @@ class MahasiswaDashboardService
         $counts = [];
         if ($ta) {
             $counts = $ta->entries()
-                ->selectRaw("date(created_at) as d, count(*) as c")
+                ->selectRaw('date(created_at) as d, count(*) as c')
                 ->groupBy('d')
                 ->pluck('c', 'd')
                 ->map(fn ($c) => (int) $c)

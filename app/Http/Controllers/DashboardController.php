@@ -2,20 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Achievement;
+use App\Models\ActionItem;
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\SeminarSubmission;
+use App\Models\SeminarSubmissionRead;
+use App\Models\Sidang;
 use App\Models\User;
 use App\Services\MahasiswaDashboardService;
+use App\Services\MaterialsReviewQueue;
+use App\Services\ProgramNamingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __construct(private MahasiswaDashboardService $dashboardService)
-    {
-    }
+    public function __construct(private MahasiswaDashboardService $dashboardService) {}
 
     public function __invoke(Request $request): View
     {
@@ -52,7 +56,7 @@ class DashboardController extends Controller
 
     private function dosenDashboard(User $user): View
     {
-        $pendingMaterialsCount = app(\App\Services\MaterialsReviewQueue::class)->countFor($user);
+        $pendingMaterialsCount = app(MaterialsReviewQueue::class)->countFor($user);
 
         // TA where the dosen is pembimbing 1/2 atau penguji 1/2 (sudah disetujui).
         $tas = MahasiswaTa::where(fn ($q) => $q->where('pembimbing_1_id', $user->id)
@@ -60,7 +64,7 @@ class DashboardController extends Controller
             ->orWhere('penguji_1_id', $user->id)
             ->orWhere('penguji_2_id', $user->id))
             ->whereNotIn('status_ta', [MahasiswaTa::STATUS_PENDING_APPROVAL, MahasiswaTa::STATUS_DITOLAK])
-            ->with(['mahasiswa', 'pembimbing1', 'pembimbing2', 'penguji1', 'penguji2'])
+            ->with('mahasiswa')
             ->latest()
             ->get();
 
@@ -69,38 +73,44 @@ class DashboardController extends Controller
         $reviewTaIds = MahasiswaTa::where('pembimbing_1_id', $user->id)
             ->orWhere('pembimbing_2_id', $user->id)
             ->pluck('id');
-        $queue = LogbookEntry::where(function ($query) use ($reviewTaIds, $user) {
-                $query->whereIn('mahasiswa_ta_id', $reviewTaIds)
-                    ->orWhere('dosen_id', $user->id);
-            })
+        $queueQuery = LogbookEntry::where(function ($query) use ($reviewTaIds, $user) {
+            $query->whereIn('mahasiswa_ta_id', $reviewTaIds)
+                ->orWhere('dosen_id', $user->id);
+        })
             ->where('status', LogbookEntry::STATUS_SUBMITTED)
+            ->whereHas('mahasiswaTa', fn ($q) => $q->whereNotIn('status_ta', [MahasiswaTa::STATUS_PENDING_APPROVAL, MahasiswaTa::STATUS_DITOLAK]));
+        $queueCount = (clone $queueQuery)->count();
+        $queue = $queueQuery
             ->with(['mahasiswaTa.mahasiswa'])
-            ->latest()
+            ->orderByDesc('submitted_at')
+            ->orderByDesc('id')
+            ->limit(5)
             ->get();
 
         // Statistik & progres per mahasiswa bimbingan.
-        $entries = LogbookEntry::whereIn('mahasiswa_ta_id', $taIds)->get();
-        $perTa = $tas->map(function ($ta) use ($entries) {
-            $e = $entries->where('mahasiswa_ta_id', $ta->id);
-            $approved = $e->where('jenis', LogbookEntry::JENIS_LOGBOOK)->where('status', LogbookEntry::STATUS_APPROVED)->count();
-            $total = $e->count();
+        $entryCounts = LogbookEntry::whereIn('mahasiswa_ta_id', $taIds)
+            ->selectRaw('mahasiswa_ta_id, jenis, status, COUNT(*) as total')
+            ->groupBy('mahasiswa_ta_id', 'jenis', 'status')
+            ->get()
+            ->groupBy('mahasiswa_ta_id');
+        $perTa = $tas->map(function ($ta) use ($entryCounts) {
+            $counts = $entryCounts->get($ta->id, collect());
+            $approved = $counts->where('jenis', LogbookEntry::JENIS_LOGBOOK)->where('status', LogbookEntry::STATUS_APPROVED)->sum('total');
             $target = $ta->target_sesi ?? 7;
             $percent = $target > 0 ? (int) round($approved / $target * 100) : 0;
 
             return [
                 'ta' => $ta,
                 'approved' => $approved,
-                'total' => $total,
                 'target' => $target,
                 'percent' => $percent,
-                'menunggu' => $e->where('status', LogbookEntry::STATUS_SUBMITTED)->count(),
+                'menunggu' => $counts->where('status', LogbookEntry::STATUS_SUBMITTED)->sum('total'),
                 'regularity' => $ta->regularity_status,
                 'tooltip' => $ta->regularity_tooltip,
-                'warned' => $ta->wasWarnedInactive(),
             ];
         })
-        ->sortBy(fn ($r) => ['red' => 0, 'yellow' => 1, 'green' => 2][$r['regularity']] ?? 3)
-        ->values();
+            ->sortBy(fn ($r) => ['red' => 0, 'yellow' => 1, 'green' => 2][$r['regularity']] ?? 3)
+            ->values();
 
         // Summary counter health indicator.
         $healthCount = [
@@ -111,12 +121,7 @@ class DashboardController extends Controller
 
         // Kartu statistik bimbingan & pengujian.
         $stats = [
-            'total_bimbingan' => MahasiswaTa::bimbinganOleh($user)->count(),
             'sedang_progres' => MahasiswaTa::bimbinganOleh($user)->aktif()->count(),
-            'tamat' => MahasiswaTa::bimbinganOleh($user)->tamat()->count(),
-            'diuji' => \App\Models\Sidang::where('penguji_id', $user->id)->count(),
-            'menunggu_review' => LogbookEntry::where('status', LogbookEntry::STATUS_SUBMITTED)
-                ->whereIn('mahasiswa_ta_id', $taIds)->count(),
         ];
 
         // Ringkasan aksi untuk dosen: permintaan attachment pending + mahasiswa perlu perhatian.
@@ -127,6 +132,14 @@ class DashboardController extends Controller
                 ->orWhere('penguji_2_id', $user->id))
             ->count();
         $needsAttention = $perTa->whereIn('regularity', ['yellow', 'red'])->count();
+        $priorityStudents = $perTa->whereIn('regularity', ['red', 'yellow'])->take(6);
+        $phaseDistribution = $tas->groupBy(fn ($ta) => $ta->jenis.'|'.$ta->fase.'|'.$ta->faseLabel())
+            ->map(function ($students) {
+                $ta = $students->first();
+
+                return ['label' => $ta->faseLabel(), 'program' => $ta->jenisLabel(), 'count' => $students->count()];
+            })
+            ->sortByDesc('count')->values();
 
         // ---- Agenda terdekat: jadwal seminar/sidang mahasiswa bimbingan/pengujian ----
         $agendaTerdekat = SeminarSubmission::where('status', SeminarSubmission::STATUS_SUBMITTED)
@@ -135,19 +148,13 @@ class DashboardController extends Controller
             ->with(['mahasiswaTa.mahasiswa'])
             ->orderBy('tanggal')
             ->orderBy('waktu')
-            ->limit(10)
-            ->get();
-
-        // ---- Submission terbaru mahasiswa bimbingan/pengujian ----
-        $submissions = SeminarSubmission::whereIn('mahasiswa_ta_id', $taIds)
-            ->with(['mahasiswaTa.mahasiswa'])
-            ->latest()
+            ->limit(4)
             ->get();
 
         return view('dashboard.dosen', compact(
-            'tas', 'queue', 'perTa', 'healthCount', 'stats',
+            'queue', 'queueCount', 'priorityStudents', 'phaseDistribution', 'healthCount', 'stats',
             'pendingRegistrations', 'needsAttention', 'pendingMaterialsCount',
-            'agendaTerdekat', 'submissions'
+            'agendaTerdekat'
         ));
     }
 
@@ -197,21 +204,30 @@ class DashboardController extends Controller
 
         // Ambil semua TA di mana dosen terkait (bimbing/uji), lalu anotasi peran.
         $all = MahasiswaTa::where(function ($q) use ($user) {
-                $q->where('pembimbing_1_id', $user->id)
-                    ->orWhere('pembimbing_2_id', $user->id)
-                    ->orWhere('penguji_1_id', $user->id)
-                    ->orWhere('penguji_2_id', $user->id);
-            })
+            $q->where('pembimbing_1_id', $user->id)
+                ->orWhere('pembimbing_2_id', $user->id)
+                ->orWhere('penguji_1_id', $user->id)
+                ->orWhere('penguji_2_id', $user->id);
+        })
             ->with($with)
             ->latest()
             ->get()
             ->map(function ($ta) use ($user) {
                 $roles = [];
-                if ($ta->pembimbing_1_id === $user->id) $roles[] = 'Pembimbing 1';
-                if ($ta->pembimbing_2_id === $user->id) $roles[] = 'Pembimbing 2';
-                if ($ta->penguji_1_id === $user->id) $roles[] = 'Penguji 1';
-                if ($ta->penguji_2_id === $user->id) $roles[] = 'Penguji 2';
+                if ($ta->pembimbing_1_id === $user->id) {
+                    $roles[] = 'Pembimbing 1';
+                }
+                if ($ta->pembimbing_2_id === $user->id) {
+                    $roles[] = 'Pembimbing 2';
+                }
+                if ($ta->penguji_1_id === $user->id) {
+                    $roles[] = 'Penguji 1';
+                }
+                if ($ta->penguji_2_id === $user->id) {
+                    $roles[] = 'Penguji 2';
+                }
                 $ta->my_roles = $roles;
+
                 return $ta;
             });
 
@@ -220,8 +236,8 @@ class DashboardController extends Controller
             || in_array('Pembimbing 2', $ta->my_roles, true))->values();
 
         // "Diuji" = dosen HANYA penguji (bukan pembimbing) — agar tidak duplikat.
-        $diuji = $all->filter(fn ($ta) => !in_array('Pembimbing 1', $ta->my_roles, true)
-            && !in_array('Pembimbing 2', $ta->my_roles, true))->values();
+        $diuji = $all->filter(fn ($ta) => ! in_array('Pembimbing 1', $ta->my_roles, true)
+            && ! in_array('Pembimbing 2', $ta->my_roles, true))->values();
 
         return view('dashboard.dosen-mahasiswa-saya', compact('dibimbing', 'diuji', 'user'));
     }
@@ -233,6 +249,7 @@ class DashboardController extends Controller
     public function dismissLanjutTa(Request $request): RedirectResponse
     {
         $request->session()->put('lanjut_ta_dismissed', true);
+
         return back();
     }
 
@@ -243,7 +260,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        $sidangs = \App\Models\Sidang::where('penguji_id', $user->id)
+        $sidangs = Sidang::where('penguji_id', $user->id)
             ->with(['mahasiswaTa.mahasiswa'])
             ->orderByDesc('tanggal')
             ->get();
@@ -265,27 +282,33 @@ class DashboardController extends Controller
         $ta = $program ?: ($activeProgram ?: $programs->first());
 
         $entries = $ta
-            ? $ta->entries()->with('comments')->latest()->get()
+            ? $ta->entries()->latest()->get()
             : collect();
+        // Hanya delapan entri terbaru yang dipakai oleh ringkasan aktivitas.
+        if ($ta) {
+            $entries->take(8)->load('comments');
+        }
 
         $approved = $entries->where('jenis', LogbookEntry::JENIS_LOGBOOK)->where('status', LogbookEntry::STATUS_APPROVED)->count();
         $target = $ta?->target_sesi ?? 7;
         $progressPercent = $target > 0 ? (int) round($approved / $target * 100) : 0;
 
         // ---- Milestone fase ----
-        $faseKeys = $ta && $ta->isKp() ? array_keys(\App\Models\MahasiswaTa::FASES_KP) : array_keys(\App\Models\MahasiswaTa::FASES);
+        $faseKeys = $ta && $ta->isKp() ? array_keys(MahasiswaTa::FASES_KP) : array_keys(MahasiswaTa::FASES);
         $faseIndex = $ta ? array_search($ta->fase, $faseKeys, true) : 0;
-        if ($faseIndex === false) $faseIndex = 0;
-        $faseLabels = $ta ? app(\App\Services\ProgramNamingService::class)->faseLabels($ta) : [];
+        if ($faseIndex === false) {
+            $faseIndex = 0;
+        }
+        $faseLabels = $ta ? app(ProgramNamingService::class)->faseLabels($ta) : [];
 
         // ---- Achievement (unlocked + total) - hanya untuk TA ----
         $unlockedAchievements = $ta && $ta->isTa() ? $user->achievements()->get() : collect();
         $unlockedCodes = $unlockedAchievements->pluck('code')->map(fn ($c) => (string) $c);
-        $totalAchievements = $ta && $ta->isTa() ? \App\Models\Achievement::count() : 0;
+        $totalAchievements = $ta && $ta->isTa() ? Achievement::count() : 0;
 
         // ---- Logbook harian (hanya KP) ----
         $logbookHarian = $ta && $ta->isKp()
-            ? $ta->logbookHarian()->orderByDesc('tanggal')->get()
+            ? $ta->logbookHarian()->orderByDesc('tanggal')->limit(3)->get()
             : collect();
 
         // ---- Statistik & streak ----
@@ -312,7 +335,7 @@ class DashboardController extends Controller
         $draftCount = $entries->where('status', LogbookEntry::STATUS_DRAFT)->count();
         $revisiCount = $entries->where('status', LogbookEntry::STATUS_REVISI)->count();
         $unresolvedActionItems = $ta
-            ? \App\Models\ActionItem::whereHas('entry', fn ($q) => $q->where('mahasiswa_ta_id', $ta->id))
+            ? ActionItem::whereHas('entry', fn ($q) => $q->where('mahasiswa_ta_id', $ta->id))
                 ->where('is_done', false)
                 ->count()
             : 0;
@@ -344,17 +367,17 @@ class DashboardController extends Controller
         // lagi saat mahasiswa pindah ke milestone seminar berikutnya) ----
         $seminarSubmission = $ta
             ? $ta->seminarSubmissions()
-                ->where('jenis', \App\Models\SeminarSubmission::jenisFromFase($ta))
+                ->where('jenis', SeminarSubmission::jenisFromFase($ta))
                 ->latest()
                 ->first()
             : null;
 
         // ---- Status mahasiswa (aktif/verified) untuk banner ----
         $mahasiswaStatus = $user->registration_status;
-        $pendingApproval = $ta && $ta->status_ta === \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL;
+        $pendingApproval = $ta && $ta->status_ta === MahasiswaTa::STATUS_PENDING_APPROVAL;
         // $ta bisa jatuh ke program yang sudah ditolak (allPrograms() tidak difilter status
         // saat programAktif() kosong) — tandai agar mahasiswa tetap diarahkan pilih dosen lagi.
-        $rejectedProgram = $ta && $ta->status_ta === \App\Models\MahasiswaTa::STATUS_DITOLAK;
+        $rejectedProgram = $ta && $ta->status_ta === MahasiswaTa::STATUS_DITOLAK;
 
         // Profil dianggap belum lengkap jika NIM (identifier), WhatsApp, atau afiliasi
         // perguruan tinggi (sampai prodi) belum diisi mahasiswa.
@@ -383,7 +406,7 @@ class DashboardController extends Controller
         $user = $request->user();
         abort_unless($user->isDosen(), 403);
 
-        $taIds = \App\Models\MahasiswaTa::where(fn ($q) => $q->where('pembimbing_1_id', $user->id)
+        $taIds = MahasiswaTa::where(fn ($q) => $q->where('pembimbing_1_id', $user->id)
             ->orWhere('pembimbing_2_id', $user->id)
             ->orWhere('penguji_1_id', $user->id)
             ->orWhere('penguji_2_id', $user->id))
@@ -392,10 +415,10 @@ class DashboardController extends Controller
         $tab = $request->query('tab', 'upcoming');
         $jenis = $request->query('jenis');
 
-        $query = \App\Models\SeminarSubmission::whereIn('mahasiswa_ta_id', $taIds)
+        $query = SeminarSubmission::whereIn('mahasiswa_ta_id', $taIds)
             ->with(['mahasiswaTa.mahasiswa']);
 
-        if ($jenis && in_array($jenis, \App\Models\SeminarSubmission::JENISES, true)) {
+        if ($jenis && in_array($jenis, SeminarSubmission::JENISES, true)) {
             $query->where('jenis', $jenis);
         }
 
@@ -416,17 +439,16 @@ class DashboardController extends Controller
         $submissions = $query->paginate(15)->withQueryString();
 
         // Status "dibaca" untuk dosen ini.
-        $readIds = \App\Models\SeminarSubmissionRead::where('user_id', $user->id)
+        $readIds = SeminarSubmissionRead::where('user_id', $user->id)
             ->whereIn('seminar_submission_id', $submissions->pluck('id'))
             ->pluck('seminar_submission_id')
             ->all();
 
-        $unreadCount = \App\Models\SeminarSubmission::whereIn('mahasiswa_ta_id', $taIds)
-            ->where('status', \App\Models\SeminarSubmission::STATUS_SUBMITTED)
+        $unreadCount = SeminarSubmission::whereIn('mahasiswa_ta_id', $taIds)
+            ->where('status', SeminarSubmission::STATUS_SUBMITTED)
             ->whereDoesntHave('reads', fn ($q) => $q->where('user_id', $user->id))
             ->count();
 
         return view('dashboard.dosen-seminar-jadwal', compact('submissions', 'readIds', 'unreadCount', 'tab', 'jenis'));
     }
-
 }

@@ -240,6 +240,10 @@
                         <span class="sidebar-label">Workspace</span>
                     </a>
                 @endif
+                <a href="{{ route('scheduling.index') }}" class="{{ $navLink }} {{ $active('scheduling.*') }}">
+                    <span class="material-symbols-outlined icon-md text-status-info">calendar_month</span>
+                    <span class="sidebar-label">Jadwalkan Bimbingan</span>
+                </a>
             @elseif ($showDosenMenu)
                 <div class="{{ $groupLabel }}">Bimbingan</div>
                 <a href="{{ route('dosen.mahasiswa-saya') }}" class="{{ $navLink }} {{ $active('dosen.mahasiswa-saya') }}">
@@ -371,29 +375,6 @@
                 @endcan
             @endif
         </nav>
-
-        <div id="sidebar-footer" class="p-4 border-t border-border space-y-1">
-            @if ($user->isMahasiswa())
-                <a href="{{ route('scheduling.index') }}" class="{{ $navLink }} {{ $active('scheduling.*') }}">
-                    <span class="material-symbols-outlined icon-sm text-status-info">calendar_month</span> <span class="sidebar-label">Jadwalkan Bimbingan</span>
-                </a>
-            @endif
-            <a href="https://reloop.notion.site/3b1155a221e880829514df5d0a8dcfd6" target="_blank" rel="noopener"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors bg-status-pending/15 text-status-pending hover:bg-status-pending/25 hover:text-status-pending border border-status-pending/30"
-                title="Laporkan masalah atau kirim ide untuk pengembangan aplikasi">
-                <span class="material-symbols-outlined icon-sm text-status-pending">feedback</span>
-                <span class="sidebar-label">Kirim Masukan</span>
-            </a>
-            <a href="https://github.com/relooplab/campus-logbook-management" target="_blank" rel="noopener"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-text-secondary hover:bg-bg-hover hover:text-text-primary"
-                title="Lihat kode sumber aplikasi di GitHub">
-                <span class="material-symbols-outlined icon-sm">code</span>
-                <span class="sidebar-label">GitHub</span>
-            </a>
-            <p class="sidebar-label px-3 pt-1.5 text-[10px] uppercase tracking-wide text-text-secondary/60" title="Versi rilis perangkat lunak">
-                v{{ \App\Support\ReleaseVersion::get() }}
-            </p>
-        </div>
     </aside>
 
     {{-- ===================== MAIN CONTENT ===================== --}}
@@ -466,6 +447,15 @@
                             <span class="material-symbols-outlined icon-sm">person</span>
                             Profil
                         </a>
+                        <a href="https://reloop.notion.site/3b1155a221e880829514df5d0a8dcfd6" target="_blank" rel="noopener"
+                            class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+                            title="Laporkan masalah atau kirim ide untuk pengembangan aplikasi">
+                            <span class="material-symbols-outlined icon-sm">feedback</span>
+                            Kirim Masukan
+                        </a>
+                        <p class="border-t border-border px-4 py-2.5 text-xs text-text-secondary" title="Versi rilis perangkat lunak">
+                            Versi v{{ \App\Support\ReleaseVersion::get() }}
+                        </p>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-hover hover:text-status-danger">
