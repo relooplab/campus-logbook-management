@@ -155,7 +155,7 @@
         @endif
         <div class="px-3 py-2 rounded-xl bg-bg-panel sm:col-span-2"> <span class="text-text-secondary">Fase:</span>
             <span class="font-medium block">{{ $mahasiswaTa->faseLabel() }}</span>
-            @if ($isDosen && $mahasiswaTa->isPembimbing(auth()->user()))
+            @if ($isDosen && ($mahasiswaTa->isPembimbing($user) || $mahasiswaTa->isPenguji($user)))
                 <form method="POST" action="{{ route($mahasiswaTa->isKp() ? "mahasiswa-kp.fase" : "mahasiswa-ta.fase", $mahasiswaTa) }}" class="mt-2 flex gap-1" onsubmit="return confirm('Ubah fase {{ $mahasiswaTa->jenisLabel() }} mahasiswa ini? Pastikan perubahan sudah benar.')">
                     @csrf <select name="fase"
                         class="rounded-xl border border-border bg-bg-surface px-2 py-1 text-xs">

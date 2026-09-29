@@ -111,7 +111,7 @@ class MahasiswaTaController extends Controller
     }
 
     /**
-     * Update fase TA (khusus dosen pembimbing P1/P2).
+     * Update fase TA/KP (dosen pembimbing atau penguji program).
      * Perubahan dicatat ke audit log.
      */
     public function updateFase(Request $request, MahasiswaTa $mahasiswaTa): RedirectResponse
@@ -119,7 +119,7 @@ class MahasiswaTaController extends Controller
         $user = $request->user();
 
         abort_unless($user->isDosen(), 403, 'Hanya dosen yang dapat mengubah fase.');
-        abort_unless($mahasiswaTa->isPembimbing($user), 403, 'Anda bukan pembimbing program ini.');
+        abort_unless($mahasiswaTa->isPembimbing($user) || $mahasiswaTa->isPenguji($user), 403, 'Anda bukan pembimbing atau penguji program ini.');
 
         $fases = $mahasiswaTa->isKp() ? MahasiswaTa::FASES_KP : MahasiswaTa::FASES;
         $validated = $request->validate([

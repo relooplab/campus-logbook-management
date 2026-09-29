@@ -3,7 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Models\Institution;
+use App\Support\ProgramContext;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreLogbookEntryRequest extends FormRequest
 {
@@ -21,8 +23,10 @@ class StoreLogbookEntryRequest extends FormRequest
         $inst = Institution::current();
         $maxKb = $inst->maxUploadSizeMb() * 1024;
         $mimes = implode(',', $inst->allowedFileTypes());
+        $ta = ProgramContext::resolve($this->user(), $this);
 
         return [
+            'addressed_dosen_id' => ['nullable', Rule::in($ta?->allDosenIds() ?? [])],
             'tanggal_bimbingan' => ['required', 'date', 'before_or_equal:today'],
             'topik' => ['required', 'string', 'max:255'],
             'progres_kendala' => ['required', 'string'],
@@ -37,6 +41,7 @@ class StoreLogbookEntryRequest extends FormRequest
         $types = strtoupper(implode(', ', $inst->allowedFileTypes()));
 
         return [
+            'addressed_dosen_id.in' => 'Penerima logbook harus pembimbing atau dosen penguji program Anda.',
             'tanggal_bimbingan.required' => 'Tanggal bimbingan wajib diisi.',
             'tanggal_bimbingan.before_or_equal' => 'Tanggal tidak boleh di masa depan.',
             'topik.required' => 'Topik bimbingan wajib diisi.',

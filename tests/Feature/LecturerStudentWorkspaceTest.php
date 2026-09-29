@@ -18,7 +18,7 @@ class LecturerStudentWorkspaceTest extends TestCase
     {
         parent::setUp();
 
-        foreach (['mahasiswa', 'dosen'] as $role) {
+        foreach (['mahasiswa', 'dosen', 'admin'] as $role) {
             Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
         }
 
@@ -87,22 +87,55 @@ class LecturerStudentWorkspaceTest extends TestCase
             ->assertSee('Tidak ada mahasiswa yang cocok');
     }
 
-    public function test_only_supervisor_can_use_inline_phase_action(): void
+    public function test_supervisors_and_examiners_can_change_phase_from_workspace_and_detail(): void
     {
         $supervised = $this->program('SupervisorStudent', 'ta', ['pembimbing_2_id' => $this->lecturer->id], 'proposal');
         $examined = $this->program('ExaminerStudent', 'kp', ['penguji_1_id' => $this->lecturer->id], 'laporan');
+        $examinedTa = $this->program('SecondExaminerStudent', 'ta', ['penguji_2_id' => $this->lecturer->id], 'proposal');
 
         $this->actingAs($this->lecturer)->get(route('dosen.mahasiswa-saya'))
             ->assertOk()->assertSee(route('mahasiswa-ta.fase', $supervised))
-            ->assertDontSee(route('mahasiswa-kp.fase', $examined));
+            ->assertSee(route('mahasiswa-kp.fase', $examined))
+            ->assertSee(route('mahasiswa-ta.fase', $examinedTa));
+
+        $this->actingAs($this->lecturer)->get(route('mahasiswa-kp.show', $examined))
+            ->assertOk()->assertSee(route('mahasiswa-kp.fase', $examined));
+        $this->actingAs($this->lecturer)->get(route('mahasiswa-ta.show', $examinedTa))
+            ->assertOk()->assertSee(route('mahasiswa-ta.fase', $examinedTa));
 
         $this->actingAs($this->lecturer)->post(route('mahasiswa-kp.fase', $examined), ['fase' => 'selesai'])
-            ->assertForbidden();
-        $this->assertSame('laporan', $examined->fresh()->fase);
+            ->assertRedirect()->assertSessionHas('success');
+        $this->assertSame('selesai', $examined->fresh()->fase);
+
+        $this->actingAs($this->lecturer)->post(route('mahasiswa-ta.fase', $examinedTa), ['fase' => 'pengumpulan_data'])
+            ->assertRedirect()->assertSessionHas('success');
+        $this->assertSame('pengumpulan_data', $examinedTa->fresh()->fase);
 
         $this->actingAs($this->lecturer)->post(route('mahasiswa-ta.fase', $supervised), ['fase' => 'pengumpulan_data'])
             ->assertRedirect()->assertSessionHas('success');
         $this->assertSame('pengumpulan_data', $supervised->fresh()->fase);
+    }
+
+    public function test_unrelated_lecturer_student_and_admin_cannot_change_phase(): void
+    {
+        $program = $this->program('UnrelatedStudent', 'ta', [], 'proposal');
+
+        foreach ([$this->lecturer, $program->mahasiswa, $this->user('admin', 'Admin')] as $actor) {
+            $this->actingAs($actor)->post(route('mahasiswa-ta.fase', $program), ['fase' => 'pengumpulan_data'])
+                ->assertForbidden();
+            $this->assertSame('proposal', $program->fresh()->fase);
+        }
+    }
+
+    public function test_examiner_cannot_skip_finalization_or_submit_invalid_phase(): void
+    {
+        $program = $this->program('ExaminerFinalizationStudent', 'ta', ['penguji_1_id' => $this->lecturer->id], 'proposal');
+
+        $this->actingAs($this->lecturer)->post(route('mahasiswa-ta.fase', $program), ['fase' => 'achievement'])
+            ->assertForbidden();
+        $this->actingAs($this->lecturer)->post(route('mahasiswa-ta.fase', $program), ['fase' => 'invalid'])
+            ->assertSessionHasErrors('fase');
+        $this->assertSame('proposal', $program->fresh()->fase);
     }
 
     public function test_pagination_keeps_filters_and_limits_loaded_students(): void

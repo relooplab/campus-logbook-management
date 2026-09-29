@@ -101,6 +101,111 @@ class RevisiRecipientTest extends TestCase
         ];
     }
 
+    private function logbookPayload(?int $recipientId, bool $submit = true): array
+    {
+        return [
+            'addressed_dosen_id' => $recipientId,
+            'tanggal_bimbingan' => now()->toDateString(),
+            'topik' => 'Bimbingan dengan penerima pilihan',
+            'progres_kendala' => 'Membahas progres dan kendala.',
+            'submit' => $submit ? 1 : null,
+        ];
+    }
+
+    public function test_form_logbook_menampilkan_pembimbing_dan_penguji_sekali_saja(): void
+    {
+        $this->ta->update(['penguji_2_id' => $this->pembimbing->id]);
+
+        $this->actingAs($this->mahasiswa)->get(route('logbook.create'))
+            ->assertOk()
+            ->assertSee('Kirim kepada (penerima logbook)')
+            ->assertSee('Pembimbing 1 & Penguji 2 — Pembimbing Satu')
+            ->assertSee('Penguji 1 — Penguji Satu')
+            ->assertSee('value="'.$this->pembimbing->id.'" selected', false)
+            ->assertDontSee('Dosen Lain');
+    }
+
+    public function test_logbook_kepada_penguji_dapat_direview_dan_pembimbing_menerima_cc(): void
+    {
+        $this->actingAs($this->mahasiswa)->post(route('logbook.store'), $this->logbookPayload($this->penguji->id))
+            ->assertRedirect(route('logbook.index'));
+
+        $entry = $this->ta->entries()->where('jenis', LogbookEntry::JENIS_LOGBOOK)->latest('id')->firstOrFail();
+        $this->assertSame($this->penguji->id, $entry->dosen_id);
+        $this->assertSame($this->penguji->id, $entry->reviewDosen()?->id);
+        $this->assertSame(LogbookEntry::STATUS_SUBMITTED, $entry->status);
+        $this->assertSame(1, $this->penguji->fresh()->notifications()->count());
+        $this->assertSame(1, $this->pembimbing->fresh()->notifications()->count());
+
+        $this->actingAs($this->penguji)->get(route('logbook.show', $entry))->assertOk()->assertSee('Keputusan Review');
+        $this->actingAs($this->dosenLain)->post(route('logbook.approve', $entry))->assertForbidden();
+        $this->actingAs($this->penguji)->post(route('logbook.approve', $entry))->assertRedirect();
+        $this->assertSame(LogbookEntry::STATUS_APPROVED, $entry->fresh()->status);
+    }
+
+    public function test_logbook_draft_menyimpan_penerima_untuk_dikirim_nanti(): void
+    {
+        $this->actingAs($this->mahasiswa)->post(route('logbook.store'), $this->logbookPayload($this->penguji->id, false))
+            ->assertRedirect(route('logbook.index'));
+
+        $entry = $this->ta->entries()->where('jenis', LogbookEntry::JENIS_LOGBOOK)->latest('id')->firstOrFail();
+        $this->assertSame(LogbookEntry::STATUS_DRAFT, $entry->status);
+        $this->assertSame($this->penguji->id, $entry->dosen_id);
+        $this->assertSame(0, $this->penguji->fresh()->notifications()->count());
+        $this->assertFalse($this->penguji->can('review', $entry));
+
+        $this->actingAs($this->mahasiswa)->post(route('logbook.submit', $entry))->assertRedirect();
+        $this->assertTrue($this->penguji->can('review', $entry->fresh()));
+        $this->assertSame(1, $this->penguji->fresh()->notifications()->count());
+        $this->assertSame(1, $this->pembimbing->fresh()->notifications()->count());
+    }
+
+    public function test_penguji_penerima_logbook_dapat_meminta_revisi(): void
+    {
+        $this->actingAs($this->mahasiswa)->post(route('logbook.store'), $this->logbookPayload($this->penguji->id))
+            ->assertRedirect();
+
+        $entry = $this->ta->entries()->where('jenis', LogbookEntry::JENIS_LOGBOOK)->latest('id')->firstOrFail();
+        $this->actingAs($this->penguji)->post(route('logbook.request-revisi', $entry), [
+            'feedback_dosen' => 'Mohon lengkapi pembahasan dan perbaiki kesimpulan bab terakhir.',
+        ])->assertRedirect();
+
+        $this->assertSame(LogbookEntry::STATUS_REVISI, $entry->fresh()->status);
+    }
+
+    public function test_pembimbing_dua_penerima_logbook_tidak_mendapat_notifikasi_ganda(): void
+    {
+        $this->ta->update(['pembimbing_2_id' => $this->penguji->id]);
+
+        $this->actingAs($this->mahasiswa)->post(route('logbook.store'), $this->logbookPayload($this->penguji->id))
+            ->assertRedirect();
+
+        $entry = $this->ta->entries()->where('jenis', LogbookEntry::JENIS_LOGBOOK)->latest('id')->firstOrFail();
+        $this->assertSame($this->penguji->id, $entry->reviewDosen()?->id);
+        $this->assertSame(1, $this->penguji->fresh()->notifications()->count());
+        $this->assertSame(1, $this->pembimbing->fresh()->notifications()->count());
+    }
+
+    public function test_logbook_lama_tanpa_penerima_menggunakan_pembimbing(): void
+    {
+        $this->parent->update(['dosen_id' => null]);
+
+        $this->assertSame($this->pembimbing->id, $this->parent->fresh()->reviewDosen()?->id);
+    }
+
+    public function test_logbook_penerima_tidak_sah_ditolak_dan_tanpa_pilihan_default_ke_pembimbing(): void
+    {
+        $this->actingAs($this->mahasiswa)->post(route('logbook.store'), $this->logbookPayload($this->dosenLain->id))
+            ->assertSessionHasErrors('addressed_dosen_id');
+        $this->assertSame(1, $this->ta->entries()->count());
+
+        $payload = $this->logbookPayload(null, false);
+        unset($payload['addressed_dosen_id']);
+        $this->actingAs($this->mahasiswa)->post(route('logbook.store'), $payload)->assertRedirect();
+        $entry = $this->ta->entries()->where('jenis', LogbookEntry::JENIS_LOGBOOK)->latest('id')->firstOrFail();
+        $this->assertSame($this->pembimbing->id, $entry->dosen_id);
+    }
+
     private function entryRevisiTerakhir(): LogbookEntry
     {
         return LogbookEntry::where('parent_entry_id', $this->parent->id)->firstOrFail();

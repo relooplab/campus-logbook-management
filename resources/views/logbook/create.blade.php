@@ -52,6 +52,21 @@
                 </div>
 
                 <div class="form-field">
+                    <label class="form-field-label" for="addressed_dosen_id">Kirim kepada (penerima logbook)</label>
+                    <div class="form-field-body">
+                        <select name="addressed_dosen_id" id="addressed_dosen_id" required class="form-control">
+                            @foreach ($dosenOptions as $dosenId => $label)
+                                <option value="{{ $dosenId }}" @selected((string) $defaultRecipientId === (string) $dosenId)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <p class="form-field-hint">Pilih pembimbing atau penguji program. Penerima dapat mereview entri setelah dikirim; pembimbing juga diberi tahu.</p>
+                        @error('addressed_dosen_id')
+                            <p class="form-field-error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="form-field">
                     <label class="form-field-label" for="tanggal_bimbingan">
                         <span class="material-symbols-outlined icon-sm" aria-hidden="true">event</span> Tanggal Bimbingan
                     </label>
@@ -163,6 +178,10 @@
                         <span class="summary-value" data-summary-tanggal>—</span>
                     </div>
                     <div class="summary-row">
+                        <span class="summary-key">Penerima</span>
+                        <span class="summary-value" data-summary-penerima>—</span>
+                    </div>
+                    <div class="summary-row">
                         <span class="summary-key">
                             <span class="material-symbols-outlined icon-sm" aria-hidden="true">sell</span> Topik Bimbingan
                         </span>
@@ -214,6 +233,7 @@
         var topik = document.getElementById('topik');
         var progres = document.getElementById('progres_kendala');
         var tanggal = document.getElementById('tanggal_bimbingan');
+        var penerima = document.getElementById('addressed_dosen_id');
 
         function formatDate(value) {
             if (!value) return '—';
@@ -232,13 +252,15 @@
         function syncSummary() {
             var tanggalEl = document.querySelector('[data-summary-tanggal]');
             var topikEl = document.querySelector('[data-summary-topik]');
+            var penerimaEl = document.querySelector('[data-summary-penerima]');
             if (tanggalEl) tanggalEl.textContent = formatDate(tanggal.value);
             if (topikEl) topikEl.textContent = topik.value.trim() || 'Belum diisi';
+            if (penerimaEl) penerimaEl.textContent = penerima.selectedOptions[0]?.textContent || 'Belum dipilih';
         }
 
         function save() {
             try {
-                localStorage.setItem(KEY, JSON.stringify({ topik: topik.value, progres: progres.value, tanggal: tanggal.value, ts: Date.now() }));
+                localStorage.setItem(KEY, JSON.stringify({ topik: topik.value, progres: progres.value, tanggal: tanggal.value, penerima: penerima.value, ts: Date.now() }));
             } catch (e) {
                 window.LbAutosave.set(PANEL, 'error');
                 return;
@@ -250,6 +272,7 @@
             if (saved.topik) topik.value = saved.topik;
             if (saved.progres) progres.value = saved.progres;
             if (saved.tanggal) tanggal.value = saved.tanggal;
+            if (saved.penerima && Array.from(penerima.options).some(function (option) { return option.value === saved.penerima; })) penerima.value = saved.penerima;
             syncSummary();
             window.LbAutosave.set(PANEL, 'restored', { time: 'Dipulihkan dari draf ' + timeLabel(saved.ts) });
         }
@@ -259,6 +282,7 @@
             topik.value = '';
             progres.value = '';
             tanggal.value = '{{ now()->format('Y-m-d') }}';
+            penerima.value = @json((string) ($ta->pembimbing_1_id ?: array_key_first($dosenOptions)));
             syncSummary();
             window.LbAutosave.set(PANEL, 'discarded');
         }

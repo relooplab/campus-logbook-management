@@ -207,21 +207,14 @@ class LogbookEntry extends Model
     }
 
     /**
-     * Resolve the dosen who is expected to review this entry, following the
-     * assignment priority from the spec:
-     *   1. mahasiswa_ta.pembimbing_1_id
-     *   2. mahasiswa_ta.pembimbing_2_id
-     *   3. entry.dosen_id (fallback)
-     *
-     * Khusus entri revisi: mahasiswa memilih penerima (pembimbing ATAU penguji)
-     * yang tersimpan di `dosen_id`, sehingga penerima itu yang menjadi reviewer.
-     * Entri revisi lama (dosen_id = pembimbing) tetap berperilaku sama.
+     * Penerima yang dipilih mahasiswa tersimpan di dosen_id untuk logbook dan
+     * revisi. Entri lama tanpa dosen_id tetap jatuh ke pembimbing program.
      */
     public function reviewDosen(): ?User
     {
         $ta = $this->mahasiswaTa;
 
-        if ($this->jenis === self::JENIS_REVISI && $this->dosen_id) {
+        if ($this->dosen_id) {
             return $this->dosen;
         }
 
@@ -232,10 +225,6 @@ class LogbookEntry extends Model
             if ($ta->pembimbing_2_id) {
                 return User::find($ta->pembimbing_2_id);
             }
-        }
-
-        if ($this->dosen_id) {
-            return $this->dosen;
         }
 
         // Entri revisi tanpa dosen_id: pakai dosen_id entri asal (parent).
@@ -287,20 +276,14 @@ class LogbookEntry extends Model
     }
 
     /**
-     * Notify penerima entri (penerima revisi yang dipilih mahasiswa, atau
-     * pembimbing sebagai fallback). Khusus entri revisi, para pembimbing ikut
-     * diberi tahu (CC) agar pengawasan bimbingan tetap berjalan ketika revisi
-     * ditujukan ke dosen penguji. Entri logbook biasa tetap hanya mengabari
-     * reviewer-nya (perilaku lama).
+     * Notify penerima entri dan pembimbing program (CC) tanpa duplikasi.
      */
     public function notifyReviewers(string $message, ?string $url = null, string $subject = 'Entri Baru Menunggu Review'): void
     {
         $recipients = [$this->reviewDosen()?->id];
 
-        if ($this->jenis === self::JENIS_REVISI) {
-            $recipients[] = $this->mahasiswaTa?->pembimbing_1_id;
-            $recipients[] = $this->mahasiswaTa?->pembimbing_2_id;
-        }
+        $recipients[] = $this->mahasiswaTa?->pembimbing_1_id;
+        $recipients[] = $this->mahasiswaTa?->pembimbing_2_id;
 
         $recipients = array_unique(array_filter($recipients));
 

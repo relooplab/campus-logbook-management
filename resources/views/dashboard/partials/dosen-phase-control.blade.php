@@ -1,4 +1,4 @@
-@if ($ta->isPembimbing($user))
+@if ($user->isDosen() && ($ta->isPembimbing($user) || $ta->isPenguji($user)))
     <form method="POST" action="{{ route($ta->isKp() ? 'mahasiswa-kp.fase' : 'mahasiswa-ta.fase', $ta) }}" class="flex min-w-0 flex-wrap items-center gap-1" onsubmit="return confirm('Ubah fase mahasiswa ini menjadi ' + this.elements.fase.options[this.elements.fase.selectedIndex].text + '?')">
         @csrf
         <label class="sr-only" for="fase-{{ $ta->id }}-{{ $controlId }}">Fase {{ $ta->mahasiswa?->name }} ({{ $ta->jenisLabel() }})</label>

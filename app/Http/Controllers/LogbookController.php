@@ -35,8 +35,10 @@ class LogbookController extends Controller
 
         $nextSesi = ($lastEntry?->sesi_ke ?? 0) + 1;
         $lastTopik = $lastEntry?->topik;
+        $dosenOptions = $ta->dosenRecipientOptions();
+        $defaultRecipientId = old('addressed_dosen_id', $ta->pembimbing_1_id ?: array_key_first($dosenOptions));
 
-        return view('logbook.create', compact('ta', 'nextSesi', 'lastTopik'));
+        return view('logbook.create', compact('ta', 'nextSesi', 'lastTopik', 'dosenOptions', 'defaultRecipientId'));
     }
 
     public function createRevisi(Request $request): View
@@ -90,7 +92,7 @@ class LogbookController extends Controller
 
         $data = $request->validated();
 
-        // Tombol "Kirim ke Pembimbing" langsung mengirim (bukan draf).
+        // Tombol "Kirim ke Dosen" langsung mengirim (bukan draf).
         $submit = $request->boolean('submit');
 
         // Buat entry dulu agar path unik {entry_id}/{uuid} bisa memakai id.
@@ -105,7 +107,7 @@ class LogbookController extends Controller
                         ->max('sesi_ke') + 1;
 
                     return $ta->entries()->create([
-                        'dosen_id' => $ta->pembimbing_1_id,
+                        'dosen_id' => $data['addressed_dosen_id'] ?? $ta->pembimbing_1_id,
                         'tanggal_bimbingan' => $data['tanggal_bimbingan'],
                         'topik' => $data['topik'],
                         'sesi_ke' => $sesiKe,
@@ -142,7 +144,7 @@ class LogbookController extends Controller
 
         if ($submit) {
             $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($entry, 'Ada entri baru menunggu review.'));
-            $entry->notifyDosen(
+            $entry->notifyReviewers(
                 'Entri logbook sesi '.$entry->sesi_ke.' baru dikirim oleh mahasiswa.',
                 route('logbook.show', $entry),
                 'Entri Baru Menunggu Review',
