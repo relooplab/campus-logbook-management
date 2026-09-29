@@ -15,6 +15,9 @@
         ])->values(),
     ])->values();
 @endphp
+@if ($user->isDosen())
+    @include('profile.partials.dosen-workspace')
+@else
 <div class="max-w-2xl space-y-6">
     <h1 class="text-xl font-bold">Profil</h1> {{-- Data profil --}} <div
         class="bg-bg-surface rounded-xl border border-border p-6 space-y-4">
@@ -335,7 +338,38 @@
         </div>
     @endif
 </div>
+@endif
 @endsection @section('scripts')
+<script>
+    // Pratinjau lokal saja; foto tetap diunggah melalui form profil yang sudah ada.
+    (function () {
+        var input = document.getElementById('profile-photo');
+        if (!input) return;
+        var previewUrl;
+        input.addEventListener('change', function () {
+            var file = input.files && input.files[0];
+            document.getElementById('photo-filename').textContent = file ? file.name : '';
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+            if (!file || !file.type.startsWith('image/')) return;
+            previewUrl = URL.createObjectURL(file);
+            var avatar = document.getElementById('profile-avatar');
+            var image = document.createElement('img');
+            image.src = previewUrl;
+            image.alt = 'Pratinjau foto profil';
+            image.className = 'h-full w-full object-cover';
+            avatar.replaceChildren(image);
+        });
+    })();
+    (function () {
+        var form = document.getElementById('dosen-profile-form');
+        if (!form) return;
+        form.addEventListener('submit', function () {
+            var button = form.querySelector('button[type="submit"]');
+            button.disabled = true;
+            button.textContent = 'Menyimpan…';
+        });
+    })();
+</script>
 <script>
     // Cascade afiliasi mahasiswa: PT → fakultas → departemen → prodi.
     (function () {

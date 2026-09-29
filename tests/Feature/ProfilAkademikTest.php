@@ -58,6 +58,21 @@ class ProfilAkademikTest extends TestCase
         ]);
     }
 
+    public function test_academic_workspace_renders_real_program_data_and_existing_actions(): void
+    {
+        $this->actingAs($this->mhs)
+            ->get(route('profile.profil-akademik'))
+            ->assertOk()
+            ->assertSee('Ringkasan Akademik')
+            ->assertSee('Judul TA Test')
+            ->assertSee('Usulkan Dosen Penguji')
+            ->assertSee('Belum tersedia')
+            ->assertSee(route('profile.profil-akademik.penguji'))
+            ->assertSee(route('logbook.create'))
+            ->assertSee(route('scheduling.index'))
+            ->assertSee(route('logbook.feedback'));
+    }
+
     public function test_mahasiswa_can_propose_penguji_and_all_must_approve(): void
     {
         $this->actingAs($this->mhs)

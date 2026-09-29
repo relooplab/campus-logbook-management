@@ -125,6 +125,13 @@ class AdminContactEmailTest extends AuditSmokeTest
             ->assertOk()
             ->assertSee('1234567890')          // NIDN read-only tampil
             ->assertSee('NIDN')                // label field
-            ->assertSee('help@profil.test');   // info hubungi admin
+            ->assertSee('help@profil.test')    // info hubungi admin
+            ->assertSee('Keamanan Akun')
+            ->assertSee('Kelola Afiliasi')
+            ->assertSee('form="dosen-profile-form"', false)
+            ->assertDontSee('name="nidn"', false)
+            ->assertSee(route('profile.update'))
+            ->assertSee(route('profile.password'))
+            ->assertSee(route('profile.email'));
     }
 }

@@ -7,11 +7,9 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
             <h1 class="font-heading font-bold text-2xl text-text-primary"><span class="material-symbols-outlined icon-md align-text-bottom">rate_review</span> Antrean Review Bahan</h1>
-            <p class="text-sm text-text-secondary mt-0.5">Bahan mahasiswa yang belum Anda tinjau. Tinjau dulu sebelum mengakses area lain.</p>
+            <p class="text-sm text-text-secondary mt-0.5">Bahan mahasiswa yang belum Anda tinjau. Anda tetap dapat mengakses dashboard kapan saja.</p>
         </div>
-        @if ($logbook->isEmpty() && $seminar->isEmpty())
-            <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">← Ke Dashboard</a>
-        @endif
+        <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">← Ke Dashboard</a>
     </div>
 
     {{-- Logbook / Revisi --}}

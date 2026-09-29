@@ -8,8 +8,7 @@ use Illuminate\View\View;
 
 /**
  * Halaman antrean review bahan mahasiswa yang belum ditinjau.
- * Dosen diarahkan ke sini oleh penjaga (gate) sebelum mengakses area lain
- * selama masih ada bahan pending (logbook/revisi/seminar belum dibaca).
+ * Dosen dapat membukanya dari pengingat di dashboard atau menu sidebar.
  */
 class MaterialsReviewController extends Controller
 {

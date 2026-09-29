@@ -37,9 +37,16 @@
     }
     $revisionRows = collect($logbook->riwayat_perbaikan ?? []);
     $completedRevisions = $revisionRows->filter(fn ($row) => ($row['status'] ?? null) === 'Sudah')->count();
+    $revisionPercent = $revisionRows->count() ? (int) round($completedRevisions / $revisionRows->count() * 100) : 0;
 @endphp
 
 <div class="{{ $logbook->jenis === 'revisi' ? 'detail-workspace' : 'max-w-5xl' }} space-y-6">
+    @if ($logbook->jenis === 'revisi')
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div><h1 class="font-heading font-bold text-2xl text-text-primary">Revisi</h1><p class="text-sm text-text-secondary mt-1">Review revisi mahasiswa dan berikan keputusan.</p></div>
+            <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali ke Logbook</a>
+        </div>
+    @else
     <x-page-header
         :subtitle="$logbook->jenis === 'revisi' ? null : 'Logbook Bimbingan'"
         :title="$logbook->jenis === 'revisi' ? 'Revisi' . ($logbook->revision_round ? ' ke-' . $logbook->revision_round : '') : 'Sesi ' . $logbook->sesi_ke">
@@ -47,18 +54,19 @@
             <a href="{{ $backUrl }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">{{ $backLabel }}</a>
         </x-slot:actions>
     </x-page-header>
+    @endif
 
     @if ($logbook->jenis === 'revisi')
         <section class="card p-5 sm:p-6" aria-label="Ringkasan revisi">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <p class="font-heading font-semibold text-text-primary">{{ $logbook->mahasiswaTa?->mahasiswa?->name }}</p>
-                @include('partials.status-badge', ['status' => $logbook->status])
+            <div class="revision-summary detail-workspace-card">
+                <div class="min-w-0"><p class="font-heading font-semibold text-lg text-text-primary">{{ $logbook->mahasiswaTa?->mahasiswa?->name }}</p><p class="text-sm text-text-secondary">Mahasiswa</p></div>
+                <dl class="revision-summary-fields text-sm">
+                    <div><dt class="text-xs text-text-secondary">Topik</dt><dd class="font-medium mt-1">{{ $logbook->topik ?? 'Revisi' }}</dd></div>
+                    <div><dt class="text-xs text-text-secondary">Tanggal Pengiriman</dt><dd class="font-medium mt-1">{{ $logbook->tanggal_tampil?->format('d M Y') ?? '—' }}</dd></div>
+                    <div><dt class="text-xs text-text-secondary">Ditujukan kepada</dt><dd class="font-medium mt-1">{{ $reviewerLabel ?? '—' }}</dd></div>
+                </dl>
+                <div class="text-left lg:text-right">@include('partials.status-badge', ['status' => $logbook->status]) @if($logbook->revision_round)<p class="text-xs text-text-secondary mt-2">Revisi ke-{{ $logbook->revision_round }}</p>@endif</div>
             </div>
-            <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm detail-workspace-card">
-                <div><dt class="inline text-text-secondary">Dikirim </dt><dd class="inline font-medium">{{ $logbook->tanggal_tampil?->format('d M Y') ?? '—' }}</dd></div>
-                <div><dt class="inline text-text-secondary">Topik </dt><dd class="inline font-medium">{{ $logbook->topik ?? 'Revisi' }}</dd></div>
-                <div><dt class="inline text-text-secondary">Ditujukan kepada </dt><dd class="inline font-medium">{{ $reviewerLabel ?? '—' }}</dd></div>
-            </dl>
         </section>
     @endif
 
@@ -117,30 +125,36 @@
                 <h3 class="text-sm font-semibold text-text-secondary mb-1">Pesan untuk Dosen</h3>
                 <div class="text-sm whitespace-pre-wrap">{{ $logbook->progres_kendala ?: '—' }}</div>
             </div>
-            <section aria-labelledby="revision-list-title">
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                    <h3 id="revision-list-title" class="font-heading font-semibold text-text-primary">Catatan Perbaikan</h3>
-                    <p class="text-sm text-text-secondary">{{ $revisionRows->count() }} catatan · {{ $completedRevisions }} ditandai sudah oleh mahasiswa</p>
+            <section class="card p-5 sm:p-6" aria-labelledby="revision-list-title">
+                <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
+                    <div><h2 id="revision-list-title" class="font-heading font-semibold text-lg text-text-primary">Catatan Perbaikan</h2><p class="text-sm text-text-secondary mt-1">Daftar catatan perbaikan dari dosen beserta respons mahasiswa.</p></div>
+                    @if ($revisionRows->isNotEmpty())<button type="button" id="revision-expand-all" class="px-3 py-2 rounded-xl border border-border text-sm text-text-primary hover:bg-bg-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand" aria-controls="revision-items">Expand Semua</button>@endif
                 </div>
+                <div class="flex items-center gap-3 mb-4 text-sm"><span>{{ $completedRevisions }} dari {{ $revisionRows->count() }} diperbaiki</span><div class="h-2 flex-1 rounded-full bg-bg-hover overflow-hidden" role="progressbar" aria-label="Progres perbaikan" aria-valuenow="{{ $completedRevisions }}" aria-valuemin="0" aria-valuemax="{{ $revisionRows->count() }}"><div class="h-full bg-status-success rounded-full" style="width: {{ $revisionPercent }}%"></div></div><span>{{ $revisionPercent }}%</span></div>
+                <div id="revision-items" class="space-y-3">
                 @forelse ($revisionRows as $r)
                     @php $revisionStatus = $r['status'] ?? '—'; @endphp
-                    <article class="rounded-xl bg-bg-panel border border-border p-4 sm:p-5 mb-3 detail-workspace-card">
-                        <div class="flex flex-wrap items-center justify-between gap-2">
-                            <h4 class="text-sm font-semibold text-text-primary">{{ $r['halaman'] ?? 'Bagian tidak disebutkan' }}</h4>
+                    <details class="revision-item rounded-xl bg-bg-panel border border-border p-4 sm:p-5 detail-workspace-card" @if($loop->first) open @endif>
+                        <summary class="revision-item-summary cursor-pointer flex flex-wrap items-center gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand rounded-lg">
+                            <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-bg-hover font-mono text-sm">{{ $loop->iteration }}</span>
+                            <span class="font-semibold text-sm text-text-primary">{{ $r['halaman'] ?? 'Bagian tidak disebutkan' }}</span>
                             <span class="inline-block px-2.5 py-1 rounded-full text-xs font-medium
                                 {{ $revisionStatus === 'Sudah' ? 'bg-status-success/10 text-status-success' : '' }}
                                 {{ $revisionStatus === 'Sebagian' ? 'bg-status-pending/10 text-status-pending' : '' }}
                                 {{ $revisionStatus === 'Belum' ? 'bg-status-danger/10 text-status-danger' : '' }}
-                            ">{{ $revisionStatus }}</span>
-                        </div>
-                        <dl class="mt-4 space-y-4 text-sm">
-                            <div><dt class="text-xs font-semibold text-text-secondary mb-1">Komentar Dosen</dt><dd class="whitespace-pre-wrap text-text-primary">{{ $r['komentar_dosen'] ?? '—' }}</dd></div>
-                            <div><dt class="text-xs font-semibold text-text-secondary mb-1">Respons / Perbaikan Mahasiswa</dt><dd class="whitespace-pre-wrap text-text-primary">{{ $r['perbaikan'] ?? '—' }}</dd></div>
+                            ">{{ $revisionStatus }}</span><span class="material-symbols-outlined icon-sm ml-auto revision-chevron" aria-hidden="true">expand_more</span>
+                            <span class="revision-preview text-xs text-text-secondary truncate w-full pl-12">{{ $r['komentar_dosen'] ?? '—' }} · {{ $r['perbaikan'] ?? '—' }}</span>
+                        </summary>
+                        @if($logbook->lampiran_path || $logbook->catatan_perbaikan_path)<a href="{{ route('logbook.pdf-viewer', $logbook) }}" class="inline-flex mt-3 text-xs text-status-info hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">Lihat di PDF ↗</a>@endif
+                        <dl class="revision-pair mt-4 text-sm">
+                            <div class="rounded-xl bg-bg-surface p-4 min-w-0"><dt class="text-xs font-semibold text-text-secondary mb-2">Komentar Dosen</dt><dd class="whitespace-pre-wrap text-text-primary">{{ $r['komentar_dosen'] ?? '—' }}</dd></div>
+                            <div class="rounded-xl bg-bg-surface p-4 min-w-0"><dt class="text-xs font-semibold text-text-secondary mb-2">Perbaikan yang Dilakukan Mahasiswa</dt><dd class="whitespace-pre-wrap text-text-primary">{{ $r['perbaikan'] ?? '—' }}</dd></div>
                         </dl>
-                    </article>
+                    </details>
                 @empty
                     <p class="text-sm text-text-secondary">Belum ada catatan perbaikan.</p>
                 @endforelse
+                </div>
             </section>
         @else
             <div>
@@ -161,6 +175,18 @@
 
     {{-- ===== Kolom kanan: aksi (sticky) ===== --}}
     <aside class="{{ $logbook->jenis === 'revisi' ? 'detail-workspace-panel' : 'lg:sticky lg:top-20' }} space-y-4" aria-label="Dokumen dan tindakan">
+        @if ($logbook->jenis === 'revisi')
+            <section class="card p-5 detail-workspace-card" aria-label="Status review revisi">
+                <h2 class="font-heading font-semibold text-text-primary mb-3">Review</h2>
+                @include('partials.status-badge', ['status' => $logbook->status])
+                <dl class="grid grid-cols-3 gap-2 mt-4 text-center text-xs text-text-secondary">
+                    <div><dt>Total Catatan</dt><dd class="text-lg font-semibold text-text-primary mt-1">{{ $revisionRows->count() }}</dd></div>
+                    <div><dt>Sudah Diperbaiki</dt><dd class="text-lg font-semibold text-status-success mt-1">{{ $completedRevisions }}</dd></div>
+                    <div><dt>Belum Diperbaiki</dt><dd class="text-lg font-semibold text-status-danger mt-1">{{ $revisionRows->count() - $completedRevisions }}</dd></div>
+                </dl>
+                <div class="mt-4 h-2 rounded-full bg-bg-hover overflow-hidden" role="progressbar" aria-label="Progres review revisi" aria-valuenow="{{ $completedRevisions }}" aria-valuemin="0" aria-valuemax="{{ $revisionRows->count() }}"><div class="h-full bg-status-success rounded-full" style="width: {{ $revisionPercent }}%"></div></div>
+            </section>
+        @endif
         @if ($logbook->lampiran_path || $logbook->catatan_perbaikan_path)
             <section class="card p-5 space-y-3 detail-workspace-card">
                 <h2 class="font-heading font-semibold text-text-primary">Dokumen</h2>
@@ -178,7 +204,7 @@
 
         @if ($canManageActionItems)
             <section class="card p-5 space-y-3 detail-workspace-card">
-                <h2 class="font-heading font-semibold text-text-primary">Action Items</h2>
+                <div class="flex items-center justify-between gap-2"><h2 class="font-heading font-semibold text-text-primary">Action Items</h2><button type="button" id="action-item-add-toggle" class="px-3 py-2 rounded-xl border border-border text-sm hover:bg-bg-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand" aria-expanded="false" aria-controls="action-item-add-form">+ Tambah</button></div>
                 <div id="action-items-list" class="space-y-3">
                     @forelse ($logbook->actionItems as $item)
                         <div class="flex items-start gap-2 action-item-row" data-item-id="{{ $item->id }}">
@@ -194,13 +220,13 @@
                         <p class="text-sm text-text-secondary">Belum ada action item.</p>
                     @endforelse
                 </div>
-                <form id="action-item-add-form" class="space-y-2">
+                <form id="action-item-add-form" class="hidden space-y-2">
                     @csrf
                     <label for="action-item-text" class="sr-only">Tambah action item</label>
                     <input id="action-item-text" type="text" name="text" placeholder="Tambah action item..." maxlength="500" required
                         class="w-full min-w-0 rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
                     <p id="action-item-error" class="hidden text-status-danger text-xs" role="alert"></p>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Tambah</button>
+                    <div class="flex gap-2"><button type="submit" class="px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Tambah</button><button type="button" id="action-item-add-cancel" class="px-4 py-2 rounded-xl bg-bg-hover text-sm hover:bg-border">Batal</button></div>
                 </form>
             </section>
         @endif
@@ -235,6 +261,7 @@
                 </div>
                 @php $reviewDecision = old('review_decision', old('feedback_dosen') ? 'revisi' : ''); @endphp
                 <form method="POST" action="{{ route('logbook.request-revisi', $logbook) }}" id="review-decision-form" class="space-y-4"
+                    data-entry-kind="{{ $logbook->jenis }}"
                     data-approve-url="{{ route('logbook.approve', $logbook) }}"
                     data-revision-url="{{ route('logbook.request-revisi', $logbook) }}"
                     data-pdf-opened="{{ $logbook->review_opened_at ? '1' : '0' }}"
@@ -242,11 +269,11 @@
                     @csrf
                     <fieldset class="space-y-2">
                         <legend class="sr-only">Pilih keputusan review</legend>
-                        <label class="flex items-center gap-2 rounded-xl border border-border bg-bg-panel p-3 text-sm cursor-pointer">
-                            <input type="radio" name="review_decision" value="approve" required @checked($reviewDecision === 'approve')> Setujui
+                        <label class="decision-choice flex items-start gap-3 rounded-xl border border-border bg-bg-panel p-3 text-sm cursor-pointer">
+                            <input type="radio" name="review_decision" value="approve" class="mt-1 accent-brand" required @checked($reviewDecision === 'approve')><span><strong class="block text-text-primary">Setujui</strong><span class="text-xs text-text-secondary">Revisi telah sesuai dan dapat dilanjutkan.</span></span>
                         </label>
-                        <label class="flex items-center gap-2 rounded-xl border border-border bg-bg-panel p-3 text-sm cursor-pointer">
-                            <input type="radio" name="review_decision" value="revisi" required @checked($reviewDecision === 'revisi')> Minta Revisi
+                        <label class="decision-choice flex items-start gap-3 rounded-xl border border-border bg-bg-panel p-3 text-sm cursor-pointer">
+                            <input type="radio" name="review_decision" value="revisi" class="mt-1 accent-brand" required @checked($reviewDecision === 'revisi')><span><strong class="block text-text-primary">Minta Revisi</strong><span class="text-xs text-text-secondary">Masih perlu revisi atau perbaikan tambahan.</span></span>
                         </label>
                     </fieldset>
                     <div id="revision-feedback-wrap" class="space-y-2 {{ $reviewDecision === 'revisi' ? '' : 'hidden' }}">
@@ -255,7 +282,7 @@
                             class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40" @disabled($reviewDecision !== 'revisi') @if($reviewDecision === 'revisi') required @endif>{{ old('feedback_dosen') }}</textarea>
                         @error('feedback_dosen') <p class="text-status-danger text-xs">{{ $message }}</p> @enderror
                     </div>
-                    <button type="submit" class="w-full px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Simpan Keputusan</button>
+                    <button type="submit" id="review-decision-submit" class="w-full px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 disabled:opacity-50" disabled>Simpan Keputusan</button>
                 </form>
             </section>
         @endif
@@ -290,6 +317,18 @@
 
 @section('scripts')
 <script>
+    var expandAll = document.getElementById('revision-expand-all');
+    if (expandAll) {
+        var revisionItems = Array.from(document.querySelectorAll('#revision-items .revision-item'));
+        function syncExpandLabel() { expandAll.textContent = revisionItems.every(item => item.open) ? 'Collapse Semua' : 'Expand Semua'; }
+        expandAll.addEventListener('click', function () {
+            var open = !revisionItems.every(item => item.open);
+            revisionItems.forEach(item => { item.open = open; });
+            syncExpandLabel();
+        });
+        revisionItems.forEach(item => item.addEventListener('toggle', syncExpandLabel));
+        syncExpandLabel();
+    }
     // ---- Action items (pemilik boleh toggle + tambah; reviewer boleh tambah/hapus) ----
     var actionList = document.getElementById('action-items-list');
     var actionAddForm = document.getElementById('action-item-add-form');
@@ -365,6 +404,15 @@
     }
 
     if (actionAddForm) {
+        var actionToggle = document.getElementById('action-item-add-toggle');
+        function setActionFormOpen(open) {
+            actionAddForm.classList.toggle('hidden', !open);
+            actionToggle.setAttribute('aria-expanded', String(open));
+            if (open) actionAddForm.querySelector('input[name="text"]').focus();
+            else actionToggle.focus();
+        }
+        actionToggle.addEventListener('click', function () { setActionFormOpen(actionAddForm.classList.contains('hidden')); });
+        document.getElementById('action-item-add-cancel').addEventListener('click', function () { setActionFormOpen(false); });
         actionAddForm.addEventListener('submit', function (e) {
             e.preventDefault();
             var input = actionAddForm.querySelector('input[name="text"]');
@@ -383,6 +431,7 @@
                 var empty = actionList.querySelector('p');
                 if (empty) empty.remove();
                 actionList.appendChild(actionItemRow(item, ownerCanToggle));
+                setActionFormOpen(false);
             }).catch(() => {
                 error.textContent = 'Action item belum tersimpan. Coba lagi.';
                 error.classList.remove('hidden');
@@ -395,6 +444,7 @@
         var decisionChoices = decisionForm.querySelectorAll('input[name="review_decision"]');
         var feedbackWrap = document.getElementById('revision-feedback-wrap');
         var feedback = document.getElementById('revision-feedback');
+        var decisionSubmit = document.getElementById('review-decision-submit');
         function syncDecision() {
             var selected = decisionForm.querySelector('input[name="review_decision"]:checked');
             var needsRevision = selected && selected.value === 'revisi';
@@ -402,6 +452,8 @@
             feedbackWrap.classList.toggle('hidden', !needsRevision);
             feedback.disabled = !needsRevision;
             feedback.required = !!needsRevision;
+            decisionSubmit.disabled = !selected;
+            decisionSubmit.textContent = needsRevision ? 'Kirim Permintaan Revisi' : (selected ? (decisionForm.dataset.entryKind === 'revisi' ? 'Setujui Revisi' : 'Setujui Entri') : 'Pilih Keputusan');
         }
         decisionChoices.forEach(choice => choice.addEventListener('change', syncDecision));
         syncDecision();
@@ -414,6 +466,10 @@
             }
             if (selected.value === 'approve' && decisionForm.dataset.hasPdf === '1' && decisionForm.dataset.pdfOpened !== '1' &&
                 !window.confirm('Lampiran PDF belum dibuka. Tetap setujui entri ini?')) {
+                event.preventDefault();
+                return;
+            }
+            if (!window.confirm(selected.value === 'approve' ? 'Setujui revisi ini?' : 'Kirim permintaan revisi kepada mahasiswa?')) {
                 event.preventDefault();
                 return;
             }

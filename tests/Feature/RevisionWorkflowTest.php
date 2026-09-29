@@ -11,6 +11,25 @@ class RevisionWorkflowTest extends AuditSmokeTest
 {
     use DatabaseTransactions;
 
+    public function test_create_workspaces_render_with_one_file_input_each(): void
+    {
+        $logbook = $this->actingAs($this->mhs)->get(route('logbook.create'));
+        $logbook->assertOk()
+            ->assertSee('Form Entri Logbook')
+            ->assertSee('Ringkasan Entri')
+            ->assertSee('data-autosave-panel="lb-create"', false);
+
+        $revisi = $this->actingAs($this->mhs)->get(route('revisi.create'));
+        $revisi->assertOk()
+            ->assertSee('Ringkasan Revisi')
+            ->assertSee('data-autosave-panel="lb-revisi"', false)
+            ->assertSee('data-step-status="4"', false);
+
+        foreach ([$logbook, $revisi] as $response) {
+            $this->assertSame(1, preg_match_all('/<input\s+type="file"(?=\s|>)/', $response->getContent()));
+        }
+    }
+
     public function test_revision_is_linked_to_parent_and_copies_review_assignment(): void
     {
         $this->entrySubmitted->update([

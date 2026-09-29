@@ -15,6 +15,14 @@
     <x-slot:actions>{!! $actionLinks !!}</x-slot:actions>
 </x-page-header>
 
+    @if ($pendingMaterialsCount > 0)
+        <a href="{{ route('materials-review.index') }}" class="flex flex-wrap items-center gap-3 rounded-xl border border-status-pending/40 bg-status-pending/10 px-4 py-3 text-sm hover:bg-status-pending/15 transition-colors">
+            <span class="material-symbols-outlined icon-md text-status-pending">rate_review</span>
+            <span class="flex-1 text-text-primary">Ada <strong>{{ $pendingMaterialsCount }} bahan menunggu review</strong> (logbook, revisi, atau seminar). Anda dapat meninjaunya kapan saja.</span>
+            <span class="font-semibold text-status-pending">Lihat Antrean →</span>
+        </a>
+    @endif
+
     {{-- ===== Ringkasan Aksi Hari Ini ===== --}}
     <div class="card p-6">
         <div class="flex items-center gap-3 mb-4">

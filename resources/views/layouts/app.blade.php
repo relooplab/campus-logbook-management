@@ -242,11 +242,15 @@
                 @endif
             @elseif ($showDosenMenu)
                 <div class="{{ $groupLabel }}">Bimbingan</div>
-<a href="{{ route('dosen.mahasiswa-saya') }}" class="{{ $navLink }} {{ $active('dosen.mahasiswa-saya') }}">
+                <a href="{{ route('dosen.mahasiswa-saya') }}" class="{{ $navLink }} {{ $active('dosen.mahasiswa-saya') }}">
                     <span class="material-symbols-outlined icon-md">group</span>
                     <span class="sidebar-label">Mahasiswa Saya</span>
                 </a>
                 <a href="{{ route('logbook.index') }}" class="{{ $navLink }} {{ $active('logbook.index') }}">
+                    <span class="material-symbols-outlined icon-md">history</span>
+                    <span class="sidebar-label">Riwayat Bimbingan</span>
+                </a>
+                <a href="{{ route('materials-review.index') }}" class="{{ $navLink }} {{ $active('materials-review.*') }}">
                     <span class="material-symbols-outlined icon-md text-status-pending">inbox</span>
                     <span class="sidebar-label">Antrean Review</span>
                 </a>

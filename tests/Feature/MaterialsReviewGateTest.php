@@ -11,16 +11,16 @@ use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 /**
- * Fitur "antrean review bahan": dosen diarahkan ke halaman antrean dari
- * dashboard selama masih ada bahan mahasiswa yang belum ditinjau
- * (logbook/revisi submitted, seminar belum dibaca).
+ * Antrean review bahan adalah pengingat, bukan penghalang dashboard dosen.
  */
 class MaterialsReviewGateTest extends TestCase
 {
     use DatabaseTransactions;
 
     private User $dosen;
+
     private User $mhs;
+
     private MahasiswaTa $ta;
 
     protected function setUp(): void
@@ -60,7 +60,7 @@ class MaterialsReviewGateTest extends TestCase
         ]);
     }
 
-    public function test_dosen_diarahkan_ke_antrean_saat_ada_logbook_belum_ditinjau(): void
+    public function test_dashboard_tetap_terbuka_saat_ada_logbook_belum_ditinjau(): void
     {
         $pending = LogbookEntry::create([
             'mahasiswa_ta_id' => $this->ta->id,
@@ -74,7 +74,12 @@ class MaterialsReviewGateTest extends TestCase
 
         $this->actingAs($this->dosen)
             ->get(route('dashboard'))
-            ->assertRedirect(route('materials-review.index'));
+            ->assertOk()
+            ->assertSee('1 bahan menunggu review')
+            ->assertSeeInOrder([
+                route('logbook.index'), 'Riwayat Bimbingan',
+                route('materials-review.index'), 'Antrean Review',
+            ]);
 
         // Halaman antrean menampilkan logbook pending.
         $this->actingAs($this->dosen)
@@ -83,7 +88,7 @@ class MaterialsReviewGateTest extends TestCase
             ->assertSee('Bimbingan 1');
     }
 
-    public function test_dosen_diarahkan_ke_antrean_saat_ada_seminar_belum_dibaca(): void
+    public function test_dashboard_tetap_terbuka_saat_ada_seminar_belum_dibaca(): void
     {
         SeminarSubmission::create([
             'mahasiswa_ta_id' => $this->ta->id,
@@ -98,7 +103,8 @@ class MaterialsReviewGateTest extends TestCase
 
         $this->actingAs($this->dosen)
             ->get(route('dashboard'))
-            ->assertRedirect(route('materials-review.index'));
+            ->assertOk()
+            ->assertSee('1 bahan menunggu review');
 
         $this->actingAs($this->dosen)
             ->get(route('materials-review.index'))
@@ -110,7 +116,8 @@ class MaterialsReviewGateTest extends TestCase
     {
         $this->actingAs($this->dosen)
             ->get(route('dashboard'))
-            ->assertOk();
+            ->assertOk()
+            ->assertDontSee('bahan menunggu review');
     }
 
     public function test_bahan_sudah_ditinjau_tidak_memicu_redirect(): void
