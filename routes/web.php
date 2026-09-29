@@ -287,6 +287,8 @@ Route::middleware(['auth', 'ensure.dosen.decision', 'ensure.dosen.affiliation', 
     Route::get('/logbook/create', [LogbookController::class, 'create'])->name('logbook.create');
     Route::post('/logbook', [LogbookController::class, 'store'])->name('logbook.store');
     Route::get('/logbook/create-revisi', [LogbookController::class, 'createRevisi'])->name('logbook.create-revisi');
+    // Alias: alamat ringkas untuk halaman yang sama (nama route lama tetap dipakai).
+    Route::get('/revisi/create', [LogbookController::class, 'createRevisi'])->name('revisi.create');
     Route::post('/logbook/revisi', [LogbookController::class, 'storeRevisi'])->name('logbook.store-revisi');
     Route::get('/logbook/feedback', [LogbookController::class, 'feedback'])->name('logbook.feedback');
     Route::put('/logbook/{logbook}/feedback-note', [LogbookController::class, 'updateFeedbackNote'])->name('logbook.feedback-note');

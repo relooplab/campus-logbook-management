@@ -13,6 +13,7 @@ import {
 import SelectionTip from './pdf/SelectionTip.jsx';
 import AnnotationSidebar from './pdf/AnnotationSidebar.jsx';
 import { useAnnotationControls } from './pdf/HighlightToolbar.jsx';
+import { capturePdfPosition, restorePdfPosition } from './pdf/viewPosition.js';
 import {
   buildPayloadFromSelection,
   statusColor,
@@ -99,6 +100,8 @@ function HighlighterView({
   hasNext,
   areaMode,
   scale,
+  initialPage,
+  onPageChange,
   onScaleChange,
   onSaveSelection,
   onDocumentReady,
@@ -170,6 +173,8 @@ function HighlighterView({
           enableAreaSelection={() => areaMode}
           areaSelectionMode={areaMode}
           pdfScaleValue={scale}
+          initialPage={initialPage}
+          onPageChange={onPageChange}
           onZoomChange={(s) => onScaleChange(Math.min(4, Math.max(0.1, Math.round(s * 100) / 100)))}
           onScrollAway={resetHash}
           utilsRef={(u) => {
@@ -221,6 +226,27 @@ function PdfViewerApp() {
   searchQueryRef.current = searchQuery;
 
   const utilsRef = useRef(null);
+  const positionsRef = useRef({ draft: null, catatan: null });
+  const pendingRestoreRef = useRef(null);
+
+  function switchFile(type) {
+    if (type === activeType) return;
+    positionsRef.current[activeType] = capturePdfPosition(utilsRef.current?.getViewer()) || positionsRef.current[activeType];
+    pendingRestoreRef.current = positionsRef.current[type] ? { type, position: positionsRef.current[type] } : null;
+    setActiveType(type);
+  }
+
+  const restorePending = useCallback((page) => {
+    const pending = pendingRestoreRef.current;
+    if (!pending || pending.type !== activeType || pending.position.page !== page) return;
+    const viewer = utilsRef.current?.getViewer();
+    if (!viewer || !viewer.pagesCount) return;
+    // PDF.js may adjust the scroll position while it lays out the page/zoom.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (pendingRestoreRef.current !== pending) return;
+      if (restorePdfPosition(viewer, pending.position)) pendingRestoreRef.current = null;
+    }));
+  }, [activeType]);
 
   const pdfUrl = activeType === 'catatan' ? catatanUrl : draftUrl;
 
@@ -316,6 +342,9 @@ function PdfViewerApp() {
     const bus = utils?.getEventBus();
     if (!bus) return;
     setSearchReady(true);
+    const restoreFirstPage = () => restorePending(1);
+    bus.on('pagesinit', restoreFirstPage);
+    if (utils.getViewer()?.pagesCount) restoreFirstPage();
     const onCount = (e) => {
       if (!searchQueryRef.current.trim()) return;
       if (e.rawQuery != null && e.rawQuery !== searchQueryRef.current) return;
@@ -331,9 +360,10 @@ function PdfViewerApp() {
     return () => {
       bus.off('updatefindmatchescount', onCount);
       bus.off('updatefindcontrolstate', onCount);
+      bus.off('pagesinit', restoreFirstPage);
       utils.clearSearch();
     };
-  }, []);
+  }, [restorePending]);
 
   // ---------------------------------------------------------------- muat anotasi
   useEffect(() => {
@@ -348,8 +378,8 @@ function PdfViewerApp() {
     setSearchQuery('');
     setSearchCount(null);
     setSearchReady(false);
-    setSpread(0);
-    setScale('page-width');
+    setSpread(positionsRef.current[activeType]?.spread ?? 0);
+    setScale(positionsRef.current[activeType]?.scale ?? 'page-width');
     utilsRef.current = null;
     if (!pdfUrl) {
       setError('Tidak ada file PDF untuk ditampilkan.');
@@ -430,6 +460,7 @@ function PdfViewerApp() {
   }, [getAnnotationById, scrollToAnnotation]);
 
   function openAnnotation(a) {
+    pendingRestoreRef.current = null;
     const next = `#highlight-${a.id}`;
     if (document.location.hash === next) {
       setScrolledId(String(a.id));
@@ -611,12 +642,12 @@ function PdfViewerApp() {
           <ListTree className="h-3.5 w-3.5" />
         </button>
         <div className="flex items-center gap-0.5 rounded-md bg-bg-panel p-0.5 shrink-0" role="group" aria-label="File">
-          <button onClick={() => setActiveType('draft')}
+          <button onClick={() => switchFile('draft')}
             className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${activeType === 'draft' ? 'bg-brand text-white shadow' : 'hover:bg-bg-hover'}`}>
             Draft
           </button>
           {hasCatatan && (
-            <button onClick={() => setActiveType('catatan')}
+            <button onClick={() => switchFile('catatan')}
               className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${activeType === 'catatan' ? 'bg-brand text-white shadow' : 'hover:bg-bg-hover'}`}>
               Catatan
             </button>
@@ -801,6 +832,8 @@ function PdfViewerApp() {
                   hasNext={unrespondedDosen.length > 0}
                   areaMode={areaMode}
                   scale={scale}
+                  initialPage={positionsRef.current[activeType]?.page}
+                  onPageChange={restorePending}
                   onScaleChange={setScale}
                   onSaveSelection={saveAnnotation}
                   onDocumentReady={setNumPages}

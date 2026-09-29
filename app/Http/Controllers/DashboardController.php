@@ -17,16 +17,9 @@ class DashboardController extends Controller
     {
     }
 
-    public function __invoke(Request $request): View|\Illuminate\Http\RedirectResponse
+    public function __invoke(Request $request): View
     {
         $user = $request->user();
-
-        // Arahkan dosen ke antrean review bila ada bahan mahasiswa yang belum
-        // ditinjau (logbook/revisi submitted, seminar belum dibaca), sebelum
-        // memakai dashboard.
-        if ($user->isDosen() && app(\App\Services\MaterialsReviewQueue::class)->countFor($user) > 0) {
-            return redirect()->route('materials-review.index');
-        }
 
         if ($user->isAdmin()) {
             return $this->adminDashboard($user);
@@ -59,6 +52,8 @@ class DashboardController extends Controller
 
     private function dosenDashboard(User $user): View
     {
+        $pendingMaterialsCount = app(\App\Services\MaterialsReviewQueue::class)->countFor($user);
+
         // TA where the dosen is pembimbing 1/2 atau penguji 1/2 (sudah disetujui).
         $tas = MahasiswaTa::where(fn ($q) => $q->where('pembimbing_1_id', $user->id)
             ->orWhere('pembimbing_2_id', $user->id)
@@ -151,7 +146,7 @@ class DashboardController extends Controller
 
         return view('dashboard.dosen', compact(
             'tas', 'queue', 'perTa', 'healthCount', 'stats',
-            'pendingRegistrations', 'needsAttention',
+            'pendingRegistrations', 'needsAttention', 'pendingMaterialsCount',
             'agendaTerdekat', 'submissions'
         ));
     }

@@ -49,7 +49,7 @@
 
 .detail-workspace-grid > * { min-width: 0; }
 
-@container (min-width: 980px) {
+@container (min-width: 900px) {
     .detail-workspace-grid {
         grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);
     }
@@ -65,3 +65,354 @@
 
 .detail-workspace-panel { min-width: 0; }
 .detail-workspace-card { overflow-wrap: anywhere; }
+
+/* Workspace detail: metadata stays compact, narrative text gets the width. */
+.revision-summary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: center; }
+.revision-summary-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; min-width: 0; }
+.revision-summary-fields > div { min-width: 0; }
+.revision-pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.revision-item-summary { list-style: none; }
+.revision-item-summary::-webkit-details-marker { display: none; }
+.revision-item[open] .revision-preview { display: none; }
+.revision-item[open] .revision-chevron { transform: rotate(180deg); }
+.decision-choice:has(input:checked) { border-color: rgb(var(--brand)); background: rgb(var(--brand) / .10); }
+.decision-choice:focus-within { outline: 2px solid rgb(var(--brand)); outline-offset: 2px; }
+.seminar-schedule-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.seminar-document-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
+.seminar-document-row > :first-child { flex: 1 1 220px; }
+
+@container (min-width: 900px) {
+    .revision-summary { grid-template-columns: minmax(150px, 1fr) minmax(0, 2.6fr) auto; }
+}
+@container (min-width: 1100px) {
+    .revision-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .seminar-schedule-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@container (max-width: 899px) {
+    .revision-summary-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container (max-width: 620px) {
+    .revision-summary-fields, .revision-pair { grid-template-columns: minmax(0, 1fr); }
+}
+@container (max-width: 380px) {
+    .seminar-schedule-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Profile pages use the existing workspace width and semantic theme surfaces. */
+.profile-workspace { width: 100%; max-width: 1600px; margin-inline: auto; container-type: inline-size; }
+.profile-workspace-grid, .academic-workspace-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+.profile-workspace-grid > *, .academic-workspace-grid > * { min-width: 0; }
+@container (min-width: 800px) {
+    .profile-workspace-grid { grid-template-columns: minmax(260px, 300px) minmax(0, 1fr); }
+}
+@container (min-width: 950px) {
+    .academic-workspace-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); }
+    .academic-workspace-panel { position: sticky; top: 80px; align-self: start; }
+}
+
+/* ============================================================
+   Form workspace — Tambah Entri Logbook & Entri Revisi.
+   Memakai lebar kerja, token warna, radius, dan tipografi yang
+   sama dengan halaman workspace lain (light + dark).
+   ============================================================ */
+.form-workspace {
+    width: 100%;
+    max-width: 1600px;
+    margin-inline: auto;
+    container-type: inline-size;
+}
+
+.form-workspace-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.form-workspace-grid > * { min-width: 0; }
+
+.form-workspace-column { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.form-workspace-panel { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+.form-workspace-card { overflow-wrap: anywhere; }
+
+@container (min-width: 1000px) {
+    .form-workspace-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); gap: 24px; }
+
+    .form-workspace-panel {
+        position: sticky;
+        top: 80px;
+        align-self: start;
+        max-height: calc(100dvh - 96px);
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+}
+
+.form-card-head { display: flex; align-items: flex-start; gap: 12px; }
+.form-card-head + * { margin-top: 20px; }
+
+/* ---------- Field: label kiri, kontrol kanan (desktop) ---------- */
+.form-field { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; min-width: 0; }
+.form-field + .form-field { margin-top: 18px; }
+.form-field-body { min-width: 0; }
+
+.form-field-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: rgb(var(--text-secondary));
+}
+
+.form-field-hint { margin-top: 6px; font-size: 12px; line-height: 1.4; color: rgb(var(--text-secondary)); }
+.form-field-error { margin-top: 6px; font-size: 12px; line-height: 1.4; color: rgb(var(--status-danger)); }
+
+@container (min-width: 640px) {
+    .form-field { grid-template-columns: minmax(150px, 200px) minmax(0, 1fr); gap: 16px; }
+    .form-field > .form-field-label { padding-top: 9px; }
+
+    .form-field--stack { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+    .form-field--stack > .form-field-label { padding-top: 0; }
+}
+
+/* ---------- Kontrol form (token tema) ---------- */
+.form-control {
+    width: 100%;
+    border-radius: var(--radius-control);
+    border: 1px solid rgb(var(--border));
+    background: rgb(var(--bg-surface));
+    color: rgb(var(--text-primary));
+    padding: 9px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.form-control::placeholder { color: rgb(var(--text-secondary) / .85); }
+
+.form-control:hover:not(:disabled):not([readonly]) { border-color: rgb(var(--brand) / .45); }
+
+.form-control:focus,
+.form-control:focus-visible {
+    outline: none;
+    border-color: rgb(var(--brand));
+    box-shadow: 0 0 0 3px rgb(var(--brand) / .22);
+}
+
+.form-control:disabled,
+.form-control[readonly] {
+    background: rgb(var(--bg-panel));
+    color: rgb(var(--text-secondary));
+    cursor: not-allowed;
+}
+
+select.form-control { padding-right: 34px; }
+
+/* Field read-only sebagai informasi, bukan input terlihat editable. */
+.form-static {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: var(--radius-control);
+    border: 1px solid rgb(var(--border));
+    background: rgb(var(--bg-panel));
+    color: rgb(var(--text-primary));
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* ---------- Editor Ringkasan Perbaikan (toolbar menempel) ---------- */
+.editor-shell {
+    border: 1px solid rgb(var(--brand) / .35);
+    border-radius: var(--radius-control);
+    background: rgb(var(--bg-surface));
+    overflow: hidden;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.editor-shell:focus-within {
+    border-color: rgb(var(--brand));
+    box-shadow: 0 0 0 3px rgb(var(--brand) / .22);
+}
+
+.editor-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    border-bottom: 1px solid rgb(var(--border));
+    background: rgb(var(--bg-panel));
+}
+
+.editor-toolbar button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgb(var(--text-secondary));
+    min-height: 34px;
+}
+
+.editor-toolbar button:hover { background: rgb(var(--bg-hover)); color: rgb(var(--text-primary)); }
+.editor-toolbar button:focus-visible { outline: 2px solid rgb(var(--brand)); outline-offset: 1px; }
+
+.editor-textarea {
+    display: block;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: rgb(var(--text-primary));
+    padding: 13px 14px;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 170px;
+}
+
+.editor-textarea:focus { outline: none; }
+.editor-textarea::placeholder { color: rgb(var(--text-secondary) / .85); }
+
+/* ---------- Unggah file (input native tetap di balik kontrol ini) ---------- */
+.upload-field {
+    border: 1px dashed rgb(var(--border));
+    border-radius: var(--radius-card);
+    background: rgb(var(--bg-panel));
+    padding: 16px;
+    transition: border-color .15s ease, background .15s ease;
+}
+
+.upload-field:focus-within { border-color: rgb(var(--brand) / .55); }
+.upload-field--filled { border-style: solid; border-color: rgb(var(--border)); background: rgb(var(--bg-surface)); }
+.upload-field--invalid { border-color: rgb(var(--status-danger) / .6); }
+
+.upload-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.upload-row > .upload-row-text { flex: 1 1 200px; min-width: 0; }
+
+/* ---------- Stepper wizard revisi ---------- */
+.stepper { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding: 2px 0 6px; }
+.stepper-item { display: flex; align-items: center; flex: 1 1 0; min-width: 200px; }
+
+.stepper-button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    text-align: left;
+    min-height: 48px;
+}
+
+.stepper-button:focus-visible { outline: 2px solid rgb(var(--brand)); outline-offset: 2px; }
+
+.stepper-marker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    border: 1px solid rgb(var(--border));
+    background: rgb(var(--bg-panel));
+    color: rgb(var(--text-secondary));
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.stepper-text { min-width: 0; }
+.stepper-label { display: block; font-size: 14px; font-weight: 600; color: rgb(var(--text-secondary)); }
+.stepper-desc { display: block; font-size: 12px; color: rgb(var(--text-secondary)); }
+
+.stepper-button[data-state="active"] { background: rgb(var(--brand) / .10); border-color: rgb(var(--brand) / .45); }
+.stepper-button[data-state="active"] .stepper-marker { background: rgb(var(--brand)); border-color: rgb(var(--brand)); color: #0b1420; }
+.stepper-button[data-state="active"] .stepper-label { color: rgb(var(--text-primary)); }
+
+.stepper-button[data-state="completed"] .stepper-marker {
+    background: rgb(var(--status-success) / .16);
+    border-color: rgb(var(--status-success) / .5);
+    color: rgb(var(--status-success));
+}
+.stepper-button[data-state="completed"] .stepper-label { color: rgb(var(--text-primary)); }
+.stepper-button[data-state="completed"] .stepper-number { display: none; }
+.stepper-button:not([data-state="completed"]) .stepper-check { display: none; }
+
+.stepper-line { flex: 1 1 auto; min-width: 10px; height: 2px; margin-inline: 4px; border-radius: 999px; background: rgb(var(--border)); }
+.stepper-line[data-state="completed"] { background: rgb(var(--status-success) / .55); }
+
+@media (max-width: 767px) {
+    .stepper-desc { display: none; }
+    .stepper-item { min-width: 148px; }
+}
+
+/* ---------- Progress ringkas di panel konteks ---------- */
+.progress-segments { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.progress-segment { height: 6px; border-radius: 999px; background: rgb(var(--border)); }
+.progress-segment[data-state="active"] { background: rgb(var(--brand)); }
+.progress-segment[data-state="completed"] { background: rgb(var(--brand) / .45); }
+
+/* ---------- Baris ringkasan (kunci–nilai) ---------- */
+.summary-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgb(var(--border));
+}
+
+.summary-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.summary-row:first-child { padding-top: 0; }
+
+.summary-key { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgb(var(--text-secondary)); flex-shrink: 0; }
+.summary-value { font-size: 13px; font-weight: 500; color: rgb(var(--text-primary)); text-align: right; overflow-wrap: anywhere; }
+
+/* ---------- Kartu perbaikan (step 2 revisi) ---------- */
+.perbaikan-card {
+    border: 1px solid rgb(var(--border));
+    border-radius: var(--radius-control);
+    background: rgb(var(--bg-panel));
+    overflow: hidden;
+}
+
+.perbaikan-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 14px; }
+.perbaikan-head-text { flex: 1 1 160px; min-width: 0; }
+.perbaikan-number { font-size: 13px; font-weight: 600; color: rgb(var(--text-primary)); }
+.perbaikan-summary { display: block; font-size: 12px; color: rgb(var(--text-secondary)); overflow-wrap: anywhere; }
+.perbaikan-body { display: flex; flex-direction: column; gap: 14px; padding: 14px; border-top: 1px solid rgb(var(--border)); }
+
+.perbaikan-card[data-collapsed="1"] .perbaikan-body { display: none; }
+.perbaikan-card:not([data-collapsed="1"]) .perbaikan-summary { display: none; }
+
+.perbaikan-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: rgb(var(--text-secondary)); padding: 6px 8px; border-radius: 8px; min-height: 34px; }
+.perbaikan-toggle:hover { background: rgb(var(--bg-hover)); color: rgb(var(--text-primary)); }
+.perbaikan-toggle:focus-visible { outline: 2px solid rgb(var(--brand)); outline-offset: 1px; }
+.perbaikan-toggle .material-symbols-outlined { transition: transform .2s ease; }
+.perbaikan-card:not([data-collapsed="1"]) .perbaikan-toggle .material-symbols-outlined { transform: rotate(180deg); }
+
+/* ---------- Baris aksi form ---------- */
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid rgb(var(--border));
+}
+
+.form-actions-end { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-left: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+    .perbaikan-toggle .material-symbols-outlined,
+    .form-control,
+    .editor-shell,
+    .upload-field { transition: none; }
+}
