@@ -187,59 +187,98 @@ class DashboardController extends Controller
         return view('dashboard.dosen-mahasiswa-list', compact('list', 'status', 'user'));
     }
 
-    /**
-     * Halaman "Mahasiswa Saya" dosen — daftar mahasiswa yang dibimbing (pembimbing 1/2)
-     * atau diuji (penguji 1/2), dikelompokkan, baik TA maupun KP. Setiap entri
-     * disertai label peran dosen (bisa lebih dari satu jika dosen merangkap).
-     * Agar tidak duplikat, mahasiswa yang dosen BIMBING tampil di seksi Dibimbing
-     * saja (peran penguji ditampilkan sebagai chip tambahan), bukan muncul di
-     * kedua seksi.
-     */
+    /** Workspace mahasiswa dosen: satu baris per program TA/KP, dengan semua peran terkait. */
     public function mahasiswaSaya(Request $request): View
     {
         $user = $request->user();
         abort_unless($user->isDosen(), 403, 'Halaman ini khusus dosen.');
 
-        $with = ['mahasiswa', 'pembimbing1', 'pembimbing2', 'penguji1', 'penguji2'];
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'program' => ['nullable', 'in:'.implode(',', MahasiswaTa::JENISES)],
+            'fase' => ['nullable', 'string', 'max:100'],
+            'status' => ['nullable', 'in:'.implode(',', MahasiswaTa::STATUS_TA)],
+            'peran' => ['nullable', 'in:pembimbing,penguji'],
+            'tab' => ['nullable', 'in:semua,pembimbing,penguji'],
+            'view' => ['nullable', 'in:daftar,fase'],
+        ]);
+        $filters['search'] = trim($filters['search'] ?? '');
+        $filters['tab'] = $filters['tab'] ?? 'semua';
+        $filters['view'] = $filters['view'] ?? 'daftar';
 
-        // Ambil semua TA di mana dosen terkait (bimbing/uji), lalu anotasi peran.
-        $all = MahasiswaTa::where(function ($q) use ($user) {
-            $q->where('pembimbing_1_id', $user->id)
+        $base = MahasiswaTa::query()
+            ->where(fn ($q) => $q->where('pembimbing_1_id', $user->id)
                 ->orWhere('pembimbing_2_id', $user->id)
                 ->orWhere('penguji_1_id', $user->id)
-                ->orWhere('penguji_2_id', $user->id);
-        })
-            ->with($with)
-            ->latest()
-            ->get()
-            ->map(function ($ta) use ($user) {
-                $roles = [];
-                if ($ta->pembimbing_1_id === $user->id) {
-                    $roles[] = 'Pembimbing 1';
-                }
-                if ($ta->pembimbing_2_id === $user->id) {
-                    $roles[] = 'Pembimbing 2';
-                }
-                if ($ta->penguji_1_id === $user->id) {
-                    $roles[] = 'Penguji 1';
-                }
-                if ($ta->penguji_2_id === $user->id) {
-                    $roles[] = 'Penguji 2';
-                }
-                $ta->my_roles = $roles;
+                ->orWhere('penguji_2_id', $user->id));
+        $supervised = fn ($q) => $q->where('pembimbing_1_id', $user->id)->orWhere('pembimbing_2_id', $user->id);
+        $examined = fn ($q) => $q->where('penguji_1_id', $user->id)->orWhere('penguji_2_id', $user->id);
 
-                return $ta;
-            });
+        $metrics = [
+            'total' => (clone $base)->count(),
+            'pembimbing' => (clone $base)->where($supervised)->count(),
+            'penguji' => (clone $base)->where($examined)->count(),
+            'aktif' => (clone $base)->where('status_ta', MahasiswaTa::STATUS_AKTIF)->count(),
+            'nonaktif' => (clone $base)->where('status_ta', MahasiswaTa::STATUS_NONAKTIF)->count(),
+        ];
 
-        // "Dibimbing" = dosen adalah pembimbing (peran penguji ditampilkan sebagai chip).
-        $dibimbing = $all->filter(fn ($ta) => in_array('Pembimbing 1', $ta->my_roles, true)
-            || in_array('Pembimbing 2', $ta->my_roles, true))->values();
+        $programs = (clone $base)->distinct()->pluck('jenis')->all();
+        $statuses = (clone $base)->distinct()->pluck('status_ta')->all();
+        $phases = (clone $base)->select('jenis', 'fase')->distinct()->get();
+        $phaseOptions = [];
+        foreach (MahasiswaTa::JENISES as $jenis) {
+            $definitions = $jenis === MahasiswaTa::JENIS_KP ? MahasiswaTa::FASES_KP : MahasiswaTa::FASES;
+            foreach ($definitions as $key => $label) {
+                if ($phases->contains(fn ($phase) => $phase->jenis === $jenis && $phase->fase === $key)) {
+                    $phaseOptions[$jenis.':'.$key] = strtoupper($jenis).' · '.$label;
+                }
+            }
+        }
 
-        // "Diuji" = dosen HANYA penguji (bukan pembimbing) — agar tidak duplikat.
-        $diuji = $all->filter(fn ($ta) => ! in_array('Pembimbing 1', $ta->my_roles, true)
-            && ! in_array('Pembimbing 2', $ta->my_roles, true))->values();
+        if (! empty($filters['fase']) && ! isset($phaseOptions[$filters['fase']])) {
+            abort(422, 'Fase tidak tersedia untuk mahasiswa Anda.');
+        }
 
-        return view('dashboard.dosen-mahasiswa-saya', compact('dibimbing', 'diuji', 'user'));
+        $query = clone $base;
+        if ($filters['search'] !== '') {
+            $query->whereHas('mahasiswa', fn ($q) => $q->where('name', 'like', '%'.$filters['search'].'%')
+                ->orWhere('nim', 'like', '%'.$filters['search'].'%'));
+        }
+        if (! empty($filters['program'])) {
+            $query->where('jenis', $filters['program']);
+        }
+        if (! empty($filters['fase']) && isset($phaseOptions[$filters['fase']])) {
+            [$jenis, $fase] = explode(':', $filters['fase'], 2);
+            $query->where('jenis', $jenis)->where('fase', $fase);
+        }
+        if (! empty($filters['status'])) {
+            $query->where('status_ta', $filters['status']);
+        }
+        if ($filters['tab'] === 'pembimbing' || ($filters['peran'] ?? null) === 'pembimbing') {
+            $query->where($supervised);
+        }
+        if ($filters['tab'] === 'penguji' || ($filters['peran'] ?? null) === 'penguji') {
+            $query->where($examined);
+        }
+
+        // Distribution is over all matching programs, not only the current page.
+        $distribution = (clone $query)->select('jenis', 'fase')
+            ->selectRaw('COUNT(*) as total')->groupBy('jenis', 'fase')->get()
+            ->keyBy(fn ($row) => $row->jenis.':'.$row->fase);
+        // NamingService resolves labels via the student's university affiliation.
+        $students = $query->with('mahasiswa.universities')->orderByDesc('id')->paginate(20)->withQueryString();
+        $students->getCollection()->each(function ($ta) use ($user) {
+            $ta->my_roles = collect([
+                'Pembimbing 1' => $ta->pembimbing_1_id === $user->id,
+                'Pembimbing 2' => $ta->pembimbing_2_id === $user->id,
+                'Penguji 1' => $ta->penguji_1_id === $user->id,
+                'Penguji 2' => $ta->penguji_2_id === $user->id,
+            ])->filter()->keys()->all();
+        });
+
+        return view('dashboard.dosen-mahasiswa-saya', compact(
+            'students', 'filters', 'metrics', 'programs', 'statuses', 'phaseOptions', 'distribution', 'user'
+        ));
     }
 
     /**

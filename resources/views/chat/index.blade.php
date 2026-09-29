@@ -1,70 +1,46 @@
-@extends("layouts.app") @section("title", "Chat") @section("content")
-<div class="max-w-4xl mx-auto space-y-4">
-    <div class="flex items-center justify-between">
-        <h1 class="text-xl font-bold">Chat</h1> <a href="{{ route("dashboard") }}"
-            class="px-3 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm">← Dashboard</a>
+@extends('layouts.app')
+@section('title', 'Chat')
+@section('content')
+<div class="space-y-4">
+    <x-page-header title="Chat" :description="$user->isDosen() ? 'Komunikasi dengan mahasiswa bimbingan dan ujian Anda.' : ($user->isMahasiswa() ? 'Komunikasi dengan dosen pembimbing dan penguji Anda.' : 'Lanjutkan percakapan Anda.')">
+        <x-slot:actions><a href="{{ route('dashboard') }}" class="btn-secondary inline-flex items-center px-4 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">← Dashboard</a></x-slot:actions>
+    </x-page-header>
+    <div class="grid min-w-0 gap-4 md:grid-cols-[minmax(300px,380px)_minmax(0,1fr)] lg:gap-5" style="height: clamp(440px, calc(100dvh - 200px), 790px)">
+        <section class="card flex min-h-0 min-w-0 flex-col overflow-hidden {{ $conversation ? 'hidden md:flex' : 'flex' }}" aria-label="Daftar percakapan">
+            <div class="border-b border-border p-4">
+                <h2 class="font-heading text-base font-bold">Percakapan</h2>
+                <form method="GET" action="{{ $conversation ? route('chat.show', $conversation) : route('chat.index') }}" class="mt-3 flex gap-2">
+                    <label for="chat-search" class="sr-only">Cari nama atau NIM</label>
+                    <input id="chat-search" name="search" type="search" value="{{ $search }}" placeholder="{{ $user->isDosen() ? 'Cari nama mahasiswa atau NIM...' : 'Cari nama atau NIM...' }}" class="min-w-0 flex-1 rounded-control border border-border bg-bg-panel px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand/50">
+                    @if ($filter !== 'semua') <input type="hidden" name="filter" value="{{ $filter }}"> @endif
+                    <button class="btn-secondary px-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand" aria-label="Cari percakapan"><span class="material-symbols-outlined icon-sm" aria-hidden="true">search</span></button>
+                </form>
+                <nav id="chat-filters" class="mt-3 flex flex-wrap gap-1.5" aria-label="Filter percakapan">
+                    @foreach (($user->isDosen() ? ['semua' => 'Semua', 'dibimbing' => 'Dibimbing', 'diuji' => 'Diuji', 'belum-dibaca' => 'Belum Dibaca'] : ['semua' => 'Semua', 'belum-dibaca' => 'Belum Dibaca']) as $key => $label)
+                        <a href="{{ $conversation ? route('chat.show', ['conversation' => $conversation, 'filter' => $key, 'search' => $search]) : route('chat.index', ['filter' => $key, 'search' => $search]) }}" @if ($filter === $key) aria-current="page" @endif class="rounded-control px-2.5 py-1.5 text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand {{ $filter === $key ? 'bg-brand-light text-brand' : 'bg-bg-panel text-text-secondary hover:bg-bg-hover hover:text-text-primary' }}">{{ $label }} ({{ $counts[$key] }})</a>
+                    @endforeach
+                </nav>
+            </div>
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain" id="conversation-list">
+                @forelse ($rows as $row)
+                    @include('chat.partials.conversation-row', ['row' => $row])
+                @empty
+                    <div class="p-8 text-center text-sm text-text-secondary">{{ $search !== '' || $filter !== 'semua' ? 'Tidak ada mahasiswa atau percakapan yang cocok.' : ($user->isDosen() ? 'Belum ada mahasiswa yang dapat dihubungi.' : 'Belum ada percakapan atau dosen yang dapat dihubungi.') }}</div>
+                @endforelse
+            </div>
+        </section>
+        <section class="card min-h-0 min-w-0 flex-col overflow-hidden {{ $conversation ? 'flex' : 'hidden md:flex' }}" aria-label="Percakapan aktif">
+            @if ($conversation)
+                @include('chat.partials.thread')
+            @else
+                <div class="flex h-full flex-col items-center justify-center p-8 text-center">
+                    <span class="icon-chip h-14 w-14"><span class="material-symbols-outlined text-3xl" aria-hidden="true">forum</span></span>
+                    <h2 class="mt-4 font-heading text-lg font-bold">Pilih percakapan</h2>
+                    <p class="mt-2 max-w-sm text-sm text-text-secondary">Pilih {{ $user->isDosen() ? 'mahasiswa' : 'kontak' }} dari daftar di sebelah kiri untuk memulai atau melanjutkan percakapan.</p>
+                </div>
+            @endif
+        </section>
     </div>
-    @if ($user->isDosen() && $supervised->isNotEmpty())
-        <div class="bg-bg-surface rounded-xl border border-border p-4">
-            <div class="flex items-center justify-between mb-3">
-                <h2 class="font-semibold">Mahasiswa Bimbingan Anda</h2>
-                <span class="text-xs text-text-secondary">{{ $supervised->count() }} mahasiswa</span>
-            </div>
-            <div class="space-y-2">
-                @foreach ($supervised as $ta)
-                    <div class="flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-border hover:bg-bg-hover/50">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <span class="h-9 w-9 rounded-full bg-brand text-[#0b1420] flex items-center justify-center text-sm font-bold flex-shrink-0">
-                                @if ($ta->mahasiswa?->photoUrl())
-                                    <img src="{{ $ta->mahasiswa->photoUrl() }}" class="h-full w-full object-cover rounded-full" alt="">
-                                @else
-                                    {{ $ta->mahasiswa?->initials() }}
-                                @endif
-                            </span>
-                            <div class="min-w-0">
-                                <p class="font-medium text-sm truncate">{{ $ta->mahasiswa?->name ?? 'Mahasiswa' }}</p>
-                                <p class="text-xs text-text-secondary truncate">{{ $ta->jenisLabel() }} — {{ $ta->judul_ta }}</p>
-                            </div>
-                        </div>
-                        <a href="{{ route('chat.start', ['user' => $ta->mahasiswa?->id, 'ta' => $ta->id]) }}"
-                            class="flex-shrink-0 px-3 py-1.5 rounded-lg bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Chat</a>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    @endif
-    @if ($conversations->isEmpty())
-        <div class="px-4 py-10 rounded-lg bg-bg-surface border border-border text-center text-text-secondary"> Belum ada
-            percakapan. @if ($user->isDosen())Mulai dari daftar mahasiswa bimbingan di atas.@elseMulai dari halaman detail dosen pembimbing Anda.@endif </div>
-    @else
-        <div class="bg-bg-surface rounded-xl border border-border overflow-hidden">
-            @foreach ($conversations as $c)
-                <a href="{{ route("chat.show", $c) }}"
-                    class="flex items-center gap-3 px-4 py-3 border-b border-border hover:bg-bg-panel hover:bg-bg-hover/50">
-                    <span
-                        class="h-10 w-10 rounded-full bg-brand text-[#0b1420] flex items-center justify-center font-bold flex-shrink-0">
-                        @if ($c->other_user?->photoUrl())
-                            <img src="{{ $c->other_user->photoUrl() }}" class="h-full w-full object-cover rounded-full"
-                                alt="">
-                        @else
-                            {{ $c->other_user?->initials() }}
-                        @endif
-                    </span>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center justify-between">
-                            <p class="font-medium">{{ $c->other_user?->name }}</p>
-                            @if ($c->unread > 0)
-                                <span
-                                    class="h-5 min-w-5 px-1 rounded-full bg-status-danger text-white text-xs flex items-center justify-center">{{ $c->unread }}</span>
-                            @endif
-                        </div>
-                        <p class="text-xs text-text-secondary">
-                            {{ $c->mahasiswaTa?->mahasiswa?->name ? "TA: " . $c->mahasiswaTa->mahasiswa->name : "" }} ·
-                            {{ $c->updated_at?->diffForHumans() }} </p>
-                    </div>
-                </a>
-            @endforeach
-        </div>
-    @endif
 </div>
 @endsection
+@section('scripts') @include('chat.partials.scripts') @endsection

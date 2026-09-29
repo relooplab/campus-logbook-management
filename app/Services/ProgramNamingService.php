@@ -23,15 +23,15 @@ class ProgramNamingService
     public function resolveConfig(MahasiswaTa $ta): ?ProgramNamingConfig
     {
         $mahasiswa = $ta->mahasiswa;
-        if (!$mahasiswa) {
+        if (! $mahasiswa) {
             return null;
         }
 
-        $affiliation = $mahasiswa->universities()
-            ->orderByDesc('user_university.is_primary')
-            ->first();
+        $affiliation = $mahasiswa->relationLoaded('universities')
+            ? $mahasiswa->universities->sortByDesc(fn ($university) => $university->pivot->is_primary)->first()
+            : $mahasiswa->universities()->orderByDesc('user_university.is_primary')->first();
 
-        if (!$affiliation) {
+        if (! $affiliation) {
             return null;
         }
 
@@ -71,7 +71,7 @@ class ProgramNamingService
      */
     public function configFor(?int $institutionId, string $scopeType, int $scopeId, string $jenis): ?ProgramNamingConfig
     {
-        if (!$institutionId) {
+        if (! $institutionId) {
             return null;
         }
 
@@ -112,7 +112,7 @@ class ProgramNamingService
         $defaults = $ta->isKp() ? MahasiswaTa::FASES_KP : MahasiswaTa::FASES;
         $config = $this->resolveConfig($ta);
 
-        if (!$config || empty($config->fase_labels)) {
+        if (! $config || empty($config->fase_labels)) {
             return $defaults;
         }
 
@@ -152,21 +152,21 @@ class ProgramNamingService
     {
         $defaults = $jenis === MahasiswaTa::JENIS_KP ? MahasiswaTa::FASES_KP : MahasiswaTa::FASES;
 
-        if (!$institutionId) {
+        if (! $institutionId) {
             return $defaults;
         }
 
         // Prodi dulu, lalu departemen.
         if ($studyProgramId) {
             $config = $this->configFor($institutionId, ProgramNamingConfig::SCOPE_STUDY_PROGRAM, $studyProgramId, $jenis);
-            if ($config && !empty($config->fase_labels)) {
+            if ($config && ! empty($config->fase_labels)) {
                 return array_merge($defaults, array_filter($config->fase_labels, fn ($v) => $v !== null && $v !== ''));
             }
         }
 
         if ($departmentId) {
             $config = $this->configFor($institutionId, ProgramNamingConfig::SCOPE_DEPARTMENT, $departmentId, $jenis);
-            if ($config && !empty($config->fase_labels)) {
+            if ($config && ! empty($config->fase_labels)) {
                 return array_merge($defaults, array_filter($config->fase_labels, fn ($v) => $v !== null && $v !== ''));
             }
         }
@@ -179,7 +179,7 @@ class ProgramNamingService
      */
     public function jenisLabelFor(?int $institutionId, string $jenis, ?int $studyProgramId = null, ?int $departmentId = null): string
     {
-        if (!$institutionId) {
+        if (! $institutionId) {
             return $jenis === MahasiswaTa::JENIS_KP ? 'KP' : 'TA';
         }
 
