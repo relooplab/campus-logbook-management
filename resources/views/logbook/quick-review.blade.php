@@ -1,262 +1,72 @@
-@extends("layouts.app") @section("title", "Quick Review") @section("content")
+@extends('layouts.app')
+@section('title', 'Quick Review')
+@section('content')
+<div class="detail-workspace space-y-5">
 @if (!$entry)
-    <div class="max-w-2xl mx-auto text-center py-16">
-        <h1 class="font-heading font-bold text-2xl text-text-primary">Quick Review</h1>
-        <p class="text-text-secondary mt-2">Tidak ada entri menunggu review. <span class="material-symbols-outlined icon-sm align-text-bottom">celebration</span></p> <a href="{{ route("dashboard") }}"
-            class="inline-block mt-4 px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">← Dashboard</a>
+    <div class="card mx-auto max-w-2xl p-8 text-center sm:p-12">
+        <span class="material-symbols-outlined icon-lg text-status-success" aria-hidden="true">task_alt</span>
+        <h1 class="mt-3 font-heading text-2xl font-bold text-text-primary">Quick Review</h1>
+        <p class="mt-2 text-sm text-text-secondary">Tidak ada item yang menunggu review.</p>
+        <a href="{{ route('dashboard') }}" class="btn-primary mt-5 inline-flex px-5 py-2.5 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">Kembali ke Dashboard</a>
     </div>
 @else
-    <div class="space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <h1 class="font-heading font-bold text-2xl text-text-primary">Quick Review <span class="text-text-secondary">(1 dari {{ $queueCount }})</span> —
-                {{ $entry->jenis === "revisi" ? "Revisi" : "Sesi " . $entry->sesi_ke }}</h1> <a
-                href="{{ route("dashboard") }}" class="px-3 py-2 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-sm font-medium">←
-                Dashboard</a>
-        </div> {{-- Ringkasan entry --}} <div class="bg-bg-surface rounded-xl border border-border p-5 space-y-3">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="font-semibold text-lg">{{ $entry->mahasiswaTa?->mahasiswa?->name }}</p>
-                    <p class="text-sm text-text-secondary">{{ $entry->mahasiswaTa?->judul_ta }}</p>
-                </div> @include("partials.status-badge", ["status" => $entry->status])
-            </div>
-            <dl class="grid sm:grid-cols-2 gap-2 text-sm">
-                <div class="px-3 py-2 rounded-xl bg-bg-panel">
-                    <dt class="text-text-secondary">Tanggal</dt>
-                    <dd>{{ ($entry->jenis === "revisi" ? $entry->tanggal_pengiriman : $entry->tanggal_bimbingan)?->format("d M Y") ?? "—" }}</dd>
-                </div>
-                <div class="px-3 py-2 rounded-xl bg-bg-panel">
-                    <dt class="text-text-secondary">Menunggu review</dt>
-                    <dd>{{ $entry->submitted_at?->diffForHumans() ?? "—" }} ({{ $entry->submitted_at?->diffInDays(now()) ?? 0 }} hari)</dd>
-                </div>
-                <div class="px-3 py-2 rounded-xl bg-bg-panel">
-                    <dt class="text-text-secondary">Topik</dt>
-                    <dd>{{ $entry->topik ?? "Revisi" }}</dd>
-                </div>
-            </dl>
-            @if ($entry->parentEntry)
-                <div class="px-3 py-2 rounded-xl bg-brand/10 border border-brand/20 text-sm">
-                    <p class="font-semibold">Revisi ke-{{ $entry->revision_round }} dari entri #{{ $entry->parentEntry->id }}</p>
-                    <p class="whitespace-pre-wrap mt-1">{{ $entry->parentEntry->feedback_dosen }}</p>
-                    <p class="text-xs text-text-secondary mt-2">Anotasi sesi sebelumnya: {{ $entry->parentEntry->comments->count() }} · sesi ini: {{ $entry->comments->count() }}</p>
-                    @if ($entry->parentEntry->comments->isNotEmpty())
-                        <div class="mt-2 space-y-1">
-                            @foreach ($entry->parentEntry->comments as $comment)
-                                <p class="text-xs"><span class="font-semibold">Hal. {{ $comment->page_number }}</span> · {{ $comment->comment }} <span class="text-text-secondary">({{ $comment->resolution_status }})</span></p>
-                            @endforeach
-                        </div>
-                    @endif
-                    <a href="{{ route("logbook.show", $entry->parentEntry) }}" class="text-brand hover:underline">Buka entri induk</a>
-                </div>
-            @endif
-            <div>
-                <h3 class="text-sm font-semibold text-text-secondary mb-1">Ringkasan Perbaikan</h3>
-                <div class="text-sm whitespace-pre-wrap">{{ $entry->progres_kendala }}</div>
-            </div>
-            @if ($entry->lampiran_path || $entry->catatan_perbaikan_path)
-                <a href="{{ route("logbook.pdf-viewer", $entry) }}" target="_blank"
-                    class="inline-block px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Lihat PDF &
-                    Anotasi</a>
-            @endif
-            @if ($entry->exceedsRevisionRoundLimit())
-                <p class="text-xs text-status-pending">Sesi revisi sudah mencapai batas perhatian. Pertimbangkan bimbingan tatap muka sebelum siklus berikutnya.</p>
-            @endif
-        </div> {{-- Feedback terakhir untuk mahasiswa ini (reuse) --}} @if ($lastFeedback)
-            <div class="bg-bg-surface rounded-xl border border-border p-4">
-                <p class="text-xs font-semibold text-text-secondary uppercase mb-1">Umpan Balik terakhir untuk mahasiswa
-                    ini</p> <button type="button" id="use-last"
-                    class="text-left text-sm hover:text-brand whitespace-pre-wrap">{{ $lastFeedback }}</button>
-            </div>
-        @endif {{-- Template feedback --}} <div
-            class="bg-bg-surface rounded-xl border border-border p-4">
-            <div class="flex items-center justify-between mb-2">
-                <p class="text-xs font-semibold text-text-secondary uppercase">Template Umpan Balik</p> <button
-                    type="button" id="new-tpl" class="text-xs text-brand hover:underline">+ Simpan feedback
-                    sebagai template</button>
-            </div>
-            <div class="flex flex-wrap gap-2" id="tpl-list">
-                @foreach ($templates as $t)
-                    <button type="button" data-body="{{ $t->body }}"
-                        class="tpl-chip px-3 py-1.5 rounded-full bg-bg-hover text-xs hover:bg-bg-hover hover:bg-bg-hover">
-                        {{ $t->title ?: \Illuminate\Support\Str::limit($t->body, 40) }} </button>
-                    @endforeach @if ($templates->isEmpty())
-                        <span class="text-xs text-text-secondary">Belum ada template.</span>
-                    @endif
-            </div>
-        </div> {{-- Form review --}} <div class="bg-bg-surface rounded-xl border border-border p-5 space-y-3">
-            <div class="flex items-center justify-between">
-                <h2 class="font-heading font-semibold text-text-primary" id="feedback-dosen-label">Umpan Balik</h2> <button type="button" id="build-feedback"
-                    class="px-4 py-2 rounded-xl bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20 transition-colors">
-                    <span class="material-symbols-outlined icon-sm align-text-bottom">bolt</span> Jadikan dari Komentar </button>
-            </div>
-            <textarea name="feedback_dosen" id="feedback_dosen" rows="4" required minlength="20" aria-labelledby="feedback-dosen-label"
-                placeholder="Tulis feedback / alasan revisi..."
-                class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">{{ old("feedback_dosen", $feedbackDraft ?? "") }}</textarea>
-            <p id="revisi-error" class="hidden text-xs text-status-danger mt-1">Umpan Balik wajib diisi minimal 20 karakter.</p>
-            <div class="flex flex-wrap gap-2">
-                <form method="POST" action="{{ route("quick-review.approve-next", $entry) }}" id="approve-form" data-pdf-opened="{{ $entry->review_opened_at || (!$entry->lampiran_path && !$entry->catatan_perbaikan_path) ? "1" : "0" }}"> @csrf <button type="submit" id="approve-btn"
-                        class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">check</span>
-                        Setujui & Next</button> </form>
-                <form method="POST" action="{{ route("quick-review.revisi-next", $entry) }}" id="revisi-form" data-pdf-opened="{{ $entry->review_opened_at || (!$entry->lampiran_path && !$entry->catatan_perbaikan_path) ? "1" : "0" }}">
-                    @csrf <input type="hidden" name="feedback_dosen" id="revisi-feedback">
-                    <button type="submit" id="revisi-btn"
-                        class="px-4 py-2 rounded-xl bg-status-pending hover:bg-status-pending/90 text-[#0b1420] text-sm font-semibold"><span class="material-symbols-outlined icon-sm align-text-bottom">autorenew</span>
-                        Revisi & Next</button>
-                </form> <a href="{{ route("logbook.show", $entry) }}"
-                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-sm font-medium">Detail
-                    penuh</a>
-            </div>
+    @php
+        $student = $entry->mahasiswaTa?->mahasiswa;
+        $isRevision = $entry->jenis === \App\Models\LogbookEntry::JENIS_REVISI;
+        $revisionRows = collect($entry->riwayat_perbaikan ?? []);
+        $completed = $revisionRows->filter(fn ($row) => ($row['status'] ?? '') === \App\Models\LogbookEntry::PERBAIKAN_SUDAH)->count();
+        $remaining = $revisionRows->count() - $completed;
+        $percentage = $revisionRows->isNotEmpty() ? (int) round($completed / $revisionRows->count() * 100) : 0;
+        $previousComments = $entry->parentEntry?->comments ?? collect();
+        $initialDecision = old('review_decision', $errors->has('feedback_dosen') ? 'revisi' : '');
+    @endphp
+    <header class="flex flex-wrap items-center justify-between gap-3">
+        <div class="min-w-0"><div class="flex flex-wrap items-center gap-3"><h1 class="font-heading text-2xl font-bold text-text-primary">Quick Review</h1><span class="badge badge-info">{{ $queueIndex + 1 }} dari {{ $queueCount }}</span></div><p class="mt-1 text-sm text-text-secondary">{{ $isRevision ? 'Revisi' : 'Logbook sesi '.$entry->sesi_ke }} · {{ $student?->name ?? 'Mahasiswa' }}</p></div>
+        <a href="{{ route('dashboard') }}" class="rounded-xl border border-border bg-bg-surface px-4 py-2 text-sm font-medium text-text-primary hover:bg-bg-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">← Dashboard</a>
+    </header>
+    <nav class="card flex flex-wrap items-center justify-between gap-3 p-3 sm:flex-nowrap" aria-label="Navigasi antrean review">
+        @if ($previousId)<a href="{{ route('quick-review.index', ['item' => $previousId]) }}" class="quick-review-navigation inline-flex min-h-10 items-center rounded-xl bg-bg-panel px-4 py-2 text-sm font-medium text-text-primary hover:bg-bg-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">← Sebelumnya</a>@else<span class="inline-flex min-h-10 items-center rounded-xl bg-bg-panel px-4 py-2 text-sm text-text-secondary opacity-60" aria-disabled="true">← Sebelumnya</span>@endif
+        <div class="order-last w-full text-center sm:order-none sm:w-auto" aria-label="Item {{ $queueIndex + 1 }} dari {{ $queueCount }}"><p class="text-sm font-semibold tabular-nums text-text-primary">{{ $queueIndex + 1 }} dari {{ $queueCount }}</p><div class="mt-1.5 h-1.5 w-32 max-w-full overflow-hidden rounded-full bg-bg-hover" role="progressbar" aria-label="Posisi antrean" aria-valuemin="0" aria-valuemax="{{ $queueCount }}" aria-valuenow="{{ $queueIndex + 1 }}"><div class="h-full rounded-full bg-brand" style="width: {{ (int) round(($queueIndex + 1) / $queueCount * 100) }}%"></div></div></div>
+        @if ($nextId)<a href="{{ route('quick-review.index', ['item' => $nextId]) }}" class="quick-review-navigation inline-flex min-h-10 items-center rounded-xl border border-brand/50 bg-brand/10 px-4 py-2 text-sm font-semibold text-brand hover:bg-brand/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">Berikutnya →</a>@else<span class="inline-flex min-h-10 items-center rounded-xl bg-bg-panel px-4 py-2 text-sm text-text-secondary opacity-60" aria-disabled="true">Berikutnya →</span>@endif
+    </nav>
+    <div class="quick-review-grid">
+        <div class="min-w-0 space-y-5">
+            <section class="card min-w-0 p-5 sm:p-6" aria-labelledby="submission-heading">
+                <div class="flex flex-wrap items-start justify-between gap-3"><h2 id="submission-heading" class="font-heading text-lg font-semibold text-text-primary">Detail Pengajuan</h2>@if ($entry->lampiran_path || $entry->catatan_perbaikan_path)<a href="{{ route('logbook.pdf-viewer', ['logbook' => $entry, 'quick_review' => 1]) }}" target="_blank" rel="noopener" class="btn-primary inline-flex min-h-10 items-center gap-2 px-4 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"><span class="material-symbols-outlined icon-sm" aria-hidden="true">picture_as_pdf</span>Buka PDF &amp; Anotasi ↗</a>@endif</div>
+                <div class="mt-5 flex min-w-0 flex-wrap items-center gap-3">@if ($student?->photoUrl())<img src="{{ $student->photoUrl() }}" alt="" class="h-12 w-12 shrink-0 rounded-full object-cover">@else<span class="avatar h-12 w-12 shrink-0 text-base" aria-hidden="true">{{ $student?->initials() ?? 'M' }}</span>@endif<div class="min-w-0 flex-1"><p class="truncate font-heading font-semibold text-text-primary" title="{{ $student?->name }}">{{ $student?->name ?? 'Mahasiswa' }}</p><p class="text-xs text-text-secondary">Mahasiswa @if ($student?->nim) · NIM <span class="font-mono">{{ $student->nim }}</span>@endif</p></div>@include('partials.status-badge', ['status' => $entry->status, 'entry' => $entry])</div>
+                <dl class="mt-5 flex flex-wrap gap-x-6 gap-y-3 border-t border-border pt-4 text-sm"><div><dt class="text-xs text-text-secondary">Jenis</dt><dd class="mt-1 font-medium text-text-primary">{{ $isRevision ? 'Revisi'.($entry->revision_round ? ' ke-'.$entry->revision_round : '') : 'Logbook sesi '.$entry->sesi_ke }}</dd></div><div><dt class="text-xs text-text-secondary">Tanggal</dt><dd class="mt-1 text-text-primary">{{ ($isRevision ? $entry->tanggal_pengiriman : $entry->tanggal_bimbingan)?->format('d M Y') ?? $entry->submitted_at?->format('d M Y') ?? '—' }}</dd></div><div><dt class="text-xs text-text-secondary">Menunggu review</dt><dd class="mt-1 text-text-primary">{{ $entry->submitted_at ? max(0, (int) $entry->submitted_at->diffInDays(now())) . ' hari' : '—' }}</dd></div>@if ($entry->topik)<div class="min-w-0"><dt class="text-xs text-text-secondary">Topik</dt><dd class="mt-1 break-words text-text-primary">{{ $entry->topik }}</dd></div>@endif</dl>
+                @if ($entry->isLockedByActiveRevision())<p class="mt-4 rounded-xl bg-status-pending/10 p-3 text-xs text-text-secondary"><strong class="text-status-pending">Terkunci:</strong> entri induk sudah mempunyai revisi anak. Perbaikan selanjutnya dilakukan melalui revisi baru.</p>@endif
+                @if ($entry->mahasiswaTa?->judul_ta)<p class="mt-4 break-words text-sm text-text-secondary">{{ $entry->mahasiswaTa->judul_ta }}</p>@endif
+                @if ($entry->progres_kendala)<div class="mt-4 rounded-xl bg-bg-panel p-4"><h3 class="text-xs font-semibold text-text-secondary">{{ $isRevision ? 'Ringkasan perbaikan mahasiswa' : 'Ringkasan pengajuan' }}</h3><p class="mt-2 whitespace-pre-wrap break-words text-sm text-text-primary">{{ $entry->progres_kendala }}</p></div>@endif
+                @if ($entry->exceedsRevisionRoundLimit())<p class="mt-3 text-sm text-status-pending">Sesi revisi sudah mencapai batas perhatian. Pertimbangkan bimbingan tatap muka sebelum siklus berikutnya.</p>@endif
+            </section>
+            @if ($isRevision)<section class="card min-w-0 p-5 sm:p-6" aria-labelledby="revision-summary-heading"><h2 id="revision-summary-heading" class="font-heading text-lg font-semibold text-text-primary">Ringkasan Revisi</h2>
+                @if ($revisionRows->isEmpty())<p class="mt-3 text-sm text-text-secondary">Belum ada catatan perbaikan terstruktur untuk revisi ini.</p>@else
+                    <dl class="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-bg-panel p-3 sm:gap-4 sm:p-4"><div><dd class="font-heading text-xl font-bold tabular-nums text-text-primary sm:text-2xl">{{ $revisionRows->count() }}</dd><dt class="text-xs text-text-secondary">Catatan</dt></div><div><dd class="font-heading text-xl font-bold tabular-nums text-status-success sm:text-2xl">{{ $completed }}</dd><dt class="text-xs text-text-secondary">Sudah diperbaiki</dt></div><div><dd class="font-heading text-xl font-bold tabular-nums text-status-pending sm:text-2xl">{{ $remaining }}</dd><dt class="text-xs text-text-secondary">Belum selesai</dt></div></dl>
+                    <div class="mt-4 flex items-center gap-3 text-xs text-text-secondary"><span>{{ $completed }} dari {{ $revisionRows->count() }} diperbaiki</span><div class="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-bg-hover" role="progressbar" aria-label="Progres perbaikan" aria-valuemin="0" aria-valuemax="{{ $revisionRows->count() }}" aria-valuenow="{{ $completed }}"><div class="h-full rounded-full bg-status-success" style="width: {{ $percentage }}%"></div></div><span class="tabular-nums">{{ $percentage }}%</span></div>
+                @endif
+            </section>@endif
+            <section class="card min-w-0 p-5 sm:p-6" aria-labelledby="previous-heading"><div class="flex flex-wrap items-center justify-between gap-2"><h2 id="previous-heading" class="font-heading text-lg font-semibold text-text-primary">Umpan Balik Terakhir untuk Mahasiswa Ini</h2>@if ($previousComments->isNotEmpty())<span class="text-xs text-text-secondary">{{ $previousComments->count() }} komentar PDF sebelumnya</span>@endif</div>
+                @if ($entry->parentEntry?->feedback_dosen)<div class="mt-4 rounded-xl bg-bg-panel p-4"><p class="text-xs font-semibold text-text-secondary">Feedback entri induk</p><p class="mt-2 whitespace-pre-wrap break-words text-sm text-text-primary">{{ $entry->parentEntry->feedback_dosen }}</p><a href="{{ route('logbook.show', $entry->parentEntry) }}" class="mt-2 inline-block text-xs font-medium text-brand hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">Buka entri induk ↗</a>@if ($lastFeedback === $entry->parentEntry->feedback_dosen)<button type="button" id="use-last" class="ml-3 mt-2 text-xs font-semibold text-brand hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">Gunakan sebagai feedback</button>@endif</div>@endif
+                @if ($previousComments->isNotEmpty())<ol class="mt-4 divide-y divide-border rounded-xl border border-border">@foreach ($previousComments as $comment)<li class="flex min-w-0 items-start gap-3 p-3 text-sm"><span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-bg-panel font-mono text-xs text-text-secondary">{{ $loop->iteration }}</span><p class="min-w-0 flex-1 whitespace-pre-wrap break-words text-text-primary">{{ $comment->comment }} <span class="text-xs text-text-secondary">({{ $comment->resolution_status }})</span></p>@if ($comment->page_number)<span class="shrink-0 rounded-lg bg-bg-panel px-2 py-1 text-xs text-text-secondary">Hal. {{ $comment->page_number }}</span>@endif</li>@endforeach</ol><p class="mt-2 text-xs text-text-secondary">Anotasi entri ini: {{ $entry->comments->count() }}</p>@endif
+                @if ($lastFeedback && $lastFeedback !== $entry->parentEntry?->feedback_dosen)<div class="mt-4 rounded-xl bg-bg-panel p-4"><p class="text-xs font-semibold text-text-secondary">Feedback terakhir tersimpan</p><p class="mt-2 whitespace-pre-wrap break-words text-sm text-text-primary">{{ $lastFeedback }}</p><button type="button" id="use-last" class="mt-2 text-xs font-semibold text-brand hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">Gunakan sebagai feedback</button></div>@elseif (!$lastFeedback && !$entry->parentEntry?->feedback_dosen && $previousComments->isEmpty())<p class="mt-3 text-sm text-text-secondary">Belum ada umpan balik sebelumnya.</p>@endif
+            </section>
         </div>
+        <aside class="quick-review-panel card min-w-0 p-5 sm:p-6" aria-labelledby="decision-heading"><h2 id="decision-heading" class="font-heading text-lg font-semibold text-text-primary">Keputusan Review</h2><p class="mt-1 text-sm text-text-secondary">Berikan feedback dan tentukan keputusan untuk pengajuan ini.</p>
+            <form id="quick-review-form" method="POST" action="{{ route('quick-review.revisi-next', $entry) }}" class="mt-5 space-y-5" data-approve-url="{{ route('quick-review.approve-next', $entry) }}" data-revision-url="{{ route('quick-review.revisi-next', $entry) }}" data-pdf-opened="{{ $entry->review_opened_at || (!$entry->lampiran_path && !$entry->catatan_perbaikan_path) ? '1' : '0' }}">@csrf
+                <div><div class="flex flex-wrap items-center justify-between gap-2"><label for="template-select" class="text-sm font-semibold text-text-primary">Template Feedback</label><button type="button" id="new-tpl" class="text-xs font-semibold text-brand hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">+ Simpan sebagai Template</button></div><select id="template-select" class="mt-2 w-full min-w-0 rounded-xl border border-border bg-bg-panel px-3 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand/40"><option value="">{{ $templates->isEmpty() ? 'Belum ada template feedback' : 'Pilih template...' }}</option>@foreach ($templates as $template)<option value="{{ $template->id }}" data-body="{{ $template->body }}">{{ $template->title ?: \Illuminate\Support\Str::limit($template->body, 50) }}</option>@endforeach</select></div>
+                <div><label for="feedback_dosen" class="block text-sm font-semibold text-text-primary">Feedback <span id="feedback-required" class="hidden text-status-danger">(wajib untuk revisi, minimal 20 karakter)</span></label><textarea id="feedback_dosen" name="feedback_dosen" rows="5" minlength="20" placeholder="Tulis feedback atau alasan revisi..." class="mt-2 w-full min-w-0 rounded-xl border border-border bg-bg-panel px-3 py-2.5 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand/40" aria-describedby="feedback-hint feedback-error">{{ old('feedback_dosen', $feedbackDraft ?? '') }}</textarea><p id="feedback-hint" class="mt-1 text-xs text-text-secondary">Feedback hanya dikirim ketika Anda memilih Minta Revisi. Persetujuan tidak menyimpan teks di kolom ini.</p>@error('feedback_dosen')<p id="feedback-error" class="mt-2 text-xs text-status-danger" role="alert">{{ $message }}</p>@else<p id="feedback-error" class="mt-2 hidden text-xs text-status-danger" role="alert">Feedback revisi wajib diisi minimal 20 karakter.</p>@enderror<button type="button" id="build-feedback" class="mt-2 inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-brand/40 bg-brand/10 px-3 py-2 text-sm font-medium text-brand hover:bg-brand/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"><span class="material-symbols-outlined icon-sm" aria-hidden="true">bolt</span>Ambil dari Komentar PDF</button></div>
+                <fieldset class="space-y-2"><legend class="mb-2 text-sm font-semibold text-text-primary">Keputusan</legend><label class="decision-choice flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-bg-panel p-3 text-sm"><input type="radio" name="review_decision" value="approve" class="mt-1 accent-brand" required @checked($initialDecision === 'approve')><span><strong class="block text-text-primary">Setujui</strong><span class="text-xs text-text-secondary">Pengajuan sudah sesuai dan dapat dilanjutkan.</span></span></label><label class="decision-choice flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-bg-panel p-3 text-sm"><input type="radio" name="review_decision" value="revisi" class="mt-1 accent-brand" required @checked($initialDecision === 'revisi')><span><strong class="block text-text-primary">Minta Revisi</strong><span class="text-xs text-text-secondary">Masih perlu perbaikan oleh mahasiswa.</span></span></label></fieldset>
+                <button type="submit" id="quick-review-submit" class="btn-primary w-full px-4 py-2.5 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50" disabled>{{ $nextId ? 'Simpan & Berikutnya' : ($queueCount > 1 ? 'Simpan & Lihat Antrean' : 'Simpan & Selesai') }}</button><a href="{{ route('logbook.show', $entry) }}" class="inline-flex w-full items-center justify-center rounded-xl border border-border bg-bg-panel px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-bg-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">Detail penuh</a>
+            </form>
+        </aside>
     </div>
-@endif {{-- Modal simpan template --}}
-<div id="tpl-modal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-bg-surface rounded-lg border border-border p-4 w-full max-w-md">
-        <h3 class="font-heading font-semibold text-text-primary mb-3">Simpan sebagai Template Umpan Balik</h3>
-        <div class="space-y-3"> <input type="text" id="tpl-title" placeholder="Judul (opsional)"
-                class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">
-            <textarea id="tpl-body" rows="3" class="w-full rounded-xl border border-border bg-bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40"
-                placeholder="Isi feedback..."></textarea>
-        </div>
-        <div class="flex justify-end gap-2 mt-4"> <button type="button" id="tpl-cancel"
-                class="px-4 py-2 rounded-xl bg-bg-hover hover:bg-border text-text-primary text-sm font-medium">Batal</button> <button type="button" id="tpl-save"
-                class="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-[#0b1420] text-sm font-semibold">Simpan</button> </div>
-    </div>
+    <div id="tpl-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-bg-base/80 p-4" role="dialog" aria-modal="true" aria-labelledby="tpl-modal-title"><div class="w-full max-w-md rounded-card border border-border bg-bg-surface p-5 shadow-lg"><h2 id="tpl-modal-title" class="font-heading font-semibold text-text-primary">Simpan sebagai Template Feedback</h2><div class="mt-4 space-y-3"><div><label for="tpl-title" class="block text-sm text-text-primary">Judul (opsional)</label><input id="tpl-title" type="text" maxlength="100" class="mt-1 w-full rounded-xl border border-border bg-bg-panel px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand/40"></div><div><label for="tpl-body" class="block text-sm text-text-primary">Isi template</label><textarea id="tpl-body" rows="4" class="mt-1 w-full rounded-xl border border-border bg-bg-panel px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand/40"></textarea></div><p id="tpl-error" class="hidden text-xs text-status-danger" role="alert"></p></div><div class="mt-4 flex justify-end gap-2"><button type="button" id="tpl-cancel" class="rounded-xl bg-bg-panel px-4 py-2 text-sm text-text-primary hover:bg-bg-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">Batal</button><button type="button" id="tpl-save" class="btn-primary px-4 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">Simpan</button></div></div></div>
+@endif
 </div>
-@endsection @section("scripts")
+@endsection
+@section('scripts')
 @if ($entry)
-<script>
-    (function() {
-        var feedback = document.getElementById('feedback_dosen');
-        var csrf = document.querySelector('meta[name="csrf-token"]').content;
-        var revisiForm = document.getElementById('revisi-form');
-        var revisiBtn = document.getElementById('revisi-btn');
-        var revisiFeedback = document.getElementById('revisi-feedback');
-
-        // Pakai feedback terakhir.
-        var useLast = document.getElementById('use-last');
-        if (useLast) {
-            useLast.addEventListener('click', function () {
-                feedback.value = useLast.textContent.trim();
-            });
-        }
-
-        // Template chips.
-        document.querySelectorAll('.tpl-chip').forEach(function (chip) {
-            chip.addEventListener('click', function () {
-                feedback.value = chip.dataset.body;
-            });
-        });
-
-        // Revisi & next: salin isi textarea ke input hidden lalu submit form.
-        var revisiError = document.getElementById('revisi-error');
-        if (revisiBtn && revisiForm && revisiFeedback && revisiError) {
-            revisiBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                if (feedback.value.trim().length < 20) {
-                    revisiError.classList.remove('hidden');
-                    feedback.focus();
-                    return;
-                }
-                revisiError.classList.add('hidden');
-                revisiFeedback.value = feedback.value;
-                revisiBtn.disabled = true;
-                revisiBtn.innerHTML = '<span class="material-symbols-outlined icon-sm align-text-bottom">hourglass_top</span> Memproses…';
-                // requestSubmit() memicu validasi native + event submit form,
-                // lebih andal daripada submit() yang bisa gagal diam-diam.
-                if (revisiForm.requestSubmit) {
-                    revisiForm.requestSubmit();
-                } else {
-                    revisiForm.submit();
-                }
-            });
-            feedback.addEventListener('input', function () {
-                revisiError.classList.add('hidden');
-            });
-        }
-
-        // Cegah double-submit pada tombol "Setujui & Next" dan "Revisi & Next".
-        var approveForm = document.getElementById('approve-form');
-        if (approveForm) {
-            approveForm.addEventListener('submit', function (e) {
-                if (approveForm.dataset.pdfOpened !== '1' && !window.confirm('Lampiran PDF belum tercatat dibuka. Tetap setujui?')) {
-                    e.preventDefault();
-                    return;
-                }
-                var btn = document.getElementById('approve-btn');
-                if (btn) {
-                    btn.disabled = true;
-                    btn.innerHTML = '<span class="material-symbols-outlined icon-sm align-text-bottom">hourglass_top</span> Memproses…';
-                }
-            });
-        }
-        if (revisiForm) {
-            revisiForm.addEventListener('submit', function (e) {
-                if (revisiForm.dataset.pdfOpened !== '1' && !window.confirm('Lampiran PDF belum tercatat dibuka. Tetap minta revisi?')) {
-                    e.preventDefault();
-                    revisiBtn.disabled = false;
-                    return;
-                }
-                var btn = document.getElementById('revisi-btn');
-                if (btn) {
-                    btn.disabled = true;
-                    btn.innerHTML = '<span class="material-symbols-outlined icon-sm align-text-bottom">hourglass_top</span> Memproses…';
-                }
-            });
-        }
-
-        // Build feedback dari komentar unresolved.
-        var buildBtn = document.getElementById('build-feedback');
-        if (buildBtn) {
-            buildBtn.addEventListener('click', function () {
-                fetch('/quick-review/{{ $entry->id }}/build-feedback', {
-                    method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
-                    credentials: 'same-origin'
-                }).then(function (r) { return r.json(); })
-                  .then(function (d) { feedback.value = d.feedback || ''; })
-                  .catch(function () { alert('Gagal memuat komentar.'); });
-            });
-        }
-
-        // Modal simpan template.
-        var modal = document.getElementById('tpl-modal');
-        var newTpl = document.getElementById('new-tpl');
-        var tplTitle = document.getElementById('tpl-title');
-        var tplBody = document.getElementById('tpl-body');
-        var tplCancel = document.getElementById('tpl-cancel');
-        var tplSave = document.getElementById('tpl-save');
-
-        if (newTpl) {
-            newTpl.addEventListener('click', function () {
-                tplBody.value = feedback.value;
-                modal.classList.remove('hidden');
-            });
-        }
-        if (tplCancel) {
-            tplCancel.addEventListener('click', function () {
-                modal.classList.add('hidden');
-            });
-        }
-        if (tplSave) {
-            tplSave.addEventListener('click', function () {
-                var body = tplBody.value.trim();
-                if (!body) return;
-                var title = tplTitle.value.trim();
-                fetch('/feedback-templates', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrf,
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({ title: title, body: body })
-                }).then(function () {
-                    modal.classList.add('hidden');
-                    window.location.reload();
-                });
-            });
-        }
-    })();
-</script>
+    @include('logbook.partials.quick-review-script')
 @endif
 @endsection

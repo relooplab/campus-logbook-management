@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Chat: scroll the contact list and message history independently, while the
+   authenticated layout's 64px navigation and content padding remain in flow. */
+.chat-workspace {
+    height: max(420px, calc(100dvh - 210px));
+}
+
+@media (max-width: 767px) {
+    .chat-workspace { height: max(400px, calc(100dvh - 180px)); }
+}
+
+@media (max-height: 550px) {
+    .chat-workspace { height: 400px; }
+}
+
 /* Panel viewer PDF: scrollbar selalu tampak (overflow-x-scroll) dan diberi
    ketebalan/warna eksplisit agar mudah ditemukan tanpa harus menggulir dulu. */
 .pdf-stage {
@@ -33,6 +47,14 @@
 }
 
 /* Detail logbook dan seminar memakai lebar area kerja yang tersedia. */
+/* Quick Review: the decision stays in view only while the context has room beside it. */
+.quick-review-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+.quick-review-grid > * { min-width: 0; }
+@container (min-width: 1000px) {
+    .quick-review-grid { grid-template-columns: minmax(0, 1fr) minmax(360px, 400px); }
+    .quick-review-panel { position: sticky; top: 80px; max-height: calc(100dvh - 96px); overflow-y: auto; scrollbar-width: thin; }
+}
+
 .detail-workspace {
     width: 100%;
     max-width: 1600px;

@@ -53,7 +53,11 @@ class ChatWorkspaceTest extends TestCase
         $this->get(route('chat.start', ['user' => $student->id, 'ta' => $program->id]))->assertRedirect();
         $thread = Conversation::where('mahasiswa_ta_id', $program->id)->firstOrFail();
         $this->get(route('chat.show', $thread))->assertOk()->assertSee('Belum ada percakapan.')
-            ->assertSee('Kembali ke daftar percakapan')->assertSee('Tulis pesan...');
+            ->assertSee('Kembali ke daftar percakapan')->assertSee('Tulis pesan...')
+            ->assertSee('Sematkan referensi karya (bukan unggah file)');
+        $this->get(route('chat.show', ['conversation' => $thread, 'search' => $student->nim]))
+            ->assertOk()->assertSee('action="'.route('chat.index').'"', false)
+            ->assertSee(route('chat.index', ['filter' => 'diuji', 'search' => $student->nim]));
     }
 
     public function test_student_can_start_with_assigned_lecturer_and_cannot_open_or_start_outside_relationship(): void

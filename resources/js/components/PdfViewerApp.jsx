@@ -36,7 +36,7 @@ import {
  */
 
 const DATA = window.PDF_VIEWER_DATA || {};
-const { title, draftUrl, catatanUrl, hasCatatan, entryId, csrf, commentsUrl, storeUrl, resolveUrl, replyUrl, deleteUrl, burnUrl, buildFeedbackUrl, canReview, canReply, returnUrl } = DATA;
+const { title, draftUrl, catatanUrl, hasCatatan, entryId, csrf, commentsUrl, storeUrl, resolveUrl, replyUrl, deleteUrl, burnUrl, buildFeedbackUrl, canReview, canReply, returnUrl, quickReviewUrl } = DATA;
 
 const parseIdFromHash = () => {
   const m = (document.location.hash || '').match(/^#highlight-(.+)$/);
@@ -611,7 +611,7 @@ function PdfViewerApp() {
         alert('Tidak ada komentar yang belum resolve.');
         return;
       }
-      window.location.href = '/quick-review';
+      window.location.href = quickReviewUrl || '/quick-review';
     } catch (e) {
       alert('Gagal membuat feedback. Periksa koneksi atau coba lagi.');
     }

@@ -31,7 +31,12 @@
             null
         @endif ,
         canReview: @json(auth()->user()->can('review', $logbook)),
-        returnUrl: @json(route("logbook.show", $logbook)),
+        returnUrl: @if(request()->boolean('quick_review') && auth()->user()->can('review', $logbook))
+            @json(route('quick-review.index', ['item' => $logbook->id]))
+        @else
+            @json(route('logbook.show', $logbook))
+        @endif ,
+        quickReviewUrl: @json(route('quick-review.index', ['item' => $logbook->id])),
     };
 </script>
 @endsection

@@ -3,7 +3,7 @@
     $isSelected = $conversation && $row->conversation?->id === $conversation->id;
     $context = $ta ? $ta->jenisLabel().' · '.($user->isDosen() ? $ta->dosenRoleLabel($user) : 'Dosen').' · '.$ta->faseLabel() : null;
 @endphp
-<a href="{{ $row->url }}" @if ($isSelected) aria-current="page" @endif class="flex min-w-0 gap-3 border-b border-border px-3 py-3 transition-colors hover:bg-bg-hover focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand {{ $isSelected ? 'bg-brand-light/70 border-l-2 border-l-brand' : '' }}">
+<a href="{{ $row->url }}" @if ($isSelected) aria-current="page" @endif class="flex min-w-0 gap-3 border-b border-border px-3 py-3.5 transition-colors hover:bg-bg-hover focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand {{ $isSelected ? 'bg-brand-light/70 border-l-2 border-l-brand' : '' }}">
     <span class="avatar h-10 w-10 shrink-0 overflow-hidden text-xs font-bold" aria-hidden="true">@if ($row->other->photoUrl())<img src="{{ $row->other->photoUrl() }}" alt="" class="h-full w-full object-cover">@else{{ $row->other->initials() }}@endif</span>
     <span class="min-w-0 flex-1">
         <span class="flex items-start justify-between gap-2"><span class="truncate text-sm font-semibold text-text-primary">{{ $row->other->name }}</span>@if ($row->latest)<time datetime="{{ $row->latest->created_at?->toIso8601String() }}" class="shrink-0 text-[11px] text-text-secondary">{{ $row->latest->created_at?->isToday() ? $row->latest->created_at->format('H:i') : $row->latest->created_at?->locale('id')->translatedFormat('d M') }}</time>@endif</span>

@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\EntryStatusChanged;
 use App\Models\FeedbackTemplate;
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
+use App\Models\PdfComment;
+use App\Services\AchievementService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,37 +21,36 @@ class QuickReviewController extends Controller
      */
     public function index(Request $request): View
     {
-        $user = $request->user();
-
-        // Antrean review untuk dosen ini.
-        $taIds = MahasiswaTa::where('pembimbing_1_id', $user->id)
-            ->orWhere('pembimbing_2_id', $user->id)
-            ->pluck('id');
-
-        $queue = LogbookEntry::where('status', LogbookEntry::STATUS_SUBMITTED)
-            ->where(function ($query) use ($taIds, $user) {
-                $query->whereIn('mahasiswa_ta_id', $taIds)
-                    ->orWhere('dosen_id', $user->id)
-                    // Reviewer penerima revisi dari entri ini (termasuk dosen penguji).
-                    ->orWhereHas('revisionChildren', fn ($q) => $q->where('dosen_id', $user->id));
-            });
-        $queueCount = (clone $queue)->count();
-        $entry = $queue
-            ->with(['mahasiswaTa.mahasiswa', 'comments.user', 'parentEntry.comments.user'])
-            ->oldest('submitted_at')
-            ->first();
+        // Ambil ID saja untuk navigasi; detail hanya dimuat untuk item aktif.
+        $queueIds = $this->reviewQueue($request)->pluck('id');
+        $queueCount = $queueIds->count();
+        $selectedId = $request->query('item');
+        if ($selectedId !== null) {
+            abort_unless(ctype_digit((string) $selectedId) && $queueIds->contains((int) $selectedId), 404);
+        }
+        $queueIndex = $selectedId === null ? 0 : $queueIds->search((int) $selectedId);
+        $entryId = $queueIds->get($queueIndex);
+        $entry = $entryId ? LogbookEntry::with(['mahasiswaTa.mahasiswa', 'comments', 'parentEntry.comments'])
+            ->findOrFail($entryId) : null;
 
         if ($entry) {
             $this->authorize('review', $entry);
         }
 
-        $templates = FeedbackTemplate::where('user_id', $user->id)->get();
+        $templates = $entry ? FeedbackTemplate::where('user_id', $request->user()->id)->get() : collect();
         $lastFeedback = $entry ? $this->lastFeedbackForStudent($entry) : null;
 
-        // Feedback draft dari localStorage (diset tombol "Jadikan Feedback").
-        $feedbackDraft = $request->session()->pull('feedback_draft');
+        // Draft dari viewer PDF hanya berlaku untuk entri tempat komentar dibuat.
+        $feedbackDraft = $request->session()->get('feedback_draft_entry_id') === $entryId
+            ? $request->session()->pull('feedback_draft') : null;
+        if ($feedbackDraft !== null) {
+            $request->session()->forget('feedback_draft_entry_id');
+        }
 
-        return view('logbook.quick-review', compact('entry', 'templates', 'lastFeedback', 'feedbackDraft', 'queueCount'));
+        $previousId = $queueIndex > 0 ? $queueIds->get($queueIndex - 1) : null;
+        $nextId = $queueIds->get($queueIndex + 1);
+
+        return view('logbook.quick-review', compact('entry', 'templates', 'lastFeedback', 'feedbackDraft', 'queueCount', 'queueIndex', 'previousId', 'nextId'));
     }
 
     /**
@@ -58,7 +61,7 @@ class QuickReviewController extends Controller
         $this->authorize('review', $logbook);
 
         // Hanya program aktif yang bisa di-review.
-        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [MahasiswaTa::STATUS_AKTIF, MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
         $logbook->update([
             'status' => LogbookEntry::STATUS_APPROVED,
@@ -66,13 +69,13 @@ class QuickReviewController extends Controller
         ]);
         $this->resolveCommentsOnApproval($logbook);
 
-        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda telah disetujui.'));
+        $this->bestEffort(fn () => EntryStatusChanged::dispatch($logbook, 'Entri Anda telah disetujui.'));
         $logbook->notifyParties('Entri '.($logbook->jenis === 'revisi' ? 'revisi' : 'logbook sesi '.$logbook->sesi_ke).' telah disetujui.', route('logbook.show', $logbook), 'Entri Disetujui');
         if ($owner = $logbook->mahasiswaTa?->mahasiswa) {
-            app(\App\Services\AchievementService::class)->evaluateForUser($owner);
+            app(AchievementService::class)->evaluateForUser($owner);
         }
 
-        return redirect()->route('quick-review.index')
+        return redirect()->route('quick-review.index', $this->nextQueueItem($request, $logbook))
             ->with('success', 'Entri disetujui. Lanjut ke berikutnya.');
     }
 
@@ -84,7 +87,7 @@ class QuickReviewController extends Controller
         $this->authorize('review', $logbook);
 
         // Hanya program aktif yang bisa di-review.
-        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [MahasiswaTa::STATUS_AKTIF, MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
         $validated = $request->validate([
             'feedback_dosen' => ['required', 'string', 'min:20'],
@@ -96,10 +99,10 @@ class QuickReviewController extends Controller
             'reviewed_at' => now(),
         ]);
 
-        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda diminta revisi.'));
+        $this->bestEffort(fn () => EntryStatusChanged::dispatch($logbook, 'Entri Anda diminta revisi.'));
         $logbook->notifyParties('Entri Anda diminta revisi: '.$validated['feedback_dosen'], route('logbook.show', $logbook), 'Permintaan Revisi');
 
-        return redirect()->route('quick-review.index')
+        return redirect()->route('quick-review.index', $this->nextQueueItem($request, $logbook))
             ->with('success', 'Entri dikembalikan untuk revisi. Lanjut ke berikutnya.');
     }
 
@@ -124,7 +127,7 @@ class QuickReviewController extends Controller
 
     public function destroyTemplate(Request $request, FeedbackTemplate $template): JsonResponse
     {
-        if ($template->user_id !== $request->user()->id && !$request->user()->isAdmin()) {
+        if ($template->user_id !== $request->user()->id && ! $request->user()->isAdmin()) {
             abort(403);
         }
         $template->delete();
@@ -147,8 +150,8 @@ class QuickReviewController extends Controller
             $cursor = $cursor->parentEntry;
         }
 
-        $comments = \App\Models\PdfComment::whereIn('logbook_entry_id', $entryIds)
-            ->where('resolution_status', \App\Models\PdfComment::STATUS_OPEN)
+        $comments = PdfComment::whereIn('logbook_entry_id', $entryIds)
+            ->where('resolution_status', PdfComment::STATUS_OPEN)
             ->orderBy('page_number')
             ->get();
 
@@ -167,6 +170,7 @@ class QuickReviewController extends Controller
 
         // Simpan ke session untuk dipakai di quick review.
         $request->session()->put('feedback_draft', $feedback);
+        $request->session()->put('feedback_draft_entry_id', $logbook->id);
 
         return response()->json(['feedback' => $feedback]);
     }
@@ -181,16 +185,44 @@ class QuickReviewController extends Controller
             ->value('feedback_dosen');
     }
 
+    private function reviewQueue(Request $request): Builder
+    {
+        $user = $request->user();
+        $taIds = MahasiswaTa::where('pembimbing_1_id', $user->id)
+            ->orWhere('pembimbing_2_id', $user->id)
+            ->pluck('id');
+
+        return LogbookEntry::where('status', LogbookEntry::STATUS_SUBMITTED)
+            ->where(function ($query) use ($taIds, $user) {
+                $query->whereIn('mahasiswa_ta_id', $taIds)
+                    ->orWhere('dosen_id', $user->id)
+                    ->orWhereHas('revisionChildren', fn ($q) => $q->where('dosen_id', $user->id));
+            })
+            ->orderBy('submitted_at')->orderBy('id');
+    }
+
+    /** Setelah keputusan, lanjut ke penerus urutan semula, atau kembali ke awal bila terakhir. */
+    private function nextQueueItem(Request $request, LogbookEntry $processed): array
+    {
+        $nextId = $this->reviewQueue($request)
+            ->where(function ($query) use ($processed) {
+                $query->where('submitted_at', '>', $processed->submitted_at)
+                    ->orWhere(fn ($q) => $q->where('submitted_at', $processed->submitted_at)->where('id', '>', $processed->id));
+            })->value('id');
+
+        return $nextId ? ['item' => $nextId] : [];
+    }
+
     private function resolveCommentsOnApproval(LogbookEntry $logbook): void
     {
         $entries = collect([$logbook, $logbook->parentEntry])->filter();
 
         foreach ($entries as $entry) {
             $entry->comments()
-                ->where('resolution_status', '!=', \App\Models\PdfComment::STATUS_RESOLVED)
+                ->where('resolution_status', '!=', PdfComment::STATUS_RESOLVED)
                 ->get()
                 ->each(function ($comment) {
-                    $comment->setResolutionStatus(\App\Models\PdfComment::STATUS_RESOLVED);
+                    $comment->setResolutionStatus(PdfComment::STATUS_RESOLVED);
                     $comment->save();
                 });
         }
