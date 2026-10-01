@@ -2,26 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Institution;
-use App\Support\ReleaseVersion;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class LandingController extends Controller
 {
-    public function __invoke(): View
+    /**
+     * Halaman depan publik. User yang sudah masuk langsung diarahkan ke
+     * Dashboard — halaman ini hanya untuk pengunjung yang belum masuk, jadi
+     * tombol "Daftar" / "Masuk ke Sistem" selalu relevan.
+     */
+    public function __invoke(): View|RedirectResponse
     {
-        // Beranda tetap dapat dibuka saat database belum siap / sedang dipulihkan.
-        try {
-            $institution = Institution::active();
-        } catch (\Throwable $e) {
-            $institution = null;
+        if (auth()->check()) {
+            return redirect()->route('dashboard');
         }
 
         return view('landing.index', [
-            'appName' => $institution?->app_name ?: config('app.name'),
-            'institutionName' => $institution?->institution_name,
-            'adminContactEmail' => $institution?->admin_contact_email,
-            'version' => ReleaseVersion::get(),
+            // Identitas produk tetap "Campus Logbook Management" dan tidak
+            // bergantung institusi tertentu (landing bersifat institution-neutral).
+            'appName' => 'Campus Logbook Management',
         ]);
     }
 }

@@ -43,7 +43,9 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', LandingController::class)->name('landing');
+// Beranda publik untuk tamu; user yang sudah masuk diarahkan ke Dashboard
+// (penanganan redirect ada di controller agar route tetap tanpa middleware auth).
+Route::get('/', LandingController::class)->name('home');
 
 // ------------------------------------------------------------------ auth
 Route::middleware('guest')->group(function () {

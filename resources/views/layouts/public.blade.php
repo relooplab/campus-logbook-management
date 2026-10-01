@@ -4,16 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#14161c">
-    <title>@yield('title', 'Beranda') · {{ $appName }}</title>
-    <meta name="description" content="Catat bimbingan, kelola revisi, dan pantau perjalanan Tugas Akhir atau Kerja Praktik dalam satu tempat bersama mahasiswa dan dosen.">
-    <link rel="canonical" href="{{ route('landing') }}">
+    <title>{{ $appName }} — Bimbingan TA &amp; KP Terstruktur</title>
+    <meta name="description" content="Campus Logbook membantu mahasiswa, dosen pembimbing, dan penguji mengelola logbook, review, revisi, progres, dan dokumen TA/KP dalam satu platform.">
+    <link rel="canonical" href="{{ route('home') }}">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="id_ID">
-    <meta property="og:title" content="{{ $appName }} — Bimbingan lebih tertata">
-    <meta property="og:description" content="Logbook, revisi, review dokumen, hingga seminar dan sidang dalam satu alur bimbingan.">
-    <meta property="og:url" content="{{ route('landing') }}">
-    <meta property="og:image" content="{{ asset('apple-touch-icon.png') }}">
-    <meta name="twitter:card" content="summary">
+    <meta property="og:title" content="{{ $appName }} — Bimbingan TA &amp; KP Terstruktur">
+    <meta property="og:description" content="Campus Logbook membantu mahasiswa, dosen pembimbing, dan penguji mengelola logbook, review, revisi, progres, dan dokumen TA/KP dalam satu platform.">
+    <meta property="og:url" content="{{ route('home') }}">
+    <meta property="og:image" content="{{ asset('images/landing/showcase-mahasiswa.webp') }}">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="icon" href="{{ asset('favicon-32x32.png') }}" sizes="32x32" type="image/png">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
