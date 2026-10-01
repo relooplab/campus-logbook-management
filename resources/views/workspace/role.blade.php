@@ -151,7 +151,11 @@
         </div>
     @endif
 
-    {{-- ===== Daftar Workspace TA/KP (dosen & admin) ===== --}}
+    {{-- ===== Direktori bimbingan (dosen); daftar admin tetap seperti semula ===== --}}
+    @if ($isDosen)
+        @include('workspace.partials.supervision-directory')
+    @else
+    {{-- ===== Daftar Workspace TA/KP (admin) ===== --}}
     <div class="card p-6">
         <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div>
@@ -187,6 +191,7 @@
             </div>
         @endif
     </div>
+    @endif
 </div>
 @endsection
 

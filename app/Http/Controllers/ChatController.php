@@ -37,6 +37,12 @@ class ChatController extends Controller
         $user = $request->user();
         abort_unless($conversation->hasUser($user->id), 403, 'Anda bukan peserta percakapan ini.');
 
+        $contextEntry = null;
+        if ($request->query('entry') !== null) {
+            $contextEntry = LogbookEntry::findOrFail($request->query('entry'));
+            $this->authorizeEntryContext($contextEntry, $conversation, $user);
+        }
+
         // Tandai semua pesan sebagai dibaca.
         $conversation->messages()
             ->where('sender_id', '!=', $user->id)
@@ -52,10 +58,10 @@ class ChatController extends Controller
         $messages = $query->orderByDesc('id')->limit(100)->get()->reverse()->values();
         $hasOlder = $messages->isNotEmpty() && $conversation->messages()->where('id', '<', $messages->first()->id)->exists();
 
-        return $this->workspace($request, $conversation, $messages, $hasOlder, (bool) $before);
+        return $this->workspace($request, $conversation, $messages, $hasOlder, (bool) $before, $contextEntry);
     }
 
-    private function workspace(Request $request, ?Conversation $conversation = null, ?Collection $messages = null, bool $hasOlder = false, bool $viewingOlder = false): View
+    private function workspace(Request $request, ?Conversation $conversation = null, ?Collection $messages = null, bool $hasOlder = false, bool $viewingOlder = false, ?LogbookEntry $contextEntry = null): View
     {
         $user = $request->user();
         $search = trim((string) $request->query('search', ''));
@@ -156,7 +162,7 @@ class ChatController extends Controller
                 'program' => $program, 'url' => route('chat.show', $conversation)];
         }
 
-        return view('chat.index', compact('user', 'rows', 'counts', 'filter', 'search', 'conversation', 'messages', 'active', 'hasOlder', 'viewingOlder'));
+        return view('chat.index', compact('user', 'rows', 'counts', 'filter', 'search', 'conversation', 'messages', 'active', 'hasOlder', 'viewingOlder', 'contextEntry'));
     }
 
     /**
@@ -179,9 +185,18 @@ class ChatController extends Controller
                     && in_array($user->id, $ta->allDosenIds(), true)
                     && in_array($other->id, $ta->allDosenIds(), true)), 403);
         }
+        $contextEntry = null;
+        if ($request->query('entry') !== null) {
+            $contextEntry = LogbookEntry::findOrFail($request->query('entry'));
+            abort_unless($taId && (int) $contextEntry->mahasiswa_ta_id === (int) $taId
+                && $this->canAccess($contextEntry->mahasiswaTa, $user)
+                && $this->canAccess($contextEntry->mahasiswaTa, $other), 403);
+        }
         $conversation = $this->findOrCreate($user, $other, $taId ?: null);
 
-        return redirect()->route('chat.show', $conversation);
+        return redirect()->route('chat.show', $contextEntry
+            ? ['conversation' => $conversation, 'entry' => $contextEntry->id]
+            : $conversation);
     }
 
     /**
@@ -201,6 +216,10 @@ class ChatController extends Controller
         $attach = null;
         if (! empty($validated['attachable_type']) && ! empty($validated['attachable_id'])) {
             $attach = $this->resolveAttachable($validated['attachable_type'], (int) $validated['attachable_id'], $user);
+            if ($attach) {
+                abort_unless((! $conversation->mahasiswa_ta_id || $attach->mahasiswa_ta_id === $conversation->mahasiswa_ta_id)
+                    && $this->canAccess($attach->mahasiswaTa, $conversation->other($user)), 403);
+            }
         }
 
         $message = Message::create([
@@ -413,6 +432,14 @@ class ChatController extends Controller
         }
 
         return null;
+    }
+
+    private function authorizeEntryContext(LogbookEntry $entry, Conversation $conversation, User $user): void
+    {
+        abort_unless($conversation->mahasiswa_ta_id
+            && $entry->mahasiswa_ta_id === $conversation->mahasiswa_ta_id
+            && $this->canAccess($entry->mahasiswaTa, $user)
+            && $this->canAccess($entry->mahasiswaTa, $conversation->other($user)), 403);
     }
 
     private function canAccess(?MahasiswaTa $ta, User $user): bool

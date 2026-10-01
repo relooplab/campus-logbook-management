@@ -18,6 +18,10 @@
     $reviewerLabel = $logbook->dosen
         ? (($reviewerRole ? $reviewerRole.' — ' : '').$logbook->dosen->name)
         : ($logbook->mahasiswaTa?->pembimbing1?->name ?? null);
+    $chatRecipient = $user->isMahasiswa() ? $logbook->reviewDosen() : $logbook->mahasiswaTa?->mahasiswa;
+    $canDiscuss = $logbook->mahasiswaTa && $chatRecipient && $chatRecipient->id !== $user->id
+        && (($user->isMahasiswa() && $logbook->mahasiswaTa->user_id === $user->id)
+            || ($user->isDosen() && ($logbook->mahasiswaTa->isPembimbing($user) || $logbook->mahasiswaTa->isPenguji($user))));
 
     // Navigasi "Kembali" konteks-sensitif pada halaman detail entri.
     if ($logbook->parentEntry) {
@@ -40,54 +44,35 @@
     $revisionPercent = $revisionRows->count() ? (int) round($completedRevisions / $revisionRows->count() * 100) : 0;
 @endphp
 
-<div class="{{ $logbook->jenis === 'revisi' ? 'detail-workspace' : 'max-w-5xl' }} space-y-6">
-    @if ($logbook->jenis === 'revisi')
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div><h1 class="font-heading font-bold text-2xl text-text-primary">Revisi</h1><p class="text-sm text-text-secondary mt-1">Review revisi mahasiswa dan berikan keputusan.</p></div>
-            <a href="{{ route('logbook.index') }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">← Kembali ke Logbook</a>
+<div class="detail-workspace space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <h1 class="font-heading font-bold text-2xl text-text-primary">{{ $logbook->jenis === 'revisi' ? 'Revisi' : 'Sesi '.$logbook->sesi_ke }}</h1>
+            <p class="text-sm text-text-secondary mt-1">{{ $logbook->jenis === 'revisi' ? 'Review revisi mahasiswa dan berikan keputusan.' : 'Detail logbook bimbingan dan tindak lanjutnya.' }}</p>
         </div>
-    @else
-    <x-page-header
-        :subtitle="$logbook->jenis === 'revisi' ? null : 'Logbook Bimbingan'"
-        :title="$logbook->jenis === 'revisi' ? 'Revisi' . ($logbook->revision_round ? ' ke-' . $logbook->revision_round : '') : 'Sesi ' . $logbook->sesi_ke">
-        <x-slot:actions>
-            <a href="{{ $backUrl }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">{{ $backLabel }}</a>
-        </x-slot:actions>
-    </x-page-header>
-    @endif
+        <div class="flex flex-wrap items-center gap-2">
+            @if ($canDiscuss)
+                <a href="{{ route('chat.start', ['user' => $chatRecipient->id, 'ta' => $logbook->mahasiswa_ta_id, 'entry' => $logbook->id]) }}" class="inline-flex items-center gap-2 rounded-xl border border-brand/40 bg-brand/10 px-4 py-2 text-sm font-medium text-brand hover:bg-brand/20">Diskusikan entri ini</a>
+            @endif
+            <a href="{{ $logbook->jenis === 'revisi' ? route('logbook.index') : $backUrl }}" class="px-4 py-2 rounded-xl bg-bg-hover text-text-primary text-sm font-medium hover:bg-border">{{ $logbook->jenis === 'revisi' ? '← Kembali ke Logbook' : $backLabel }}</a>
+        </div>
+    </div>
 
-    @if ($logbook->jenis === 'revisi')
-        <section class="card p-5 sm:p-6" aria-label="Ringkasan revisi">
+        <section class="card p-5 sm:p-6" aria-label="{{ $logbook->jenis === 'revisi' ? 'Ringkasan revisi' : 'Ringkasan logbook bimbingan' }}">
             <div class="revision-summary detail-workspace-card">
-                <div class="min-w-0"><p class="font-heading font-semibold text-lg text-text-primary">{{ $logbook->mahasiswaTa?->mahasiswa?->name }}</p><p class="text-sm text-text-secondary">Mahasiswa</p></div>
+                <div class="min-w-0"><p class="font-heading font-semibold text-lg text-text-primary">{{ $logbook->mahasiswaTa?->mahasiswa?->name ?? '—' }}</p><p class="text-sm text-text-secondary">Mahasiswa</p></div>
                 <dl class="revision-summary-fields text-sm">
-                    <div><dt class="text-xs text-text-secondary">Topik</dt><dd class="font-medium mt-1">{{ $logbook->topik ?? 'Revisi' }}</dd></div>
-                    <div><dt class="text-xs text-text-secondary">Tanggal Pengiriman</dt><dd class="font-medium mt-1">{{ $logbook->tanggal_tampil?->format('d M Y') ?? '—' }}</dd></div>
-                    <div><dt class="text-xs text-text-secondary">Ditujukan kepada</dt><dd class="font-medium mt-1">{{ $reviewerLabel ?? '—' }}</dd></div>
+                    <div><dt class="text-xs text-text-secondary">Topik</dt><dd class="font-medium mt-1">{{ $logbook->topik ?? ($logbook->jenis === 'revisi' ? 'Revisi' : '—') }}</dd></div>
+                    <div><dt class="text-xs text-text-secondary">{{ $logbook->jenis === 'revisi' ? 'Tanggal Pengiriman' : 'Tanggal Bimbingan' }}</dt><dd class="font-medium mt-1">{{ $logbook->tanggal_tampil?->format('d M Y') ?? '—' }}</dd></div>
+                    <div><dt class="text-xs text-text-secondary">{{ $logbook->jenis === 'revisi' ? 'Ditujukan kepada' : 'Dosen' }}</dt><dd class="font-medium mt-1">{{ $reviewerLabel ?? '—' }}</dd></div>
                 </dl>
                 <div class="text-left lg:text-right">@include('partials.status-badge', ['status' => $logbook->status]) @if($logbook->revision_round)<p class="text-xs text-text-secondary mt-2">Revisi ke-{{ $logbook->revision_round }}</p>@endif</div>
             </div>
         </section>
-    @endif
 
-    <div class="{{ $logbook->jenis === 'revisi' ? 'detail-workspace-grid' : 'grid lg:grid-cols-[1fr_320px] gap-6 items-start' }}">
+    <div class="detail-workspace-grid">
     <div class="space-y-4 min-w-0">
-    <div class="{{ $logbook->jenis === 'revisi' ? 'space-y-5' : 'card p-6 space-y-4' }}">
-        @if ($logbook->jenis !== 'revisi')
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <p class="text-sm text-text-secondary">{{ $logbook->mahasiswaTa?->mahasiswa?->name }}</p>
-            @include('partials.status-badge', ['status' => $logbook->status])
-        </div>
-
-        @include('partials.meta-grid', [
-            'items' => [
-                ['label' => 'Mahasiswa', 'value' => $logbook->mahasiswaTa?->mahasiswa?->name],
-                ['label' => $logbook->jenis === 'revisi' ? 'Tanggal Pengiriman Revisi' : 'Tanggal Bimbingan', 'value' => $logbook->tanggal_tampil?->format('d M Y') ?? '—'],
-                ['label' => 'Topik', 'value' => $logbook->topik ?? 'Revisi'],
-                ['label' => $logbook->jenis === 'revisi' ? 'Ditujukan kepada' : 'Dosen', 'value' => $reviewerLabel ?? '—'],
-            ],
-        ])
-        @endif
+    <div class="space-y-5">
 
         @if ($owner && $logbook->status === 'submitted')
             <div class="px-4 py-3 rounded-xl bg-bg-panel border border-border text-sm flex flex-wrap items-center gap-2">
@@ -157,10 +142,10 @@
                 </div>
             </section>
         @else
-            <div>
-                <h3 class="text-sm font-semibold text-text-secondary mb-1">Ringkasan Perbaikan</h3>
-                <div class="text-sm whitespace-pre-wrap">{{ $logbook->progres_kendala }}</div>
-            </div>
+            <section class="card p-5 sm:p-6 detail-workspace-card" aria-labelledby="logbook-progress-title">
+                <h2 id="logbook-progress-title" class="font-heading font-semibold text-lg text-text-primary mb-3">Ringkasan Perbaikan</h2>
+                <div class="text-sm whitespace-pre-wrap break-words">{{ $logbook->progres_kendala ?: 'Belum ada ringkasan perbaikan.' }}</div>
+            </section>
         @endif
 
         @if ($logbook->feedback_dosen)
@@ -174,7 +159,7 @@
     </div>
 
     {{-- ===== Kolom kanan: aksi (sticky) ===== --}}
-    <aside class="{{ $logbook->jenis === 'revisi' ? 'detail-workspace-panel' : 'lg:sticky lg:top-20' }} space-y-4" aria-label="Dokumen dan tindakan">
+    <aside class="detail-workspace-panel space-y-4" aria-label="Dokumen dan tindakan">
         @if ($logbook->jenis === 'revisi')
             <section class="card p-5 detail-workspace-card" aria-label="Status review revisi">
                 <h2 class="font-heading font-semibold text-text-primary mb-3">Review</h2>
@@ -270,16 +255,16 @@
                     <fieldset class="space-y-2">
                         <legend class="sr-only">Pilih keputusan review</legend>
                         <label class="decision-choice flex items-start gap-3 rounded-xl border border-border bg-bg-panel p-3 text-sm cursor-pointer">
-                            <input type="radio" name="review_decision" value="approve" class="mt-1 accent-brand" required @checked($reviewDecision === 'approve')><span><strong class="block text-text-primary">Setujui</strong><span class="text-xs text-text-secondary">Revisi telah sesuai dan dapat dilanjutkan.</span></span>
+                            <input type="radio" name="review_decision" value="approve" class="mt-1 accent-brand" required @checked($reviewDecision === 'approve')><span><strong class="block text-text-primary">Setujui</strong><span class="text-xs text-text-secondary">{{ $logbook->jenis === 'revisi' ? 'Revisi telah sesuai dan dapat dilanjutkan.' : 'Entri bimbingan telah sesuai dan dapat dilanjutkan.' }}</span></span>
                         </label>
                         <label class="decision-choice flex items-start gap-3 rounded-xl border border-border bg-bg-panel p-3 text-sm cursor-pointer">
                             <input type="radio" name="review_decision" value="revisi" class="mt-1 accent-brand" required @checked($reviewDecision === 'revisi')><span><strong class="block text-text-primary">Minta Revisi</strong><span class="text-xs text-text-secondary">Masih perlu revisi atau perbaikan tambahan.</span></span>
                         </label>
                     </fieldset>
-                    <div id="revision-feedback-wrap" class="space-y-2 {{ $reviewDecision === 'revisi' ? '' : 'hidden' }}">
-                        <label for="revision-feedback" class="block text-xs font-semibold text-text-secondary">Alasan revisi / feedback</label>
-                        <textarea id="revision-feedback" name="feedback_dosen" rows="4" minlength="20" placeholder="Jelaskan perbaikan yang diperlukan (minimal 20 karakter)..."
-                            class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40" @disabled($reviewDecision !== 'revisi') @if($reviewDecision === 'revisi') required @endif>{{ old('feedback_dosen') }}</textarea>
+                    <div id="revision-feedback-wrap" class="space-y-2">
+                        <label for="revision-feedback" class="block text-xs font-semibold text-text-secondary">Feedback dosen <span id="revision-feedback-required" class="{{ $reviewDecision === 'revisi' ? '' : 'hidden' }}">(wajib untuk revisi, minimal 20 karakter)</span></label>
+                        <textarea id="revision-feedback" name="feedback_dosen" rows="4" maxlength="5000" @if($reviewDecision === 'revisi') minlength="20" required @endif placeholder="Opsional saat menyetujui; untuk revisi jelaskan perbaikan minimal 20 karakter..."
+                            class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">{{ old('feedback_dosen') }}</textarea>
                         @error('feedback_dosen') <p class="text-status-danger text-xs">{{ $message }}</p> @enderror
                     </div>
                     <button type="submit" id="review-decision-submit" class="w-full px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 disabled:opacity-50" disabled>Simpan Keputusan</button>
@@ -449,9 +434,9 @@
             var selected = decisionForm.querySelector('input[name="review_decision"]:checked');
             var needsRevision = selected && selected.value === 'revisi';
             decisionForm.action = needsRevision ? decisionForm.dataset.revisionUrl : decisionForm.dataset.approveUrl;
-            feedbackWrap.classList.toggle('hidden', !needsRevision);
-            feedback.disabled = !needsRevision;
+            feedbackWrap.querySelector('#revision-feedback-required').classList.toggle('hidden', !needsRevision);
             feedback.required = !!needsRevision;
+            feedback.minLength = needsRevision ? 20 : 0;
             decisionSubmit.disabled = !selected;
             decisionSubmit.textContent = needsRevision ? 'Kirim Permintaan Revisi' : (selected ? (decisionForm.dataset.entryKind === 'revisi' ? 'Setujui Revisi' : 'Setujui Entri') : 'Pilih Keputusan');
         }
@@ -469,7 +454,7 @@
                 event.preventDefault();
                 return;
             }
-            if (!window.confirm(selected.value === 'approve' ? 'Setujui revisi ini?' : 'Kirim permintaan revisi kepada mahasiswa?')) {
+            if (!window.confirm(selected.value === 'approve' ? (decisionForm.dataset.entryKind === 'revisi' ? 'Setujui revisi ini?' : 'Setujui entri logbook ini?') : 'Kirim permintaan revisi kepada mahasiswa?')) {
                 event.preventDefault();
                 return;
             }

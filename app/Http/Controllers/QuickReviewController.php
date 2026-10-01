@@ -63,8 +63,11 @@ class QuickReviewController extends Controller
         // Hanya program aktif yang bisa di-review.
         abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [MahasiswaTa::STATUS_AKTIF, MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
+        $validated = $request->validate(['feedback_dosen' => ['nullable', 'string', 'max:5000']]);
+
         $logbook->update([
             'status' => LogbookEntry::STATUS_APPROVED,
+            'feedback_dosen' => $validated['feedback_dosen'] ?? null,
             'reviewed_at' => now(),
         ]);
         $this->resolveCommentsOnApproval($logbook);

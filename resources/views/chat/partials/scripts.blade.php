@@ -13,6 +13,15 @@
     const form = document.getElementById('message-form');
     const body = document.getElementById('msg-body');
     const send = document.getElementById('send-btn');
+    const selectedAttach = document.getElementById('selected-attach');
+    selectedAttach.addEventListener('click', function (event) {
+        if (!event.target.closest('.clear-attach')) return;
+        document.getElementById('attach-type').value = '';
+        document.getElementById('attach-id').value = '';
+        selectedAttach.replaceChildren();
+        selectedAttach.classList.add('hidden');
+        body.focus();
+    });
     history.scrollTop = @json($viewingOlder ?? false) ? 0 : history.scrollHeight;
 
     form.addEventListener('submit', function (event) {
@@ -61,19 +70,14 @@
                     option.addEventListener('click', function () {
                         document.getElementById('attach-type').value = item.type;
                         document.getElementById('attach-id').value = item.id;
-                        const selected = document.getElementById('selected-attach');
+                        const selected = selectedAttach;
                         selected.replaceChildren();
                         selected.append(document.createTextNode('Referensi: ' + item.label + ' '));
                         const clear = document.createElement('button');
                         clear.type = 'button';
-                        clear.className = 'underline';
+                        clear.className = 'clear-attach underline';
                         clear.textContent = 'Hapus';
                         clear.setAttribute('aria-label', 'Hapus referensi terpilih');
-                        clear.addEventListener('click', function () {
-                            document.getElementById('attach-type').value = '';
-                            document.getElementById('attach-id').value = '';
-                            selected.classList.add('hidden');
-                        });
                         selected.append(clear);
                         selected.classList.remove('hidden');
                         closeAttach();

@@ -14,7 +14,7 @@
         function syncDecision() {
             const revision = decision() === 'revisi';
             feedback.required = revision;
-            feedback.disabled = decision() === 'approve';
+            feedback.minLength = revision ? 20 : 0;
             document.getElementById('feedback-required').classList.toggle('hidden', !revision);
             submit.disabled = !decision();
             form.action = revision ? form.dataset.revisionUrl : form.dataset.approveUrl;

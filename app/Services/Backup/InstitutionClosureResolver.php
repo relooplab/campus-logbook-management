@@ -55,6 +55,7 @@ class InstitutionClosureResolver
 
         // 3. Resolve parent tingkat-2 yang dibutuhkan tabel 'via' & pass ekspansi.
         $resolved['logbook_entries'] = $this->resolveByStrategy('logbook_entries', $strategies['logbook_entries'], $resolved, $institutionIds, $includeIndividual);
+        $resolved['pdf_comments'] = $this->resolveByStrategy('pdf_comments', $strategies['pdf_comments'], $resolved, $institutionIds, $includeIndividual);
         $resolved['thesis_finalizations'] = $this->resolveByStrategy('thesis_finalizations', $strategies['thesis_finalizations'], $resolved, $institutionIds, $includeIndividual);
         $resolved['institution_workspaces'] = $this->resolveByStrategy('institution_workspaces', $strategies['institution_workspaces'], $resolved, $institutionIds, $includeIndividual);
         $resolved['announcements'] = $this->resolveByStrategy('announcements', $strategies['announcements'], $resolved, $institutionIds, $includeIndividual);

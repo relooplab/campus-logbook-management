@@ -10,6 +10,47 @@ class DetailWorkspaceTest extends AuditSmokeTest
 {
     use DatabaseTransactions;
 
+    public function test_reviewer_sees_logbook_in_the_revision_workspace_layout(): void
+    {
+        $this->entrySubmitted->update([
+            'topik' => 'Pembahasan bab metodologi',
+            'progres_kendala' => 'Metode penelitian sudah diperbaiki.',
+            'lampiran_path' => 'lampiran/logbook.pdf',
+        ]);
+
+        $response = $this->actingAs($this->dosen)->get(route('logbook.show', $this->entrySubmitted));
+
+        $response->assertOk()
+            ->assertSee('class="detail-workspace space-y-6"', false)
+            ->assertSee('class="detail-workspace-grid"', false)
+            ->assertSee('class="detail-workspace-panel space-y-4"', false)
+            ->assertSee('Ringkasan logbook bimbingan')
+            ->assertSee('Sesi '.$this->entrySubmitted->sesi_ke)
+            ->assertSee('Pembahasan bab metodologi')
+            ->assertSee('Tanggal Bimbingan')
+            ->assertSee('Metode penelitian sudah diperbaiki.')
+            ->assertSee('review-decision-form')
+            ->assertSee(route('logbook.pdf-viewer', $this->entrySubmitted))
+            ->assertSee(route('logbook.approve', $this->entrySubmitted))
+            ->assertSee(route('chat.start', ['user' => $this->mhs->id, 'ta' => $this->ta->id, 'entry' => $this->entrySubmitted->id]))
+            ->assertSee(route('logbook.request-revisi', $this->entrySubmitted))
+            ->assertDontSee('Status review revisi');
+        $this->assertSame(1, substr_count($response->getContent(), 'Buka PDF &amp; Anotasi'));
+    }
+
+    public function test_student_sees_logbook_workspace_without_reviewer_decision(): void
+    {
+        $response = $this->actingAs($this->mhs)->get(route('logbook.show', $this->entryDraft));
+
+        $response->assertOk()
+            ->assertSee('class="detail-workspace-grid"', false)
+            ->assertSee('Ringkasan logbook bimbingan')
+            ->assertSee('Ringkasan Perbaikan')
+            ->assertSee(route('logbook.edit', $this->entryDraft))
+            ->assertSee(route('chat.start', ['user' => $this->dosen->id, 'ta' => $this->ta->id, 'entry' => $this->entryDraft->id]))
+            ->assertDontSee('id="review-decision-form"', false);
+    }
+
     public function test_reviewer_sees_revision_workspace_and_existing_actions(): void
     {
         $this->entryRevisi->update([
@@ -33,8 +74,29 @@ class DetailWorkspaceTest extends AuditSmokeTest
             ->assertSee('review-decision-form')
             ->assertSee(route('logbook.pdf-viewer', $this->entryRevisi))
             ->assertSee(route('logbook.approve', $this->entryRevisi))
+            ->assertSee(route('chat.start', ['user' => $this->mhs->id, 'ta' => $this->ta->id, 'entry' => $this->entryRevisi->id]))
             ->assertSee(route('logbook.request-revisi', $this->entryRevisi));
         $this->assertSame(1, substr_count($response->getContent(), 'Buka PDF &amp; Anotasi'));
+    }
+
+    public function test_approval_feedback_is_optional_but_revision_feedback_remains_required(): void
+    {
+        $this->actingAs($this->dosen)->post(route('logbook.approve', $this->entrySubmitted), [
+            'feedback_dosen' => 'Sudah baik, lanjutkan ke bab berikutnya.',
+        ])->assertRedirect();
+        $this->assertSame('Sudah baik, lanjutkan ke bab berikutnya.', $this->entrySubmitted->fresh()->feedback_dosen);
+        $this->actingAs($this->mhs)->get(route('logbook.show', $this->entrySubmitted))
+            ->assertOk()->assertSee('Sudah baik, lanjutkan ke bab berikutnya.');
+
+        $this->entryRevisi->update(['dosen_id' => $this->dosen->id, 'status' => LogbookEntry::STATUS_SUBMITTED]);
+        $this->actingAs($this->dosen)->post(route('logbook.approve', $this->entryRevisi))->assertRedirect();
+        $this->assertSame(LogbookEntry::STATUS_APPROVED, $this->entryRevisi->fresh()->status);
+        $this->assertNull($this->entryRevisi->fresh()->feedback_dosen);
+
+        $this->entryDraft->update(['status' => LogbookEntry::STATUS_SUBMITTED, 'dosen_id' => $this->dosen->id]);
+        $this->actingAs($this->dosen)->post(route('logbook.request-revisi', $this->entryDraft), ['feedback_dosen' => 'Pendek'])
+            ->assertSessionHasErrors('feedback_dosen');
+        $this->assertSame(LogbookEntry::STATUS_SUBMITTED, $this->entryDraft->fresh()->status);
     }
 
     public function test_seminar_detail_separates_location_and_meeting_link_without_changing_document_routes(): void

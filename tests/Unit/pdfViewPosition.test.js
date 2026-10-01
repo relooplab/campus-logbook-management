@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { capturePdfPosition, restorePdfPosition } from '../../resources/js/components/pdf/viewPosition.js';
+import { capturePdfPosition, captureSpreadAnchor, centerPdfSpread, restorePdfPosition } from '../../resources/js/components/pdf/viewPosition.js';
 
 function makeViewer(pageTop, scrollTop, scale = 'page-width') {
   const container = {
@@ -51,4 +51,53 @@ test('keeps draft and catatan positions independent across repeated tab switches
   restorePdfPosition(reopenedCatatan, saved.catatan);
   assert.equal(reopenedCatatan.container.scrollTop, 6040);
   assert.equal(saved.draft.offsetY, 180);
+});
+
+function makeSpreadViewer({ containerWidth, scrollLeft, scrollTop = 0, pageXs, pageWidth, pageTop = 600, pageHeight = 600, pageNumber = 2 }) {
+  const container = {
+    clientWidth: containerWidth,
+    scrollLeft,
+    scrollTop,
+    getBoundingClientRect: () => ({ left: 50, top: 100 }),
+  };
+  const spread = { querySelectorAll: () => pageXs.map((x) => ({
+    getBoundingClientRect: () => ({ left: 50 + x - container.scrollLeft, right: 50 + x + pageWidth - container.scrollLeft }),
+  })) };
+  return {
+    container,
+    currentPageNumber: pageNumber,
+    getPageView: (index) => index + 1 === pageNumber ? {
+      div: {
+        closest: (selector) => selector === '.spread' ? spread : null,
+        getBoundingClientRect: () => ({ top: 100 + pageTop - container.scrollTop, height: pageHeight }),
+      },
+    } : null,
+  };
+}
+
+test('centers both pages in the PDF viewport despite horizontal scrolling and open panels', () => {
+  for (const containerWidth of [900, 580]) {
+    const viewer = makeSpreadViewer({ containerWidth, scrollLeft: 270, pageXs: [250, 580], pageWidth: 300, scrollTop: 660 });
+    const anchor = captureSpreadAnchor(viewer);
+    assert.equal(anchor.page, 2);
+    assert.equal(centerPdfSpread(viewer, anchor), true);
+    assert.equal(viewer.container.scrollLeft, 250 + 630 / 2 - containerWidth / 2);
+    assert.equal(viewer.container.scrollTop, 660);
+  }
+});
+
+test('centering preserves relative vertical position after spread changes page height', () => {
+  const before = makeSpreadViewer({ containerWidth: 700, scrollLeft: 0, scrollTop: 750, pageXs: [100, 420], pageWidth: 300, pageHeight: 600 });
+  const anchor = captureSpreadAnchor(before);
+  const after = makeSpreadViewer({ containerWidth: 700, scrollLeft: 90, scrollTop: 400, pageXs: [100, 420], pageWidth: 300, pageHeight: 300 });
+  centerPdfSpread(after, anchor);
+  assert.equal(after.container.scrollTop, 675);
+  assert.equal(after.container.scrollLeft, 100 + 620 / 2 - 350);
+});
+
+test('a lone page in a spread centers on that page and missing views are ignored', () => {
+  const viewer = makeSpreadViewer({ containerWidth: 700, scrollLeft: 75, pageXs: [200], pageWidth: 300, pageNumber: 1 });
+  assert.equal(centerPdfSpread(viewer, captureSpreadAnchor(viewer)), true);
+  assert.equal(viewer.container.scrollLeft, 0);
+  assert.equal(centerPdfSpread(viewer, { page: 9, offsetFraction: 0 }), false);
 });

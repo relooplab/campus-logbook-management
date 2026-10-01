@@ -617,15 +617,18 @@ class LogbookController extends Controller
         return back()->with('success', 'Entri dikirim ke dosen.');
     }
 
-    public function approve(LogbookEntry $logbook): RedirectResponse
+    public function approve(Request $request, LogbookEntry $logbook): RedirectResponse
     {
         $this->authorize('review', $logbook);
 
         // Hanya program aktif yang bisa di-review.
         abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
+        $validated = $request->validate(['feedback_dosen' => ['nullable', 'string', 'max:5000']]);
+
         $logbook->update([
             'status' => LogbookEntry::STATUS_APPROVED,
+            'feedback_dosen' => $validated['feedback_dosen'] ?? null,
             'reviewed_at' => now(),
         ]);
         $this->resolveCommentsOnApproval($logbook);
@@ -1046,7 +1049,7 @@ class LogbookController extends Controller
         $type = $request->query('type', PdfComment::FILE_TYPE_DRAFT);
         $comments = $logbook->comments()
             ->fileType($type)
-            ->with('user')
+            ->with('user', 'replies.user', 'entry.mahasiswaTa.mahasiswa')
             ->orderBy('created_at')
             ->get()
             ->map(function (PdfComment $c) {
@@ -1071,6 +1074,7 @@ class LogbookController extends Controller
                     'payload' => $payload,
                     'resolution_status' => $status,
                     'reply' => $c->reply,
+                    'replies' => $c->repliesForViewer(),
                     'is_dosen' => (bool) ($c->user ? $c->user->isDosen() : false),
                     'created_at' => $c->created_at,
                 ];

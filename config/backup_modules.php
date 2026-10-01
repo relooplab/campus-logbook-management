@@ -82,6 +82,7 @@ return [
                 'logbook_entries',
                 'action_items',
                 'pdf_comments',
+                'pdf_comment_replies',
                 'logbook_harian_kp',
                 'inactivity_notifications',
             ],

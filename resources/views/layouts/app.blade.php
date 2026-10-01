@@ -73,7 +73,6 @@
             html.sidebar-collapsed #sidebar { width: 5rem; }
             html.sidebar-collapsed #main-wrap { margin-left: 5rem; }
             html.sidebar-collapsed .sidebar-label { display: none; }
-            html.sidebar-collapsed #sidebar-logo-row { justify-content: center; padding-left: 1rem; padding-right: 1rem; }
             html.sidebar-collapsed #sidebar nav a { justify-content: center; }
         }
         /* ===== Perbaikan mobile ===== */
@@ -104,10 +103,6 @@
         }
         /* Tombol aksi header agar tidak overflow */
         .header-actions { flex-wrap: wrap; }
-
-        @media (min-width: 768px) {
-            html.sidebar-collapsed #sidebar-clock { display: none; }
-        }
     </style>
     @yield('head')
 </head>
@@ -123,38 +118,17 @@
         <button type="button" id="sidebar-collapse-btn" title="Ciutkan/lebarkan sidebar" class="hidden md:flex absolute -right-3 top-5 w-6 h-6 rounded-full bg-bg-surface border border-border items-center justify-center text-text-secondary hover:text-text-primary hover:bg-bg-hover z-50">
             <span id="sidebar-collapse-icon" class="material-symbols-outlined icon-sm">chevron_left</span>
         </button>
-        <div id="sidebar-logo-row" class="px-4 py-5 flex flex-col items-center gap-2.5">
-            <div id="sidebar-clock" class="sidebar-label flex flex-col items-center gap-0.5">
-                <div class="text-base font-semibold tracking-wide text-text-primary font-mono leading-none" id="clock-date">Memuat…</div>
-                <div class="text-[10px] text-text-secondary font-medium" id="clock-sub">Tanggal bimbingan</div>
-            </div>
-            <button type="button" id="sidebar-close-btn" title="Tutup menu" class="md:hidden p-1.5 rounded-lg text-text-secondary hover:bg-bg-hover hover:text-text-primary">
+        <div class="flex justify-end px-3 pt-2 md:hidden">
+            <button type="button" id="sidebar-close-btn" title="Tutup menu" class="p-1.5 rounded-lg text-text-secondary hover:bg-bg-hover hover:text-text-primary">
                 <span class="material-symbols-outlined icon-md">close</span>
             </button>
         </div>
 
         @auth
             @php
-                $primaryUniv = $user->primaryUniversity();
                 $showDosenMenu = $user->isDosen();
                 $showAdminMenu = $user->isAdmin();
             @endphp
-            @if ($primaryUniv || $user->nidn || $user->nim)
-                <div class="px-6 pb-2 sidebar-label space-y-1">
-                    @if ($user->isDosen() && $user->nidn)
-                        <span class="block text-[10px] text-text-secondary truncate font-mono">NIDN: {{ $user->nidn }}</span>
-                    @endif
-                    @if ($user->isMahasiswa() && $user->nim)
-                        <span class="block text-[10px] text-text-secondary truncate font-mono">NIM: {{ $user->nim }}</span>
-                    @endif
-                    @if ($primaryUniv)
-                        <span class="block text-[10px] px-2 py-0.5 rounded-full bg-bg-panel text-text-secondary truncate max-w-full" title="{{ $primaryUniv->name }}">
-                            <span class="material-symbols-outlined icon-sm align-text-bottom" style="font-size:12px">account_balance</span>
-                            {{ \Illuminate\Support\Str::limit($primaryUniv->name, 24) }}
-                        </span>
-                    @endif
-                </div>
-            @endif
         @endauth
 
         <nav class="flex-1 px-3 space-y-1 overflow-y-auto mt-1">
@@ -756,37 +730,6 @@
         document.addEventListener('click', function (e) {
             if (!results.contains(e.target) && e.target !== input) results.classList.add('hidden');
         });
-    })();
-</script>
-<script>
-    // ---- Tanggal di sidebar (format Senin, 11/Agustus) ----
-    (function () {
-        var dateEl = document.getElementById('clock-date');
-        var subEl = document.getElementById('clock-sub');
-        if (!dateEl) return;
-        var DAYS = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-        var MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-        var MONTHS_FULL = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-
-        function format(date) {
-            var dd = String(date.getDate()).padStart(2, '0');
-            return DAYS[date.getDay()] + ', ' + dd + '/' + MONTHS[date.getMonth()];
-        }
-
-        dateEl.textContent = format(new Date());
-        if (subEl) {
-            subEl.textContent = MONTHS_FULL[new Date().getMonth()] + ' ' + new Date().getFullYear();
-        }
-        // Perbarui sekali sehari (cek tiap 60 detik, ganti hanya jika harinya berubah)
-        var last = new Date().toDateString();
-        setInterval(function () {
-            var now = new Date();
-            if (now.toDateString() !== last) {
-                last = now.toDateString();
-                dateEl.textContent = format(now);
-                if (subEl) subEl.textContent = MONTHS_FULL[now.getMonth()] + ' ' + now.getFullYear();
-            }
-        }, 60000);
     })();
 </script>
 @yield('scripts')

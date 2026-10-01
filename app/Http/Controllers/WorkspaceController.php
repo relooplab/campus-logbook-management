@@ -95,6 +95,17 @@ class WorkspaceController extends Controller
 
         // Dosen: workspace pribadi + daftar TA bimbingan.
         if ($user->isDosen()) {
+            $directoryFilters = $request->validate([
+                'student_search' => ['nullable', 'string', 'max:100'],
+                'student_program' => ['nullable', 'in:ta,kp'],
+                'student_role' => ['nullable', 'in:pembimbing,penguji'],
+                'student_view' => ['nullable', 'in:daftar,grid'],
+            ]);
+            $directoryFilters['student_search'] = trim($directoryFilters['student_search'] ?? '');
+            $directoryFilters['student_program'] = $directoryFilters['student_program'] ?? '';
+            $directoryFilters['student_role'] = $directoryFilters['student_role'] ?? '';
+            $directoryFilters['student_view'] = $directoryFilters['student_view'] ?? 'daftar';
+
             $personalFiles = WorkspaceFile::where('user_id', $user->id)->with('uploader')
                 ->orderByDesc('created_at')->get();
             $personalGrouped = $personalFiles->groupBy(fn ($f) => $f->bab ?: 'Lainnya');
@@ -102,12 +113,32 @@ class WorkspaceController extends Controller
             $personalQuotaBytes = Feature::storageLimitMb($user) * 1048576;
             $personalPct = $personalQuotaBytes > 0 ? min(100, round($personalTotalBytes / $personalQuotaBytes * 100)) : 0;
 
-            $tas = MahasiswaTa::bimbinganOleh($user)
-                ->with(['mahasiswa', 'pembimbing1', 'pembimbing2'])
-                ->latest()
-                ->get();
+            // Use the same direct relationship as the directory, but never offer
+            // workspaces that the lecturer cannot open before approval.
+            $directory = MahasiswaTa::bimbinganOleh($user)
+                ->whereNotIn('status_ta', [MahasiswaTa::STATUS_PENDING_APPROVAL, MahasiswaTa::STATUS_DITOLAK]);
+            $directoryTotal = (clone $directory)->distinct()->count('user_id');
 
-            return view('workspace.role', compact('user', 'personalFiles', 'personalGrouped', 'personalTotalBytes', 'personalQuotaBytes', 'personalPct', 'tas'));
+            $tas = $directory
+                ->when($directoryFilters['student_search'] !== '', function ($query) use ($directoryFilters) {
+                    $term = '%'.$directoryFilters['student_search'].'%';
+                    $query->where(fn ($q) => $q->whereHas('mahasiswa', fn ($student) => $student
+                        ->where('name', 'like', $term)->orWhere('nim', 'like', $term))
+                        ->orWhere('judul_ta', 'like', $term)
+                        ->orWhere('tempat_kp', 'like', $term));
+                })
+                ->when($directoryFilters['student_program'] !== '', fn ($q) => $q->where('jenis', $directoryFilters['student_program']))
+                ->when($directoryFilters['student_role'] === 'pembimbing', fn ($q) => $q->where(fn ($roles) => $roles
+                    ->where('pembimbing_1_id', $user->id)->orWhere('pembimbing_2_id', $user->id)))
+                ->when($directoryFilters['student_role'] === 'penguji', fn ($q) => $q->where(fn ($roles) => $roles
+                    ->where('penguji_1_id', $user->id)->orWhere('penguji_2_id', $user->id)))
+                ->with('mahasiswa.universities')
+                ->withCount('workspaceFiles')
+                ->orderByDesc('id')
+                ->paginate(20, ['*'], 'student_page')
+                ->withQueryString();
+
+            return view('workspace.role', compact('user', 'personalFiles', 'personalGrouped', 'personalTotalBytes', 'personalQuotaBytes', 'personalPct', 'tas', 'directoryTotal', 'directoryFilters'));
         }
 
         // Admin: daftar TA/KP (dibatasi institusi untuk admin institusional).

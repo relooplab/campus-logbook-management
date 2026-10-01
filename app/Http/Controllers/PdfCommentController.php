@@ -48,27 +48,33 @@ class PdfCommentController extends Controller
     {
         $this->authorize('view', $comment->entry);
 
-        // Hanya mahasiswa pemilik TA yang boleh membalas komentar dosen.
-        if ($comment->entry->mahasiswaTa?->user_id !== $request->user()->id) {
-            abort(403, 'Hanya mahasiswa pemilik TA yang dapat membalas komentar.');
-        }
+        $isOwner = $comment->entry->mahasiswaTa?->user_id === $request->user()->id;
+        $isReviewer = app(LogbookEntryPolicy::class)->isReviewer($request->user(), $comment->entry);
+        abort_unless($isOwner || $isReviewer, 403, 'Hanya mahasiswa pemilik atau dosen reviewer yang dapat membalas komentar.');
 
         $validated = $request->validate([
             'reply' => ['required', 'string', 'max:2000'],
         ]);
 
-        $comment->update(['reply' => $validated['reply']]);
+        $comment->replies()->create([
+            'user_id' => $request->user()->id,
+            'body' => $validated['reply'],
+        ]);
+        // Kolom legacy tetap menampung balasan mahasiswa pertama untuk konsumen lama.
+        if ($isOwner && ! $comment->reply) {
+            $comment->update(['reply' => $validated['reply']]);
+        }
 
         // Membalas komentar dosen = menandai "sudah diperbaiki" (addressed)
         // secara otomatis, menunggu keputusan dosen untuk resolve.
         $dosenAuthor = $comment->user && $comment->user->isDosen() ? $comment->user : null;
-        if ($dosenAuthor && $comment->resolution_status === PdfComment::STATUS_OPEN) {
+        if ($isOwner && $dosenAuthor && $comment->resolution_status === PdfComment::STATUS_OPEN) {
             $comment->setResolutionStatus(PdfComment::STATUS_ADDRESSED);
             $comment->save();
         }
 
         // Notifikasi ke dosen penulis komentar bahwa mahasiswa sudah menanggapi.
-        if ($dosenAuthor && $comment->entry) {
+        if ($isOwner && $dosenAuthor && $comment->entry) {
             $mahasiswa = $comment->entry->mahasiswaTa?->mahasiswa;
             $this->bestEffort(fn () => $dosenAuthor->notify(new \App\Notifications\ActivityNotification(
                 ($mahasiswa?->name ?? 'Mahasiswa').' menanggapi komentar Anda pada '.
@@ -78,9 +84,20 @@ class PdfCommentController extends Controller
             )));
         }
 
+        if ($isReviewer && ($owner = $comment->entry->mahasiswaTa?->mahasiswa)) {
+            $this->bestEffort(fn () => $owner->notify(new \App\Notifications\ActivityNotification(
+                'Dosen menanggapi komentar PDF Anda: "'.mb_strimwidth($validated['reply'], 0, 120, '…').'"',
+                route('logbook.pdf-viewer', $comment->entry).'#highlight-'.$comment->id,
+                'Balasan Komentar PDF',
+            )));
+        }
+
+        $comment->load('replies.user', 'entry.mahasiswaTa.mahasiswa');
+
         return response()->json([
             'ok' => true,
             'reply' => $comment->reply,
+            'replies' => $comment->repliesForViewer(),
             'resolution_status' => $comment->resolution_status,
         ]);
     }

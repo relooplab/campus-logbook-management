@@ -5,6 +5,8 @@ namespace Tests\Feature\Backup;
 use App\Models\Conversation;
 use App\Models\Institution;
 use App\Models\MahasiswaTa;
+use App\Models\LogbookEntry;
+use App\Models\PdfComment;
 use App\Models\Sidang;
 use App\Models\University;
 use App\Models\User;
@@ -87,6 +89,23 @@ class InstitutionClosureResolverTest extends TestCase
         $reasonForPembimbing = collect($result['closure_expansions'])
             ->firstWhere('user_id', $pembimbingLuar->id)['reason'] ?? null;
         $this->assertSame('mahasiswa_ta_role', $reasonForPembimbing);
+    }
+
+    public function test_pdf_comment_replies_follow_institution_scope_and_include_authors(): void
+    {
+        $student = User::create(['name' => 'Mahasiswa Anotasi', 'email' => 'annot-student@closure-test.com', 'password' => bcrypt('x'), 'institution_id' => $this->institutionA->id]);
+        $reviewer = User::create(['name' => 'Dosen Eksternal', 'email' => 'annot-reviewer@closure-test.com', 'password' => bcrypt('x'), 'institution_id' => $this->institutionB->id]);
+        $ta = MahasiswaTa::create(['institution_id' => $this->institutionA->id, 'user_id' => $student->id, 'jenis' => MahasiswaTa::JENIS_TA, 'status_ta' => MahasiswaTa::STATUS_AKTIF]);
+        $entry = LogbookEntry::create(['mahasiswa_ta_id' => $ta->id, 'jenis' => LogbookEntry::JENIS_LOGBOOK, 'sesi_ke' => 1, 'status' => LogbookEntry::STATUS_SUBMITTED]);
+        $comment = PdfComment::create(['logbook_entry_id' => $entry->id, 'user_id' => $student->id, 'file_type' => PdfComment::FILE_TYPE_DRAFT, 'page_number' => 1, 'comment' => 'Anotasi.']);
+        $reply = $comment->replies()->create(['user_id' => $reviewer->id, 'body' => 'Tanggapan reviewer.']);
+
+        $result = $this->resolver->resolve(['users', 'pdf_comments', 'pdf_comment_replies'], [$this->institutionA->id], false);
+        $this->assertContains($reply->id, $result['scope']['pdf_comment_replies']);
+        $this->assertContains($reviewer->id, $result['scope']['users']);
+        $this->assertSame('pdf_comment_reply_author', collect($result['closure_expansions'])->firstWhere('user_id', $reviewer->id)['reason'] ?? null);
+        $outside = $this->resolver->resolve(['pdf_comment_replies'], [$this->institutionB->id], false);
+        $this->assertNotContains($reply->id, $outside['scope']['pdf_comment_replies']);
     }
 
     public function test_cross_institution_sidang_penguji_is_pulled_in(): void

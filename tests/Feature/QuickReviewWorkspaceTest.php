@@ -67,8 +67,22 @@ class QuickReviewWorkspaceTest extends AuditSmokeTest
 
         $this->actingAs($this->dosen)->post(route('quick-review.approve-next', $this->entrySubmitted))
             ->assertRedirect(route('quick-review.index'));
+        $this->assertNull($this->entrySubmitted->fresh()->feedback_dosen);
         $this->actingAs($this->dosen)->get(route('quick-review.index'))->assertOk()->assertSee('Tidak ada item yang menunggu review.');
         $this->actingAs($this->dosen)->post(route('quick-review.approve-next', $second))->assertForbidden();
+    }
+
+    public function test_approve_next_accepts_optional_feedback_and_enforces_length_limit(): void
+    {
+        $this->actingAs($this->dosen)->post(route('quick-review.approve-next', $this->entrySubmitted), [
+            'feedback_dosen' => str_repeat('a', 5001),
+        ])->assertSessionHasErrors('feedback_dosen');
+        $this->assertSame(LogbookEntry::STATUS_SUBMITTED, $this->entrySubmitted->fresh()->status);
+
+        $this->actingAs($this->dosen)->post(route('quick-review.approve-next', $this->entrySubmitted), [
+            'feedback_dosen' => 'Bagus, silakan lanjut.',
+        ])->assertRedirect(route('quick-review.index'));
+        $this->assertSame('Bagus, silakan lanjut.', $this->entrySubmitted->fresh()->feedback_dosen);
     }
 
     public function test_revision_summary_previous_comments_and_templates_use_real_data(): void

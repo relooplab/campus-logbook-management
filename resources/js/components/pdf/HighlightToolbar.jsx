@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MessageSquare } from 'lucide-react';
+import AnnotationConversation from './AnnotationConversation.jsx';
 
 /**
  * Kontrol komentar ala example-app yang menempel pada toolbar bawaan
@@ -21,13 +22,13 @@ export function resolveButtonLabel(meta, canReview) {
   return canReview ? 'Tandai Selesai' : 'Tandai Sudah Diperbaiki';
 }
 
-export function useAnnotationControls(highlight, meta, { canReview, canReply, onReply, onToggleResolve, onDelete, onSkipNext, hasNext }) {
+export function useAnnotationControls(highlight, meta, { canReview, canReply, canDiscuss, currentUserId, onReply, onToggleResolve, onDelete, onSkipNext, hasNext }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(null); // 'reply' | 'resolve' | 'delete' | null
 
   const status = STATUS_META[meta?.resolutionStatus] || STATUS_META.open;
-  const showReplyBox = canReply && meta?.isDosen && meta?.resolutionStatus === 'open' && !meta?.reply;
+  const showReplyBox = canDiscuss;
 
   async function handleReply() {
     const text = draft.trim();
@@ -75,7 +76,7 @@ export function useAnnotationControls(highlight, meta, { canReview, canReply, on
 
   const panel = open && meta ? (
     <div
-      className="w-72 rounded-md border border-border bg-bg-surface p-3 text-left shadow-lg"
+      className="w-72 max-h-[min(70vh,36rem)] overflow-y-auto rounded-md border border-border bg-bg-surface p-3 text-left shadow-lg"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="mb-1.5 flex items-center justify-between gap-2">
@@ -87,20 +88,16 @@ export function useAnnotationControls(highlight, meta, { canReview, canReply, on
         </span>
       </div>
       {meta.user && <p className="text-xs text-text-secondary mb-1">{meta.user}</p>}
-      <p className="text-sm mb-2 whitespace-pre-wrap">{meta.comment}</p>
+      <p className="text-sm mb-2 break-words [overflow-wrap:anywhere] whitespace-pre-wrap">{meta.comment}</p>
 
-      {meta.reply && (
-        <div className="mb-2 rounded-md bg-bg-panel p-2">
-          <p className="text-[11px] font-semibold text-text-secondary mb-0.5">Balasan Mahasiswa</p>
-          <p className="text-sm whitespace-pre-wrap">{meta.reply}</p>
-        </div>
-      )}
+      <AnnotationConversation annotation={meta} currentUserId={currentUserId} />
 
       {showReplyBox && (
         <div className="mb-2">
           <textarea
             rows={2}
             value={draft}
+            maxLength={2000}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {

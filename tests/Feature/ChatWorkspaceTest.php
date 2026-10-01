@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Conversation;
+use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\Message;
 use App\Models\User;
@@ -139,5 +140,56 @@ class ChatWorkspaceTest extends TestCase
             'attachable_type' => 'workspace', 'attachable_id' => 99999999])->assertRedirect();
         $this->assertDatabaseHas('messages', ['conversation_id' => $thread->id,
             'body' => 'Pesan', 'attachable_type' => null, 'attachable_id' => null]);
+    }
+
+    public function test_entry_context_prefills_reference_without_sending_and_can_be_sent_to_correct_thread(): void
+    {
+        $lecturer = $this->account('dosen', 'Lecturer');
+        $student = $this->account('mahasiswa', 'Student');
+        $program = $this->program($student, $lecturer);
+        foreach (['logbook', 'revisi'] as $kind) {
+            $entry = LogbookEntry::create([
+                'mahasiswa_ta_id' => $program->id, 'dosen_id' => $lecturer->id,
+                'jenis' => $kind, 'sesi_ke' => $kind === 'revisi' ? 3 : 2,
+                'revision_round' => $kind === 'revisi' ? 1 : null,
+                'status' => LogbookEntry::STATUS_SUBMITTED,
+            ]);
+            $this->actingAs($student)->get(route('chat.start', ['user' => $lecturer->id, 'ta' => $program->id, 'entry' => $entry->id]))
+                ->assertRedirect();
+            $thread = Conversation::where('mahasiswa_ta_id', $program->id)->firstOrFail();
+            $this->get(route('chat.show', ['conversation' => $thread, 'entry' => $entry->id]))
+                ->assertOk()->assertSee('value="logbook"', false)->assertSee('value="'.$entry->id.'"', false)
+                ->assertSee($kind === 'revisi' ? 'Referensi: Revisi r1' : 'Referensi: Entri #2')
+                ->assertSee('Hapus referensi terpilih');
+            $this->assertSame($kind === 'revisi' ? 1 : 0, $thread->messages()->count());
+            $this->post(route('chat.store', $thread), [
+                'body' => 'Mari bahas entri ini', 'attachable_type' => 'logbook', 'attachable_id' => $entry->id,
+            ])->assertRedirect();
+            $this->assertDatabaseHas('messages', [
+                'conversation_id' => $thread->id, 'attachable_type' => LogbookEntry::class, 'attachable_id' => $entry->id,
+            ]);
+        }
+    }
+
+    public function test_entry_context_rejects_cross_program_and_nonparticipants(): void
+    {
+        $lecturer = $this->account('dosen', 'Lecturer');
+        $student = $this->account('mahasiswa', 'Student');
+        $outsider = $this->account('mahasiswa', 'Outsider');
+        $program = $this->program($student, $lecturer);
+        $foreign = $this->program($outsider, $lecturer);
+        $entry = LogbookEntry::create(['mahasiswa_ta_id' => $foreign->id,
+            'jenis' => LogbookEntry::JENIS_LOGBOOK, 'status' => LogbookEntry::STATUS_SUBMITTED]);
+        $thread = Conversation::create(['user_one_id' => min($student->id, $lecturer->id),
+            'user_two_id' => max($student->id, $lecturer->id), 'mahasiswa_ta_id' => $program->id]);
+
+        $this->actingAs($student)->get(route('chat.start', ['user' => $lecturer->id, 'ta' => $program->id, 'entry' => $entry->id]))
+            ->assertForbidden();
+        $this->get(route('chat.show', ['conversation' => $thread, 'entry' => $entry->id]))->assertForbidden();
+        $this->actingAs($lecturer)->post(route('chat.store', $thread), ['body' => 'Salah program',
+            'attachable_type' => 'logbook', 'attachable_id' => $entry->id])->assertForbidden();
+        $this->assertDatabaseMissing('messages', ['conversation_id' => $thread->id, 'body' => 'Salah program']);
+        $this->actingAs($outsider)->get(route('chat.show', ['conversation' => $thread, 'entry' => $entry->id]))
+            ->assertForbidden();
     }
 }

@@ -59,6 +59,7 @@ return [
         'logbook_entries' => ['type' => 'mahasiswa_ta_scope', 'column' => 'mahasiswa_ta_id'],
         'action_items' => ['type' => 'via', 'column' => 'logbook_entry_id', 'parent' => 'logbook_entries'],
         'pdf_comments' => ['type' => 'via', 'column' => 'logbook_entry_id', 'parent' => 'logbook_entries'],
+        'pdf_comment_replies' => ['type' => 'via', 'column' => 'pdf_comment_id', 'parent' => 'pdf_comments'],
         'logbook_harian_kp' => ['type' => 'mahasiswa_ta_scope', 'column' => 'mahasiswa_ta_id'],
         'inactivity_notifications' => ['type' => 'mahasiswa_ta_scope', 'column' => 'mahasiswa_ta_id'],
 
@@ -102,6 +103,7 @@ return [
         ['reason' => 'finalization_approval', 'table' => 'finalization_approvals', 'source' => 'finalization_approvals', 'columns' => ['pembimbing_id'], 'scoped_by' => ['finalization_id', 'thesis_finalizations']],
         ['reason' => 'logbook_reviewer', 'table' => 'logbook_entries', 'source' => 'logbook_entries', 'columns' => ['dosen_id'], 'scoped_by' => ['mahasiswa_ta_id', 'mahasiswa_ta']],
         ['reason' => 'pdf_comment_author', 'table' => 'pdf_comments', 'source' => 'pdf_comments', 'columns' => ['user_id'], 'scoped_by' => ['logbook_entry_id', 'logbook_entries']],
+        ['reason' => 'pdf_comment_reply_author', 'table' => 'pdf_comment_replies', 'source' => 'pdf_comment_replies', 'columns' => ['user_id'], 'scoped_by' => ['pdf_comment_id', 'pdf_comments']],
         ['reason' => 'workspace_admin', 'table' => 'institution_workspaces', 'source' => 'institution_workspaces', 'columns' => ['created_by'], 'scoped_by' => ['institution_id', null]],
         ['reason' => 'workspace_admin', 'table' => 'institution_workspace_files', 'source' => 'institution_workspace_files', 'columns' => ['uploaded_by', 'deleted_by'], 'scoped_by' => ['institution_workspace_id', 'institution_workspaces']],
         ['reason' => 'admin_scope_grantee', 'table' => 'admin_scopes', 'source' => 'admin_scopes', 'columns' => ['user_id', 'granted_by'], 'scoped_by' => ['institution_id', null]],

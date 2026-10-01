@@ -110,4 +110,70 @@ class PdfCommentResponseFlowTest extends TestCase
 
         $this->assertSame(1, $this->dosen->fresh()->notifications()->count());
     }
+
+    public function test_mahasiswa_dan_reviewer_dapat_berdiskusi_tanpa_menimpa_balasan_sebelumnya(): void
+    {
+        $comment = $this->dosenComment();
+        $this->actingAs($this->mahasiswa)->postJson(route('pdf-comments.reply', $comment), [
+            'reply' => 'Penjelasan metode sudah saya tambahkan.',
+        ])->assertOk()->assertJsonCount(1, 'replies');
+
+        $this->actingAs($this->dosen)->postJson(route('pdf-comments.reply', $comment), [
+            'reply' => 'Mohon sertakan rujukannya juga.',
+        ])->assertOk()->assertJsonPath('resolution_status', PdfComment::STATUS_ADDRESSED)
+            ->assertJsonCount(2, 'replies');
+
+        $this->actingAs($this->mahasiswa)->postJson(route('pdf-comments.reply', $comment), [
+            'reply' => 'Rujukan sudah saya tambahkan.',
+        ])->assertOk()->assertJsonCount(3, 'replies');
+
+        $messages = $comment->replies()->orderBy('id')->get();
+        $this->assertSame([$this->mahasiswa->id, $this->dosen->id, $this->mahasiswa->id], $messages->pluck('user_id')->all());
+        $this->assertSame(['Penjelasan metode sudah saya tambahkan.', 'Mohon sertakan rujukannya juga.', 'Rujukan sudah saya tambahkan.'], $messages->pluck('body')->all());
+        $this->assertSame('Penjelasan metode sudah saya tambahkan.', $comment->fresh()->reply);
+        $this->actingAs($this->dosen)->getJson(route('logbook.pdf.comments', ['logbook' => $this->entry, 'type' => PdfComment::FILE_TYPE_CATATAN]))
+            ->assertOk()->assertJsonPath('0.replies.1.body', 'Mohon sertakan rujukannya juga.')
+            ->assertJsonPath('0.replies.2.user_id', $this->mahasiswa->id);
+        $this->assertSame(PdfComment::STATUS_ADDRESSED, $comment->fresh()->resolution_status);
+    }
+
+    public function test_balasan_legacy_tetap_ditampilkan_dan_balasan_baru_tidak_menggantinya(): void
+    {
+        $comment = $this->dosenComment();
+        $comment->update(['reply' => 'Balasan lama sebelum migrasi.']);
+
+        $this->actingAs($this->dosen)->getJson(route('logbook.pdf.comments', ['logbook' => $this->entry, 'type' => PdfComment::FILE_TYPE_CATATAN]))
+            ->assertOk()->assertJsonPath('0.replies.0.body', 'Balasan lama sebelum migrasi.');
+
+        $this->postJson(route('pdf-comments.reply', $comment), ['reply' => 'Mohon revisi lagi.'])
+            ->assertOk()->assertJsonPath('replies.0.body', 'Balasan lama sebelum migrasi.')
+            ->assertJsonPath('replies.1.body', 'Mohon revisi lagi.');
+        $this->assertSame('Balasan lama sebelum migrasi.', $comment->fresh()->reply);
+    }
+
+    public function test_hanya_pemilik_dan_reviewer_yang_dapat_mengirim_balasan_valid(): void
+    {
+        $comment = $this->dosenComment();
+        $unrelated = User::create(['name' => 'Dosen Lain', 'email' => 'outsider-'.uniqid().'@t.test', 'password' => bcrypt('password')]);
+        $unrelated->assignRole('dosen');
+
+        $this->actingAs($unrelated)->postJson(route('pdf-comments.reply', $comment), ['reply' => 'Tidak boleh.'])->assertForbidden();
+        $this->actingAs($this->dosen)->postJson(route('pdf-comments.reply', $comment), ['reply' => '  '])->assertUnprocessable();
+        $this->postJson(route('pdf-comments.reply', $comment), ['reply' => str_repeat('x', 2001)])->assertUnprocessable();
+        $this->assertSame(0, $comment->replies()->count());
+    }
+
+    public function test_komentar_dan_balasan_panjang_tidak_dipotong_dari_api(): void
+    {
+        $comment = $this->dosenComment();
+        $longComment = str_repeat('Uraikan hasil uji dan metode secara rinci. ', 35);
+        $longReply = trim(str_repeat('Penjelasan dan rujukan sudah dilengkapi. ', 35));
+        $comment->update(['comment' => $longComment]);
+
+        $this->actingAs($this->mahasiswa)->postJson(route('pdf-comments.reply', $comment), ['reply' => $longReply])
+            ->assertOk()->assertJsonPath('replies.0.body', $longReply);
+        $this->getJson(route('logbook.pdf.comments', ['logbook' => $this->entry, 'type' => PdfComment::FILE_TYPE_CATATAN]))
+            ->assertOk()->assertJsonPath('0.payload.body.0.value', $longComment)
+            ->assertJsonPath('0.replies.0.body', $longReply);
+    }
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PdfComment extends Model
 {
@@ -78,6 +79,36 @@ class PdfComment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function replies(): HasMany
+    {
+        return $this->hasMany(PdfCommentReply::class)->orderBy('id');
+    }
+
+    public function repliesForViewer(): array
+    {
+        $replies = $this->replies->map(fn (PdfCommentReply $reply) => [
+            'id' => $reply->id,
+            'user_id' => $reply->user_id,
+            'user' => $reply->user?->name,
+            'body' => $reply->body,
+            'created_at' => $reply->created_at,
+        ])->all();
+
+        // Data lama yang ditulis setelah migrasi (atau belum dibackfill) tetap terbaca.
+        $owner = $this->entry?->mahasiswaTa?->user_id;
+        if ($this->reply && ! collect($replies)->contains(fn ($item) => $item['user_id'] === $owner && $item['body'] === $this->reply)) {
+            array_unshift($replies, [
+                'id' => null,
+                'user_id' => $owner,
+                'user' => $this->entry?->mahasiswaTa?->mahasiswa?->name,
+                'body' => $this->reply,
+                'created_at' => $this->updated_at,
+            ]);
+        }
+
+        return $replies;
     }
 
     /**

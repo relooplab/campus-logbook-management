@@ -11,6 +11,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { STATUS_META, resolveButtonLabel } from './HighlightToolbar.jsx';
+import AnnotationConversation from './AnnotationConversation.jsx';
 
 /**
  * Sidebar daftar anotasi ala example-app:
@@ -48,7 +49,7 @@ function PageGroup({ pageNumber, highlightCount, children, forceOpen }) {
   );
 }
 
-function HighlightCard({ annotation: a, isActive, canReview, canReply, onOpen, onReply, onToggleResolve, onDelete }) {
+function HighlightCard({ annotation: a, isActive, canReview, canDiscuss, currentUserId, onOpen, onReply, onToggleResolve, onDelete }) {
   const [replying, setReplying] = useState(false);
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(null);
@@ -56,7 +57,7 @@ function HighlightCard({ annotation: a, isActive, canReview, canReply, onOpen, o
   const type = TYPE_META[a.type] || TYPE_META.area;
   const Icon = type.icon;
   const status = STATUS_META[a.resolutionStatus] || STATUS_META.open;
-  const showReply = canReply && a.isDosen && a.resolutionStatus === 'open' && !a.reply;
+  const showReply = canDiscuss;
 
   async function sendReply() {
     const text = draft.trim();
@@ -96,23 +97,18 @@ function HighlightCard({ annotation: a, isActive, canReview, canReply, onOpen, o
       </div>
 
       {a.type === 'text' && a.quote && (
-        <p className="mb-2 line-clamp-2 text-sm italic text-text-secondary">“{a.quote}”</p>
+        <p className="mb-2 break-words [overflow-wrap:anywhere] whitespace-pre-wrap text-sm italic text-text-secondary">“{a.quote}”</p>
       )}
 
       <div className="mb-1 flex items-start gap-2 rounded-md bg-bg-panel/60 p-2">
         <MessageSquare className="mt-0.5 h-3.5 w-3.5 shrink-0 text-text-secondary" />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           {a.user && <p className="text-[11px] font-semibold text-text-secondary">{a.user}</p>}
-          <p className="line-clamp-3 text-sm">{a.comment}</p>
+          <p className="break-words [overflow-wrap:anywhere] whitespace-pre-wrap text-sm">{a.comment}</p>
         </div>
       </div>
 
-      {a.reply && (
-        <div className="mb-1 rounded-md border-l-2 border-brand bg-bg-panel/40 p-2">
-          <p className="text-[11px] font-semibold text-text-secondary">Balasan Mahasiswa</p>
-          <p className="line-clamp-3 text-sm whitespace-pre-wrap">{a.reply}</p>
-        </div>
-      )}
+      <AnnotationConversation annotation={a} currentUserId={currentUserId} />
 
       {replying ? (
         <div className="mt-2" onClick={(e) => e.stopPropagation()}>
@@ -120,6 +116,7 @@ function HighlightCard({ annotation: a, isActive, canReview, canReply, onOpen, o
             rows={2}
             autoFocus
             value={draft}
+            maxLength={2000}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
@@ -187,6 +184,8 @@ export default function AnnotationSidebar({
   scrolledId,
   canReview,
   canReply,
+  canDiscuss,
+  currentUserId,
   unrespondedCount,
   onOpen,
   onReply,
@@ -208,7 +207,8 @@ export default function AnnotationSidebar({
         (a) =>
           (a.comment || '').toLowerCase().includes(q) ||
           (a.user || '').toLowerCase().includes(q) ||
-          (a.reply || '').toLowerCase().includes(q),
+          (a.reply || '').toLowerCase().includes(q) ||
+          (a.replies || []).some((message) => (message.body || '').toLowerCase().includes(q)),
       );
     }
     if (typeFilter !== 'all') list = list.filter((a) => (a.type || 'area') === typeFilter);
@@ -305,7 +305,7 @@ export default function AnnotationSidebar({
       </div>
 
       {/* Daftar kartu */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="p-2">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center px-4">
@@ -329,6 +329,8 @@ export default function AnnotationSidebar({
                     isActive={String(a.id) === String(scrolledId)}
                     canReview={canReview}
                     canReply={canReply}
+                    canDiscuss={canDiscuss}
+                    currentUserId={currentUserId}
                     onOpen={onOpen}
                     onReply={onReply}
                     onToggleResolve={onToggleResolve}
@@ -346,6 +348,8 @@ export default function AnnotationSidebar({
                   isActive={String(a.id) === String(scrolledId)}
                   canReview={canReview}
                   canReply={canReply}
+                  canDiscuss={canDiscuss}
+                  currentUserId={currentUserId}
                   onOpen={onOpen}
                   onReply={onReply}
                   onToggleResolve={onToggleResolve}

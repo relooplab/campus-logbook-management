@@ -96,6 +96,7 @@ export function toAnnotation(item) {
     comment,
     quote,
     reply: item.reply || '',
+    replies: item.replies || [],
     resolved: resolutionStatus === 'resolved',
     resolutionStatus,
     isDosen: !!item.is_dosen,

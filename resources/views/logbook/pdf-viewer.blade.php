@@ -24,6 +24,7 @@
         replyUrl: @json(url("/pdf-comments/{id}/reply")),
         deleteUrl: @json(url("/pdf-comments/{id}")),
         canReply: @json($logbook->mahasiswaTa?->user_id === auth()->user()->id),
+        currentUserId: @json(auth()->id()),
         burnUrl: @json(route("logbook.pdf.burn", ["logbook" => $logbook, "type" => "__TYPE__"])),
         buildFeedbackUrl: @if (auth()->user()->can('review', $logbook))
             @json(route("quick-review.build-feedback", $logbook))
@@ -31,6 +32,7 @@
             null
         @endif ,
         canReview: @json(auth()->user()->can('review', $logbook)),
+        canDiscuss: @json($logbook->mahasiswaTa?->user_id === auth()->id() || auth()->user()->can('isReviewer', $logbook)),
         returnUrl: @if(request()->boolean('quick_review') && auth()->user()->can('review', $logbook))
             @json(route('quick-review.index', ['item' => $logbook->id]))
         @else

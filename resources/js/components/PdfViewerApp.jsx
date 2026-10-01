@@ -13,7 +13,9 @@ import {
 import SelectionTip from './pdf/SelectionTip.jsx';
 import AnnotationSidebar from './pdf/AnnotationSidebar.jsx';
 import { useAnnotationControls } from './pdf/HighlightToolbar.jsx';
-import { capturePdfPosition, restorePdfPosition } from './pdf/viewPosition.js';
+import { capturePdfPosition, captureSpreadAnchor, centerPdfSpread, restorePdfPosition } from './pdf/viewPosition.js';
+import { correctAreaSelection } from './pdf/areaPosition.js';
+import { parseZoomPercent, ZOOM_OPTIONS } from './pdf/zoom.js';
 import {
   buildPayloadFromSelection,
   statusColor,
@@ -36,7 +38,7 @@ import {
  */
 
 const DATA = window.PDF_VIEWER_DATA || {};
-const { title, draftUrl, catatanUrl, hasCatatan, entryId, csrf, commentsUrl, storeUrl, resolveUrl, replyUrl, deleteUrl, burnUrl, buildFeedbackUrl, canReview, canReply, returnUrl, quickReviewUrl } = DATA;
+const { title, draftUrl, catatanUrl, hasCatatan, entryId, csrf, commentsUrl, storeUrl, resolveUrl, replyUrl, deleteUrl, burnUrl, buildFeedbackUrl, canReview, canReply, canDiscuss, currentUserId, returnUrl, quickReviewUrl } = DATA;
 
 const parseIdFromHash = () => {
   const m = (document.location.hash || '').match(/^#highlight-(.+)$/);
@@ -57,6 +59,8 @@ function HighlightContainer({ annotationsById, onReply, onToggleResolve, onDelet
   const controls = useAnnotationControls(highlight, meta, {
     canReview,
     canReply,
+    canDiscuss,
+    currentUserId,
     onReply,
     onToggleResolve,
     onDelete,
@@ -208,6 +212,7 @@ function PdfViewerApp() {
   // Skala awal "page-width" (pas lebar panel, seperti viewer lama) agar tajam;
   // setelah pengguna zoom, onZoomChange mengisinya dengan angka.
   const [scale, setScale] = useState('page-width');
+  const [zoomInput, setZoomInput] = useState('Pas');
   const [error, setError] = useState(null);
   const [areaMode, setAreaMode] = useState(true); // true = seret area, false = blok teks
   const [hasSelectableText, setHasSelectableText] = useState(null); // null = memeriksa, false = PDF pindaian
@@ -228,6 +233,21 @@ function PdfViewerApp() {
   const utilsRef = useRef(null);
   const positionsRef = useRef({ draft: null, catatan: null });
   const pendingRestoreRef = useRef(null);
+  const spreadAnchorRef = useRef(null);
+
+  useEffect(() => {
+    setZoomInput(typeof scale === 'number' ? `${Math.round(scale * 100)}%` : 'Pas');
+  }, [scale]);
+
+  function commitZoom(value) {
+    const next = value.trim().toLowerCase() === 'pas' ? 'page-width' : parseZoomPercent(value);
+    if (next === null) {
+      setZoomInput(typeof scale === 'number' ? `${Math.round(scale * 100)}%` : 'Pas');
+      return;
+    }
+    setScale(next);
+    setZoomInput(typeof next === 'number' ? `${Math.round(next * 100)}%` : 'Pas');
+  }
 
   function switchFile(type) {
     if (type === activeType) return;
@@ -298,21 +318,32 @@ function PdfViewerApp() {
     const viewer = utilsRef.current?.getViewer();
     if (!viewer) return;
     viewer.spreadMode = spread;
-    if (spread) {
-      viewer.currentScaleValue = 'page-width';
-      const pages = viewer.viewer.querySelector('.spread')?.querySelectorAll('.page');
-      const width = Array.from(pages || []).reduce((total, page) => total + page.getBoundingClientRect().width, 0);
-      if (width > 0) {
-        setScale(Math.max(0.1, Math.floor(viewer.currentScale * (viewer.container.clientWidth - 40) / width * 1000) / 1000));
-      }
-    }
+    if (!spread) return;
+    const anchor = spreadAnchorRef.current;
+    if (!anchor) return;
+    // PDF.js already divides page-width by two for spreads. The previous
+    // manual division shrank the pages again and kept the old horizontal scroll.
+    viewer.currentScaleValue = 'page-width';
+    let secondFrame;
+    const firstFrame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(() => {
+        if (spreadAnchorRef.current !== anchor || utilsRef.current?.getViewer() !== viewer) return;
+        if (centerPdfSpread(viewer, anchor)) spreadAnchorRef.current = null;
+      });
+    });
+    return () => {
+      cancelAnimationFrame(firstFrame);
+      if (secondFrame) cancelAnimationFrame(secondFrame);
+    };
   }, [spread, searchReady]);
 
   function toggleSpread() {
     if (spread) {
+      spreadAnchorRef.current = null;
       setSpread(0);
       setScale(prevScaleRef.current);
     } else {
+      spreadAnchorRef.current = captureSpreadAnchor(utilsRef.current?.getViewer());
       prevScaleRef.current = scale;
       setSpread(1);
       setScale('page-width');
@@ -488,7 +519,8 @@ function PdfViewerApp() {
   async function saveAnnotation(selection, commentText) {
     if (!selection || !selection.position) return false;
     const comment = (commentText || '').trim() || 'Tandai area';
-    const payload = buildPayloadFromSelection(entryId, activeType, selection, comment);
+    const corrected = correctAreaSelection(selection, utilsRef.current?.getViewer());
+    const payload = buildPayloadFromSelection(entryId, activeType, corrected, comment);
     try {
       const res = await fetch(storeUrl, {
         method: 'POST',
@@ -524,6 +556,7 @@ function PdfViewerApp() {
       setAnnotations((a) => a.map((x) => (x.id === id ? {
         ...x,
         reply: d.reply || '',
+        replies: d.replies || [],
         resolutionStatus: d.resolution_status || x.resolutionStatus,
         resolved: (d.resolution_status || x.resolutionStatus) === 'resolved',
       } : x)));
@@ -625,7 +658,7 @@ function PdfViewerApp() {
     <div className={isFullscreen
       ? 'fixed inset-0 z-[60] bg-bg-base flex flex-col gap-2 p-2'
       : 'h-full flex flex-col gap-2 p-2 md:p-3'}>
-      {/* Bar compact: kembali | judul | file | mode | zoom | panel || aksi */}
+      {/* Bar compact: kembali | judul | anotasi | outline | file | mode | zoom || aksi */}
       <div className="flex items-center gap-1.5 md:gap-2 rounded-lg border border-border bg-bg-surface px-2 py-1.5 overflow-x-auto shrink-0">
         <a href={returnUrl} title="Kembali ke detail"
           className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap bg-bg-panel hover:bg-bg-hover shrink-0">
@@ -634,6 +667,13 @@ function PdfViewerApp() {
         <span className="text-sm font-bold whitespace-nowrap truncate" title={`Anotasi PDF · ${title || ''}`}>
           Anotasi PDF · {title}
         </span>
+        <button onClick={() => setSidebarOpen((v) => !v)}
+          aria-label="Tampilkan/sembunyikan panel anotasi"
+          aria-pressed={sidebarOpen}
+          title="Tampilkan/sembunyikan panel anotasi"
+          className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap shrink-0 ${sidebarOpen ? 'bg-brand text-white' : 'bg-bg-panel hover:bg-bg-hover'}`}>
+          <PanelLeft className="h-3.5 w-3.5" /> {annotations.length}
+        </button>
         <button
           onClick={() => setLeftOpen((v) => !v)}
           title="Outline & halaman"
@@ -713,9 +753,34 @@ function PdfViewerApp() {
         <div className="flex items-center gap-0.5 rounded-md bg-bg-panel p-0.5 shrink-0" aria-label="Zoom">
           <button onClick={zoomOut} title="Perkecil"
             className="px-2 py-1 rounded text-xs font-bold leading-none hover:bg-bg-hover">−</button>
-          <span className="text-xs font-medium tabular-nums min-w-[2.75rem] text-center" title={typeof scale === 'number' ? '' : 'Otomatis selebar panel'}>
-            {typeof scale === 'number' ? `${Math.round(scale * 100)}%` : 'Pas'}
-          </span>
+          <input
+            type="text"
+            inputMode="decimal"
+            aria-label="Zoom PDF dalam persen"
+            title="Ketik zoom (10–400%), Enter untuk menerapkan"
+            value={zoomInput}
+            onChange={(e) => setZoomInput(e.target.value)}
+            onBlur={(e) => commitZoom(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') { e.currentTarget.blur(); }
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                setZoomInput(typeof scale === 'number' ? `${Math.round(scale * 100)}%` : 'Pas');
+              }
+            }}
+            className="w-16 rounded bg-transparent px-1 py-0.5 text-center text-xs font-medium tabular-nums outline-none focus:ring-2 focus:ring-brand"
+          />
+          <select
+            aria-label="Pilihan zoom PDF"
+            title="Pilih persentase zoom"
+            value={scale === 'page-width' ? 'Pas' : ZOOM_OPTIONS.includes(Math.round(scale * 100)) && Math.abs(scale * 100 - Math.round(scale * 100)) < 0.001 ? `${Math.round(scale * 100)}%` : ''}
+            onChange={(e) => commitZoom(e.target.value)}
+            className="w-5 bg-transparent text-xs outline-none cursor-pointer"
+          >
+            <option value="" disabled>Zoom</option>
+            <option value="Pas">Pas lebar</option>
+            {ZOOM_OPTIONS.map((n) => <option key={n} value={`${n}%`}>{n}%</option>)}
+          </select>
           <button onClick={zoomIn} title="Perbesar"
             className="px-2 py-1 rounded text-xs font-bold leading-none hover:bg-bg-hover">+</button>
           {!isMobile && (
@@ -727,11 +792,6 @@ function PdfViewerApp() {
             </button>
           )}
         </div>
-        <button onClick={() => setSidebarOpen((v) => !v)}
-          title="Tampilkan/sembunyikan panel anotasi"
-          className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap shrink-0 ${sidebarOpen ? 'bg-brand text-white' : 'bg-bg-panel hover:bg-bg-hover'}`}>
-          <PanelLeft className="h-3.5 w-3.5" /> {annotations.length}
-        </button>
         <span className="hidden lg:inline text-xs text-text-secondary whitespace-nowrap shrink-0">{numPages || '…'} hal</span>
         <div className="ml-auto flex items-center gap-1.5 shrink-0">
           {buildFeedbackUrl && (
@@ -789,6 +849,8 @@ function PdfViewerApp() {
               scrolledId={scrolledId}
               canReview={canReview}
               canReply={canReply}
+              canDiscuss={canDiscuss}
+              currentUserId={currentUserId}
               unrespondedCount={unrespondedDosen.length}
               onOpen={openAnnotation}
               onReply={saveReply}

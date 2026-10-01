@@ -29,6 +29,8 @@ return [
         ['table' => 'action_items', 'column' => 'logbook_entry_id', 'references' => 'logbook_entries'],
         ['table' => 'pdf_comments', 'column' => 'logbook_entry_id', 'references' => 'logbook_entries'],
         ['table' => 'pdf_comments', 'column' => 'user_id', 'references' => 'users'],
+        ['table' => 'pdf_comment_replies', 'column' => 'pdf_comment_id', 'references' => 'pdf_comments'],
+        ['table' => 'pdf_comment_replies', 'column' => 'user_id', 'references' => 'users'],
         ['table' => 'logbook_harian_kp', 'column' => 'mahasiswa_ta_id', 'references' => 'mahasiswa_ta'],
         ['table' => 'inactivity_notifications', 'column' => 'mahasiswa_ta_id', 'references' => 'mahasiswa_ta'],
 
