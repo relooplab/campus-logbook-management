@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\User;
+use App\Notifications\ActivityNotification;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -110,6 +112,75 @@ class RevisiRecipientTest extends TestCase
             'progres_kendala' => 'Membahas progres dan kendala.',
             'submit' => $submit ? 1 : null,
         ];
+    }
+
+    private function assertReviewEmail(User $recipient, LogbookEntry $entry, string $description): void
+    {
+        Notification::assertSentTo($recipient, ActivityNotification::class, function (ActivityNotification $notification) use ($recipient, $entry, $description) {
+            $expected = $this->mahasiswa->name.' (NIM '.$this->mahasiswa->nim.') mengirim '.$description.' untuk direview';
+            $this->assertStringContainsString($expected, $notification->message);
+            $this->assertSame('Entri Baru Menunggu Review', $notification->subject);
+            $this->assertSame(route('logbook.show', $entry), $notification->url);
+            $this->assertStringContainsString($expected, $notification->toArray($recipient)['message']);
+            $mail = $notification->toMail($recipient);
+            $this->assertSame($notification->subject, $mail->subject);
+            $this->assertStringContainsString($this->mahasiswa->name, $mail->render());
+            $this->assertStringContainsString($this->mahasiswa->nim, $mail->render());
+
+            return true;
+        });
+    }
+
+    public function test_logbook_baru_email_review_menyebut_nama_dan_nim_mahasiswa(): void
+    {
+        Notification::fake();
+
+        $this->actingAs($this->mahasiswa)->post(route('logbook.store'), $this->logbookPayload($this->penguji->id))
+            ->assertRedirect(route('logbook.index'));
+
+        $entry = $this->ta->entries()->where('jenis', LogbookEntry::JENIS_LOGBOOK)->latest('id')->firstOrFail();
+        $this->assertReviewEmail($this->penguji, $entry, 'entri logbook sesi '.$entry->sesi_ke);
+        $this->assertReviewEmail($this->pembimbing, $entry, 'entri logbook sesi '.$entry->sesi_ke);
+    }
+
+    public function test_revisi_baru_email_review_menyebut_mahasiswa_dan_peran_penerima(): void
+    {
+        Notification::fake();
+
+        $this->actingAs($this->mahasiswa)->post(route('logbook.store-revisi'), $this->revisiPayload($this->penguji->id))
+            ->assertRedirect();
+
+        $entry = $this->entryRevisiTerakhir();
+        $this->assertReviewEmail($this->penguji, $entry, 'entri revisi');
+        $this->assertReviewEmail($this->pembimbing, $entry, 'entri revisi');
+        Notification::assertSentTo($this->penguji, ActivityNotification::class, function (ActivityNotification $notification) {
+            $this->assertStringContainsString('oleh Penguji 1', $notification->message);
+
+            return true;
+        });
+    }
+
+    public function test_draf_yang_dikirim_kemudian_email_review_menyebut_identitas_mahasiswa(): void
+    {
+        Notification::fake();
+
+        $this->actingAs($this->mahasiswa)->post(route('logbook.store'), $this->logbookPayload($this->penguji->id, false))
+            ->assertRedirect();
+        $entry = $this->ta->entries()->where('jenis', LogbookEntry::JENIS_LOGBOOK)->latest('id')->firstOrFail();
+        Notification::assertNothingSent();
+
+        $this->post(route('logbook.submit', $entry))->assertRedirect();
+        $this->assertReviewEmail($this->penguji, $entry, 'entri logbook sesi '.$entry->sesi_ke);
+        $this->assertReviewEmail($this->pembimbing, $entry, 'entri logbook sesi '.$entry->sesi_ke);
+    }
+
+    public function test_pesan_review_tanpa_nim_tetap_menyebut_nama_mahasiswa(): void
+    {
+        $this->mahasiswa->update(['nim' => null]);
+        $this->assertSame(
+            'Mhs Revisi mengirim entri logbook sesi 1 untuk direview.',
+            $this->parent->reviewSubmissionMessage(),
+        );
     }
 
     public function test_form_logbook_menampilkan_pembimbing_dan_penguji_sekali_saja(): void

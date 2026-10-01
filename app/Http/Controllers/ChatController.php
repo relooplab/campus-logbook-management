@@ -12,11 +12,15 @@ use App\Models\SeminarSubmission;
 use App\Models\ThesisFinalization;
 use App\Models\User;
 use App\Models\WorkspaceFile;
+use App\Services\StorageUsageService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ChatController extends Controller
@@ -51,7 +55,7 @@ class ChatController extends Controller
 
         // Load one window at a time; older messages remain accessible via ?before=ID.
         $before = filter_var($request->query('before'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: null;
-        $query = $conversation->messages()->with('sender', 'attachable');
+        $query = $conversation->messages()->with('sender', 'attachable', 'workspaceFiles.file');
         if ($before) {
             $query->where('id', '<', $before);
         }
@@ -162,7 +166,9 @@ class ChatController extends Controller
                 'program' => $program, 'url' => route('chat.show', $conversation)];
         }
 
-        return view('chat.index', compact('user', 'rows', 'counts', 'filter', 'search', 'conversation', 'messages', 'active', 'hasOlder', 'viewingOlder', 'contextEntry'));
+        $canUploadFiles = $conversation && $this->canUploadFiles($conversation, $user);
+
+        return view('chat.index', compact('user', 'rows', 'counts', 'filter', 'search', 'conversation', 'messages', 'active', 'hasOlder', 'viewingOlder', 'contextEntry', 'canUploadFiles'));
     }
 
     /**
@@ -208,10 +214,23 @@ class ChatController extends Controller
         abort_unless($conversation->hasUser($user->id), 403);
 
         $validated = $request->validate([
-            'body' => ['required', 'string', 'max:5000'],
+            'body' => ['nullable', 'string', 'max:5000'],
             'attachable_type' => ['nullable', 'in:workspace,logbook,logbook_harian,seminar,finalization'],
             'attachable_id' => ['nullable', 'integer'],
+            'files' => ['nullable', 'array', 'max:5'],
+            'files.*' => ['required', 'file', 'mimes:pdf,doc,docx,xls,xlsx', 'max:51200'],
         ]);
+
+        $uploads = $request->file('files', []);
+        $body = trim($validated['body'] ?? '');
+        if ($body === '' && count($uploads) === 0) {
+            throw ValidationException::withMessages(['body' => 'Tulis pesan atau pilih file untuk dikirim.']);
+        }
+
+        $ta = $conversation->mahasiswaTa;
+        if (count($uploads) > 0) {
+            abort_unless($this->canUploadFiles($conversation, $user), 403);
+        }
 
         $attach = null;
         if (! empty($validated['attachable_type']) && ! empty($validated['attachable_id'])) {
@@ -221,19 +240,84 @@ class ChatController extends Controller
                     && $this->canAccess($attach->mahasiswaTa, $conversation->other($user)), 403);
             }
         }
+        if ($body === '' && count($uploads) === 0 && ! $attach) {
+            throw ValidationException::withMessages(['body' => 'Tulis pesan atau pilih file untuk dikirim.']);
+        }
 
-        $message = Message::create([
-            'conversation_id' => $conversation->id,
-            'sender_id' => $user->id,
-            'body' => $validated['body'],
-            'attachable_type' => $attach ? get_class($attach) : null,
-            'attachable_id' => $attach ? $attach->id : null,
-        ]);
+        $storedPaths = [];
+        $save = function () use ($conversation, $user, $body, $attach, $ta, $uploads, &$storedPaths) {
+            return DB::transaction(function () use ($conversation, $user, $body, $attach, $ta, $uploads, &$storedPaths) {
+                $message = Message::create([
+                    'conversation_id' => $conversation->id,
+                    'sender_id' => $user->id,
+                    'body' => $body,
+                    'attachable_type' => $attach ? get_class($attach) : null,
+                    'attachable_id' => $attach ? $attach->id : null,
+                ]);
 
-        $conversation->touch();
+                if ($attach instanceof WorkspaceFile) {
+                    $message->workspaceFiles()->create([
+                        'workspace_file_id' => $attach->id,
+                        'original_name' => $attach->original_name,
+                    ]);
+                }
+
+                foreach ($uploads as $file) {
+                    $path = $file->store('workspace/'.$ta->id, 'local');
+                    if (! $path) {
+                        throw new \RuntimeException('Gagal menyimpan file ke workspace.');
+                    }
+                    $storedPaths[] = $path;
+                    $workspaceFile = WorkspaceFile::create([
+                        'mahasiswa_ta_id' => $ta->id,
+                        'uploaded_by' => $user->id,
+                        'original_name' => $file->getClientOriginalName(),
+                        'path' => $path,
+                        'mime_type' => $file->getClientMimeType(),
+                        'size' => $file->getSize(),
+                    ]);
+                    $message->workspaceFiles()->create([
+                        'workspace_file_id' => $workspaceFile->id,
+                        'original_name' => $workspaceFile->original_name,
+                    ]);
+                }
+
+                $conversation->touch();
+
+                return $message;
+            });
+        };
+
+        try {
+            $chargeTo = count($uploads) ? $ta->storageChargeTarget() : null;
+            $message = $chargeTo
+                ? app(StorageUsageService::class)->withUploadLock($chargeTo, collect($uploads)->sum(fn ($file) => $file->getSize()), $save)
+                : $save();
+        } catch (\Throwable $e) {
+            foreach ($storedPaths as $path) {
+                Storage::disk('local')->delete($path);
+            }
+            throw $e;
+        }
+
         $this->bestEffort(fn () => broadcast(new MessageSent($message, $conversation)));
 
         return redirect()->route('chat.show', $conversation);
+    }
+
+    private function canUploadFiles(Conversation $conversation, User $user): bool
+    {
+        $ta = $conversation->mahasiswaTa;
+        if (! $ta || ! $conversation->hasUser($user->id) || ! $ta->dosenHasGrantedAccess()) {
+            return false;
+        }
+
+        $other = $conversation->other($user);
+        $related = fn (User $participant) => $ta->isMember($participant)
+            || ($participant->isDosen() && ($ta->isPembimbing($participant) || $ta->isPenguji($participant)));
+
+        return $related($user) && $related($other)
+            && $user->can('viewWorkspace', $ta) && $other->can('viewWorkspace', $ta);
     }
 
     /**

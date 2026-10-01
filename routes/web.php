@@ -33,6 +33,7 @@ use App\Http\Controllers\SeminarSubmissionController;
 use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\WorkspaceController;
 use App\Http\Controllers\InstitutionWorkspaceController;
+use App\Http\Controllers\LandingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -42,9 +43,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    return redirect()->route(auth()->check() ? 'dashboard' : 'login');
-});
+Route::get('/', LandingController::class)->name('landing');
 
 // ------------------------------------------------------------------ auth
 Route::middleware('guest')->group(function () {

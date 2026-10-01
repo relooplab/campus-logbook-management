@@ -96,10 +96,10 @@
 .ctx-admin   { --brand: var(--accent-purple); --brand-hover: 140 118 181; --brand-light: 45 44 62; --brand-fill: var(--accent-purple); --brand-fill-hover: 140 118 181; }
 .ctx-mahasiswa { --brand: var(--accent-blue); --brand-hover: 98 129 195; --brand-light: 42 52 82; --brand-fill: var(--accent-blue); --brand-fill-hover: 96 130 205; }
 /* Variasi light untuk konteks */
-.light .ctx-dosen, body:not(.dark) .ctx-dosen { --brand-light: 246 236 226; }
-.light .ctx-kelompok, body:not(.dark) .ctx-kelompok { --brand-light: 226 238 236; }
-.light .ctx-admin, body:not(.dark) .ctx-admin { --brand-light: 236 232 243; }
-.light .ctx-mahasiswa, body:not(.dark) .ctx-mahasiswa { --brand-light: 228 233 246; }
+.light .ctx-dosen, html:not(.dark) .ctx-dosen { --brand-light: 246 236 226; }
+.light .ctx-kelompok, html:not(.dark) .ctx-kelompok { --brand-light: 226 238 236; }
+.light .ctx-admin, html:not(.dark) .ctx-admin { --brand-light: 236 232 243; }
+.light .ctx-mahasiswa, html:not(.dark) .ctx-mahasiswa { --brand-light: 228 233 246; }
 /* ============================================================
    Primitive utilities (komponen dari guideline)
    ============================================================ */

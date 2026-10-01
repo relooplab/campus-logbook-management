@@ -297,4 +297,21 @@ class LogbookEntry extends Model
             }
         }
     }
+
+    /** Isi notifikasi pengiriman entri, termasuk identitas mahasiswa pemilik program. */
+    public function reviewSubmissionMessage(?string $recipientRole = null): string
+    {
+        $student = $this->mahasiswaTa?->mahasiswa;
+        $identity = $student?->name ?: 'Mahasiswa';
+        if ($student?->nim) {
+            $identity .= ' (NIM '.$student->nim.')';
+        }
+
+        $entry = $this->jenis === self::JENIS_REVISI
+            ? 'entri revisi'
+            : 'entri logbook sesi '.$this->sesi_ke;
+
+        return $identity.' mengirim '.$entry.' untuk direview'
+            .($recipientRole ? ' oleh '.$recipientRole : '').'.';
+    }
 }

@@ -5,6 +5,7 @@ Aplikasi web untuk mencatat, memantau, dan mengelola proses bimbingan tugas akhi
 ## 🚀 Demo
 
 - Live URL: <https://logbook.reloop.id>
+- Beranda publik: <https://logbook.reloop.id/> — fitur, alur bimbingan, dan tautan untuk masuk atau mendaftar.
 - Dashboard mahasiswa:
 
   ![Dashboard mahasiswa](public/images/readme-dashboard-mahasiswa.jpeg)

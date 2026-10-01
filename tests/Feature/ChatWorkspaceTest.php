@@ -7,7 +7,11 @@ use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\Message;
 use App\Models\User;
+use App\Models\WorkspaceFile;
+use App\Services\StorageUsageService;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -34,6 +38,176 @@ class ChatWorkspaceTest extends TestCase
         return MahasiswaTa::create(['user_id' => $student->id, 'jenis' => 'ta',
             'fase' => 'proposal', 'status_ta' => 'aktif', 'target_sesi' => 7,
             'judul_ta' => 'Judul rahasia panjang untuk program '.$student->id, $role => $lecturer->id]);
+    }
+
+    private function thread(User $student, User $lecturer, ?MahasiswaTa $program): Conversation
+    {
+        return Conversation::create([
+            'user_one_id' => min($student->id, $lecturer->id),
+            'user_two_id' => max($student->id, $lecturer->id),
+            'mahasiswa_ta_id' => $program?->id,
+        ]);
+    }
+
+    private function pdf(string $name): UploadedFile
+    {
+        return UploadedFile::fake()->createWithContent($name, '%PDF-1.4 chat workspace test');
+    }
+
+    public function test_student_supervisor_and_examiner_can_upload_multiple_files_without_duplicate_storage(): void
+    {
+        Storage::fake('local');
+        $student = $this->account('mahasiswa', 'StudentUpload');
+        $supervisor = $this->account('dosen', 'SupervisorUpload');
+        $examiner = $this->account('dosen', 'ExaminerUpload');
+        $program = $this->program($student, $supervisor);
+        $program->update(['penguji_1_id' => $examiner->id]);
+
+        $supervisorThread = $this->thread($student, $supervisor, $program);
+        $examinerThread = $this->thread($student, $examiner, $program);
+        foreach ([[$student, $supervisor, $supervisorThread], [$supervisor, $student, $supervisorThread], [$examiner, $student, $examinerThread]] as $index => [$sender, $recipient, $thread]) {
+            $this->actingAs($sender)->get(route('chat.show', $thread))->assertOk()
+                ->assertSee('Unggah file baru ke workspace mahasiswa')
+                ->assertSee('Sematkan referensi karya (bukan unggah file)')
+                ->assertSee('bookmark_add')->assertSee('upload_file');
+            $first = "chat-{$index}-a.pdf";
+            $second = "chat-{$index}-b.pdf";
+            $this->post(route('chat.store', $thread), [
+                'files' => [$this->pdf($first), $this->pdf($second)],
+            ])->assertRedirect(route('chat.show', $thread));
+
+            $message = Message::where('conversation_id', $thread->id)->orderByDesc('id')->firstOrFail();
+            $this->assertSame('', $message->body);
+            $this->assertSame(2, $message->workspaceFiles()->count());
+            foreach ($message->workspaceFiles as $attachment) {
+                $this->assertSame($sender->id, $attachment->file->uploaded_by);
+                $this->assertSame($program->id, $attachment->file->mahasiswa_ta_id);
+                Storage::disk('local')->assertExists($attachment->file->path);
+            }
+            $this->actingAs($recipient)->get(route('chat.show', $thread))->assertOk()
+                ->assertSee($first)->assertSee($second);
+        }
+        $this->assertSame(6, WorkspaceFile::where('mahasiswa_ta_id', $program->id)->count());
+        $this->assertSame(6 * strlen('%PDF-1.4 chat workspace test'), app(StorageUsageService::class)->totalBytes($student));
+    }
+
+    public function test_deleted_workspace_upload_remains_as_non_downloadable_chat_entry(): void
+    {
+        Storage::fake('local');
+        $student = $this->account('mahasiswa', 'DeleteStudent');
+        $lecturer = $this->account('dosen', 'DeleteLecturer');
+        $program = $this->program($student, $lecturer);
+        $thread = $this->thread($student, $lecturer, $program);
+        $this->actingAs($student)->post(route('chat.store', $thread), [
+            'body' => 'Silakan periksa', 'files' => [$this->pdf('draft-hapus.pdf')],
+        ])->assertRedirect();
+        $attachment = Message::where('conversation_id', $thread->id)->firstOrFail()->workspaceFiles()->firstOrFail();
+        $file = $attachment->file;
+        $url = route('workspace.preview', $file);
+        $this->actingAs($lecturer)->get(route('chat.show', $thread))->assertOk()->assertSee($url);
+        $this->actingAs($student)->delete(route('workspace.destroy', $file))->assertRedirect();
+        $this->assertNull($attachment->fresh()->file);
+        Storage::disk('local')->assertMissing($file->path);
+        $this->actingAs($lecturer)->get(route('chat.show', $thread))->assertOk()
+            ->assertSee('draft-hapus.pdf · File telah dihapus')->assertDontSee($url)
+            ->assertSee('Silakan periksa');
+    }
+
+    public function test_existing_workspace_reference_is_linked_once_and_can_show_deleted_placeholder(): void
+    {
+        Storage::fake('local');
+        $student = $this->account('mahasiswa', 'ReferenceStudent');
+        $lecturer = $this->account('dosen', 'ReferenceLecturer');
+        $program = $this->program($student, $lecturer);
+        $thread = $this->thread($student, $lecturer, $program);
+        $file = WorkspaceFile::create([
+            'mahasiswa_ta_id' => $program->id, 'uploaded_by' => $student->id,
+            'original_name' => 'existing.pdf', 'path' => 'workspace/existing.pdf',
+            'mime_type' => 'application/pdf', 'size' => 25,
+        ]);
+        Storage::disk('local')->put($file->path, '%PDF-1.4 existing');
+        $this->actingAs($student)->post(route('chat.store', $thread), [
+            'body' => 'Referensi lama', 'attachable_type' => 'workspace', 'attachable_id' => $file->id,
+        ])->assertRedirect();
+        $message = Message::where('conversation_id', $thread->id)->firstOrFail();
+        $this->assertSame($file->id, $message->attachable_id);
+        $this->assertSame(1, $message->workspaceFiles()->count());
+        $this->assertSame(1, WorkspaceFile::where('mahasiswa_ta_id', $program->id)->count());
+        $this->actingAs($lecturer)->get(route('chat.show', $thread))->assertOk()->assertSee('existing.pdf');
+        $this->actingAs($student)->delete(route('workspace.destroy', $file))->assertRedirect();
+        $this->actingAs($lecturer)->get(route('chat.show', $thread))->assertOk()
+            ->assertSee('existing.pdf · File telah dihapus');
+    }
+
+    public function test_upload_rejects_unlinked_conversations_nonparticipants_and_pending_programs(): void
+    {
+        Storage::fake('local');
+        $student = $this->account('mahasiswa', 'AccessStudent');
+        $lecturer = $this->account('dosen', 'AccessLecturer');
+        $outsider = $this->account('mahasiswa', 'AccessOutsider');
+        $program = $this->program($student, $lecturer);
+        $thread = $this->thread($student, $lecturer, $program);
+        $unlinked = $this->thread($student, $lecturer, null);
+        $this->actingAs($outsider)->post(route('chat.store', $thread), [
+            'files' => [$this->pdf('outside.pdf')],
+        ])->assertForbidden();
+        $this->actingAs($student)->post(route('chat.store', $unlinked), [
+            'files' => [$this->pdf('unlinked.pdf')],
+        ])->assertForbidden();
+        $foreignStudent = $this->account('mahasiswa', 'ForeignStudent');
+        $foreignProgram = $this->program($foreignStudent, $lecturer);
+        $crossProgramThread = $this->thread($student, $lecturer, $foreignProgram);
+        $this->post(route('chat.store', $crossProgramThread), [
+            'files' => [$this->pdf('cross-program.pdf')],
+        ])->assertForbidden();
+        $program->update(['status_ta' => MahasiswaTa::STATUS_PENDING_APPROVAL]);
+        $this->get(route('chat.show', $thread))->assertOk()->assertDontSee('id="upload-btn"', false);
+        $this->post(route('chat.store', $thread), [
+            'files' => [$this->pdf('pending.pdf')],
+        ])->assertForbidden();
+        $this->assertSame(0, WorkspaceFile::where('mahasiswa_ta_id', $program->id)->count());
+        $this->assertSame(0, WorkspaceFile::where('mahasiswa_ta_id', $foreignProgram->id)->count());
+    }
+
+    public function test_upload_validates_file_count_type_size_and_empty_message(): void
+    {
+        Storage::fake('local');
+        $student = $this->account('mahasiswa', 'ValidateStudent');
+        $lecturer = $this->account('dosen', 'ValidateLecturer');
+        $program = $this->program($student, $lecturer);
+        $thread = $this->thread($student, $lecturer, $program);
+        $this->actingAs($student)->post(route('chat.store', $thread), [])->assertSessionHasErrors('body');
+        $this->post(route('chat.store', $thread), [
+            'files' => array_map(fn ($i) => $this->pdf("many-{$i}.pdf"), range(1, 6)),
+        ])->assertSessionHasErrors('files');
+        $this->post(route('chat.store', $thread), [
+            'files' => [UploadedFile::fake()->create('unsafe.exe', 1)],
+        ])->assertSessionHasErrors('files.0');
+        $this->post(route('chat.store', $thread), [
+            'files' => [UploadedFile::fake()->create('large.pdf', 51201, 'application/pdf')],
+        ])->assertSessionHasErrors('files.0');
+        $this->assertSame(0, $thread->messages()->count());
+        $this->assertSame(0, WorkspaceFile::where('mahasiswa_ta_id', $program->id)->count());
+    }
+
+    public function test_quota_failure_creates_neither_message_nor_workspace_file(): void
+    {
+        Storage::fake('local');
+        $student = $this->account('mahasiswa', 'QuotaStudent');
+        $lecturer = $this->account('dosen', 'QuotaLecturer');
+        $program = $this->program($student, $lecturer);
+        $thread = $this->thread($student, $lecturer, $program);
+        WorkspaceFile::create([
+            'mahasiswa_ta_id' => $program->id, 'uploaded_by' => $student->id,
+            'original_name' => 'existing.pdf', 'path' => 'workspace/existing.pdf',
+            'mime_type' => 'application/pdf', 'size' => 100000000000,
+        ]);
+        // Existing Workspace usage is included in the same quota check.
+        $this->actingAs($student)->post(route('chat.store', $thread), [
+            'files' => [UploadedFile::fake()->create('quota.pdf', 51200, 'application/pdf')],
+        ])->assertStatus(422);
+        $this->assertSame(0, $thread->messages()->count());
+        $this->assertSame(1, WorkspaceFile::where('mahasiswa_ta_id', $program->id)->count());
     }
 
     public function test_lecturer_list_has_authorized_contacts_filters_search_and_empty_thread(): void

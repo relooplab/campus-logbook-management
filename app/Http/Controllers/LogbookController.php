@@ -145,7 +145,7 @@ class LogbookController extends Controller
         if ($submit) {
             $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($entry, 'Ada entri baru menunggu review.'));
             $entry->notifyReviewers(
-                'Entri logbook sesi '.$entry->sesi_ke.' baru dikirim oleh mahasiswa.',
+                $entry->reviewSubmissionMessage(),
                 route('logbook.show', $entry),
                 'Entri Baru Menunggu Review',
             );
@@ -257,8 +257,7 @@ class LogbookController extends Controller
         if ($submit) {
             $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($entry, 'Ada entri revisi baru menunggu review.'));
             $entry->notifyReviewers(
-                'Entri revisi baru dikirim oleh mahasiswa'
-                    .($recipientRole ? ' untuk '.$recipientRole.'.' : '.'),
+                $entry->reviewSubmissionMessage($recipientRole),
                 route('logbook.show', $entry),
                 'Entri Baru Menunggu Review',
             );
@@ -609,7 +608,7 @@ class LogbookController extends Controller
 
         $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Ada entri baru menunggu review.'));
         $logbook->notifyReviewers(
-            'Entri '.($logbook->jenis === 'revisi' ? 'revisi' : 'logbook sesi '.$logbook->sesi_ke).' baru dikirim oleh mahasiswa.',
+            $logbook->reviewSubmissionMessage(),
             route('logbook.show', $logbook),
             'Entri Baru Menunggu Review',
         );

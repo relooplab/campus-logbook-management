@@ -14,6 +14,35 @@
     const body = document.getElementById('msg-body');
     const send = document.getElementById('send-btn');
     const selectedAttach = document.getElementById('selected-attach');
+    const uploadInput = document.getElementById('chat-files');
+    const selectedFiles = document.getElementById('selected-files');
+    if (uploadInput) {
+        document.getElementById('upload-btn').addEventListener('click', function () { uploadInput.click(); });
+        uploadInput.addEventListener('change', function () {
+            selectedFiles.replaceChildren();
+            if (uploadInput.files.length > 5) {
+                uploadInput.value = '';
+                selectedFiles.textContent = 'Maksimal 5 file per pesan.';
+                selectedFiles.classList.remove('hidden');
+                return;
+            }
+            if (!uploadInput.files.length) { selectedFiles.classList.add('hidden'); return; }
+            const names = document.createElement('span');
+            names.className = 'break-all';
+            names.textContent = 'File ke workspace: ' + Array.from(uploadInput.files, file => file.name).join(', ');
+            const clear = document.createElement('button');
+            clear.type = 'button';
+            clear.className = 'ml-2 font-semibold text-brand underline';
+            clear.textContent = 'Hapus pilihan';
+            clear.addEventListener('click', function () {
+                uploadInput.value = '';
+                selectedFiles.replaceChildren();
+                selectedFiles.classList.add('hidden');
+            });
+            selectedFiles.append(names, clear);
+            selectedFiles.classList.remove('hidden');
+        });
+    }
     selectedAttach.addEventListener('click', function (event) {
         if (!event.target.closest('.clear-attach')) return;
         document.getElementById('attach-type').value = '';
@@ -26,7 +55,7 @@
 
     form.addEventListener('submit', function (event) {
         if (send.disabled) { event.preventDefault(); return; }
-        if (!body.value.trim()) { event.preventDefault(); body.focus(); return; }
+        if (!body.value.trim() && !(uploadInput && uploadInput.files.length)) { event.preventDefault(); body.focus(); return; }
         send.disabled = true;
         send.textContent = 'Mengirim...';
     });
@@ -37,7 +66,7 @@
     body.addEventListener('keydown', function (event) {
         if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
             event.preventDefault();
-            if (body.value.trim() && !send.disabled) form.requestSubmit();
+            if ((body.value.trim() || (uploadInput && uploadInput.files.length)) && !send.disabled) form.requestSubmit();
         }
     });
 
