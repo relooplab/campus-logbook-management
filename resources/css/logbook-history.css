@@ -13,9 +13,9 @@
 .history-tab { display: block; padding: .9rem .2rem; border-bottom: 2px solid transparent; font-size: .875rem; font-weight: 600; color: rgb(var(--text-secondary)); }
 .history-tab:hover { color: rgb(var(--text-primary)); }
 .history-tab.is-active { color: rgb(var(--brand)); border-color: rgb(var(--brand)); }
-.history-desktop { overflow: auto; max-height: 68vh; }
+.history-desktop { overflow: visible; }
 .history-table { width: 100%; table-layout: fixed; font-size: .875rem; text-align: left; }
-.history-table th { position: sticky; top: 0; z-index: 1; background: rgb(var(--bg-panel)); color: rgb(var(--text-secondary)); font-size: .75rem; font-weight: 600; padding: .7rem 1rem; border-bottom: 1px solid rgb(var(--border)); }
+.history-table th { background: rgb(var(--bg-panel)); color: rgb(var(--text-secondary)); font-size: .75rem; font-weight: 600; padding: .7rem 1rem; border-bottom: 1px solid rgb(var(--border)); }
 .history-table th:nth-child(1) { width: 23%; }
 .history-table th:nth-child(2) { width: 17%; }
 .history-table th:nth-child(3) { width: 25%; }

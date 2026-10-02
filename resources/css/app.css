@@ -94,7 +94,7 @@
 .landing-capabilities.is-marquee-ready .landing-marquee-track { display: flex; width: max-content; animation: landing-capabilities-scroll 28s linear infinite; }
 .landing-capabilities.is-marquee-ready .landing-marquee-group { display: flex; flex-wrap: nowrap; flex-shrink: 0; justify-content: flex-start; padding-right: 2.5rem; }
 .landing-capabilities.is-marquee-ready .landing-marquee-group span { white-space: nowrap; }
-.landing-social-link { display: inline-flex; align-items: center; justify-content: center; min-width: 2.75rem; min-height: 2.75rem; border: 1px solid rgb(var(--border)); border-radius: .75rem; }
+.landing-social-link { display: inline-flex; align-items: center; justify-content: center; min-width: 2rem; min-height: 2rem; border-radius: .5rem; }
 .landing-social-link:hover { background: rgb(var(--bg-hover)); color: rgb(var(--text-primary)); }
 .landing-social-link:focus-visible { outline: 2px solid rgb(var(--brand)); outline-offset: 3px; }
 @keyframes landing-capabilities-scroll { to { transform: translateX(-50%); } }

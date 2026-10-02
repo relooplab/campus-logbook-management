@@ -116,7 +116,9 @@ class LandingPageTest extends TestCase
     public function test_footer_has_current_year_copyright_and_social_links(): void
     {
         $this->get(route('landing'))->assertOk()
-            ->assertSee('© '.now()->year.' Reloop Lab.')
+            ->assertSee('© '.now()->year)
+            ->assertSee('href="https://reloop.id"', false)
+            ->assertSee('ReLoop Lab')
             ->assertSee('href="https://github.com/relooplab/campus-logbook-management"', false)
             ->assertSee('href="https://www.linkedin.com/company/relooplab"', false)
             ->assertSee('aria-label="LinkedIn Reloop Lab (tab baru)"', false)
@@ -133,9 +135,19 @@ class LandingPageTest extends TestCase
         ])->render();
 
         $this->assertStringNotContainsString('Institution Must Not Appear', $html);
-        $this->assertStringContainsString('items-center gap-5 text-center', $html);
+        $this->assertStringContainsString('items-center gap-3 text-center', $html);
         $this->assertStringContainsString('v1.2.3', $html);
-        $this->assertStringContainsString('© '.now()->year.' Reloop Lab.', $html);
+        $this->assertStringContainsString('© '.now()->year, $html);
+        $this->assertStringContainsString('href="https://reloop.id"', $html);
+        $this->assertStringContainsString('>ReLoop Lab</a>', $html);
+        $this->assertStringNotContainsString('>Beranda</a>', $html);
+        $this->assertStringNotContainsString('Kirim Masukan', $html);
+        $this->assertStringContainsString('width="14" height="14"', $html);
+        $document = new \DOMDocument;
+        @$document->loadHTML($html);
+        $xpath = new \DOMXPath($document);
+        $this->assertSame(1, $xpath->query('//*[@data-footer-meta]/p')->length);
+        $this->assertSame(2, $xpath->query('//*[@data-footer-meta]/nav/a')->length);
     }
 
     public function test_landing_page_hides_technical_stack_and_license_blurb(): void
@@ -146,7 +158,7 @@ class LandingPageTest extends TestCase
             ->assertDontSee('Laravel · Tailwind CSS · React · PDF.js · Reverb')
             ->assertDontSee('Dilisensikan dengan Business Source License 1.1.')
             ->assertSee('PERTANYAAN UMUM')
-            ->assertSee('Kirim Masukan');
+            ->assertDontSee('Kirim Masukan');
     }
 
     public function test_landing_page_has_metadata_for_public_sharing(): void
