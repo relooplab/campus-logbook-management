@@ -21,6 +21,7 @@ class LogbookEntry extends Model
     public const STATUS_SUBMITTED = 'submitted';
     public const STATUS_APPROVED = 'approved';
     public const STATUS_REVISI = 'revisi';
+    public const STATUS_ARCHIVED = 'archived';
     public const STATUS_REVISION_IN_PROGRESS = 'revision_in_progress';
 
     /** Status perbaikan pada tabel riwayat perbaikan. */
@@ -37,6 +38,7 @@ class LogbookEntry extends Model
         self::STATUS_SUBMITTED,
         self::STATUS_APPROVED,
         self::STATUS_REVISI,
+        self::STATUS_ARCHIVED,
         self::STATUS_REVISION_IN_PROGRESS,
     ];
 
@@ -48,6 +50,7 @@ class LogbookEntry extends Model
         self::STATUS_SUBMITTED => 'Menunggu Review',
         self::STATUS_APPROVED => 'Disetujui',
         self::STATUS_REVISI => 'Revisi Diminta',
+        self::STATUS_ARCHIVED => 'Diarsipkan',
         self::STATUS_REVISION_IN_PROGRESS => 'Revisi sedang dikerjakan',
     ];
 
@@ -57,7 +60,7 @@ class LogbookEntry extends Model
      */
     public function statusLabel(): string
     {
-        if ($this->isLockedByActiveRevision()) {
+        if ($this->status !== self::STATUS_ARCHIVED && $this->isLockedByActiveRevision()) {
             return 'Terkunci';
         }
 
@@ -83,6 +86,9 @@ class LogbookEntry extends Model
         'catatan_perbaikan_size',
         'catatan_original_name',
         'feedback_dosen',
+        'archive_reason',
+        'archived_at',
+        'archived_by',
         'feedback_note',
         'status',
         'submitted_at',
@@ -100,6 +106,7 @@ class LogbookEntry extends Model
             'riwayat_perbaikan' => 'array',
             'submitted_at' => 'datetime',
             'reviewed_at' => 'datetime',
+            'archived_at' => 'datetime',
             'review_opened_at' => 'datetime',
         ];
     }

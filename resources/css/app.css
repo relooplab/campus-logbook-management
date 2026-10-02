@@ -24,7 +24,7 @@
 .landing-mobile-nav a { display: block; padding: .75rem .5rem; border-radius: .5rem; }
 .landing-mobile-nav a:hover { background: rgb(var(--bg-hover)); }
 .landing-hero { padding-block: clamp(4rem, 9vw, 8.5rem); }
-.landing-eyebrow { display: inline-flex; align-items: center; gap: .6rem; font-size: .68rem; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; color: rgb(var(--brand)); }
+.landing-eyebrow { display: inline-flex; align-items: center; gap: .6rem; font-size: .68rem; font-weight: 700; letter-spacing: .11em; color: rgb(var(--brand)); }
 .landing-eyebrow-dot { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 .3rem rgb(var(--brand) / .13); }
 .landing-display { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: clamp(2.7rem, 5vw, 5.1rem); font-weight: 800; letter-spacing: -.055em; line-height: 1.11; text-wrap: balance; }
 .landing-heading { font-size: clamp(1.85rem, 3.2vw, 3rem); line-height: 1.2; font-weight: 800; letter-spacing: -.045em; text-wrap: balance; }
@@ -64,9 +64,6 @@
 .landing-mode-icon { flex: none; }
 .landing-mode h3 { font-weight: 700; }
 .landing-mode p { font-size: .875rem; line-height: 1.65; margin-top: .35rem; color: rgb(var(--text-secondary)); }
-.landing-tech { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 2rem; padding-block: 2rem; border-bottom: 1px solid rgb(var(--border)); }
-.landing-tech p { font-family: 'IBM Plex Mono', monospace; font-size: .8rem; line-height: 1.8; color: rgb(var(--text-secondary)); }
-.landing-tech p span { padding-inline: .35rem; color: rgb(var(--brand)); }
 .landing-faq { border-top: 1px solid rgb(var(--border)); }
 .landing-faq details { border-bottom: 1px solid rgb(var(--border)); }
 .landing-faq summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem 0; cursor: pointer; font-weight: 700; list-style: none; }

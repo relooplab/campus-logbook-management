@@ -81,7 +81,7 @@ class AchievementService
         $seq = $ta->entries()->where('jenis', LogbookEntry::JENIS_LOGBOOK)->orderBy('id')->pluck('status')->values();
         $run = 0;
         foreach ($seq as $s) {
-            if ($s === LogbookEntry::STATUS_REVISI) {
+            if (in_array($s, [LogbookEntry::STATUS_REVISI, LogbookEntry::STATUS_ARCHIVED], true)) {
                 $run = 0;
             } elseif ($s === LogbookEntry::STATUS_APPROVED) {
                 $run++;

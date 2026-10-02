@@ -8,6 +8,7 @@ use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\PdfComment;
 use App\Services\AchievementService;
+use App\Services\LogbookReviewTransition;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -56,7 +57,7 @@ class QuickReviewController extends Controller
     /**
      * Approve & next: setujui entry lalu redirect ke antrean berikutnya.
      */
-    public function approveNext(Request $request, LogbookEntry $logbook): RedirectResponse
+    public function approveNext(Request $request, LogbookEntry $logbook, LogbookReviewTransition $transition): RedirectResponse
     {
         $this->authorize('review', $logbook);
 
@@ -65,8 +66,7 @@ class QuickReviewController extends Controller
 
         $validated = $request->validate(['feedback_dosen' => ['nullable', 'string', 'max:5000']]);
 
-        $logbook->update([
-            'status' => LogbookEntry::STATUS_APPROVED,
+        $transition->apply($logbook, LogbookEntry::STATUS_APPROVED, [
             'feedback_dosen' => $validated['feedback_dosen'] ?? null,
             'reviewed_at' => now(),
         ]);
@@ -85,7 +85,7 @@ class QuickReviewController extends Controller
     /**
      * Revisi & next: simpan feedback (dengan template/build dari komentar) lalu next.
      */
-    public function revisiNext(Request $request, LogbookEntry $logbook): RedirectResponse
+    public function revisiNext(Request $request, LogbookEntry $logbook, LogbookReviewTransition $transition): RedirectResponse
     {
         $this->authorize('review', $logbook);
 
@@ -96,8 +96,7 @@ class QuickReviewController extends Controller
             'feedback_dosen' => ['required', 'string', 'min:20'],
         ]);
 
-        $logbook->update([
-            'status' => LogbookEntry::STATUS_REVISI,
+        $transition->apply($logbook, LogbookEntry::STATUS_REVISI, [
             'feedback_dosen' => $validated['feedback_dosen'],
             'reviewed_at' => now(),
         ]);
@@ -107,6 +106,18 @@ class QuickReviewController extends Controller
 
         return redirect()->route('quick-review.index', $this->nextQueueItem($request, $logbook))
             ->with('success', 'Entri dikembalikan untuk revisi. Lanjut ke berikutnya.');
+    }
+
+    public function archiveNext(Request $request, LogbookEntry $logbook, \App\Services\ArchiveLogbookReview $archive): RedirectResponse
+    {
+        $this->authorize('review', $logbook);
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [MahasiswaTa::STATUS_AKTIF, MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
+
+        $validated = $request->validate(['archive_reason' => ['nullable', 'string', 'max:5000']]);
+        $archive->archive($logbook, $request->user(), $validated['archive_reason'] ?? null);
+
+        return redirect()->route('quick-review.index', $this->nextQueueItem($request, $logbook))
+            ->with('success', 'Entri diarsipkan. Lanjut ke berikutnya.');
     }
 
     /**

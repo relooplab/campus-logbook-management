@@ -236,6 +236,14 @@
             <a href="{{ route('logbook.create-revisi', ['parent_entry_id' => $logbook->id]) }}" class="block text-center px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90">Buat Revisi dari Umpan Balik Ini</a>
         @endif
 
+        @if ($logbook->status === \App\Models\LogbookEntry::STATUS_ARCHIVED)
+            <section class="card p-5 space-y-2" aria-label="Informasi arsip">
+                <h2 class="font-heading font-semibold text-text-primary">Entri Diarsipkan</h2>
+                @if ($logbook->archive_reason)<p class="text-sm text-text-secondary">Catatan: {{ $logbook->archive_reason }}</p>@endif
+                @if ($logbook->archived_at)<p class="text-xs text-text-secondary">Diarsipkan {{ $logbook->archived_at->format('d M Y H:i') }}</p>@endif
+            </section>
+        @endif
+
         @if ($canReview && $logbook->status === 'submitted')
             <section class="card p-5 space-y-4 detail-workspace-card">
                 <div>
@@ -249,6 +257,7 @@
                     data-entry-kind="{{ $logbook->jenis }}"
                     data-approve-url="{{ route('logbook.approve', $logbook) }}"
                     data-revision-url="{{ route('logbook.request-revisi', $logbook) }}"
+                    data-archive-url="{{ route('logbook.archive', $logbook) }}"
                     data-pdf-opened="{{ $logbook->review_opened_at ? '1' : '0' }}"
                     data-has-pdf="{{ $logbook->lampiran_path || $logbook->catatan_perbaikan_path ? '1' : '0' }}">
                     @csrf
@@ -260,12 +269,20 @@
                         <label class="decision-choice flex items-start gap-3 rounded-xl border border-border bg-bg-panel p-3 text-sm cursor-pointer">
                             <input type="radio" name="review_decision" value="revisi" class="mt-1 accent-brand" required @checked($reviewDecision === 'revisi')><span><strong class="block text-text-primary">Minta Revisi</strong><span class="text-xs text-text-secondary">Masih perlu revisi atau perbaikan tambahan.</span></span>
                         </label>
+                        <label class="decision-choice flex items-start gap-3 rounded-xl border border-border bg-bg-panel p-3 text-sm cursor-pointer">
+                            <input type="radio" name="review_decision" value="archive" class="mt-1 accent-brand" required @checked($reviewDecision === 'archive')><span><strong class="block text-text-primary">Arsipkan</strong><span class="text-xs text-text-secondary">Simpan sebagai riwayat tanpa menyetujui atau meminta revisi.</span></span>
+                        </label>
                     </fieldset>
                     <div id="revision-feedback-wrap" class="space-y-2">
                         <label for="revision-feedback" class="block text-xs font-semibold text-text-secondary">Feedback dosen <span id="revision-feedback-required" class="{{ $reviewDecision === 'revisi' ? '' : 'hidden' }}">(wajib untuk revisi, minimal 20 karakter)</span></label>
                         <textarea id="revision-feedback" name="feedback_dosen" rows="4" maxlength="5000" @if($reviewDecision === 'revisi') minlength="20" required @endif placeholder="Opsional saat menyetujui; untuk revisi jelaskan perbaikan minimal 20 karakter..."
                             class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">{{ old('feedback_dosen') }}</textarea>
                         @error('feedback_dosen') <p class="text-status-danger text-xs">{{ $message }}</p> @enderror
+                    </div>
+                    <div id="archive-reason-wrap" class="space-y-2 {{ $reviewDecision === 'archive' ? '' : 'hidden' }}">
+                        <label for="archive-reason" class="block text-xs font-semibold text-text-secondary">Catatan arsip (opsional)</label>
+                        <textarea id="archive-reason" name="archive_reason" rows="3" maxlength="5000" placeholder="Tambahkan catatan jika perlu..." class="w-full rounded-xl border border-border bg-bg-surface px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40">{{ old('archive_reason') }}</textarea>
+                        @error('archive_reason') <p class="text-status-danger text-xs">{{ $message }}</p> @enderror
                     </div>
                     <button type="submit" id="review-decision-submit" class="w-full px-4 py-2 rounded-xl bg-brand text-[#0b1420] text-sm font-medium hover:opacity-90 disabled:opacity-50" disabled>Simpan Keputusan</button>
                 </form>
@@ -429,16 +446,24 @@
         var decisionChoices = decisionForm.querySelectorAll('input[name="review_decision"]');
         var feedbackWrap = document.getElementById('revision-feedback-wrap');
         var feedback = document.getElementById('revision-feedback');
+        var archiveReason = document.getElementById('archive-reason');
+        var archiveWrap = document.getElementById('archive-reason-wrap');
         var decisionSubmit = document.getElementById('review-decision-submit');
         function syncDecision() {
             var selected = decisionForm.querySelector('input[name="review_decision"]:checked');
             var needsRevision = selected && selected.value === 'revisi';
-            decisionForm.action = needsRevision ? decisionForm.dataset.revisionUrl : decisionForm.dataset.approveUrl;
+            var isArchive = selected && selected.value === 'archive';
+            decisionForm.action = isArchive ? decisionForm.dataset.archiveUrl : (needsRevision ? decisionForm.dataset.revisionUrl : decisionForm.dataset.approveUrl);
+            feedbackWrap.classList.toggle('hidden', !!isArchive);
+            feedback.disabled = !!isArchive;
             feedbackWrap.querySelector('#revision-feedback-required').classList.toggle('hidden', !needsRevision);
             feedback.required = !!needsRevision;
             feedback.minLength = needsRevision ? 20 : 0;
+            archiveWrap.classList.toggle('hidden', !isArchive);
+            archiveReason.disabled = !isArchive;
+            archiveReason.required = false;
             decisionSubmit.disabled = !selected;
-            decisionSubmit.textContent = needsRevision ? 'Kirim Permintaan Revisi' : (selected ? (decisionForm.dataset.entryKind === 'revisi' ? 'Setujui Revisi' : 'Setujui Entri') : 'Pilih Keputusan');
+            decisionSubmit.textContent = isArchive ? 'Arsipkan Entri' : (needsRevision ? 'Kirim Permintaan Revisi' : (selected ? (decisionForm.dataset.entryKind === 'revisi' ? 'Setujui Revisi' : 'Setujui Entri') : 'Pilih Keputusan'));
         }
         decisionChoices.forEach(choice => choice.addEventListener('change', syncDecision));
         syncDecision();
@@ -454,7 +479,8 @@
                 event.preventDefault();
                 return;
             }
-            if (!window.confirm(selected.value === 'approve' ? (decisionForm.dataset.entryKind === 'revisi' ? 'Setujui revisi ini?' : 'Setujui entri logbook ini?') : 'Kirim permintaan revisi kepada mahasiswa?')) {
+            var message = selected.value === 'archive' ? 'Arsipkan entri ini tanpa menyetujui atau meminta revisi?' : (selected.value === 'approve' ? (decisionForm.dataset.entryKind === 'revisi' ? 'Setujui revisi ini?' : 'Setujui entri logbook ini?') : 'Kirim permintaan revisi kepada mahasiswa?');
+            if (!window.confirm(message)) {
                 event.preventDefault();
                 return;
             }

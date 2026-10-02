@@ -9,6 +9,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\UserPlanOverride;
+use App\Services\LogbookReviewTransition;
 use App\Support\Feature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -2116,7 +2117,7 @@ class AdminController extends Controller
 
     // ---------------------------------------------------------------- bulk actions
 
-    public function bulkAction(Request $request): RedirectResponse
+    public function bulkAction(Request $request, LogbookReviewTransition $transition): RedirectResponse
     {
         $validated = $request->validate([
             'ids' => ['required', 'array'],
@@ -2186,12 +2187,14 @@ class AdminController extends Controller
             ->where('status', \App\Models\LogbookEntry::STATUS_SUBMITTED)
             ->get();
 
+        $processed = 0;
         foreach ($entries as $entry) {
             if ($validated['action'] === 'approve') {
-                $entry->update([
-                    'status' => \App\Models\LogbookEntry::STATUS_APPROVED,
+                if (! $transition->tryApply($entry, \App\Models\LogbookEntry::STATUS_APPROVED, [
                     'reviewed_at' => now(),
-                ]);
+                ])) {
+                    continue;
+                }
                 $this->resolveCommentsOnApproval($entry);
 
                 $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($entry, 'Entri Anda telah disetujui oleh pembimbing.'));
@@ -2205,11 +2208,12 @@ class AdminController extends Controller
                     app(\App\Services\AchievementService::class)->evaluateForUser($owner);
                 }
             } else {
-                $entry->update([
-                    'status' => \App\Models\LogbookEntry::STATUS_REVISI,
+                if (! $transition->tryApply($entry, \App\Models\LogbookEntry::STATUS_REVISI, [
                     'feedback_dosen' => $validated['feedback_dosen'],
                     'reviewed_at' => now(),
-                ]);
+                ])) {
+                    continue;
+                }
 
                 $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($entry, 'Entri Anda diminta revisi: '.$validated['feedback_dosen']));
                 $entry->notifyParties(
@@ -2218,15 +2222,16 @@ class AdminController extends Controller
                     'Permintaan Revisi',
                 );
             }
+            $processed++;
         }
 
         \App\Support\Audit::log('Admin bulk '.$validated['action'], [
             'action' => $validated['action'],
-            'count' => $entries->count(),
+            'count' => $processed,
             'ids' => $validated['ids'],
         ]);
 
-        return back()->with('success', $entries->count().' entri berhasil diproses.');
+        return back()->with('success', $processed.' entri berhasil diproses.');
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateLogbookEntryRequest;
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\PdfComment;
+use App\Services\LogbookReviewTransition;
 use App\Services\StorageUsageService;
 use App\Support\ProgramContext;
 use Illuminate\Http\JsonResponse;
@@ -616,7 +617,7 @@ class LogbookController extends Controller
         return back()->with('success', 'Entri dikirim ke dosen.');
     }
 
-    public function approve(Request $request, LogbookEntry $logbook): RedirectResponse
+    public function approve(Request $request, LogbookEntry $logbook, LogbookReviewTransition $transition): RedirectResponse
     {
         $this->authorize('review', $logbook);
 
@@ -625,8 +626,7 @@ class LogbookController extends Controller
 
         $validated = $request->validate(['feedback_dosen' => ['nullable', 'string', 'max:5000']]);
 
-        $logbook->update([
-            'status' => LogbookEntry::STATUS_APPROVED,
+        $transition->apply($logbook, LogbookEntry::STATUS_APPROVED, [
             'feedback_dosen' => $validated['feedback_dosen'] ?? null,
             'reviewed_at' => now(),
         ]);
@@ -650,7 +650,7 @@ class LogbookController extends Controller
         return back()->with('success', 'Entri disetujui.');
     }
 
-    public function requestRevisi(Request $request, LogbookEntry $logbook): RedirectResponse
+    public function requestRevisi(Request $request, LogbookEntry $logbook, LogbookReviewTransition $transition): RedirectResponse
     {
         $this->authorize('review', $logbook);
 
@@ -661,8 +661,7 @@ class LogbookController extends Controller
             'feedback_dosen' => ['required', 'string', 'min:20'],
         ]);
 
-        $logbook->update([
-            'status' => LogbookEntry::STATUS_REVISI,
+        $transition->apply($logbook, LogbookEntry::STATUS_REVISI, [
             'feedback_dosen' => $validated['feedback_dosen'],
             'reviewed_at' => now(),
         ]);
@@ -675,6 +674,17 @@ class LogbookController extends Controller
         );
 
         return back()->with('success', 'Entri dikembalikan untuk revisi.');
+    }
+
+    public function archive(Request $request, LogbookEntry $logbook, \App\Services\ArchiveLogbookReview $archive): RedirectResponse
+    {
+        $this->authorize('review', $logbook);
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
+
+        $validated = $request->validate(['archive_reason' => ['nullable', 'string', 'max:5000']]);
+        $archive->archive($logbook, $request->user(), $validated['archive_reason'] ?? null);
+
+        return back()->with('success', 'Entri diarsipkan.');
     }
 
     /**
