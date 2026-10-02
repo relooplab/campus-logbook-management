@@ -11,6 +11,7 @@
         "submitted" => ["badge-pending", "Menunggu Review"],
         "approved" => ["badge-success", "Disetujui"],
         "revisi" => ["badge-danger", "Revisi Diminta"],
+        "archived" => ["badge-neutral", "Diarsipkan"],
         "revision_in_progress" => ["badge-pending", "Revisi sedang dikerjakan"],
     ];
 

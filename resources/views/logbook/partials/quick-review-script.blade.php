@@ -2,22 +2,32 @@
     (function () {
         const form = document.getElementById('quick-review-form');
         const feedback = document.getElementById('feedback_dosen');
+        const feedbackWrap = feedback.parentElement;
+        const archiveReason = document.getElementById('archive_reason');
+        const archiveWrap = document.getElementById('archive-reason-wrap');
         const error = document.getElementById('feedback-error');
         const submit = document.getElementById('quick-review-submit');
         const radios = Array.from(form.querySelectorAll('[name="review_decision"]'));
         const csrf = document.querySelector('meta[name="csrf-token"]').content;
         const initialFeedback = feedback.value;
+        const initialArchiveReason = archiveReason.value;
         const initialDecision = form.querySelector('[name="review_decision"]:checked')?.value || '';
         let submitting = false;
 
         function decision() { return form.querySelector('[name="review_decision"]:checked')?.value || ''; }
         function syncDecision() {
             const revision = decision() === 'revisi';
+            const archive = decision() === 'archive';
+            feedbackWrap.classList.toggle('hidden', archive);
+            feedback.disabled = archive;
             feedback.required = revision;
             feedback.minLength = revision ? 20 : 0;
+            archiveWrap.classList.toggle('hidden', !archive);
+            archiveReason.disabled = !archive;
+            archiveReason.required = false;
             document.getElementById('feedback-required').classList.toggle('hidden', !revision);
             submit.disabled = !decision();
-            form.action = revision ? form.dataset.revisionUrl : form.dataset.approveUrl;
+            form.action = archive ? form.dataset.archiveUrl : (revision ? form.dataset.revisionUrl : form.dataset.approveUrl);
             if (!revision) error.classList.add('hidden');
         }
         radios.forEach(radio => radio.addEventListener('change', syncDecision));
@@ -25,7 +35,7 @@
 
         feedback.addEventListener('input', () => error.classList.add('hidden'));
         document.querySelectorAll('.quick-review-navigation').forEach(link => link.addEventListener('click', event => {
-            if ((feedback.value !== initialFeedback || decision() !== initialDecision) && !window.confirm('Keputusan atau feedback belum disimpan. Pindah item tanpa menyimpan?')) event.preventDefault();
+            if ((feedback.value !== initialFeedback || archiveReason.value !== initialArchiveReason || decision() !== initialDecision) && !window.confirm('Keputusan atau feedback belum disimpan. Pindah item tanpa menyimpan?')) event.preventDefault();
         }));
         document.getElementById('use-last')?.addEventListener('click', function () {
             feedback.value = @json($lastFeedback);
@@ -46,7 +56,11 @@
             if (decision() === 'revisi' && feedback.value.trim().length < 20) {
                 event.preventDefault(); error.classList.remove('hidden'); feedback.focus(); return;
             }
-            if (form.dataset.pdfOpened !== '1' && !window.confirm('Lampiran PDF belum tercatat dibuka. Tetap ' + (decision() === 'revisi' ? 'minta revisi' : 'setujui') + '?')) {
+
+            if (form.dataset.pdfOpened !== '1' && !window.confirm('Lampiran PDF belum tercatat dibuka. Tetap ' + (decision() === 'revisi' ? 'minta revisi' : (decision() === 'archive' ? 'arsipkan' : 'setujui')) + '?')) {
+                event.preventDefault(); return;
+            }
+            if (decision() === 'archive' && !window.confirm('Arsipkan entri ini tanpa menyetujui atau meminta revisi?')) {
                 event.preventDefault(); return;
             }
             submitting = true;

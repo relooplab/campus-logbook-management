@@ -178,6 +178,7 @@ Route::middleware(['auth', 'ensure.dosen.decision', 'ensure.dosen.affiliation', 
     Route::get('/quick-review', [QuickReviewController::class, 'index'])->name('quick-review.index');
     Route::post('/quick-review/{logbook}/approve-next', [QuickReviewController::class, 'approveNext'])->name('quick-review.approve-next');
     Route::post('/quick-review/{logbook}/revisi-next', [QuickReviewController::class, 'revisiNext'])->name('quick-review.revisi-next');
+    Route::post('/quick-review/{logbook}/archive-next', [QuickReviewController::class, 'archiveNext'])->name('quick-review.archive-next');
     Route::post('/quick-review/{logbook}/build-feedback', [QuickReviewController::class, 'buildFeedbackFromComments'])->name('quick-review.build-feedback');
 
     // ------------------------------------------------- antrean review bahan (gate dosen)
@@ -301,6 +302,7 @@ Route::middleware(['auth', 'ensure.dosen.decision', 'ensure.dosen.affiliation', 
     Route::post('/logbook/{logbook}/submit', [LogbookController::class, 'submit'])->name('logbook.submit');
     Route::post('/logbook/{logbook}/approve', [LogbookController::class, 'approve'])->name('logbook.approve');
     Route::post('/logbook/{logbook}/revisi', [LogbookController::class, 'requestRevisi'])->name('logbook.request-revisi');
+    Route::post('/logbook/{logbook}/archive', [LogbookController::class, 'archive'])->name('logbook.archive');
     Route::post('/logbook/{logbook}/reopen', [LogbookController::class, 'reopen'])->name('logbook.reopen');
     Route::post('/logbook/{logbook}/reopen-revisi', [LogbookController::class, 'reopenRevisi'])->name('logbook.reopen-revisi');
 
