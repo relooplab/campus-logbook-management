@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Institution;
+use App\Models\MahasiswaTa;
 use App\Support\ReleaseVersion;
 use Illuminate\Contracts\View\View;
 
@@ -22,6 +23,13 @@ class LandingController extends Controller
             'institutionName' => $institution?->institution_name,
             'adminContactEmail' => $institution?->admin_contact_email,
             'version' => ReleaseVersion::get(),
+            'taPhases' => MahasiswaTa::FASES,
+            'dashboardImages' => collect(['mahasiswa', 'dosen'])->mapWithKeys(function (string $role) {
+                $path = 'images/readme-dashboard-'.$role.'.jpeg';
+
+                // Replacing a screenshot must invalidate browser/CDN image caches.
+                return [$role => asset($path).'?v='.hash_file('sha256', public_path($path))];
+            })->all(),
         ]);
     }
 }

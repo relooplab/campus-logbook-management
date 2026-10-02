@@ -2,22 +2,33 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\EntryStatusChanged;
+use App\Events\PdfCommentCreated;
 use App\Http\Requests\StoreLogbookEntryRequest;
 use App\Http\Requests\StoreRevisiRequest;
 use App\Http\Requests\UpdateLogbookEntryRequest;
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\PdfComment;
+use App\Models\User;
+use App\Notifications\ActivityNotification;
+use App\Services\AchievementService;
+use App\Services\ArchiveLogbookReview;
 use App\Services\LogbookReviewTransition;
 use App\Services\StorageUsageService;
 use App\Support\ProgramContext;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use setasign\Fpdi\Fpdi;
 
 class LogbookController extends Controller
 {
@@ -76,7 +87,7 @@ class LogbookController extends Controller
         $defaultRecipientId = old('addressed_dosen_id')
             ?: ($selectedParent?->dosen_id ?: $ta->pembimbing_1_id);
 
-        if ($defaultRecipientId && !isset($dosenOptions[(int) $defaultRecipientId])) {
+        if ($defaultRecipientId && ! isset($dosenOptions[(int) $defaultRecipientId])) {
             // Dosen default sudah tidak lagi terkait program (mis. penguji diganti).
             $defaultRecipientId = $ta->pembimbing_1_id ?: array_key_first($dosenOptions);
         }
@@ -100,7 +111,7 @@ class LogbookController extends Controller
         // sesi_ke dihitung secara atomik & di-retry bila bentrok (unique index)
         // untuk menghindari race condition pada request paralel (TOCTOU).
         $entry = null;
-        for ($attempt = 0; $attempt < 3 && !$entry; $attempt++) {
+        for ($attempt = 0; $attempt < 3 && ! $entry; $attempt++) {
             try {
                 $entry = DB::transaction(function () use ($ta, $data, $submit) {
                     $sesiKe = (int) $ta->entries()
@@ -118,7 +129,7 @@ class LogbookController extends Controller
                         'submitted_at' => $submit ? now() : null,
                     ]);
                 });
-            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            } catch (UniqueConstraintViolationException $e) {
                 // Request paralel menghitung sesi yang sama — coba lagi.
             }
         }
@@ -144,7 +155,7 @@ class LogbookController extends Controller
         }
 
         if ($submit) {
-            $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($entry, 'Ada entri baru menunggu review.'));
+            $this->bestEffort(fn () => EntryStatusChanged::dispatch($entry, 'Ada entri baru menunggu review.'));
             $entry->notifyReviewers(
                 $entry->reviewSubmissionMessage(),
                 route('logbook.show', $entry),
@@ -170,7 +181,7 @@ class LogbookController extends Controller
             // Mahasiswa dapat membuat entri revisi tanpa harus ada logbook dulu.
             // Jika parent dipilih, validasi & tautkan ke entri induk.
             $parent = null;
-            if (!empty($data['parent_entry_id'])) {
+            if (! empty($data['parent_entry_id'])) {
                 $parent = $ta->entries()
                     ->whereKey($data['parent_entry_id'])
                     ->whereIn('status', [LogbookEntry::STATUS_REVISI, LogbookEntry::STATUS_REVISION_IN_PROGRESS])
@@ -211,7 +222,7 @@ class LogbookController extends Controller
             ]);
 
             // Parent yang sedang dikerjakan revisinya ditandai "Revisi sedang dikerjakan".
-            if ($parent && !$submit) {
+            if ($parent && ! $submit) {
                 $parent->update(['status' => LogbookEntry::STATUS_REVISION_IN_PROGRESS]);
             }
 
@@ -256,7 +267,7 @@ class LogbookController extends Controller
             : 'dosen';
 
         if ($submit) {
-            $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($entry, 'Ada entri revisi baru menunggu review.'));
+            $this->bestEffort(fn () => EntryStatusChanged::dispatch($entry, 'Ada entri revisi baru menunggu review.'));
             $entry->notifyReviewers(
                 $entry->reviewSubmissionMessage($recipientRole),
                 route('logbook.show', $entry),
@@ -275,7 +286,16 @@ class LogbookController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
-        $filters = $request->only(['status', 'jenis', 'date_from', 'date_to', 'keyword']);
+        $request->validate([
+            'status' => ['nullable', 'string', 'in:'.implode(',', LogbookEntry::STATUSES)],
+            'jenis' => ['nullable', 'in:logbook,revisi'],
+            'keyword' => ['nullable', 'string', 'max:200'],
+            'mahasiswa_id' => ['nullable', 'integer'],
+            'date_from' => ['nullable', 'date_format:Y-m-d'],
+            'date_to' => ['nullable', 'date_format:Y-m-d'],
+            'per_page' => ['nullable', 'in:20,50,100'],
+        ]);
+        $filters = $request->only(['status', 'jenis', 'date_from', 'date_to', 'keyword', 'mahasiswa_id', 'per_page']);
 
         if ($user->isMahasiswa()) {
             $ta = ProgramContext::resolve($user, $request);
@@ -292,24 +312,38 @@ class LogbookController extends Controller
                 ->pluck('id');
 
             // TA dari dosen lain yang punya hubungan langsung (grup/TA bersama).
-            $relatedTaIds = MahasiswaTa::where(function ($q) use ($user) {
-                $q->whereIn('pembimbing_1_id', $user->relatedDosenIds())
-                    ->orWhereIn('pembimbing_2_id', $user->relatedDosenIds())
-                    ->orWhereIn('penguji_1_id', $user->relatedDosenIds())
-                    ->orWhereIn('penguji_2_id', $user->relatedDosenIds());
+            $relatedDosenIds = $user->relatedDosenIds();
+            $relatedTaIds = MahasiswaTa::where(function ($q) use ($relatedDosenIds) {
+                $q->whereIn('pembimbing_1_id', $relatedDosenIds)
+                    ->orWhereIn('pembimbing_2_id', $relatedDosenIds)
+                    ->orWhereIn('penguji_1_id', $relatedDosenIds)
+                    ->orWhereIn('penguji_2_id', $relatedDosenIds);
             })->pluck('id');
 
             $query = LogbookEntry::where(fn ($q) => $q->whereIn('mahasiswa_ta_id', $taIds)
-                    ->orWhereIn('mahasiswa_ta_id', $relatedTaIds)
-                    ->orWhere('dosen_id', $user->id))
+                ->orWhereIn('mahasiswa_ta_id', $relatedTaIds)
+                ->orWhere('dosen_id', $user->id))
                 ->with(['mahasiswaTa.mahasiswa', 'dosen']);
         } else {
             $query = LogbookEntry::with(['mahasiswaTa.mahasiswa']);
         }
 
-        // Filter kombinasi memakai when() query builder (spesifikasi Fase 7).
+        // All aggregates and student options inherit the same visibility scope.
+        $summary = (clone $query)->reorder()->selectRaw(
+            'COUNT(*) as total, SUM(CASE WHEN jenis = ? THEN 1 ELSE 0 END) as logbook, '
+            .'SUM(CASE WHEN jenis = ? THEN 1 ELSE 0 END) as revisi, '
+            .'SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as pending, '
+            .'SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as revision_requested',
+            [LogbookEntry::JENIS_LOGBOOK, LogbookEntry::JENIS_REVISI, LogbookEntry::STATUS_SUBMITTED, LogbookEntry::STATUS_REVISI]
+        )->toBase()->first();
+        $students = User::query()->whereIn('id', MahasiswaTa::query()
+            ->select('user_id')->whereIn('id', (clone $query)->select('mahasiswa_ta_id')->toBase()))
+            ->orderBy('name')->get(['id', 'name', 'nim']);
+
+        // Date filters intentionally preserve the existing guidance-date semantics.
         $query->when($request->filled('status'), fn ($q) => $q->status($request->query('status')))
             ->when($request->filled('jenis'), fn ($q) => $q->jenis($request->query('jenis')))
+            ->when($request->filled('mahasiswa_id'), fn ($q) => $q->whereHas('mahasiswaTa', fn ($ta) => $ta->where('user_id', $request->query('mahasiswa_id'))))
             ->when($request->filled('date_from'), fn ($q) => $q->whereDate('tanggal_bimbingan', '>=', $request->query('date_from')))
             ->when($request->filled('date_to'), fn ($q) => $q->whereDate('tanggal_bimbingan', '<=', $request->query('date_to')))
             ->when($request->filled('keyword'), function ($q) use ($request) {
@@ -317,13 +351,19 @@ class LogbookController extends Controller
                 $q->where(function ($qq) use ($kw) {
                     $qq->where('topik', 'like', "%{$kw}%")
                         ->orWhere('progres_kendala', 'like', "%{$kw}%")
-                        ->orWhereHas('mahasiswaTa.mahasiswa', fn ($m) => $m->where('name', 'like', "%{$kw}%"));
+                        ->orWhereHas('mahasiswaTa.mahasiswa', fn ($m) => $m->where(fn ($identity) => $identity
+                            ->where('name', 'like', "%{$kw}%")->orWhere('nim', 'like', "%{$kw}%")));
                 });
             });
 
-        $entries = $query->latest()->paginate(20)->withQueryString();
+        if (! $user->isMahasiswa()) {
+            $query->select(['id', 'mahasiswa_ta_id', 'dosen_id', 'jenis', 'sesi_ke', 'topik', 'status',
+                'tanggal_bimbingan', 'tanggal_pengiriman', 'submitted_at', 'created_at']);
+        }
+        $entries = $query->with(['mahasiswaTa.mahasiswa.universities', 'dosen'])->withExists('revisionChildren')
+            ->latest()->orderByDesc('id')->paginate((int) $request->query('per_page', 20))->withQueryString();
 
-        return view('logbook.index', compact('entries', 'filters'));
+        return view('logbook.index', compact('entries', 'filters', 'summary', 'students'));
     }
 
     // ---------------------------------------------------------------- feedback page
@@ -518,7 +558,7 @@ class LogbookController extends Controller
     {
         $ext = $file->getClientOriginalExtension() ?: 'pdf';
         $id = $entryId ?: uniqid('e', false);
-        $name = $id.'/'.(string) \Illuminate\Support\Str::uuid().'.'.$ext;
+        $name = $id.'/'.(string) Str::uuid().'.'.$ext;
 
         return $file->storeAs($dir.'/'.$id, basename($name), 'local');
     }
@@ -535,14 +575,14 @@ class LogbookController extends Controller
         }
 
         try {
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.catatan-perbaikan', [
+            $pdf = Pdf::loadView('exports.catatan-perbaikan', [
                 'logbook' => $logbook,
                 'riwayat' => $logbook->riwayat_perbaikan,
                 'pesan' => $logbook->progres_kendala,
             ]);
 
             $output = $pdf->output();
-            $path = 'catatan/'.$logbook->id.'/'.(string) \Illuminate\Support\Str::uuid().'.pdf';
+            $path = 'catatan/'.$logbook->id.'/'.(string) Str::uuid().'.pdf';
             Storage::disk('local')->put($path, $output);
 
             $logbook->update([
@@ -577,7 +617,7 @@ class LogbookController extends Controller
      */
     private function logAttachmentChange(LogbookEntry $logbook, string $field, ?string $old, ?string $new, int $resolved): void
     {
-        \Illuminate\Support\Facades\Log::channel('audit')->info('Attachment replaced', [
+        Log::channel('audit')->info('Attachment replaced', [
             'entry_id' => $logbook->id,
             'field' => $field,
             'old' => $old ? basename($old) : null,
@@ -595,7 +635,7 @@ class LogbookController extends Controller
         $this->authorize('submit', $logbook);
 
         // Hanya program aktif yang bisa submit.
-        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [MahasiswaTa::STATUS_AKTIF, MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
         $logbook->update([
             'status' => LogbookEntry::STATUS_SUBMITTED,
@@ -607,7 +647,7 @@ class LogbookController extends Controller
             $logbook->parentEntry->update(['status' => LogbookEntry::STATUS_SUBMITTED]);
         }
 
-        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Ada entri baru menunggu review.'));
+        $this->bestEffort(fn () => EntryStatusChanged::dispatch($logbook, 'Ada entri baru menunggu review.'));
         $logbook->notifyReviewers(
             $logbook->reviewSubmissionMessage(),
             route('logbook.show', $logbook),
@@ -622,7 +662,7 @@ class LogbookController extends Controller
         $this->authorize('review', $logbook);
 
         // Hanya program aktif yang bisa di-review.
-        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [MahasiswaTa::STATUS_AKTIF, MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
         $validated = $request->validate(['feedback_dosen' => ['nullable', 'string', 'max:5000']]);
 
@@ -635,7 +675,7 @@ class LogbookController extends Controller
         // Reviewer bisa pembimbing atau dosen penguji (penerima revisi), jadi
         // pesan notifikasi tidak menyebut peran tertentu.
         $reviewerName = auth()->user()?->name;
-        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda telah disetujui'.($reviewerName ? ' oleh '.$reviewerName : ' oleh dosen').'.'));
+        $this->bestEffort(fn () => EntryStatusChanged::dispatch($logbook, 'Entri Anda telah disetujui'.($reviewerName ? ' oleh '.$reviewerName : ' oleh dosen').'.'));
         $logbook->notifyParties(
             'Entri '.($logbook->jenis === 'revisi' ? 'revisi' : 'logbook sesi '.$logbook->sesi_ke).' telah disetujui.',
             route('logbook.show', $logbook),
@@ -644,7 +684,7 @@ class LogbookController extends Controller
 
         // Evaluasi achievement mahasiswa.
         if ($owner = $logbook->mahasiswaTa?->mahasiswa) {
-            app(\App\Services\AchievementService::class)->evaluateForUser($owner);
+            app(AchievementService::class)->evaluateForUser($owner);
         }
 
         return back()->with('success', 'Entri disetujui.');
@@ -655,7 +695,7 @@ class LogbookController extends Controller
         $this->authorize('review', $logbook);
 
         // Hanya program aktif yang bisa di-review.
-        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [MahasiswaTa::STATUS_AKTIF, MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
         $validated = $request->validate([
             'feedback_dosen' => ['required', 'string', 'min:20'],
@@ -666,7 +706,7 @@ class LogbookController extends Controller
             'reviewed_at' => now(),
         ]);
 
-        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri Anda diminta revisi: '.$validated['feedback_dosen']));
+        $this->bestEffort(fn () => EntryStatusChanged::dispatch($logbook, 'Entri Anda diminta revisi: '.$validated['feedback_dosen']));
         $logbook->notifyParties(
             'Entri Anda diminta revisi: '.$validated['feedback_dosen'],
             route('logbook.show', $logbook),
@@ -676,10 +716,10 @@ class LogbookController extends Controller
         return back()->with('success', 'Entri dikembalikan untuk revisi.');
     }
 
-    public function archive(Request $request, LogbookEntry $logbook, \App\Services\ArchiveLogbookReview $archive): RedirectResponse
+    public function archive(Request $request, LogbookEntry $logbook, ArchiveLogbookReview $archive): RedirectResponse
     {
         $this->authorize('review', $logbook);
-        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [MahasiswaTa::STATUS_AKTIF, MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
         $validated = $request->validate(['archive_reason' => ['nullable', 'string', 'max:5000']]);
         $archive->archive($logbook, $request->user(), $validated['archive_reason'] ?? null);
@@ -695,7 +735,7 @@ class LogbookController extends Controller
         $this->authorize('reopen', $logbook);
 
         // Hanya program aktif yang bisa dibuka kembali.
-        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [MahasiswaTa::STATUS_AKTIF, MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
         abort_unless($logbook->status === LogbookEntry::STATUS_APPROVED, 422, 'Hanya entri yang sudah disetujui yang bisa dibuka kembali.');
 
@@ -704,7 +744,7 @@ class LogbookController extends Controller
             'reviewed_at' => null,
         ]);
 
-        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Persetujuan entri Anda dibatalkan dosen, kini kembali menunggu review.'));
+        $this->bestEffort(fn () => EntryStatusChanged::dispatch($logbook, 'Persetujuan entri Anda dibatalkan dosen, kini kembali menunggu review.'));
         $logbook->notifyParties(
             'Persetujuan entri '.($logbook->jenis === 'revisi' ? 'revisi' : 'logbook sesi '.$logbook->sesi_ke).' dibatalkan dosen. Entri kembali menunggu review.',
             route('logbook.show', $logbook),
@@ -722,7 +762,7 @@ class LogbookController extends Controller
         $this->authorize('reopen', $logbook);
 
         // Hanya program aktif yang bisa dibuka kembali.
-        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [\App\Models\MahasiswaTa::STATUS_AKTIF, \App\Models\MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
+        abort_unless(in_array($logbook->mahasiswaTa?->status_ta, [MahasiswaTa::STATUS_AKTIF, MahasiswaTa::STATUS_PENDING_APPROVAL], true), 403, 'Program belum aktif atau ditolak.');
 
         abort_unless($logbook->status === LogbookEntry::STATUS_APPROVED, 422, 'Hanya entri yang sudah disetujui yang bisa diminta revisi kembali.');
 
@@ -736,7 +776,7 @@ class LogbookController extends Controller
             'reviewed_at' => now(),
         ]);
 
-        $this->bestEffort(fn () => \App\Events\EntryStatusChanged::dispatch($logbook, 'Entri yang sudah disetujui diminta revisi kembali: '.$validated['feedback_dosen']));
+        $this->bestEffort(fn () => EntryStatusChanged::dispatch($logbook, 'Entri yang sudah disetujui diminta revisi kembali: '.$validated['feedback_dosen']));
         $logbook->notifyParties(
             'Entri yang sudah disetujui diminta revisi kembali: '.$validated['feedback_dosen'],
             route('logbook.show', $logbook),
@@ -751,7 +791,7 @@ class LogbookController extends Controller
     public function pdf(LogbookEntry $logbook)
     {
         $this->authorize('view', $logbook);
-        abort_if(!$logbook->lampiran_path, 404, 'File perbaikan/draft tidak tersedia.');
+        abort_if(! $logbook->lampiran_path, 404, 'File perbaikan/draft tidak tersedia.');
 
         return $this->inlinePdf($logbook->lampiran_path);
     }
@@ -759,7 +799,7 @@ class LogbookController extends Controller
     public function catatanPdf(LogbookEntry $logbook)
     {
         $this->authorize('view', $logbook);
-        abort_if(!$logbook->catatan_perbaikan_path, 404, 'Catatan perbaikan tidak tersedia.');
+        abort_if(! $logbook->catatan_perbaikan_path, 404, 'Catatan perbaikan tidak tersedia.');
 
         return $this->inlinePdf($logbook->catatan_perbaikan_path);
     }
@@ -775,14 +815,14 @@ class LogbookController extends Controller
 
         $type = $request->query('type', PdfComment::FILE_TYPE_DRAFT);
         $field = $type === PdfComment::FILE_TYPE_CATATAN ? 'catatan_perbaikan_path' : 'lampiran_path';
-        abort_if(!$logbook->{$field}, 404, 'File PDF tidak tersedia.');
+        abort_if(! $logbook->{$field}, 404, 'File PDF tidak tersedia.');
 
         $source = Storage::disk('local')->path($logbook->{$field});
         abort_unless(is_file($source), 404, 'File PDF tidak ditemukan.');
 
         $comments = $logbook->comments()->fileType($type)->with('user')->orderBy('page_number')->get();
 
-        $pdf = new \setasign\Fpdi\Fpdi();
+        $pdf = new Fpdi;
         $pageCount = $pdf->setSourceFile($source);
 
         // Halaman daftar / legend komentar ditempatkan DI AWAL dokumen,
@@ -801,7 +841,7 @@ class LogbookController extends Controller
             $pageComments = $comments->where('page_number', $pageNo);
             $i = 0;
             foreach ($pageComments as $c) {
-                if (!$c->isArea()) {
+                if (! $c->isArea()) {
                     continue;
                 }
                 $i++;
@@ -863,7 +903,9 @@ class LogbookController extends Controller
                     });
                     foreach ($wrapped as $ln) {
                         $lines[] = $ln;
-                        if (count($lines) >= 3) break;
+                        if (count($lines) >= 3) {
+                            break;
+                        }
                     }
                 }
                 foreach ($lines as $idx => $ln) {
@@ -894,7 +936,7 @@ class LogbookController extends Controller
      * bisa diklik untuk lompat ke anotasinya di halaman asli. Mengembalikan
      * map [comment_id => link] yang diarahkan burnPdf() via SetLink.
      */
-    private function appendCommentList(\setasign\Fpdi\Fpdi $pdf, $comments, string $type): array
+    private function appendCommentList(Fpdi $pdf, $comments, string $type): array
     {
         $only = $comments->filter(fn ($c) => $c->isArea())->values();
 
@@ -980,7 +1022,7 @@ class LogbookController extends Controller
         return $links;
     }
 
-    private function legendRow(\setasign\Fpdi\Fpdi $pdf, array $color, string $label): void
+    private function legendRow(Fpdi $pdf, array $color, string $label): void
     {
         [$r, $g, $b] = $color;
         $x = $pdf->GetX();
@@ -1043,7 +1085,7 @@ class LogbookController extends Controller
     public function viewer(Request $request, LogbookEntry $logbook): View
     {
         $this->authorize('view', $logbook);
-        if ($request->user()->isDosen() && $request->user()->can('review', $logbook) && !$logbook->review_opened_at) {
+        if ($request->user()->isDosen() && $request->user()->can('review', $logbook) && ! $logbook->review_opened_at) {
             $logbook->update(['review_opened_at' => now()]);
         }
         $logbook->load('comments.user');
@@ -1139,7 +1181,7 @@ class LogbookController extends Controller
 
         $logbook->comments()->save($comment);
 
-        $this->bestEffort(fn () => \App\Events\PdfCommentCreated::dispatch($comment));
+        $this->bestEffort(fn () => PdfCommentCreated::dispatch($comment));
 
         // Notifikasi ke pihak terkait (kecuali penulis komentar sendiri):
         // pemilik TA, reviewer entri, pembimbing (CC), serta penerima revisi
@@ -1159,8 +1201,8 @@ class LogbookController extends Controller
             : []);
 
         foreach (array_unique(array_filter($recipients)) as $id) {
-            if ($id !== $request->user()->id && ($u = \App\Models\User::find($id))) {
-                $this->bestEffort(fn () => $u->notify(new \App\Notifications\ActivityNotification(
+            if ($id !== $request->user()->id && ($u = User::find($id))) {
+                $this->bestEffort(fn () => $u->notify(new ActivityNotification(
                     'Komentar baru pada PDF entri Anda: '.$comment->comment,
                     route('logbook.show', $logbook),
                     'Komentar PDF Baru',

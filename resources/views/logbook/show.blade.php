@@ -5,6 +5,12 @@
 @section('content')
 @php
     $user = auth()->user();
+    $program = $logbook->mahasiswaTa;
+    $canViewProgram = $program && (
+        ($user->isAdmin() && ($user->isSystemAdmin() || $user->institution_id === null || $program->institution_id === $user->institution_id))
+        || (!$user->isAdmin() && $user->isDosen() && ($program->isPembimbing($user) || $program->isPenguji($user)))
+        || (!$user->isAdmin() && !$user->isDosen() && $user->isMahasiswa() && $program->isMember($user))
+    );
     $owner = $user->isMahasiswa() && $logbook->mahasiswaTa?->isMember($user);
     $canReview = $user->can('review', $logbook);
     $canReopen = $user->can('reopen', $logbook);
@@ -60,7 +66,16 @@
 
         <section class="card p-5 sm:p-6" aria-label="{{ $logbook->jenis === 'revisi' ? 'Ringkasan revisi' : 'Ringkasan logbook bimbingan' }}">
             <div class="revision-summary detail-workspace-card">
-                <div class="min-w-0"><p class="font-heading font-semibold text-lg text-text-primary">{{ $logbook->mahasiswaTa?->mahasiswa?->name ?? '—' }}</p><p class="text-sm text-text-secondary">Mahasiswa</p></div>
+                <div class="min-w-0">
+                    <p class="font-heading font-semibold text-lg text-text-primary">
+                        @if ($canViewProgram && $program->mahasiswa)
+                            <a href="{{ route($program->isKp() ? 'mahasiswa-kp.show' : 'mahasiswa-ta.show', $program) }}" class="text-brand hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand">{{ $program->mahasiswa->name }}</a>
+                        @else
+                            {{ $program?->mahasiswa?->name ?? '—' }}
+                        @endif
+                    </p>
+                    <p class="text-sm text-text-secondary">Mahasiswa</p>
+                </div>
                 <dl class="revision-summary-fields text-sm">
                     <div><dt class="text-xs text-text-secondary">Topik</dt><dd class="font-medium mt-1">{{ $logbook->topik ?? ($logbook->jenis === 'revisi' ? 'Revisi' : '—') }}</dd></div>
                     <div><dt class="text-xs text-text-secondary">{{ $logbook->jenis === 'revisi' ? 'Tanggal Pengiriman' : 'Tanggal Bimbingan' }}</dt><dd class="font-medium mt-1">{{ $logbook->tanggal_tampil?->format('d M Y') ?? '—' }}</dd></div>

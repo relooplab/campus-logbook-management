@@ -48,8 +48,8 @@
 <main id="konten">
     <section class="landing-hero landing-container grid lg:grid-cols-[1fr_0.94fr] gap-12 lg:gap-16 items-center" aria-labelledby="hero-title">
         <div class="max-w-2xl">
-            <div class="landing-eyebrow mb-6"><span class="landing-eyebrow-dot"></span><span>Bimbingan yang tertata.<br>Kemajuan yang terlihat.</span></div>
-            <h1 id="hero-title" class="landing-display">Campus Logbook Management</h1>
+            <div class="landing-eyebrow mb-6"><span class="landing-eyebrow-dot"></span><span>Bimbingan yang tertata, kemajuan yang terlihat.</span></div>
+            <h1 id="hero-title" class="landing-display">Campus <span class="text-accent-blue">Logbook</span> <span class="text-accent-orange">Management</span></h1>
             <p class="mt-6 text-base sm:text-lg leading-relaxed text-text-secondary max-w-xl">Dari entri logbook pertama sampai sidang terakhir, mahasiswa dan dosen bisa mencatat progres, memberi umpan balik, serta menuntaskan revisi dalam satu tempat.</p>
             <div class="mt-8 flex flex-wrap items-center gap-3">
                 @auth
@@ -62,24 +62,26 @@
             <p class="mt-7 text-xs leading-relaxed text-text-secondary">Untuk mahasiswa, dosen pembimbing, penguji, dan pengelola program.</p>
         </div>
 
-        <div class="landing-journey" aria-label="Contoh alur bimbingan dari entri hingga selesai">
+        <div class="landing-journey landing-hero-preview" data-phase-color="0" aria-label="Ilustrasi perjalanan Tugas Akhir">
             <div class="landing-journey-top flex items-center justify-between gap-2">
-                <span class="flex items-center gap-2 font-semibold"><span class="material-symbols-outlined icon-md text-brand">auto_stories</span> Perjalanan bimbingan</span>
-                <span class="font-mono text-xs text-text-secondary">TA / KP</span>
+                <span class="flex items-center gap-2 font-semibold"><span class="material-symbols-outlined icon-md text-brand" aria-hidden="true">route</span> Perjalanan TA</span>
+                <span class="landing-step-tag">Ilustrasi</span>
             </div>
-            <div class="landing-journey-body">
-                <div class="landing-track">
-                    <div class="landing-step"><span class="landing-step-icon text-accent-blue"><span class="material-symbols-outlined icon-md">edit_note</span></span><div><div class="flex items-center gap-2 flex-wrap"><strong>Entri bimbingan</strong><span class="landing-step-tag">Mahasiswa</span></div><p>Catat progres dan lampirkan dokumen.</p></div></div>
-                    <div class="landing-step"><span class="landing-step-icon text-accent-orange"><span class="material-symbols-outlined icon-md">rate_review</span></span><div><div class="flex items-center gap-2 flex-wrap"><strong>Umpan balik dosen</strong><span class="landing-step-tag">Dosen</span></div><p>Tinjau berkas, beri komentar, dan arahkan langkah berikutnya.</p></div></div>
-                    <div class="landing-step"><span class="landing-step-icon text-accent-purple"><span class="material-symbols-outlined icon-md">sync</span></span><div><div class="flex items-center gap-2 flex-wrap"><strong>Revisi terpantau</strong><span class="landing-step-tag">Kolaborasi</span></div><p>Perbaiki pekerjaan tanpa kehilangan riwayat.</p></div></div>
-                    <div class="landing-step"><span class="landing-step-icon text-accent-teal"><span class="material-symbols-outlined icon-md">verified</span></span><div><div class="flex items-center gap-2 flex-wrap"><strong>Siap melangkah</strong><span class="landing-step-tag">Seminar &amp; sidang</span></div><p>Seluruh perjalanan tetap tercatat hingga selesai.</p></div></div>
-                </div>
+            <div class="landing-preview-body">
+                <div class="landing-preview-orbit" aria-hidden="true"><span class="material-symbols-outlined">school</span><span class="landing-preview-orbit-dot"></span></div>
+                <span class="landing-section-label">LANGKAH BERIKUTNYA, TERLIHAT.</span>
+                <h2 data-ta-hero-label>Penyusunan Proposal</h2>
+                <p>Catatan, dokumen, dan umpan balik menyertai setiap fase perjalanan Anda.</p>
+                <div class="landing-preview-progress" aria-hidden="true">@foreach($taPhases as $key => $label)<span data-ta-hero-segment="{{ $loop->index }}" class="{{ $loop->first ? 'is-current' : '' }}"></span>@endforeach</div>
+                <a href="#alur" class="landing-text-link">Jelajahi delapan fase <span aria-hidden="true">↓</span></a>
             </div>
-            <div class="landing-journey-bottom"><span class="material-symbols-outlined icon-sm">history</span> Satu alur. Setiap langkah punya jejaknya.</div>
+            <div class="landing-journey-bottom"><span class="material-symbols-outlined icon-sm" aria-hidden="true">history</span> Bukan sekadar selesai. Setiap langkah tercatat.</div>
         </div>
     </section>
 
-    <div class="landing-container"><div class="landing-divider"></div></div>
+    @include('landing.partials.capabilities-marquee')
+
+    @include('landing.partials.ta-journey')
 
     <section class="landing-section landing-container" aria-labelledby="masalah-title">
         <div class="grid md:grid-cols-[0.78fr_1fr] gap-8 md:gap-16 items-start">
@@ -111,15 +113,7 @@
         </div>
     </section>
 
-    <section id="alur" class="landing-section landing-container" aria-labelledby="alur-title">
-        <div class="text-center max-w-2xl mx-auto"><span class="landing-section-label">PERJALANAN FASE</span><h2 id="alur-title" class="landing-heading mt-4">Jelas langkahnya, jelas kemajuannya.</h2><p class="mt-4 text-text-secondary">Setiap program punya tahapan. Bimbingan, revisi, dan peninjauan terdokumentasi sepanjang perjalanan.</p></div>
-        <ol class="landing-phases mt-12">
-            <li><span class="landing-phase-number">01</span><h3>Mulai &amp; rencanakan</h3><p>Tentukan program, pembimbing, dan arah pengerjaan.</p></li>
-            <li><span class="landing-phase-number">02</span><h3>Catat &amp; diskusikan</h3><p>Isi logbook, bagikan berkas, dan terima umpan balik.</p></li>
-            <li><span class="landing-phase-number">03</span><h3>Perbaiki &amp; tinjau</h3><p>Kerjakan revisi dengan riwayat perubahan yang jelas.</p></li>
-            <li><span class="landing-phase-number">04</span><h3>Seminar &amp; selesaikan</h3><p>Siapkan seminar, sidang, hingga finalisasi.</p></li>
-        </ol>
-    </section>
+
 
     <section id="untuk-siapa" class="landing-section landing-section-muted" aria-labelledby="peran-title">
         <div class="landing-container">
@@ -134,10 +128,7 @@
 
     <section class="landing-section landing-container" aria-labelledby="tampilan-title">
         <div class="flex flex-wrap justify-between items-end gap-4 mb-9"><div><span class="landing-section-label">LIHAT RUANG KERJANYA</span><h2 id="tampilan-title" class="landing-heading mt-4">Dibuat untuk pekerjaan nyata.</h2></div><p class="text-sm text-text-secondary max-w-sm">Tampilan dashboard mahasiswa dan dosen dalam aplikasi.</p></div>
-        <div class="grid md:grid-cols-2 gap-5">
-            <figure class="landing-screenshot"><img src="{{ asset('images/readme-dashboard-mahasiswa.jpeg') }}" alt="Tampilan dashboard mahasiswa dengan ringkasan progres bimbingan" width="1280" height="952" loading="lazy"><figcaption><span class="material-symbols-outlined icon-sm text-accent-blue" aria-hidden="true">school</span> Dashboard mahasiswa</figcaption></figure>
-            <figure class="landing-screenshot"><img src="{{ asset('images/readme-dashboard-dosen.jpeg') }}" alt="Tampilan dashboard dosen dengan ringkasan mahasiswa dan aktivitas bimbingan" width="1280" height="927" loading="lazy"><figcaption><span class="material-symbols-outlined icon-sm text-accent-orange" aria-hidden="true">co_present</span> Dashboard dosen</figcaption></figure>
-        </div>
+        @include('landing.partials.dashboard-slider')
     </section>
 
     <section class="landing-section landing-section-muted" aria-labelledby="mode-title">
@@ -156,7 +147,7 @@
     <section class="landing-container pb-20 sm:pb-28" aria-labelledby="cta-title"><div class="landing-final-cta"><div class="relative z-10"><span class="landing-section-label">MULAI DARI SATU ENTRI</span><h2 id="cta-title" class="landing-heading mt-4 max-w-2xl">Beri setiap langkah bimbingan tempat yang semestinya.</h2><p class="mt-4 text-text-secondary max-w-xl">Catat yang sudah dikerjakan, lihat yang perlu diperbaiki, dan lanjutkan bersama.</p><div class="mt-7 flex flex-wrap gap-3">@auth<a href="{{ route('dashboard') }}" class="landing-button landing-button-primary landing-button-large">Ke Dashboard <span aria-hidden="true">↗</span></a>@else<a href="{{ route('register') }}" class="landing-button landing-button-primary landing-button-large">Buat akun gratis <span aria-hidden="true">↗</span></a><a href="{{ route('login') }}" class="landing-button landing-button-outline landing-button-large">Masuk</a>@endauth</div></div></div></section>
 </main>
 
-<footer class="landing-footer"><div class="landing-container py-9 flex flex-col md:flex-row md:items-center justify-between gap-6"><div class="text-sm"><div class="font-heading font-bold text-text-primary">{{ $appName }}</div><p class="text-text-secondary mt-1">{{ $institutionName && $institutionName !== 'Perguruan Tinggi' ? $institutionName : 'Ruang kerja bimbingan akademik' }} · v{{ $version }}</p></div><nav aria-label="Tautan lain" class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-text-secondary"><a href="{{ route('landing') }}" class="hover:text-text-primary">Beranda</a><a href="https://github.com/relooplab/campus-logbook-management" target="_blank" rel="noopener noreferrer" class="hover:text-text-primary">GitHub</a><a href="https://reloop.notion.site/3b1155a221e880829514df5d0a8dcfd6" target="_blank" rel="noopener noreferrer" class="hover:text-text-primary">Kirim Masukan</a>@if($adminContactEmail)<a href="mailto:{{ $adminContactEmail }}" class="hover:text-text-primary">Hubungi admin</a>@endif</nav></div></footer>
+@include('landing.partials.footer')
 @endsection
 
 @section('scripts')
@@ -193,6 +184,63 @@
         });
         menu.querySelectorAll('a').forEach(function (link) { link.addEventListener('click', closeMenu); });
         document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closeMenu(); });
+
+        var journey = document.querySelector('[data-ta-journey]');
+        var phaseButtons = Array.from(journey.querySelectorAll('[data-ta-select]'));
+        var playButton = journey.querySelector('[data-ta-play]');
+        var motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        var activePhase = 0;
+        var playing = !motion.matches;
+        var visible = false;
+        var timer = null;
+
+        function selectPhase(index) {
+            activePhase = index;
+            document.querySelector('.landing-hero-preview').setAttribute('data-phase-color', String(index));
+            phaseButtons.forEach(function (button, i) {
+                button.setAttribute('aria-pressed', String(i === index));
+                var step = button.closest('li');
+                step.classList.toggle('is-current', i === index);
+                step.classList.toggle('is-complete', i < index);
+            });
+            journey.querySelectorAll('[data-ta-detail]').forEach(function (panel, i) { panel.hidden = i !== index; });
+            document.querySelector('[data-ta-hero-label]').textContent = phaseButtons[index].lastElementChild.textContent;
+            document.querySelectorAll('[data-ta-hero-segment]').forEach(function (segment, i) {
+                segment.classList.toggle('is-current', i === index);
+                segment.classList.toggle('is-complete', i < index);
+            });
+        }
+        function syncPlayback() {
+            window.clearInterval(timer);
+            timer = null;
+            playButton.textContent = playing ? 'Jeda animasi' : 'Putar animasi';
+            playButton.setAttribute('aria-pressed', String(playing));
+            journey.classList.toggle('is-breathing', playing && visible && !document.hidden && !motion.matches);
+            if (playing && visible && !document.hidden && !motion.matches) {
+                timer = window.setInterval(function () { selectPhase((activePhase + 1) % phaseButtons.length); }, 4500);
+            }
+        }
+        playButton.hidden = false;
+        phaseButtons.forEach(function (button, index) {
+            button.addEventListener('click', function () { playing = false; selectPhase(index); syncPlayback(); });
+        });
+        playButton.addEventListener('click', function () { playing = !playing; syncPlayback(); });
+        journey.addEventListener('focusin', function (event) {
+            if (event.target !== playButton) { playing = false; syncPlayback(); }
+        });
+        motion.addEventListener('change', function () { if (motion.matches) playing = false; syncPlayback(); });
+        document.addEventListener('visibilitychange', syncPlayback);
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver(function (entries) {
+                visible = entries[0].isIntersecting;
+                syncPlayback();
+            }, { threshold: .15 }).observe(journey);
+        } else {
+            visible = true;
+        }
+        syncPlayback();
     })();
 </script>
+@include('landing.partials.motion-script')
+@include('landing.partials.marquee-script')
 @endsection

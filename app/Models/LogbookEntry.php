@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Notifications\ActivityNotification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class LogbookEntry extends Model
 {
@@ -14,25 +16,35 @@ class LogbookEntry extends Model
 
     /** Jenis submission. */
     public const JENIS_LOGBOOK = 'logbook';
+
     public const JENIS_REVISI = 'revisi';
 
     /** Status workflow. */
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_SUBMITTED = 'submitted';
+
     public const STATUS_APPROVED = 'approved';
+
     public const STATUS_REVISI = 'revisi';
+
     public const STATUS_ARCHIVED = 'archived';
+
     public const STATUS_REVISION_IN_PROGRESS = 'revision_in_progress';
 
     /** Status perbaikan pada tabel riwayat perbaikan. */
     public const PERBAIKAN_SUDAH = 'Sudah';
+
     public const PERBAIKAN_SEBAGIAN = 'Sebagian';
+
     public const PERBAIKAN_BELUM = 'Belum';
+
     public const PERBAIKAN_STATUSES = [self::PERBAIKAN_SUDAH, self::PERBAIKAN_SEBAGIAN, self::PERBAIKAN_BELUM];
 
     public const MAX_REVISION_ROUND = 3;
 
     public const JENISES = [self::JENIS_LOGBOOK, self::JENIS_REVISI];
+
     public const STATUSES = [
         self::STATUS_DRAFT,
         self::STATUS_SUBMITTED,
@@ -176,6 +188,10 @@ class LogbookEntry extends Model
      */
     public function isLockedByActiveRevision(): bool
     {
+        if (array_key_exists('revision_children_exists', $this->attributes)) {
+            return (bool) $this->attributes['revision_children_exists'];
+        }
+
         return $this->revisionChildren()->exists();
     }
 
@@ -192,7 +208,7 @@ class LogbookEntry extends Model
      * Tanggal yang ditampilkan: Tanggal Bimbingan untuk logbook,
      * Tanggal Pengiriman untuk revisi (agar tidak kosong).
      */
-    public function getTanggalTampilAttribute(): ?\Illuminate\Support\Carbon
+    public function getTanggalTampilAttribute(): ?Carbon
     {
         return $this->jenis === self::JENIS_REVISI
             ? ($this->tanggal_pengiriman ?? $this->submitted_at?->toDate())
@@ -260,7 +276,7 @@ class LogbookEntry extends Model
         foreach ($recipients as $id) {
             if ($user = User::find($id)) {
                 try {
-                    $user->notify(new \App\Notifications\ActivityNotification($message, $url, $subject));
+                    $user->notify(new ActivityNotification($message, $url, $subject));
                 } catch (\Throwable $e) {
                     report($e);
                 }
@@ -275,7 +291,7 @@ class LogbookEntry extends Model
     {
         if ($dosen = $this->reviewDosen()) {
             try {
-                $dosen->notify(new \App\Notifications\ActivityNotification($message, $url, $subject));
+                $dosen->notify(new ActivityNotification($message, $url, $subject));
             } catch (\Throwable $e) {
                 report($e);
             }
@@ -297,7 +313,7 @@ class LogbookEntry extends Model
         foreach ($recipients as $id) {
             if ($user = User::find($id)) {
                 try {
-                    $user->notify(new \App\Notifications\ActivityNotification($message, $url, $subject));
+                    $user->notify(new ActivityNotification($message, $url, $subject));
                 } catch (\Throwable $e) {
                     report($e);
                 }

@@ -6,13 +6,22 @@ Aplikasi web untuk mencatat, memantau, dan mengelola proses bimbingan tugas akhi
 
 - Live URL: <https://logbook.reloop.id>
 - Beranda publik: <https://logbook.reloop.id/> — fitur, alur bimbingan, dan tautan untuk masuk atau mendaftar.
-- Dashboard mahasiswa:
 
-  ![Dashboard mahasiswa](public/images/readme-dashboard-mahasiswa.jpeg)
+Beranda menyajikan delapan fase perjalanan TA yang mengikuti alur aplikasi. Pilih fase untuk melihat penjelasannya, atau gunakan tombol putar/jeda untuk animasi. Pemutaran otomatis menghormati preferensi reduced motion.
 
-- Dashboard dosen:
+### Dashboard mahasiswa
 
-  ![Dashboard dosen](public/images/readme-dashboard-dosen.jpeg)
+Ringkasan perjalanan TA, progres bimbingan, aktivitas, dan pencapaian mahasiswa.
+
+![Dashboard mahasiswa](public/images/readme-dashboard-mahasiswa.jpeg)
+
+### Dashboard dosen
+
+Ringkasan mahasiswa bimbingan, antrean review, agenda, dan mahasiswa yang perlu perhatian.
+
+![Dashboard dosen](public/images/readme-dashboard-dosen.jpeg)
+
+Kedua pratinjau dashboard juga ditampilkan pada beranda publik menggunakan aset gambar yang sama.
 
 ## 🧱 Tech Stack
 

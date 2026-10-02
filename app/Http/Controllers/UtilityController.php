@@ -33,8 +33,11 @@ class UtilityController extends Controller
                 ->orWhere('nim', 'like', "%{$q}%")
                 ->orWhere('email', 'like', "%{$q}%");
         })
+        ->with('roles')
         ->get(['id', 'name', 'nim'])
-        ->filter(fn ($u) => $user->isAdmin() || $user->id === $u->id || $user->hasDirectRelation($u))
+        ->filter(fn ($u) => $user->isAdmin() || $user->id === $u->id || $user->hasDirectRelation($u)
+            || ($user->isDosen() && $u->isMahasiswa() && $u->allPrograms()->get()
+                ->contains(fn (MahasiswaTa $program) => $program->isPembimbing($user) || $program->isPenguji($user))))
         ->take(8)
         ->values();
 
@@ -121,7 +124,7 @@ class UtilityController extends Controller
                 'id' => $u->id,
                 'name' => $u->name,
                 'nim' => $u->nim,
-                'url' => route('profile.show', $u),
+                'url' => $this->searchUserUrl($u, $user),
             ]),
             'entries' => $entries->map(fn ($e) => [
                 'id' => $e->id,
@@ -136,6 +139,32 @@ class UtilityController extends Controller
                 'url' => $f->isPdf() ? route('workspace.preview', $f) : route('workspace.download', $f),
             ]),
         ]);
+    }
+
+    private function searchUserUrl(User $result, User $viewer): string
+    {
+        if ($result->isMahasiswa()) {
+            $program = $result->allPrograms()
+                ->orderByRaw("CASE WHEN jenis = 'ta' THEN 0 ELSE 1 END")
+                ->orderByRaw("CASE WHEN status_ta = 'aktif' THEN 0 ELSE 1 END")
+                ->orderByDesc('id')
+                ->get()
+                ->first(function (MahasiswaTa $program) use ($viewer) {
+                    if ($viewer->isAdmin()) {
+                        return $viewer->isSystemAdmin() || $viewer->institution_id === null
+                            || $program->institution_id === $viewer->institution_id;
+                    }
+
+                    return ($viewer->isDosen() && ($program->isPembimbing($viewer) || $program->isPenguji($viewer)))
+                        || ($viewer->isMahasiswa() && $program->isMember($viewer));
+                });
+
+            if ($program) {
+                return route($program->isKp() ? 'mahasiswa-kp.show' : 'mahasiswa-ta.show', $program);
+            }
+        }
+
+        return route('profile.show', $result);
     }
 
     /**

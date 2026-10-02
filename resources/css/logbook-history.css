@@ -1,0 +1,57 @@
+/* Scoped history layout; all colors inherit the workspace theme. */
+.logbook-history { min-width: 0; }
+.history-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .65rem; }
+.history-metric { display: flex; align-items: baseline; flex-wrap: wrap; gap: .4rem .75rem; padding: .85rem 1rem; border: 1px solid rgb(var(--border)); border-radius: var(--radius-control); background: rgb(var(--bg-surface)); }
+.history-search { display: flex; align-items: end; gap: .75rem; }
+.history-filters { display: grid; grid-template-columns: .8fr 1.1fr 1.5fr 1fr 1fr auto; gap: .75rem; align-items: end; }
+.history-filters > div { min-width: 0; }
+.history-label { display: block; margin-bottom: .35rem; font-size: .75rem; color: rgb(var(--text-secondary)); }
+.history-input { width: 100%; min-width: 0; padding: .6rem .75rem; font-size: .875rem; border: 1px solid rgb(var(--border)); border-radius: var(--radius-control); color: rgb(var(--text-primary)); background: rgb(var(--bg-surface)); color-scheme: light; }
+.dark .history-input { color-scheme: dark; }
+.history-input::placeholder { color: rgb(var(--text-secondary)); }
+.logbook-history :is(a, button, select, input):focus-visible { outline: 2px solid rgb(var(--brand)); outline-offset: 3px; }
+.history-tab { display: block; padding: .9rem .2rem; border-bottom: 2px solid transparent; font-size: .875rem; font-weight: 600; color: rgb(var(--text-secondary)); }
+.history-tab:hover { color: rgb(var(--text-primary)); }
+.history-tab.is-active { color: rgb(var(--brand)); border-color: rgb(var(--brand)); }
+.history-desktop { overflow: auto; max-height: 68vh; }
+.history-table { width: 100%; table-layout: fixed; font-size: .875rem; text-align: left; }
+.history-table th { position: sticky; top: 0; z-index: 1; background: rgb(var(--bg-panel)); color: rgb(var(--text-secondary)); font-size: .75rem; font-weight: 600; padding: .7rem 1rem; border-bottom: 1px solid rgb(var(--border)); }
+.history-table th:nth-child(1) { width: 23%; }
+.history-table th:nth-child(2) { width: 17%; }
+.history-table th:nth-child(3) { width: 25%; }
+.history-table th:nth-child(4) { width: 13%; }
+.history-table th:nth-child(5) { width: 14%; }
+.history-table th:nth-child(6) { width: 8%; }
+.history-table td { padding: .85rem 1rem; vertical-align: top; border-bottom: 1px solid rgb(var(--border)); overflow-wrap: anywhere; }
+.history-table tr:last-child td { border-bottom: 0; }
+.history-table tbody tr:hover { background: rgb(var(--bg-hover) / .5); }
+.history-student-link { color: rgb(var(--brand)); font-weight: 600; }
+.history-student-link:hover, .history-detail:hover { text-decoration: underline; }
+.history-detail { color: rgb(var(--brand)); font-size: .8125rem; font-weight: 600; white-space: nowrap; }
+.history-mobile { display: none; }
+.history-mobile-entry { padding: 1rem; border-bottom: 1px solid rgb(var(--border)); overflow-wrap: anywhere; }
+.history-mobile-entry:last-child { border-bottom: 0; }
+.logbook-history .badge { white-space: normal; }
+.history-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
+.history-page-size { width: auto; font-size: .75rem; }
+.history-page { display: inline-flex; align-items: center; justify-content: center; min-width: 2rem; min-height: 2rem; border-radius: .5rem; font-size: .75rem; border: 1px solid rgb(var(--border)); }
+a.history-page:hover { background: rgb(var(--bg-hover)); }
+.history-page.is-active { color: rgb(var(--brand)); background: rgb(var(--brand) / .1); border-color: rgb(var(--brand) / .4); }
+.history-page.is-disabled { color: rgb(var(--text-secondary)); opacity: .5; }
+@media (max-width: 1279px) {
+    .history-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .history-table :is(th, td) { padding-inline: .65rem; }
+}
+@media (max-width: 1023px) {
+    .history-desktop { display: none; }
+    .history-mobile { display: block; }
+    .history-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 639px) {
+    .history-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .history-metric { padding: .7rem .8rem; }
+    .history-filters { grid-template-columns: minmax(0, 1fr); }
+    .history-search { flex-direction: column; align-items: stretch; }
+    .history-footer { align-items: start; }
+    .history-mobile-entry .badge { font-size: .65rem; }
+}
