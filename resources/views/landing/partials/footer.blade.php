@@ -1,17 +1,18 @@
 <footer class="landing-footer">
-    <div class="landing-container py-9 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div class="text-sm">
-            <div class="font-heading font-bold text-text-primary">{{ $appName }}</div>
-            <p class="text-text-secondary mt-1">@if($institutionName && $institutionName !== 'Perguruan Tinggi'){{ $institutionName }} · @endif v{{ $version }}</p>
-            <p class="text-text-secondary mt-2">© {{ now()->year }} Reloop Lab.</p>
+    <div class="landing-container py-9 flex flex-col items-center gap-5 text-center">
+        <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm">
+            <span class="font-heading font-bold text-text-primary">{{ $appName }}</span>
+            <span class="text-xs text-text-secondary">v{{ $version }}</span>
         </div>
-        <nav aria-label="Tautan lain" class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-text-secondary">
-            <a href="{{ route('landing') }}" class="hover:text-text-primary">Beranda</a>
-            <a href="https://reloop.notion.site/3b1155a221e880829514df5d0a8dcfd6" target="_blank" rel="noopener noreferrer" class="hover:text-text-primary">Kirim Masukan</a>
-            @if($adminContactEmail)
-                <a href="mailto:{{ $adminContactEmail }}" class="hover:text-text-primary">Hubungi admin</a>
-            @endif
-            <div class="flex items-center gap-2">
+        <nav aria-label="Tautan lain" class="flex flex-col sm:flex-row items-center justify-center gap-x-6 gap-y-3 text-sm text-text-secondary">
+            <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+                <a href="{{ route('landing') }}" class="hover:text-text-primary">Beranda</a>
+                <a href="https://reloop.notion.site/3b1155a221e880829514df5d0a8dcfd6" target="_blank" rel="noopener noreferrer" class="hover:text-text-primary">Kirim Masukan</a>
+                @if($adminContactEmail)
+                    <a href="mailto:{{ $adminContactEmail }}" class="hover:text-text-primary">Hubungi admin</a>
+                @endif
+            </div>
+            <div class="flex items-center justify-center gap-2">
                 <a href="https://github.com/relooplab/campus-logbook-management" target="_blank" rel="noopener noreferrer" class="landing-social-link" aria-label="GitHub Campus Logbook Management (tab baru)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .75a11.25 11.25 0 0 0-3.56 21.92c.56.1.77-.24.77-.54v-2.1c-3.13.68-3.79-1.33-3.79-1.33-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.73 1.16 1.73 1.16 1 1.72 2.64 1.22 3.28.93.1-.72.39-1.22.71-1.5-2.5-.28-5.13-1.25-5.13-5.56 0-1.23.44-2.23 1.16-3.02-.12-.28-.5-1.43.11-2.98 0 0 .95-.3 3.09 1.15a10.77 10.77 0 0 1 5.62 0c2.15-1.45 3.09-1.15 3.09-1.15.61 1.55.23 2.7.11 2.98.72.79 1.16 1.79 1.16 3.02 0 4.32-2.63 5.28-5.14 5.56.4.35.76 1.03.76 2.08v3.1c0 .3.2.65.78.54A11.25 11.25 0 0 0 12 .75Z"/></svg>
                 </a>
@@ -20,5 +21,6 @@
                 </a>
             </div>
         </nav>
+        <p class="text-xs text-text-secondary">© {{ now()->year }} Reloop Lab.</p>
     </div>
 </footer>

@@ -26,6 +26,14 @@ class LandingPageTest extends TestCase
             ->assertDontSee('Ruang kerja Tugas Akhir &amp; Kerja Praktik', false);
     }
 
+    public function test_header_application_name_is_hidden_on_mobile(): void
+    {
+        $this->get(route('landing'))->assertOk()
+            ->assertSee('data-header-app-name class="hidden sm:inline truncate text-sm sm:text-base"', false)
+            ->assertSee('aria-label="Buka navigasi"', false)
+            ->assertSee('data-theme-toggle', false);
+    }
+
     public function test_dashboard_previews_share_existing_assets_with_readme(): void
     {
         $response = $this->get(route('landing'))->assertOk();
@@ -113,6 +121,21 @@ class LandingPageTest extends TestCase
             ->assertSee('href="https://www.linkedin.com/company/relooplab"', false)
             ->assertSee('aria-label="LinkedIn Reloop Lab (tab baru)"', false)
             ->assertSee('aria-label="GitHub Campus Logbook Management (tab baru)"', false);
+    }
+
+    public function test_footer_omits_institution_name_and_keeps_centered_identity(): void
+    {
+        $html = view('landing.partials.footer', [
+            'appName' => 'Campus Logbook Management',
+            'institutionName' => 'Institution Must Not Appear',
+            'version' => '1.2.3',
+            'adminContactEmail' => null,
+        ])->render();
+
+        $this->assertStringNotContainsString('Institution Must Not Appear', $html);
+        $this->assertStringContainsString('items-center gap-5 text-center', $html);
+        $this->assertStringContainsString('v1.2.3', $html);
+        $this->assertStringContainsString('© '.now()->year.' Reloop Lab.', $html);
     }
 
     public function test_landing_page_hides_technical_stack_and_license_blurb(): void
