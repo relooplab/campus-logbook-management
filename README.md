@@ -1,71 +1,53 @@
 # Campus Logbook Management
 
-Aplikasi web untuk mencatat, memantau, dan mengelola proses bimbingan tugas akhir/kerja praktik antara mahasiswa, dosen pembimbing, penguji, dan administrator.
+Campus Logbook Management membantu mahasiswa, dosen, dan pengelola akademik mengelola bimbingan Tugas Akhir (TA) dan Kerja Praktik (KP). Catatan, dokumen, keputusan review, dan perkembangan mahasiswa terdokumentasi dalam satu aplikasi.
 
-## 🚀 Demo
+**Aplikasi:** [logbook.reloop.id](https://logbook.reloop.id) · **Panduan:** [Panduan Pengguna](docs/USER-GUIDE.md)
 
-- Live URL: <https://logbook.reloop.id>
-- Beranda publik: <https://logbook.reloop.id/> — fitur, alur bimbingan, dan tautan untuk masuk atau mendaftar.
+## Pratinjau
 
-Beranda menyajikan delapan fase perjalanan TA yang mengikuti alur aplikasi. Pilih fase untuk melihat penjelasannya, atau gunakan tombol putar/jeda untuk animasi. Pemutaran otomatis menghormati preferensi reduced motion.
+| Dashboard mahasiswa | Dashboard dosen |
+| :---: | :---: |
+| ![Dashboard mahasiswa: ringkasan progres dan aktivitas bimbingan](public/images/readme-dashboard-mahasiswa.jpeg) | ![Dashboard dosen: mahasiswa bimbingan dan antrean review](public/images/readme-dashboard-dosen.jpeg) |
 
-### Dashboard mahasiswa
+## Fitur utama
 
-Ringkasan perjalanan TA, progres bimbingan, aktivitas, dan pencapaian mahasiswa.
+- **Logbook dan revisi:** mahasiswa mencatat sesi bimbingan, mengunggah dokumen, dan mengikuti status pengajuan.
+- **Keputusan dosen:** dosen dapat menyetujui, meminta revisi, atau mengarsipkan entri; catatan arsip bersifat opsional.
+- **Peninjauan PDF:** anotasi dan komentar pada bagian dokumen yang relevan.
+- **Dashboard sesuai peran:** ringkasan progres bagi mahasiswa, antrean review bagi dosen, dan alat administrasi bagi pengelola.
+- **Berkas dan komunikasi:** ruang kerja dokumen, chat, pengumuman, dan notifikasi.
+- **Alur akademik:** pengelolaan pembimbing dan penguji, bahan seminar, sidang, hingga finalisasi TA/KP.
+- **Akses personal dan institusi:** hak akses berbasis peran dengan pemisahan data institusi.
 
-![Dashboard mahasiswa](public/images/readme-dashboard-mahasiswa.jpeg)
+## Teknologi
 
-### Dashboard dosen
+| Komponen | Teknologi |
+| --- | --- |
+| Backend | Laravel 11 · PHP 8.4 |
+| Antarmuka | Blade · Tailwind CSS · React · PDF.js |
+| Database, cache, dan antrean | MySQL 8.4 · Redis |
+| Realtime | Laravel Reverb |
+| Web server dan deployment | Nginx · Docker Compose |
 
-Ringkasan mahasiswa bimbingan, antrean review, agenda, dan mahasiswa yang perlu perhatian.
+## Menjalankan secara lokal
 
-![Dashboard dosen](public/images/readme-dashboard-dosen.jpeg)
-
-Kedua pratinjau dashboard juga ditampilkan pada beranda publik menggunakan aset gambar yang sama.
-
-## 🧱 Tech Stack
-
-- Frontend: Laravel Blade, Tailwind CSS, React, PDF.js
-- Backend: Laravel 11, PHP 8.4
-- Database: MySQL 8.4
-- Cache & queue: Redis
-- Realtime: Laravel Reverb
-- Web server: Nginx
-- Deployment: Docker Compose
-
-## ✨ Fitur
-
-- Logbook dan revision submission dengan alur review/approval.
-- PDF viewer dengan anotasi, komentar, dan ekspor PDF/Excel.
-- Dashboard khusus mahasiswa, dosen, dan administrator.
-- Manajemen pembimbing, penguji, fase TA/KP, seminar, dan finalisasi tesis.
-- Workspace file mahasiswa dengan kontrol akses.
-- Chat realtime, announcement, notifikasi email, dan reminder.
-- Role-based access control serta dukungan deployment personal dan institusi.
-
-## 📦 Instalasi Lokal
-
-### Prasyarat
-
-- PHP >= 8.2 dan Composer
-- Node.js dan npm
-- SQLite atau MySQL
+**Prasyarat:** PHP 8.4, Composer, Node.js 20+, npm, dan SQLite. Di direktori pilihan Anda, pasang dependensi dan salin contoh konfigurasi:
 
 ```bash
 git clone https://github.com/relooplab/campus-logbook-management.git
 cd campus-logbook-management
-
 composer install
-npm install
+npm ci
 cp .env.example .env
-php artisan key:generate
 ```
 
-Untuk setup lokal sederhana, sesuaikan `.env` dengan database SQLite:
+Sebelum menjalankan Artisan, sesuaikan nilai berikut di `.env` agar aplikasi lokal menggunakan SQLite tanpa MySQL atau Redis:
 
 ```dotenv
 APP_ENV=local
 APP_DEBUG=true
+APP_URL=http://127.0.0.1:8000
 DB_CONNECTION=sqlite
 DB_DATABASE=database/database.sqlite
 CACHE_STORE=file
@@ -75,74 +57,39 @@ BROADCAST_CONNECTION=log
 MAIL_MAILER=log
 ```
 
-Lanjutkan setup dan jalankan aplikasi:
+Kemudian siapkan database, bangun aset, dan jalankan aplikasi:
 
 ```bash
 touch database/database.sqlite
+php artisan key:generate
 php artisan migrate --seed
 php artisan storage:link
+npm run build
 php artisan serve
 ```
 
-Di terminal lain, jalankan asset watcher:
+Buka <http://127.0.0.1:8000>. Saat mengubah antarmuka, jalankan `npm run dev` di terminal lain untuk memuat ulang aset secara otomatis.
 
-```bash
-npm run dev
-```
+## Deployment dengan Docker Compose
 
-Aplikasi tersedia di <http://127.0.0.1:8000>.
-
-## 🔧 Konfigurasi Environment
-
-Salin `.env.example` menjadi `.env`, lalu sesuaikan minimal:
-
-```dotenv
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://logbook.reloop.id
-APP_KEY=<application-key>
-
-DB_PASSWORD=<strong-database-password>
-MYSQL_ROOT_PASSWORD=<strong-root-password>
-
-REVERB_APP_ID=<unique-id>
-REVERB_APP_KEY=<unique-key>
-REVERB_APP_SECRET=<unique-secret>
-```
-
-Gunakan secret yang berbeda untuk setiap environment dan jangan commit file `.env`. Konfigurasi email, Redis, proxy, dan tautan eksternal tersedia di `.env.example`.
-
-## 🏗️ Build & Production
-
-Deployment production menggunakan Docker Compose:
+Sebelum menjalankan Compose, salin `.env.example` menjadi `.env` dan isi `APP_KEY`, `APP_URL`, `DB_PASSWORD`, `MYSQL_ROOT_PASSWORD`, serta `REVERB_APP_ID`, `REVERB_APP_KEY`, dan `REVERB_APP_SECRET`. Gunakan kredensial unik untuk setiap lingkungan; jangan masukkan `.env` ke Git.
 
 ```bash
 cp .env.example .env
-# Isi seluruh secret dan konfigurasi production di .env
-
-docker compose build
-docker compose up -d
+# Lengkapi .env terlebih dahulu, lalu:
+docker compose config --quiet
+docker compose up -d --build
 docker compose exec logbook-ta-app php artisan migrate --force
 docker compose ps
 ```
 
-Pastikan `APP_DEBUG=false`, `APP_URL` memakai URL publik, dan port Mailpit (`8225`/`8226`) tidak diekspos ke internet. Untuk deployment resmi, gunakan script deployment pada environment production dan lakukan backup database sebelum migrasi.
+Untuk akses publik, gunakan reverse proxy HTTPS, tetapkan `APP_DEBUG=false`, dan konfigurasikan SMTP produksi melalui variabel `MAIL_*`. Secara default, port Mailpit hanya terikat ke localhost untuk pengujian; jangan membukanya ke internet. Cadangkan database dan berkas sebelum migrasi atau deployment. Rincian variabel tersedia di [`.env.example`](.env.example).
 
-## 🧪 Testing
+## Pengujian
 
-```bash
-php artisan test
-```
+Jalankan `php artisan test` menggunakan **database pengujian terpisah**. Jangan arahkan test suite ke database produksi.
 
-## 📄 License
+## Dokumentasi dan lisensi
 
-Licensed under the **Business Source License 1.1 (BSL 1.1)**. Lihat [LICENSE](LICENSE) untuk detail penggunaan dan ketentuan lisensi komersial.
-
-Untuk pertanyaan lisensi: **dev@reloop.id**.
-
-## 🔗 Referensi
-
-- [User Guide](docs/USER-GUIDE.md)
-- [API Reference](docs/API.md)
-- [Deployment Modes](docs/MODE-SPEC.md)
-- [Glossary](docs/GLOSSARY.md)
+- [Panduan Pengguna](docs/USER-GUIDE.md) · [API](docs/API.md) · [Mode personal/institusi](docs/MODE-SPEC.md) · [Glosarium](docs/GLOSSARY.md)
+- Kode ini menggunakan [Business Source License 1.1](LICENSE), **bukan lisensi open source**. Penggunaan produksi pribadi (noninstitusional) diizinkan sesuai ketentuan lisensi; penggunaan produksi oleh atau untuk institusi memerlukan lisensi komersial terpisah. Pertanyaan lisensi: [dev@reloop.id](mailto:dev@reloop.id).
