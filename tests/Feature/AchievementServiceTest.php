@@ -1,0 +1,87 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Achievement;
+use App\Models\LogbookEntry;
+use App\Models\MahasiswaTa;
+use App\Models\User;
+use App\Services\AchievementService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class AchievementServiceTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private User $student;
+
+    private MahasiswaTa $ta;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->student = User::factory()->create();
+        $this->ta = MahasiswaTa::create([
+            'user_id' => $this->student->id,
+            'jenis' => MahasiswaTa::JENIS_TA,
+            'status_ta' => MahasiswaTa::STATUS_AKTIF,
+            'target_sesi' => 7,
+        ]);
+        $this->artisan('achievements:sync')->assertSuccessful();
+    }
+
+    public function test_sync_command_creates_and_updates_the_complete_catalog(): void
+    {
+        $this->assertSame(8, Achievement::count());
+        $this->assertSame(
+            '2 logbook dikirim < 2 hari setelah bimbingan',
+            Achievement::where('code', Achievement::TEPAT_WAKTU)->value('description'),
+        );
+    }
+
+    public function test_early_progress_badges_use_attainable_historical_events(): void
+    {
+        $this->logbook(1, LogbookEntry::STATUS_APPROVED, now()->subDays(7), now()->subDays(6));
+        $this->logbook(2, LogbookEntry::STATUS_APPROVED, now()->subDay(), now());
+
+        app(AchievementService::class)->evaluateForUser($this->student);
+
+        $codes = $this->student->achievements()->pluck('code');
+        $this->assertTrue($codes->contains(Achievement::LANGAH_PERTAMA));
+        $this->assertTrue($codes->contains(Achievement::KONSISTEN));
+        $this->assertTrue($codes->contains(Achievement::ZERO_REVISI));
+        $this->assertTrue($codes->contains(Achievement::TEPAT_WAKTU));
+    }
+
+    public function test_comeback_uses_child_revision_submit_time_after_parent_feedback(): void
+    {
+        $parent = $this->logbook(1, LogbookEntry::STATUS_REVISI, now()->subDays(4), now()->subDays(3));
+        $parent->update(['feedback_dosen' => 'Lengkapi pembahasan hasil.', 'reviewed_at' => now()->subDays(2)]);
+        LogbookEntry::create([
+            'mahasiswa_ta_id' => $this->ta->id,
+            'parent_entry_id' => $parent->id,
+            'jenis' => LogbookEntry::JENIS_REVISI,
+            'status' => LogbookEntry::STATUS_SUBMITTED,
+            'submitted_at' => now(),
+            'tanggal_pengiriman' => today(),
+        ]);
+
+        app(AchievementService::class)->evaluateForUser($this->student);
+
+        $this->assertTrue($this->student->achievements()->where('code', Achievement::COMEBACK)->exists());
+    }
+
+    private function logbook(int $session, string $status, $guidanceDate, $submittedAt): LogbookEntry
+    {
+        return LogbookEntry::create([
+            'mahasiswa_ta_id' => $this->ta->id,
+            'jenis' => LogbookEntry::JENIS_LOGBOOK,
+            'sesi_ke' => $session,
+            'status' => $status,
+            'tanggal_bimbingan' => $guidanceDate,
+            'submitted_at' => $submittedAt,
+        ]);
+    }
+}

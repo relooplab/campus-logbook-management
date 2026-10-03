@@ -6,11 +6,12 @@ use App\Models\Achievement;
 use App\Models\LogbookEntry;
 use App\Notifications\ActivityNotification;
 use App\Services\AchievementService;
-use App\Services\MaterialsReviewQueue;
 use App\Services\LogbookReviewTransition;
+use App\Services\MaterialsReviewQueue;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Permission;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class DosenArchiveReviewTest extends AuditSmokeTest
 {
@@ -36,8 +37,7 @@ class DosenArchiveReviewTest extends AuditSmokeTest
         $this->assertSame(0, app(MaterialsReviewQueue::class)->pendingLogbook($this->dosen)->count());
         $this->actingAs($this->dosen)->get(route('quick-review.index'))->assertOk()->assertSee('Tidak ada item yang menunggu review.');
         $this->actingAs($this->mhs)->get(route('logbook.show', $entry))->assertOk()->assertSee('Diarsipkan')->assertSee(self::REASON);
-        Notification::assertSentTo($this->mhs, ActivityNotification::class, fn ($notification) =>
-            $notification->subject === 'Entri Diarsipkan' && str_contains($notification->message, self::REASON));
+        Notification::assertSentTo($this->mhs, ActivityNotification::class, fn ($notification) => $notification->subject === 'Entri Diarsipkan' && str_contains($notification->message, self::REASON));
     }
 
     public function test_archive_accepts_short_reason_and_requires_submitted_status(): void
@@ -58,8 +58,7 @@ class DosenArchiveReviewTest extends AuditSmokeTest
         $entry = $this->entrySubmitted->fresh();
         $this->assertSame(LogbookEntry::STATUS_ARCHIVED, $entry->status);
         $this->assertNull($entry->archive_reason);
-        Notification::assertSentTo($this->mhs, ActivityNotification::class, fn ($notification) =>
-            $notification->subject === 'Entri Diarsipkan' && !str_contains($notification->message, 'Alasan:'));
+        Notification::assertSentTo($this->mhs, ActivityNotification::class, fn ($notification) => $notification->subject === 'Entri Diarsipkan' && ! str_contains($notification->message, 'Alasan:'));
     }
 
     public function test_non_reviewers_cannot_archive_entry(): void
@@ -125,17 +124,15 @@ class DosenArchiveReviewTest extends AuditSmokeTest
     public function test_archived_entry_interrupts_consecutive_approval_achievement(): void
     {
         Achievement::firstOrCreate(['code' => Achievement::ZERO_REVISI], [
-            'name' => 'Zero Revisi', 'description' => 'Tiga approval beruntun', 'icon' => '🎯',
+            'name' => 'Zero Revisi', 'description' => 'Dua approval beruntun', 'icon' => '🎯',
         ]);
         $this->entryDraft->update(['status' => LogbookEntry::STATUS_APPROVED]);
-        $this->entrySubmitted->update(['status' => LogbookEntry::STATUS_APPROVED]);
+        // Entri berikutnya diarsipkan — run approval harus terputus sebelum
+        // mencapai dua beruntun, sehingga badge belum ter-unlock.
+        $this->entrySubmitted->update(['status' => LogbookEntry::STATUS_ARCHIVED]);
         LogbookEntry::create([
             'mahasiswa_ta_id' => $this->ta->id, 'jenis' => LogbookEntry::JENIS_LOGBOOK,
-            'sesi_ke' => 3, 'status' => LogbookEntry::STATUS_ARCHIVED,
-        ]);
-        LogbookEntry::create([
-            'mahasiswa_ta_id' => $this->ta->id, 'jenis' => LogbookEntry::JENIS_LOGBOOK,
-            'sesi_ke' => 4, 'status' => LogbookEntry::STATUS_APPROVED,
+            'sesi_ke' => 3, 'status' => LogbookEntry::STATUS_APPROVED,
         ]);
 
         app(AchievementService::class)->evaluateForUser($this->mhs);
@@ -157,7 +154,7 @@ class DosenArchiveReviewTest extends AuditSmokeTest
             try {
                 app(LogbookReviewTransition::class)->apply($stale, $status);
                 $this->fail('Review keputusan lama seharusnya ditolak.');
-            } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            } catch (HttpException $e) {
                 $this->assertSame(403, $e->getStatusCode());
             }
         }

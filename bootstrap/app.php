@@ -1,8 +1,15 @@
 <?php
 
+use App\Http\Middleware\EnsureDosenAffiliation;
+use App\Http\Middleware\EnsureDosenPendingApproval;
+use App\Http\Middleware\EnsureEmailVerified;
+use App\Http\Middleware\UpdateLastActive;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -11,20 +18,23 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([
+        __DIR__.'/../app/Console/Commands',
+    ])
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            'ensure.dosen.affiliation' => \App\Http\Middleware\EnsureDosenAffiliation::class,
-            'ensure.email.verified' => \App\Http\Middleware\EnsureEmailVerified::class,
-            'ensure.dosen.decision' => \App\Http\Middleware\EnsureDosenPendingApproval::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
+            'role_or_permission' => RoleOrPermissionMiddleware::class,
+            'ensure.dosen.affiliation' => EnsureDosenAffiliation::class,
+            'ensure.email.verified' => EnsureEmailVerified::class,
+            'ensure.dosen.decision' => EnsureDosenPendingApproval::class,
         ]);
 
         // Catat waktu terakhir aktif user pada setiap request web.
         // Dipasang di grup `web` (bukan global) karena butuh session untuk
         // membaca Auth::user(); middleware global berjalan sebelum StartSession.
-        $middleware->appendToGroup('web', \App\Http\Middleware\UpdateLastActive::class);
+        $middleware->appendToGroup('web', UpdateLastActive::class);
 
         // Percaya reverse-proxy (bila dikonfigurasi via TRUSTED_PROXIES) agar
         // header X-Forwarded-Proto diteruskan -> Laravel tahu skema https.
