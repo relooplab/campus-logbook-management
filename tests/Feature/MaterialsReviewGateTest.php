@@ -112,6 +112,43 @@ class MaterialsReviewGateTest extends TestCase
             ->assertSee('Seminar Proposal');
     }
 
+    public function test_materials_review_links_student_name_to_program_detail(): void
+    {
+        LogbookEntry::create([
+            'mahasiswa_ta_id' => $this->ta->id,
+            'jenis' => LogbookEntry::JENIS_LOGBOOK,
+            'sesi_ke' => 1,
+            'dosen_id' => $this->dosen->id,
+            'topik' => 'Bimbingan 1',
+            'status' => LogbookEntry::STATUS_SUBMITTED,
+            'submitted_at' => now(),
+        ]);
+
+        $this->actingAs($this->dosen)->get(route('materials-review.index'))
+            ->assertOk()
+            ->assertSee(route('mahasiswa-ta.show', $this->ta), false)
+            ->assertSee('Mhs Review');
+    }
+
+    public function test_materials_review_links_seminar_student_name_to_program_detail(): void
+    {
+        SeminarSubmission::create([
+            'mahasiswa_ta_id' => $this->ta->id,
+            'jenis' => SeminarSubmission::JENIS_PROPOSAL,
+            'tanggal' => now()->addDays(7),
+            'waktu' => '09:00',
+            'undangan_path' => 'seminar-materials/undangan.pdf',
+            'undangan_original_name' => 'undangan.pdf',
+            'undangan_kepada' => ['pembimbing_1'],
+            'status' => SeminarSubmission::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($this->dosen)->get(route('materials-review.index'))
+            ->assertOk()
+            ->assertSee(route('mahasiswa-ta.show', $this->ta), false)
+            ->assertSee('Mhs Review');
+    }
+
     public function test_dashboard_normal_saat_tidak_ada_bahan_pending(): void
     {
         $this->actingAs($this->dosen)
