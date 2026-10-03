@@ -6,8 +6,10 @@ use App\Models\Achievement;
 use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\User;
+use App\Notifications\ActivityNotification;
 use App\Services\AchievementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class AchievementServiceTest extends TestCase
@@ -43,6 +45,7 @@ class AchievementServiceTest extends TestCase
 
     public function test_early_progress_badges_use_attainable_historical_events(): void
     {
+        Notification::fake();
         $this->logbook(1, LogbookEntry::STATUS_APPROVED, now()->subDays(7), now()->subDays(6));
         $this->logbook(2, LogbookEntry::STATUS_APPROVED, now()->subDay(), now());
 
@@ -53,6 +56,19 @@ class AchievementServiceTest extends TestCase
         $this->assertTrue($codes->contains(Achievement::KONSISTEN));
         $this->assertTrue($codes->contains(Achievement::ZERO_REVISI));
         $this->assertTrue($codes->contains(Achievement::TEPAT_WAKTU));
+
+        // Satu notifikasi rangkuman saja (in-app + email) untuk 4 badge sekaligus.
+        Notification::assertSentTo($this->student, ActivityNotification::class, fn ($notification) => str_contains($notification->message, '4 achievement baru')
+            && $notification->subject === 'Achievement Baru Terkunci');
+    }
+
+    public function test_no_notification_when_no_new_badge_unlocked(): void
+    {
+        Notification::fake();
+        app(AchievementService::class)->evaluateForUser($this->student);
+
+        Notification::assertNothingSent();
+        $this->assertSame(0, $this->student->achievements()->count());
     }
 
     public function test_comeback_uses_child_revision_submit_time_after_parent_feedback(): void

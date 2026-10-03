@@ -7,6 +7,7 @@ use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\PdfComment;
 use App\Models\User;
+use App\Notifications\ActivityNotification;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 
@@ -64,11 +65,36 @@ class AchievementService
             $unlocked->push(Achievement::TEPAT_WAKTU);
         }
 
+        $newlyUnlocked = [];
         foreach ($unlocked->unique() as $code) {
             $ach = Achievement::where('code', $code)->first();
             if ($ach && ! $user->achievements()->where('achievement_id', $ach->id)->exists()) {
                 $user->achievements()->attach($ach->id, ['unlocked_at' => now()]);
+                $newlyUnlocked[] = $ach;
             }
+        }
+
+        if ($newlyUnlocked) {
+            $this->notifyUnlocked($user, $newlyUnlocked);
+        }
+    }
+
+    /**
+     * Beri tahu mahasiswa lewat notifikasi in-app + email. Satu evaluasi yang
+     * membuka beberapa badge sekaligus (mis. backfill) dirangkum jadi satu
+     * notifikasi agar tidak membanjiri inbox.
+     */
+    private function notifyUnlocked(User $user, array $badges): void
+    {
+        $badges = collect($badges);
+        $message = $badges->count() === 1
+            ? '🎉 Achievement baru terkunci: '.$badges->first()->name.' — '.$badges->first()->description
+            : '🎉 Kamu membuka '.$badges->count().' achievement baru: '.$badges->map(fn ($badge) => $badge->icon.' '.$badge->name)->join(', ');
+
+        try {
+            $user->notify(new ActivityNotification($message, route('dashboard'), 'Achievement Baru Terkunci'));
+        } catch (\Throwable $e) {
+            report($e);
         }
     }
 
