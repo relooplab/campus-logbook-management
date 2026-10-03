@@ -118,6 +118,49 @@ class AchievementServiceTest extends TestCase
         $this->assertFalse($this->student->achievements()->where('code', Achievement::COMEBACK)->exists());
     }
 
+    public function test_setengah_jalan_unlocks_when_phase_reaches_seminar_hasil(): void
+    {
+        Notification::fake();
+        $this->ta->update(['fase' => 'seminar_hasil']);
+
+        app(AchievementService::class)->evaluateForUser($this->student);
+
+        $this->assertTrue($this->student->achievements()->where('code', Achievement::SETENGAH_JALAN)->exists());
+    }
+
+    public function test_setengah_jalan_unlocks_when_phase_passed_seminar_hasil(): void
+    {
+        Notification::fake();
+        $this->ta->update(['fase' => 'sidang']);
+
+        app(AchievementService::class)->evaluateForUser($this->student);
+
+        $this->assertTrue($this->student->achievements()->where('code', Achievement::SETENGAH_JALAN)->exists());
+    }
+
+    public function test_setengah_jalan_stays_locked_before_seminar_hasil_even_with_many_approved_entries(): void
+    {
+        Notification::fake();
+        $this->ta->update(['fase' => 'penyusunan_laporan']);
+        $this->logbook(1, LogbookEntry::STATUS_APPROVED, now()->subDays(7), now()->subDays(6));
+        $this->logbook(2, LogbookEntry::STATUS_APPROVED, now()->subDays(4), now()->subDays(3));
+        $this->logbook(3, LogbookEntry::STATUS_APPROVED, now()->subDays(1), now());
+
+        app(AchievementService::class)->evaluateForUser($this->student);
+
+        $this->assertFalse($this->student->achievements()->where('code', Achievement::SETENGAH_JALAN)->exists());
+    }
+
+    public function test_setengah_jalan_stays_locked_for_kp_program(): void
+    {
+        Notification::fake();
+        $this->ta->update(['jenis' => MahasiswaTa::JENIS_KP, 'fase' => 'seminar_kp']);
+
+        app(AchievementService::class)->evaluateForUser($this->student);
+
+        $this->assertFalse($this->student->achievements()->where('code', Achievement::SETENGAH_JALAN)->exists());
+    }
+
     private function logbook(int $session, string $status, $guidanceDate, $submittedAt): LogbookEntry
     {
         return LogbookEntry::create([

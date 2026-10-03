@@ -46,7 +46,7 @@ class Achievement extends Model
             self::KONSISTEN => ['⚡', 'Konsisten', '2 sesi beruntun tanpa jeda lebih dari 14 hari'],
             self::ZERO_REVISI => ['🎯', 'Zero Revisi', '2 entri disetujui tanpa revisi berturut-turut'],
             self::COMEBACK => ['🔥', 'Comeback', 'Kirim revisi dalam 3 hari setelah feedback'],
-            self::SETENGAH_JALAN => ['📚', 'Setengah Jalan', '50% target sesi tercapai'],
+            self::SETENGAH_JALAN => ['📚', 'Setengah Jalan', 'Mencapai fase Seminar Hasil'],
             self::GARIS_AKHIR => ['🏁', 'Garis Akhir', 'Semua target sesi disetujui'],
             self::RESPONSIF => ['💬', 'Responsif', 'Semua komentar PDF resolved'],
             self::TEPAT_WAKTU => ['⏰', 'Tepat Waktu', '2 logbook dikirim < 2 hari setelah bimbingan'],
