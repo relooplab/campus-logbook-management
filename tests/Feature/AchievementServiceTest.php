@@ -71,6 +71,17 @@ class AchievementServiceTest extends TestCase
         $this->assertSame(0, $this->student->achievements()->count());
     }
 
+    public function test_konsisten_stays_locked_when_sessions_farther_than_fourteen_days(): void
+    {
+        Notification::fake();
+        $this->logbook(1, LogbookEntry::STATUS_APPROVED, now()->subDays(30), now()->subDays(29));
+        $this->logbook(2, LogbookEntry::STATUS_APPROVED, now()->subDays(1), now()->subDay());
+
+        app(AchievementService::class)->evaluateForUser($this->student);
+
+        $this->assertFalse($this->student->achievements()->where('code', Achievement::KONSISTEN)->exists());
+    }
+
     public function test_comeback_uses_child_revision_submit_time_after_parent_feedback(): void
     {
         $parent = $this->logbook(1, LogbookEntry::STATUS_REVISI, now()->subDays(4), now()->subDays(3));
@@ -87,6 +98,24 @@ class AchievementServiceTest extends TestCase
         app(AchievementService::class)->evaluateForUser($this->student);
 
         $this->assertTrue($this->student->achievements()->where('code', Achievement::COMEBACK)->exists());
+    }
+
+    public function test_comeback_stays_locked_when_child_submitted_after_three_days(): void
+    {
+        $parent = $this->logbook(1, LogbookEntry::STATUS_REVISI, now()->subDays(9), now()->subDays(8));
+        $parent->update(['feedback_dosen' => 'Lengkapi pembahasan hasil.', 'reviewed_at' => now()->subDays(7)]);
+        LogbookEntry::create([
+            'mahasiswa_ta_id' => $this->ta->id,
+            'parent_entry_id' => $parent->id,
+            'jenis' => LogbookEntry::JENIS_REVISI,
+            'status' => LogbookEntry::STATUS_SUBMITTED,
+            'submitted_at' => now()->subDays(2),
+            'tanggal_pengiriman' => today()->subDays(2),
+        ]);
+
+        app(AchievementService::class)->evaluateForUser($this->student);
+
+        $this->assertFalse($this->student->achievements()->where('code', Achievement::COMEBACK)->exists());
     }
 
     private function logbook(int $session, string $status, $guidanceDate, $submittedAt): LogbookEntry

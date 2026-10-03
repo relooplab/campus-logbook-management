@@ -128,7 +128,10 @@ class AchievementService
         $run = 0;
         $previous = null;
         foreach ($dates as $date) {
-            $run = $previous === null || $date->diffInDays($previous) <= 14 ? $run + 1 : 1;
+            // diffInDays(a) = (a - this): dari tanggal sebelumnya ke berikutnya
+            // hasilnya positif saat jeda normal; reset bila jeda > 14 hari.
+            $gap = $previous !== null ? $previous->diffInDays($date) : 0;
+            $run = ($gap >= 0 && $gap <= 14) ? $run + 1 : 1;
             if ($run >= 2) {
                 return true;
             }
@@ -173,7 +176,10 @@ class AchievementService
                     return false;
                 }
 
-                return $revision->submitted_at->diffInDays($reviewedAt) < 3;
+                // diffInDays(a) = (a - this): balik argumen agar hasil positif
+                // saat child dikirim setelah review, lalu batasi benar-benar < 3 hari.
+                $delay = $reviewedAt->diffInDays($revision->submitted_at);
+                return $delay > 0 && $delay < 3;
             });
     }
 
@@ -220,7 +226,10 @@ class AchievementService
             ->whereNotNull('tanggal_bimbingan')
             ->get()
             ->filter(function (LogbookEntry $entry) {
-                return $entry->submitted_at->diffInDays($entry->tanggal_bimbingan) < 2;
+                // diffInDays(a) = (a - this): balik argumen agar gap positif
+                // (submit setelah bimbingan) dan benar-benar < 2 hari.
+                $gap = Carbon::parse($entry->tanggal_bimbingan)->diffInDays($entry->submitted_at);
+                return $gap >= 0 && $gap < 2;
             })
             ->count();
 
