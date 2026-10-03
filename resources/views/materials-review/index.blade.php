@@ -30,7 +30,7 @@
                     <div class="px-4 py-3 flex flex-wrap items-center gap-3 bg-bg-surface">
                         <span class="text-2xl">{{ $entry->jenis === 'revisi' ? '↩' : '📝' }}</span>
                         <div class="min-w-0 flex-1">
-                            <p class="font-medium text-text-primary">{{ $entry->mahasiswaTa?->mahasiswa?->name ?? 'Mahasiswa' }}</p>
+                            <p class="font-medium text-text-primary">@include('logbook.partials.student-identity', ['entry' => $entry])</p>
                             <p class="text-xs text-text-secondary">{{ $entry->jenis === 'revisi' ? 'Revisi' : 'Logbook sesi '.$entry->sesi_ke }} · {{ $entry->topik ?: '' }}</p>
                         </div>
                         <a href="{{ route('logbook.show', $entry) }}" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Tinjau →</a>
@@ -57,7 +57,7 @@
                     <div class="px-4 py-3 flex flex-wrap items-center gap-3 bg-bg-surface">
                         <span class="text-2xl">📄</span>
                         <div class="min-w-0 flex-1">
-                            <p class="font-medium text-text-primary">{{ $sub->mahasiswaTa?->mahasiswa?->name ?? 'Mahasiswa' }}</p>
+                            <p class="font-medium text-text-primary">@include('seminar-submission.partials.student-identity', ['submission' => $sub])</p>
                             <p class="text-xs text-text-secondary">{{ $sub->jenisLabel() }} · {{ optional($sub->tanggal)->format('d M Y') ?: '' }}</p>
                         </div>
                         <a href="{{ route('seminar-submission.show', $sub) }}" class="px-3 py-1.5 rounded-xl bg-brand text-[#0b1420] text-xs font-medium hover:opacity-90">Baca & Tandai Dibaca →</a>
