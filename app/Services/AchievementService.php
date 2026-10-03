@@ -7,6 +7,9 @@ use App\Models\LogbookEntry;
 use App\Models\MahasiswaTa;
 use App\Models\PdfComment;
 use App\Models\User;
+use App\Notifications\ActivityNotification;
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 
 class AchievementService
 {
@@ -17,26 +20,81 @@ class AchievementService
     public function evaluateForUser(User $user): void
     {
         $ta = $user->mahasiswaTa;
-        if (!$ta) {
+        if (! $ta) {
+            return;
+        }
+
+        $this->evaluateForProgram($ta);
+    }
+
+    /**
+     * Evaluasi program tertentu. Dipakai command backfill agar semua institusi
+     * dapat dievaluasi tanpa bergantung pada institution scope request aktif.
+     */
+    public function evaluateForProgram(MahasiswaTa $ta): void
+    {
+        $user = $ta->mahasiswa;
+        if (! $ta->isTa() || ! $user) {
             return;
         }
 
         $unlocked = collect();
 
-        if ($this->langkahPertama($ta)) $unlocked->push(Achievement::LANGAH_PERTAMA);
-        if ($this->konsisten($ta)) $unlocked->push(Achievement::KONSISTEN);
-        if ($this->zeroRevisi($ta)) $unlocked->push(Achievement::ZERO_REVISI);
-        if ($this->comeback($ta)) $unlocked->push(Achievement::COMEBACK);
-        if ($this->setengahJalan($ta)) $unlocked->push(Achievement::SETENGAH_JALAN);
-        if ($this->garisAkhir($ta)) $unlocked->push(Achievement::GARIS_AKHIR);
-        if ($this->responsif($ta)) $unlocked->push(Achievement::RESPONSIF);
-        if ($this->tepatWaktu($ta)) $unlocked->push(Achievement::TEPAT_WAKTU);
+        if ($this->langkahPertama($ta)) {
+            $unlocked->push(Achievement::LANGAH_PERTAMA);
+        }
+        if ($this->konsisten($ta)) {
+            $unlocked->push(Achievement::KONSISTEN);
+        }
+        if ($this->zeroRevisi($ta)) {
+            $unlocked->push(Achievement::ZERO_REVISI);
+        }
+        if ($this->comeback($ta)) {
+            $unlocked->push(Achievement::COMEBACK);
+        }
+        if ($this->setengahJalan($ta)) {
+            $unlocked->push(Achievement::SETENGAH_JALAN);
+        }
+        if ($this->garisAkhir($ta)) {
+            $unlocked->push(Achievement::GARIS_AKHIR);
+        }
+        if ($this->responsif($ta)) {
+            $unlocked->push(Achievement::RESPONSIF);
+        }
+        if ($this->tepatWaktu($ta)) {
+            $unlocked->push(Achievement::TEPAT_WAKTU);
+        }
 
+        $newlyUnlocked = [];
         foreach ($unlocked->unique() as $code) {
             $ach = Achievement::where('code', $code)->first();
-            if ($ach && !$user->achievements()->where('achievement_id', $ach->id)->exists()) {
+            if ($ach && ! $user->achievements()->where('achievement_id', $ach->id)->exists()) {
                 $user->achievements()->attach($ach->id, ['unlocked_at' => now()]);
+                $newlyUnlocked[] = $ach;
             }
+        }
+
+        if ($newlyUnlocked) {
+            $this->notifyUnlocked($user, $newlyUnlocked);
+        }
+    }
+
+    /**
+     * Beri tahu mahasiswa lewat notifikasi in-app + email. Satu evaluasi yang
+     * membuka beberapa badge sekaligus (mis. backfill) dirangkum jadi satu
+     * notifikasi agar tidak membanjiri inbox.
+     */
+    private function notifyUnlocked(User $user, array $badges): void
+    {
+        $badges = collect($badges);
+        $message = $badges->count() === 1
+            ? '🎉 Achievement baru terkunci: '.$badges->first()->name.' — '.$badges->first()->description
+            : '🎉 Kamu membuka '.$badges->count().' achievement baru: '.$badges->map(fn ($badge) => $badge->icon.' '.$badge->name)->join(', ');
+
+        try {
+            $user->notify(new ActivityNotification($message, route('dashboard'), 'Achievement Baru Terkunci'));
+        } catch (\Throwable $e) {
+            report($e);
         }
     }
 
@@ -57,27 +115,35 @@ class AchievementService
 
     private function konsisten(MahasiswaTa $ta): bool
     {
-        // 4 sesi logbook beruntun tanpa jeda > 14 hari antar tanggal bimbingan.
+        // Dua sesi beruntun tanpa jeda > 14 hari. Cari run lokal, jangan
+        // menggugurkan progres lama hanya karena ada jeda pada sesi berikutnya.
         $dates = $ta->entries()
             ->where('jenis', LogbookEntry::JENIS_LOGBOOK)
             ->whereNotNull('tanggal_bimbingan')
             ->orderBy('tanggal_bimbingan')
             ->pluck('tanggal_bimbingan')
-            ->map(fn ($d) => $d instanceof \Carbon\CarbonInterface ? $d : \Carbon\Carbon::parse($d))
+            ->map(fn ($d) => $d instanceof CarbonInterface ? $d : Carbon::parse($d))
             ->values();
 
-        if ($dates->count() < 4) return false;
-
-        for ($i = 1; $i < $dates->count(); $i++) {
-            $gap = $dates[$i]->diffInDays($dates[$i - 1]);
-            if ($gap > 14) return false;
+        $run = 0;
+        $previous = null;
+        foreach ($dates as $date) {
+            // diffInDays(a) = (a - this): dari tanggal sebelumnya ke berikutnya
+            // hasilnya positif saat jeda normal; reset bila jeda > 14 hari.
+            $gap = $previous !== null ? $previous->diffInDays($date) : 0;
+            $run = ($gap >= 0 && $gap <= 14) ? $run + 1 : 1;
+            if ($run >= 2) {
+                return true;
+            }
+            $previous = $date;
         }
-        return true;
+
+        return false;
     }
 
     private function zeroRevisi(MahasiswaTa $ta): bool
     {
-        // 3 entri approved berturut-turut tanpa revisi di antaranya.
+        // 2 entri approved berturut-turut tanpa revisi di antaranya.
         $seq = $ta->entries()->where('jenis', LogbookEntry::JENIS_LOGBOOK)->orderBy('id')->pluck('status')->values();
         $run = 0;
         foreach ($seq as $s) {
@@ -85,36 +151,49 @@ class AchievementService
                 $run = 0;
             } elseif ($s === LogbookEntry::STATUS_APPROVED) {
                 $run++;
-                if ($run >= 3) return true;
+                if ($run >= 2) {
+                    return true;
+                }
             }
         }
+
         return false;
     }
 
     private function comeback(MahasiswaTa $ta): bool
     {
-        // Entry yang pernah diminta revisi (ada feedback_dosen & reviewed_at)
-        // lalu dikirim ulang (submitted_at) dalam < 3 hari.
+        // Revisi adalah child entry. Ukur waktu submit child terhadap waktu
+        // feedback/review parent, bukan waktu review submission awal dosen.
         return $ta->entries()
-            ->whereNotNull('feedback_dosen')
-            ->whereNotNull('reviewed_at')
+            ->where('jenis', LogbookEntry::JENIS_REVISI)
+            ->whereNotNull('parent_entry_id')
             ->whereNotNull('submitted_at')
+            ->with('parentEntry:id,reviewed_at')
             ->get()
-            ->contains(function ($e) {
-                $delay = \Carbon\Carbon::parse($e->submitted_at)->diffInDays($e->reviewed_at);
-                return $delay < 3;
+            ->contains(function (LogbookEntry $revision) {
+                $reviewedAt = $revision->parentEntry?->reviewed_at;
+                if (! $reviewedAt || $revision->submitted_at->lt($reviewedAt)) {
+                    return false;
+                }
+
+                // diffInDays(a) = (a - this): balik argumen agar hasil positif
+                // saat child dikirim setelah review, lalu batasi benar-benar < 3 hari.
+                $delay = $reviewedAt->diffInDays($revision->submitted_at);
+                return $delay > 0 && $delay < 3;
             });
     }
 
     private function setengahJalan(MahasiswaTa $ta): bool
     {
         $target = $ta->target_sesi ?? 7;
+
         return $target > 0 && $this->approvedCount($ta) >= $target / 2;
     }
 
     private function garisAkhir(MahasiswaTa $ta): bool
     {
         $target = $ta->target_sesi ?? 7;
+
         return $target > 0 && $this->approvedCount($ta) >= $target;
     }
 
@@ -122,29 +201,38 @@ class AchievementService
     {
         // Semua komentar PDF di semua entri sudah resolve.
         $entryIds = $ta->entries()->pluck('id');
-        if ($entryIds->isEmpty()) return false;
+        if ($entryIds->isEmpty()) {
+            return false;
+        }
         $total = PdfComment::whereIn('logbook_entry_id', $entryIds)->count();
-        if ($total === 0) return false;
+        if ($total === 0) {
+            return false;
+        }
         $unresolved = PdfComment::whereIn('logbook_entry_id', $entryIds)
             ->whereIn('resolution_status', [PdfComment::STATUS_OPEN, PdfComment::STATUS_ADDRESSED])
             ->count();
+
         return $unresolved === 0;
     }
 
     private function tepatWaktu(MahasiswaTa $ta): bool
     {
-        // Submit < 2 hari setelah tanggal_bimbingan, minimal 5x.
+        // Histori submitted_at tetap berlaku setelah reviewer mengubah status.
+        // Dua submit logbook <2 hari setelah bimbingan adalah target awal yang
+        // realistis dan tetap mendorong kebiasaan submit tepat waktu.
         $count = $ta->entries()
-            ->where('status', LogbookEntry::STATUS_SUBMITTED)
+            ->where('jenis', LogbookEntry::JENIS_LOGBOOK)
             ->whereNotNull('submitted_at')
             ->whereNotNull('tanggal_bimbingan')
             ->get()
-            ->filter(function ($e) {
-                $gap = \Carbon\Carbon::parse($e->submitted_at)->diffInDays($e->tanggal_bimbingan);
-                return $gap < 2;
+            ->filter(function (LogbookEntry $entry) {
+                // diffInDays(a) = (a - this): balik argumen agar gap positif
+                // (submit setelah bimbingan) dan benar-benar < 2 hari.
+                $gap = Carbon::parse($entry->tanggal_bimbingan)->diffInDays($entry->submitted_at);
+                return $gap >= 0 && $gap < 2;
             })
             ->count();
 
-        return $count >= 5;
+        return $count >= 2;
     }
 }
