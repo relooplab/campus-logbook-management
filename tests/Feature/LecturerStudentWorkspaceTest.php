@@ -52,6 +52,21 @@ class LecturerStudentWorkspaceTest extends TestCase
         ], $roles));
     }
 
+    public function test_student_name_is_clickable_link_to_program_detail(): void
+    {
+        $ta = $this->program('ClickableName', 'ta', ['pembimbing_1_id' => $this->lecturer->id], 'proposal');
+        $kp = $this->program('ClickableKpName', 'kp', ['penguji_1_id' => $this->lecturer->id], 'laporan');
+
+        $response = $this->actingAs($this->lecturer)->get(route('dosen.mahasiswa-saya'));
+
+        $response->assertOk();
+        // Desktop table: nama mahasiswa harus berupa anchor ke detail program.
+        $response->assertSeeHtml('<a href="'.e(route('mahasiswa-ta.show', $ta)).'" title="Lihat profil '.e($ta->mahasiswa->name).'" class="history-student-link block truncate font-semibold">'.e($ta->mahasiswa->name).'</a>');
+        $response->assertSeeHtml('<a href="'.e(route('mahasiswa-kp.show', $kp)).'" title="Lihat profil '.e($kp->mahasiswa->name).'" class="history-student-link block truncate font-semibold">'.e($kp->mahasiswa->name).'</a>');
+        // Mobile card: nama juga anchor ke detail program.
+        $response->assertSeeHtml('<a href="'.e(route('mahasiswa-ta.show', $ta)).'" title="Lihat profil '.e($ta->mahasiswa->name).'" class="history-student-link break-words text-sm font-semibold">'.e($ta->mahasiswa->name).'</a>');
+    }
+
     public function test_unified_workspace_has_real_counts_multiple_roles_and_program_links(): void
     {
         $ta = $this->program('UniqueAlpha', 'ta', [

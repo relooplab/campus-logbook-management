@@ -12,7 +12,7 @@
         <tbody class="divide-y divide-border">@foreach ($rows as $ta)
             @php $student = $ta->mahasiswa; $detail = route($ta->isKp() ? 'mahasiswa-kp.show' : 'mahasiswa-ta.show', $ta); @endphp
             <tr class="hover:bg-bg-hover">
-                <td class="px-2 py-2"><div class="flex min-w-0 items-center gap-2"><span class="avatar h-8 w-8 shrink-0 text-xs">@if ($student?->photoUrl())<img src="{{ $student->photoUrl() }}" alt="" class="h-full w-full rounded-full object-cover">@else{{ $student?->initials() }}@endif</span><div class="min-w-0"><div class="truncate font-semibold text-text-primary" title="{{ $student?->name }}">{{ $student?->name ?? '—' }}</div><div class="truncate font-mono text-xs text-text-secondary">{{ $student?->nim }}</div></div></div></td>
+                <td class="px-2 py-2"><div class="flex min-w-0 items-center gap-2"><span class="avatar h-8 w-8 shrink-0 text-xs">@if ($student?->photoUrl())<img src="{{ $student->photoUrl() }}" alt="" class="h-full w-full rounded-full object-cover">@else{{ $student?->initials() }}@endif</span><div class="min-w-0"><a href="{{ $detail }}" title="Lihat profil {{ $student?->name ?? 'mahasiswa' }}" class="history-student-link block truncate font-semibold">{{ $student?->name ?? '—' }}</a><div class="truncate font-mono text-xs text-text-secondary">{{ $student?->nim }}</div></div></div></td>
                 <td class="px-2 py-2"><span class="badge {{ $ta->isKp() ? 'badge-neutral' : 'badge-info' }}">{{ $ta->jenisLabel() }}</span></td>
                 <td class="px-2 py-2">@include('dashboard.partials.dosen-phase-control', ['controlId' => 'desktop'])</td>
                 <td class="px-2 py-2"><div class="flex flex-wrap gap-1">@foreach ($ta->my_roles as $role)<span class="badge {{ str_starts_with($role, 'Pembimbing') ? 'badge-info' : 'badge-neutral' }}">{{ $role }}</span>@endforeach</div></td>
@@ -24,9 +24,9 @@
     </table>
 </div>
 <div class="space-y-2 lg:hidden">@foreach ($rows as $ta)
-    @php $student = $ta->mahasiswa; @endphp
+    @php $student = $ta->mahasiswa; $detail = route($ta->isKp() ? 'mahasiswa-kp.show' : 'mahasiswa-ta.show', $ta); @endphp
     <article class="rounded-control border border-border bg-bg-panel p-3">
-        <div class="flex items-start justify-between gap-2"><div class="flex min-w-0 items-center gap-2"><span class="avatar h-9 w-9 shrink-0 text-xs">@if ($student?->photoUrl())<img src="{{ $student->photoUrl() }}" alt="" class="h-full w-full rounded-full object-cover">@else{{ $student?->initials() }}@endif</span><div class="min-w-0"><div class="break-words text-sm font-semibold text-text-primary">{{ $student?->name ?? '—' }}</div><div class="font-mono text-xs text-text-secondary">{{ $student?->nim }}</div></div></div><span class="badge shrink-0 {{ $badgeMap[$ta->status_ta] ?? 'badge-neutral' }}">{{ ucfirst($ta->status_ta) }}</span></div>
+        <div class="flex items-start justify-between gap-2"><div class="flex min-w-0 items-center gap-2"><span class="avatar h-9 w-9 shrink-0 text-xs">@if ($student?->photoUrl())<img src="{{ $student->photoUrl() }}" alt="" class="h-full w-full rounded-full object-cover">@else{{ $student?->initials() }}@endif</span><div class="min-w-0"><a href="{{ $detail }}" title="Lihat profil {{ $student?->name ?? 'mahasiswa' }}" class="history-student-link break-words text-sm font-semibold">{{ $student?->name ?? '—' }}</a><div class="font-mono text-xs text-text-secondary">{{ $student?->nim }}</div></div></div><span class="badge shrink-0 {{ $badgeMap[$ta->status_ta] ?? 'badge-neutral' }}">{{ ucfirst($ta->status_ta) }}</span></div>
         <div class="mt-3 flex flex-wrap items-center gap-1.5"><span class="badge {{ $ta->isKp() ? 'badge-neutral' : 'badge-info' }}">{{ $ta->jenisLabel() }}</span>@foreach ($ta->my_roles as $role)<span class="badge {{ str_starts_with($role, 'Pembimbing') ? 'badge-info' : 'badge-neutral' }}">{{ $role }}</span>@endforeach</div>
         <div class="mt-3 text-sm text-text-secondary">Fase: <span class="text-text-primary">{{ $ta->faseLabel() }}</span></div>
         <div class="mt-2">@include('dashboard.partials.dosen-phase-control', ['controlId' => 'mobile'])</div>

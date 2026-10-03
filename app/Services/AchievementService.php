@@ -185,9 +185,18 @@ class AchievementService
 
     private function setengahJalan(MahasiswaTa $ta): bool
     {
-        $target = $ta->target_sesi ?? 7;
+        // Mengacu pada fase TA, bukan jumlah sesi: unlock ketika fase sudah
+        // mencapai Seminar Hasil (termasuk fase sesudahnya: Draft Sidang,
+        // Sidang, Achievement Unlocked). Program KP tidak memiliki fase ini.
+        if ($ta->jenis !== MahasiswaTa::JENIS_TA) {
+            return false;
+        }
 
-        return $target > 0 && $this->approvedCount($ta) >= $target / 2;
+        $phaseOrder = array_keys(MahasiswaTa::FASES);
+        $current = array_search($ta->fase, $phaseOrder, true);
+        $target = array_search('seminar_hasil', $phaseOrder, true);
+
+        return $current !== false && $current >= $target;
     }
 
     private function garisAkhir(MahasiswaTa $ta): bool
